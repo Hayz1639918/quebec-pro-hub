@@ -14,7 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string
+          phone: string | null
+          user_type: 'client' | 'professional'
+          company_name: string | null
+          rbq_number: string | null
+          rbq_certification_url: string | null
+          services_offered: string | null
+          insurance_info: string | null
+          is_rbq_verified: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name: string
+          phone?: string | null
+          user_type: 'client' | 'professional'
+          company_name?: string | null
+          rbq_number?: string | null
+          rbq_certification_url?: string | null
+          services_offered?: string | null
+          insurance_info?: string | null
+          is_rbq_verified?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string
+          phone?: string | null
+          user_type?: 'client' | 'professional'
+          company_name?: string | null
+          rbq_number?: string | null
+          rbq_certification_url?: string | null
+          services_offered?: string | null
+          insurance_info?: string | null
+          is_rbq_verified?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +69,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_type: 'client' | 'professional'
     }
     CompositeTypes: {
       [_ in never]: never
