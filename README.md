@@ -58,7 +58,17 @@ Le client est initialisé via `src/integrations/supabase/client.ts` et attend le
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-Assurez-vous d’utiliser uniquement la clé « public anon » côté client.
+Assurez-vous d'utiliser uniquement la clé « public anon » côté client.
+
+### Configuration de la base de données
+
+Avant de démarrer l'application, vous devez configurer la base de données Supabase :
+
+1. Créez un projet Supabase sur [supabase.com](https://supabase.com)
+2. Appliquez les migrations SQL depuis `supabase/migrations/001_create_profiles_table.sql`
+3. Configurez le bucket de stockage pour les certifications RBQ
+
+Pour plus de détails, consultez `supabase/README.md`
 
 ## Personnalisation UI
 
