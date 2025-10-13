@@ -4,15 +4,57 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Globe, ChevronDown, Check } from "lucide-react";
-import { useState } from "react";
+import { Globe, ChevronDown, Check, User, LogOut, LayoutDashboard } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo-batirnet.jpeg";
 
 const Navigation = () => {
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    checkUser();
+    
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setUser(session?.user || null);
+    if (session?.user) {
+      await fetchProfile(session.user.id);
+    }
+  };
+
+  const fetchProfile = async (userId: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    setProfile(data);
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   const content = {
     fr: {
@@ -86,16 +128,54 @@ const Navigation = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button 
-              variant="ghost" 
-              className="hidden sm:inline-flex"
-              onClick={() => navigate("/auth?mode=login")}
-            >
-              {t.login}
-            </Button>
-            <Button onClick={() => navigate("/auth?mode=signup")}>
-              {t.signup}
-            </Button>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-card z-50">
+                  <div className="px-2 py-1.5 text-sm font-semibold">
+                    {profile?.full_name || user.email}
+                  </div>
+                  <div className="px-2 py-1 text-xs text-muted-foreground">
+                    {profile?.user_type === 'client' ? 'Client' : 'Professionnel'}
+                  </div>
+                  <DropdownMenuSeparator />
+                  {profile?.user_type === 'client' && (
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/dashboard")}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="cursor-pointer text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Déconnexion
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="hidden sm:inline-flex"
+                  onClick={() => navigate("/auth?mode=login")}
+                >
+                  {t.login}
+                </Button>
+                <Button onClick={() => navigate("/auth?mode=signup")}>
+                  {t.signup}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

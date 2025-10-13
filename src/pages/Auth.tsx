@@ -221,6 +221,9 @@ const Auth = () => {
         title: "Connexion réussie",
         description: "Bienvenue sur BâtirNet !",
       });
+      
+      // Redirect to dashboard for clients
+      navigate("/dashboard");
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Email ou mot de passe incorrect";
       toast({
