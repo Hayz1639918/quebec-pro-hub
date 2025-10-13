@@ -4,6 +4,7 @@
 - Architecture: `docs/architecture.md`
 - Authentification & Inscription: `docs/authentication.md`
 - Marketplace des Professionnels: `docs/marketplace.md`
+- Marketplace des Projets: `docs/projects-marketplace.md`
 - Paiements & Escrow: `docs/payments.md`
 - Rôles & permissions: `docs/roles.md`
 - Sécurité & conformité: `docs/security.md`

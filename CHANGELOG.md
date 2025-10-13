@@ -42,6 +42,41 @@
   - Date et catégorie de projet
   - RLS pour gestion par professionnel
 
+#### Page Marketplace des Projets (v1.2)
+- **Page `/projects`** : Marketplace complète pour découvrir les projets
+  - Recherche en temps réel (titre, description, catégorie)
+  - Filtres par catégorie, région et budget
+  - Tri par récence, budget ou nombre de propositions
+  - Affichage en liste avec cartes détaillées
+  - Statistiques (projets actifs, propositions totales)
+  
+- **Informations affichées** :
+  - Badge de statut du projet (Ouvert, En cours, Complété, Annulé)
+  - Titre et description du projet
+  - Catégorie de travaux (badge)
+  - Localisation (ville, région)
+  - Budget (fourchette ou "à discuter")
+  - Date de publication (format relatif)
+  - Échéance (si définie)
+  - Nombre de propositions et de vues
+  - Actions rapides (détails, soumettre proposition)
+
+- **Migration 003** : Tables projets et propositions
+  - Table `projects` avec ENUM project_status
+  - Table `proposals` pour soumissions professionnels
+  - Table `project_images` pour photos de projets
+  - Bucket Storage `projects` (public)
+  - Triggers automatiques pour `proposals_count`
+  - Function `increment_project_views()` pour compteur
+  - RLS complet pour sécurité
+  
+- **Système de propositions** :
+  - Professionnels peuvent soumettre des propositions
+  - Budget et durée estimés
+  - Statuts : pending, accepted, rejected, withdrawn
+  - Limite : une proposition par professionnel par projet
+  - Compteur automatique sur les projets
+
 ### Ajouté (suite)
 
 #### Système d'inscription amélioré
@@ -159,16 +194,28 @@
 quebec-pro-hub/
 ├── src/
 │   ├── pages/
-│   │   └── Auth.tsx                                  [MODIFIÉ]
+│   │   ├── Auth.tsx                                  [MODIFIÉ]
+│   │   ├── Professionals.tsx                         [NOUVEAU]
+│   │   └── Projects.tsx                              [NOUVEAU]
+│   ├── components/
+│   │   ├── Navigation.tsx                            [MODIFIÉ]
+│   │   ├── Hero.tsx                                  [MODIFIÉ]
+│   │   └── CTA.tsx                                   [MODIFIÉ]
+│   ├── App.tsx                                       [MODIFIÉ]
 │   └── integrations/
 │       └── supabase/
 │           └── types.ts                              [MODIFIÉ]
 ├── supabase/
 │   ├── migrations/
-│   │   └── 001_create_profiles_table.sql             [NOUVEAU]
+│   │   ├── 001_create_profiles_table.sql             [NOUVEAU]
+│   │   ├── 002_add_marketplace_fields.sql            [NOUVEAU]
+│   │   └── 003_create_projects_table.sql             [NOUVEAU]
 │   └── README.md                                     [NOUVEAU]
 ├── docs/
 │   ├── authentication.md                             [NOUVEAU]
+│   ├── marketplace.md                                [NOUVEAU]
+│   ├── marketplace-quickstart.md                     [NOUVEAU]
+│   ├── projects-marketplace.md                       [NOUVEAU]
 │   ├── testing-guide.md                              [NOUVEAU]
 │   └── SUMMARY.md                                    [MODIFIÉ]
 ├── INSTALLATION.md                                   [NOUVEAU]

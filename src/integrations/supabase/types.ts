@@ -167,6 +167,123 @@ export type Database = {
           created_at?: string
         }
       }
+      projects: {
+        Row: {
+          id: string
+          client_id: string
+          title: string
+          description: string
+          category: string | null
+          budget_min: number | null
+          budget_max: number | null
+          city: string | null
+          region: string | null
+          postal_code: string | null
+          status: 'open' | 'in_progress' | 'completed' | 'cancelled'
+          deadline: string | null
+          created_at: string
+          updated_at: string
+          proposals_count: number
+          views_count: number
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          title: string
+          description: string
+          category?: string | null
+          budget_min?: number | null
+          budget_max?: number | null
+          city?: string | null
+          region?: string | null
+          postal_code?: string | null
+          status?: 'open' | 'in_progress' | 'completed' | 'cancelled'
+          deadline?: string | null
+          created_at?: string
+          updated_at?: string
+          proposals_count?: number
+          views_count?: number
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          title?: string
+          description?: string
+          category?: string | null
+          budget_min?: number | null
+          budget_max?: number | null
+          city?: string | null
+          region?: string | null
+          postal_code?: string | null
+          status?: 'open' | 'in_progress' | 'completed' | 'cancelled'
+          deadline?: string | null
+          created_at?: string
+          updated_at?: string
+          proposals_count?: number
+          views_count?: number
+        }
+      }
+      proposals: {
+        Row: {
+          id: string
+          project_id: string
+          professional_id: string
+          message: string
+          estimated_budget: number | null
+          estimated_duration_days: number | null
+          status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          professional_id: string
+          message: string
+          estimated_budget?: number | null
+          estimated_duration_days?: number | null
+          status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          professional_id?: string
+          message?: string
+          estimated_budget?: number | null
+          estimated_duration_days?: number | null
+          status?: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      project_images: {
+        Row: {
+          id: string
+          project_id: string
+          image_url: string
+          caption: string | null
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          image_url: string
+          caption?: string | null
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          image_url?: string
+          caption?: string | null
+          display_order?: number
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -176,6 +293,7 @@ export type Database = {
     }
     Enums: {
       user_type: 'client' | 'professional'
+      project_status: 'open' | 'in_progress' | 'completed' | 'cancelled'
     }
     CompositeTypes: {
       [_ in never]: never
