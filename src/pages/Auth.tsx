@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import logo from "@/assets/logo-batirnet.jpeg";
 
 type UserType = "client" | "professional";
+type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -38,16 +40,38 @@ const Auth = () => {
 
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
+        // Fetch user profile to determine where to redirect
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile && (profile as { user_type: UserType }).user_type === 'client') {
+          navigate("/dashboard");
+        } else if (profile) {
         navigate("/");
+        }
       }
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session && event === 'SIGNED_IN') {
+        // Fetch user profile to determine where to redirect
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profile && (profile as { user_type: UserType }).user_type === 'client') {
+          navigate("/dashboard");
+        } else if (profile) {
         navigate("/");
+        }
       }
     });
 
@@ -161,19 +185,17 @@ const Auth = () => {
       }
 
       // Save user profile to database
-      const profileData = {
+      const profileData: any = {
         id: authData.user.id,
         email,
         full_name: fullName,
         phone: phone || null,
         user_type: userType,
-        ...(userType === "professional" ? {
-          company_name: companyName,
-          rbq_number: rbqNumber,
-          rbq_certification_url: rbqCertificationUrl,
-          services_offered: servicesOffered || null,
-          insurance_info: insuranceInfo || null,
-        } : {}),
+        company_name: userType === "professional" ? companyName : null,
+        rbq_number: userType === "professional" ? rbqNumber : null,
+        rbq_certification_url: userType === "professional" ? rbqCertificationUrl : null,
+        services_offered: userType === "professional" ? (servicesOffered || null) : null,
+        insurance_info: userType === "professional" ? (insuranceInfo || null) : null,
       };
 
       const { error: profileError } = await supabase
@@ -193,6 +215,19 @@ const Auth = () => {
           : "Votre compte a été créé avec succès !",
       });
 
+      // Redirect based on user type
+      if (userType === "client") {
+        // For clients, redirect to dashboard
+        setTimeout(() => {
+          navigate("/dashboard");
+        }, 1500);
+      } else {
+        // For professionals, redirect to home (they need RBQ verification first)
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
+
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription";
       toast({
@@ -210,17 +245,17 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Connexion réussie",
-        description: "Bienvenue sur BâtirNet !",
-      });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur BâtirNet !",
+        });
       
       // Redirect to dashboard for clients
       navigate("/dashboard");
@@ -280,67 +315,67 @@ const Auth = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {!isLogin && (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleGoogleAuth}
-              type="button"
-            >
-              <Chrome className="mr-2 h-5 w-5" />
-              Continuer avec Google
-            </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleAuth}
+            type="button"
+          >
+            <Chrome className="mr-2 h-5 w-5" />
+            Continuer avec Google
+          </Button>
           )}
 
           {!isLogin && (
-            <div className="relative">
-              <Separator />
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                OU
-              </span>
-            </div>
+          <div className="relative">
+            <Separator />
+            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              OU
+            </span>
+          </div>
           )}
 
           {isLogin ? (
             // Login Form
             <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Adresse email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="nom@exemple.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Adresse email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="nom@exemple.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    minLength={6}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                  minLength={6}
+                />
               </div>
+            </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
                 {loading ? "Chargement..." : "Se connecter"}
               </Button>
             </form>
@@ -535,8 +570,8 @@ const Auth = () => {
                   disabled={loading}
                 >
                   {loading ? "Création du compte..." : "Créer mon compte"}
-                </Button>
-              </form>
+            </Button>
+          </form>
             </Tabs>
           )}
 
