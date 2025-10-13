@@ -7,10 +7,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Globe, ChevronDown, Check } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo-batirnet.jpeg";
 
 const Navigation = () => {
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
+  const navigate = useNavigate();
 
   const content = {
     fr: {
@@ -78,10 +80,14 @@ const Navigation = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" className="hidden sm:inline-flex">
+            <Button 
+              variant="ghost" 
+              className="hidden sm:inline-flex"
+              onClick={() => navigate("/auth")}
+            >
               {t.login}
             </Button>
-            <Button variant="default">
+            <Button onClick={() => navigate("/auth")}>
               {t.signup}
             </Button>
           </div>
