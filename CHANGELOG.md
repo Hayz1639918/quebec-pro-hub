@@ -4,6 +4,46 @@
 
 ### Ajouté
 
+#### Page Marketplace des Professionnels (v1.1)
+- **Page `/professionals`** : Marketplace complète pour découvrir les professionnels
+  - Recherche en temps réel (nom, entreprise, services)
+  - Filtres par type de service et région
+  - Tri par récence, nom ou note
+  - Affichage en grille avec cartes détaillées
+  - Statistiques (professionnels vérifiés, note moyenne)
+  
+- **Informations affichées** :
+  - Badge de vérification RBQ
+  - Numéro RBQ
+  - Localisation (ville, région)
+  - Années d'expérience
+  - Services offerts avec badges
+  - Note moyenne avec étoiles
+  - Nombre total d'avis
+  - Nombre de projets réalisés
+  - Actions rapides (profil, téléphone, email)
+
+- **Migration 002** : Champs marketplace
+  - Ajout de `city`, `region`, `postal_code` pour la localisation
+  - Ajout de `bio`, `years_experience` pour les informations
+  - Ajout de `average_rating`, `total_reviews`, `total_projects` pour les métriques
+  - Ajout de `profile_picture_url`, `website_url`
+  
+- **Table `reviews`** : Système d'évaluations
+  - Note globale (1-5 étoiles)
+  - Notes détaillées (qualité, ponctualité, communication, valeur)
+  - Commentaires textuels
+  - Trigger automatique pour mettre à jour les moyennes
+  - RLS pour protection des données
+  
+- **Table `portfolio_items`** : Portfolio de travaux
+  - Titre et description de projets
+  - Images de projets (bucket Storage `portfolio`)
+  - Date et catégorie de projet
+  - RLS pour gestion par professionnel
+
+### Ajouté (suite)
+
 #### Système d'inscription amélioré
 - **Formulaires différenciés** : Deux types de formulaires d'inscription distincts
   - Formulaire Client : Inscription simplifiée pour les particuliers et entreprises

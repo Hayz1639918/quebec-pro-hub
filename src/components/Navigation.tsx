@@ -46,9 +46,12 @@ const Navigation = () => {
 
           {/* Navigation Links - Centered */}
           <div className="hidden md:flex items-center gap-8 mx-auto">
-            <a href="#how-it-works" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">
+            <button 
+              onClick={() => navigate("/professionals")}
+              className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap"
+            >
               {t.findPro}
-            </a>
+            </button>
             <a href="#for-contractors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">
               {t.discover}
             </a>
@@ -83,11 +86,11 @@ const Navigation = () => {
             <Button 
               variant="ghost" 
               className="hidden sm:inline-flex"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/auth?mode=login")}
             >
               {t.login}
             </Button>
-            <Button onClick={() => navigate("/auth")}>
+            <Button onClick={() => navigate("/auth?mode=signup")}>
               {t.signup}
             </Button>
           </div>
