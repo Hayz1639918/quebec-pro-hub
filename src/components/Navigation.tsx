@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Globe } from "lucide-react";
+import { Globe } from "lucide-react";
 import { useState } from "react";
+import logo from "@/assets/logo-batirnet.jpeg";
 
 const Navigation = () => {
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
@@ -31,11 +32,12 @@ const Navigation = () => {
       <div className="container mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center gap-2">
-            <div className="bg-gradient-hero p-2 rounded-lg">
-              <Building2 className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">BâtirNet</span>
+          <div className="flex items-center gap-3">
+            <img 
+              src={logo} 
+              alt="BâtirNet Logo" 
+              className="h-12 w-auto"
+            />
           </div>
 
           {/* Navigation Links */}

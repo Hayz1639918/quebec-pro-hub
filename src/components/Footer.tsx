@@ -1,4 +1,5 @@
-import { Building2, Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import { Facebook, Twitter, Linkedin, Instagram } from "lucide-react";
+import logo from "@/assets/logo-batirnet.jpeg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -30,11 +31,12 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 mb-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="bg-gradient-hero p-2 rounded-lg">
-                <Building2 className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="text-2xl font-bold">BâtirNet</span>
+            <div className="mb-6">
+              <img 
+                src={logo} 
+                alt="BâtirNet Logo" 
+                className="h-12 w-auto"
+              />
             </div>
             <p className="text-muted-foreground mb-6 leading-relaxed">
               La plateforme canadienne de confiance pour connecter clients et entrepreneurs du bâtiment.
