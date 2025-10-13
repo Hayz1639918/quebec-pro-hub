@@ -1,0 +1,89 @@
+import { Button } from "@/components/ui/button";
+import { Search, CheckCircle2 } from "lucide-react";
+import heroImage from "@/assets/hero-construction.jpg";
+
+const Hero = () => {
+  return (
+    <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-subtle -z-10" />
+      
+      <div className="container mx-auto px-6 lg:px-8 py-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Left Content */}
+          <div className="space-y-8 animate-fade-in">
+            <div className="inline-block">
+              <span className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                🇨🇦 Plateforme canadienne de confiance
+              </span>
+            </div>
+            
+            <h1 className="leading-tight">
+              Connectez-vous aux meilleurs entrepreneurs du bâtiment
+            </h1>
+            
+            <p className="text-xl text-muted-foreground leading-relaxed max-w-xl">
+              BâtirNet simplifie la recherche d'entrepreneurs qualifiés pour tous vos projets de construction et rénovation. 
+              Sécurisé, transparent, et professionnel.
+            </p>
+
+            {/* Key Features */}
+            <div className="space-y-3">
+              {[
+                "Entrepreneurs vérifiés et certifiés",
+                "Paiements sécurisés par jalons",
+                "Contrats intelligents avec e-signature"
+              ].map((feature, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span className="text-foreground font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button variant="hero" size="lg" className="gap-2">
+                <Search className="h-5 w-5" />
+                Trouver un entrepreneur
+              </Button>
+              <Button variant="outline" size="lg">
+                Devenir partenaire
+              </Button>
+            </div>
+
+            {/* Social Proof */}
+            <div className="flex items-center gap-8 pt-6 border-t border-border">
+              <div>
+                <div className="text-3xl font-bold text-foreground">2,500+</div>
+                <div className="text-sm text-muted-foreground">Entrepreneurs actifs</div>
+              </div>
+              <div className="h-12 w-px bg-border" />
+              <div>
+                <div className="text-3xl font-bold text-foreground">15,000+</div>
+                <div className="text-sm text-muted-foreground">Projets réalisés</div>
+              </div>
+              <div className="h-12 w-px bg-border" />
+              <div>
+                <div className="text-3xl font-bold text-foreground">4.8/5</div>
+                <div className="text-sm text-muted-foreground">Note moyenne</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Image */}
+          <div className="relative lg:h-[600px]">
+            <div className="absolute inset-0 bg-gradient-hero opacity-10 rounded-3xl blur-3xl" />
+            <img
+              src={heroImage}
+              alt="Professional construction team collaborating on a project"
+              className="relative rounded-3xl shadow-large object-cover w-full h-full"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Hero;
