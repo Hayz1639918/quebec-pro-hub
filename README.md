@@ -57,6 +57,7 @@ src/
 - **`/`** : Page d'accueil avec présentation de la plateforme
 - **`/auth`** : Inscription et connexion (client/professionnel)
 - **`/professionals`** : Marketplace des professionnels vérifiés RBQ
+- **`/projects`** : Marketplace des projets de construction/rénovation
 - **`/auth?mode=signup`** : Inscription directe
 - **`/auth?mode=login`** : Connexion directe
 

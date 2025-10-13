@@ -52,9 +52,12 @@ const Navigation = () => {
             >
               {t.findPro}
             </button>
-            <a href="#for-contractors" className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap">
+            <button 
+              onClick={() => navigate("/projects")}
+              className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap"
+            >
               {t.discover}
-            </a>
+            </button>
           </div>
 
           {/* Right Side Actions */}
