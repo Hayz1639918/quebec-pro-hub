@@ -3,6 +3,7 @@
 - Vue d'ensemble: `docs/overview.md`
 - Architecture: `docs/architecture.md`
 - Authentification & Inscription: `docs/authentication.md`
+- Fonctionnalités Client: `docs/client-features.md`
 - Marketplace des Professionnels: `docs/marketplace.md`
 - Marketplace des Projets: `docs/projects-marketplace.md`
 - Paiements & Escrow: `docs/payments.md`
