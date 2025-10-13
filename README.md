@@ -1,73 +1,142 @@
-# Welcome to your Lovable project
+# BâtirNet — Québec Pro Hub
 
-## Project info
+Place de marché sécurisée (Web + mobile) connectant des clients (particuliers/entreprises) avec des entrepreneurs du bâtiment à l’échelle du Canada, avec un fort accent Québec. Différenciation clé: matching intelligent (IA), contrats intelligents avec e‑signature et paiements par jalons, évaluations riches, conformité légale provinciale et UX multilingue FR/EN.
 
-**URL**: https://lovable.dev/projects/2a5e3a65-afd7-4080-88e2-815c7e6ac0d1
+## Stack technique
 
-## How can I edit this code?
+- Vite + React + TypeScript
+- Tailwind CSS + shadcn/ui (Radix UI)
+- React Router
+- TanStack Query
+- Supabase JS SDK
 
-There are several ways of editing your application.
+## Démarrage rapide
 
-**Use Lovable**
+Prérequis:
+- Node.js 18+ et npm
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2a5e3a65-afd7-4080-88e2-815c7e6ac0d1) and start prompting.
+Étapes:
+1. Cloner le dépôt et se placer dans le dossier du projet.
+2. Créer un fichier `.env` à la racine avec vos variables:
+   - `VITE_SUPABASE_URL="https://<project>.supabase.co"`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY="<public-anon-key>"`
+3. Installer les dépendances:
+   - `npm i`
+4. Lancer le serveur de développement:
+   - `npm run dev`
+5. Ouvrir l’application sur `http://localhost:8080`.
+6. (Optionnel) Lancer l’API locale minimaliste:
+   - `npm run server` (expose `http://localhost:5174`)
+   - Endpoints de test: `GET /health`, `GET /api/v1/ping`, `POST /api/v1/echo`
 
-Changes made via Lovable will be committed automatically to this repo.
+Scripts utiles:
+- `npm run dev` — démarre le serveur Vite
+- `npm run build` — build de production
+- `npm run preview` — prévisualisation du build
+- `npm run lint` — exécute ESLint
+ - `npm run docs` — génère la documentation de code dans `docs/`
+ - `npm run test` — exécute la suite de tests Vitest
+ - `npm run test:watch` — mode TDD interactif
+ - `npm run test:coverage` — rapport de couverture
 
-**Use your preferred IDE**
+## Structure du projet
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+src/
+  components/        # UI réutilisable et sections (Hero, Features, CTA, etc.)
+  components/ui/     # Composants shadcn/ui basés sur Radix
+  pages/             # Pages (Index, Auth, NotFound)
+  integrations/      # Clients externes (Supabase)
+  hooks/             # Hooks personnalisés
+  assets/            # Images statiques
+  main.tsx           # Point d’entrée React
 ```
 
-**Edit a file directly in GitHub**
+## Intégration Supabase
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Le client est initialisé via `src/integrations/supabase/client.ts` et attend les variables:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 
-**Use GitHub Codespaces**
+Assurez-vous d’utiliser uniquement la clé « public anon » côté client.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Personnalisation UI
 
-## What technologies are used for this project?
+- Les composants UI proviennent de shadcn/ui et Radix. Les styles globaux et thèmes se trouvent dans `tailwind.config.ts`, `src/index.css` et `src/App.css`.
+- Pour ajouter/ajuster des composants, modifiez `src/components` et `src/components/ui`.
 
-This project is built with:
+## Déploiement
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Construire: `npm run build` (génère `dist/`).
+2. Héberger le dossier `dist/` sur un hébergeur statique (Netlify, Vercel, Cloudflare Pages, etc.).
+3. Définir les variables d’environnement Vite sur la plateforme d’hébergement (préfixe `VITE_`).
 
-## How can I deploy this project?
+## Backend de développement (plugin backend-development)
 
-Simply open [Lovable](https://lovable.dev/projects/2a5e3a65-afd7-4080-88e2-815c7e6ac0d1) and click on Share -> Publish.
+Un serveur HTTP minimal sans dépendances est fourni dans `server/index.js` pour prototyper des appels API.
 
-## Can I connect a custom domain to my Lovable project?
+- Démarrer: `npm run server` (port par défaut: `5174`, changeable via `API_PORT`).
+- Dev proxy: Vite redirige `\u2060/api/*` vers l’API locale (`vite.config.ts`).
+- CORS: activé côté API, mais inutile via le proxy Vite.
 
-Yes, you can!
+Vous pouvez remplacer ce serveur par Express/Fastify ultérieurement si besoin.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Documentation du code
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Générée via TypeDoc (sortie Markdown):
+- Config: `typedoc.json`
+- Build: `npm run docs` (nécessite `typedoc` et `typedoc-plugin-markdown`)
+
+Installez les dépendances de documentation si nécessaire:
+```
+npm i -D typedoc typedoc-plugin-markdown
+```
+
+## Vue d’ensemble produit
+
+- Différenciation:
+  - Matching intelligent (IA) pour recommander les meilleurs entrepreneurs.
+  - Contrats intelligents (blockchain) avec e‑signature et jalons de paiement (escrow/paiements en tranches).
+  - Système d’évaluation riche (ponctualité, qualité, respect des délais, communication, etc.).
+  - Couche légale provinciale (vérifs RBQ/permis/assurances, conformité PIPEDA).
+  - UX multilingue FR/EN pour servir des communautés variées.
+
+- Modèle d’affaires:
+  - Freemium côté clients, abonnements premium côté entrepreneurs, offre VIP pour clients exigeant un accompagnement.
+
+- Roadmap proposée:
+  - MVP → déploiement Québec → Canada → USA/Europe.
+
+Pour le détail, consultez `docs/SUMMARY.md` (sommaire de la documentation).
+
+## TDD & tests (plugin tdd-workflows)
+
+Outils:
+- Vitest (+ jsdom)
+- React Testing Library + jest-dom
+
+Fichiers clés:
+- `vite.config.ts` → section `test` (config Vitest)
+- `src/test/setup.ts` → setup jest-dom
+- Exemple: `src/components/__tests__/hero.test.tsx`
+
+Installation des dépendances de test:
+```
+npm i -D vitest jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom
+```
+
+Exécution:
+- `npm run test:watch` pour itérer en TDD
+- `npm run test` pour CI
+- `npm run test:coverage` pour la couverture
+
+## Contribution
+
+1. Créez une branche feature.
+2. Développez avec `npm run dev`.
+3. Vérifiez le linting avec `npm run lint`.
+4. Ouvrez une pull request.
+
+## Licence
+
+Ce dépôt ne spécifie pas de licence. Contactez les mainteneurs pour les conditions d’utilisation.

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src"],
+  "tsconfig": "tsconfig.app.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs",
+  "readme": "none",
+  "hideGenerator": true,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "categorizeByGroup": false
+}
+
