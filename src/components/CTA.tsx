@@ -1,7 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CTA = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background */}
@@ -23,7 +26,12 @@ const CTA = () => {
             </div>
             
             <div className="space-y-4">
-              <Button variant="hero" size="lg" className="w-full">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="w-full"
+                onClick={() => navigate("/auth?mode=signup")}
+              >
                 Créer un projet gratuitement
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -50,7 +58,12 @@ const CTA = () => {
             </div>
             
             <div className="space-y-4">
-              <Button variant="accent" size="lg" className="w-full">
+              <Button 
+                variant="accent" 
+                size="lg" 
+                className="w-full"
+                onClick={() => navigate("/auth?mode=signup")}
+              >
                 Devenir partenaire
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">

@@ -27,6 +27,16 @@ export type Database = {
           services_offered: string | null
           insurance_info: string | null
           is_rbq_verified: boolean
+          city: string | null
+          region: string | null
+          postal_code: string | null
+          bio: string | null
+          years_experience: number | null
+          average_rating: number
+          total_reviews: number
+          total_projects: number
+          profile_picture_url: string | null
+          website_url: string | null
           created_at: string
           updated_at: string
         }
@@ -42,6 +52,16 @@ export type Database = {
           services_offered?: string | null
           insurance_info?: string | null
           is_rbq_verified?: boolean
+          city?: string | null
+          region?: string | null
+          postal_code?: string | null
+          bio?: string | null
+          years_experience?: number | null
+          average_rating?: number
+          total_reviews?: number
+          total_projects?: number
+          profile_picture_url?: string | null
+          website_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -57,8 +77,94 @@ export type Database = {
           services_offered?: string | null
           insurance_info?: string | null
           is_rbq_verified?: boolean
+          city?: string | null
+          region?: string | null
+          postal_code?: string | null
+          bio?: string | null
+          years_experience?: number | null
+          average_rating?: number
+          total_reviews?: number
+          total_projects?: number
+          profile_picture_url?: string | null
+          website_url?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      reviews: {
+        Row: {
+          id: string
+          professional_id: string
+          client_id: string
+          project_id: string | null
+          rating: number
+          comment: string | null
+          quality_rating: number | null
+          punctuality_rating: number | null
+          communication_rating: number | null
+          value_rating: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          professional_id: string
+          client_id: string
+          project_id?: string | null
+          rating: number
+          comment?: string | null
+          quality_rating?: number | null
+          punctuality_rating?: number | null
+          communication_rating?: number | null
+          value_rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          professional_id?: string
+          client_id?: string
+          project_id?: string | null
+          rating?: number
+          comment?: string | null
+          quality_rating?: number | null
+          punctuality_rating?: number | null
+          communication_rating?: number | null
+          value_rating?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      portfolio_items: {
+        Row: {
+          id: string
+          professional_id: string
+          title: string
+          description: string | null
+          image_url: string | null
+          project_date: string | null
+          category: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          professional_id: string
+          title: string
+          description?: string | null
+          image_url?: string | null
+          project_date?: string | null
+          category?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          professional_id?: string
+          title?: string
+          description?: string | null
+          image_url?: string | null
+          project_date?: string | null
+          category?: string | null
+          created_at?: string
         }
       }
     }

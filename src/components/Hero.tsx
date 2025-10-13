@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Search, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-construction.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
       {/* Background Gradient */}
@@ -43,11 +46,20 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button variant="hero" size="lg" className="gap-2">
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="gap-2"
+                onClick={() => navigate("/auth?mode=signup")}
+              >
                 <Search className="h-5 w-5" />
                 Trouver un entrepreneur
               </Button>
-              <Button variant="outline" size="lg">
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => navigate("/auth?mode=signup")}
+              >
                 Devenir partenaire
               </Button>
             </div>

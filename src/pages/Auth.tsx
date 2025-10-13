@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,9 @@ import logo from "@/assets/logo-batirnet.jpeg";
 type UserType = "client" | "professional";
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get('mode');
+  const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [userType, setUserType] = useState<UserType>("client");
   const [loading, setLoading] = useState(false);
   const [rbqFile, setRbqFile] = useState<File | null>(null);

@@ -45,12 +45,20 @@ Scripts utiles:
 src/
   components/        # UI réutilisable et sections (Hero, Features, CTA, etc.)
   components/ui/     # Composants shadcn/ui basés sur Radix
-  pages/             # Pages (Index, Auth, NotFound)
+  pages/             # Pages (Index, Auth, Professionals, NotFound)
   integrations/      # Clients externes (Supabase)
   hooks/             # Hooks personnalisés
   assets/            # Images statiques
-  main.tsx           # Point d’entrée React
+  main.tsx           # Point d'entrée React
 ```
+
+## Pages principales
+
+- **`/`** : Page d'accueil avec présentation de la plateforme
+- **`/auth`** : Inscription et connexion (client/professionnel)
+- **`/professionals`** : Marketplace des professionnels vérifiés RBQ
+- **`/auth?mode=signup`** : Inscription directe
+- **`/auth?mode=login`** : Connexion directe
 
 ## Intégration Supabase
 
