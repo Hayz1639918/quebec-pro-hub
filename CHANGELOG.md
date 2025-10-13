@@ -1,6 +1,70 @@
 # Changelog — BâtirNet
 
-## [Non publié] - 2025-10-13
+## [v1.3] - 2025-10-13
+
+### Ajouté
+
+#### Configuration et Documentation
+- **Guide complet de configuration Supabase** : `docs/supabase-setup.md`
+  - Instructions détaillées pour créer un projet Supabase
+  - Guide d'exécution des migrations SQL
+  - Section de dépannage complète
+  - Exemples et bonnes pratiques de sécurité
+
+#### Améliorations de sécurité
+- **Fichier `.gitignore` amélioré** : Ajout de `.env` et variantes pour éviter de commiter les secrets
+- **Documentation de sécurité** : Mise en garde contre le commit des clés API
+
+### Modifié
+
+#### `README.md`
+- Refonte de la section "Démarrage rapide" avec des instructions plus claires
+- Ajout de liens vers le guide de configuration Supabase
+- Amélioration de la présentation avec des blocs de code formatés
+
+#### `src/pages/Auth.tsx`
+- Correction de la redirection après connexion selon le type d'utilisateur
+  - Clients → `/dashboard`
+  - Professionnels → `/` (page d'accueil)
+- Amélioration de la gestion des erreurs d'inscription
+- Correction du typage TypeScript pour éviter les erreurs de linting
+
+### Corrigé
+
+- **Problème d'URL Supabase** : Correction de l'URL mal formée dans le fichier `.env`
+- **Policy RLS trop restrictive** : Ajustement de la policy d'insertion des profils
+- **Confirmation d'email** : Documentation pour désactiver la confirmation en développement
+- **Failed to fetch** : Résolution des problèmes de connexion à Supabase
+- **Erreurs de typage TypeScript** : Utilisation de types `any` pour contourner les problèmes d'inférence de types Supabase
+
+### Documentation
+
+#### Nouveaux guides
+- `docs/supabase-setup.md` : Guide complet de configuration (8 sections)
+  - Création du projet
+  - Récupération des clés
+  - Configuration des variables d'environnement
+  - Exécution des migrations
+  - Désactivation de la confirmation d'email
+  - Tests de l'application
+  - Section de dépannage détaillée
+  - Ressources et bonnes pratiques de sécurité
+
+#### README amélioré
+- Section "Démarrage rapide" clarifiée
+- Ajout de prérequis Supabase
+- Instructions étape par étape avec blocs de code
+- Lien direct vers le guide de configuration
+
+### Notes de déploiement
+
+Pour les environnements existants :
+1. Vérifier que le fichier `.env` contient les bonnes clés Supabase
+2. S'assurer que `.env` est dans `.gitignore`
+3. Exécuter les migrations SQL si ce n'est pas déjà fait
+4. Désactiver la confirmation d'email dans Supabase (développement uniquement)
+
+## [v1.2] - 2025-10-13
 
 ### Ajouté
 

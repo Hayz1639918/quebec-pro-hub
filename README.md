@@ -14,20 +14,41 @@ Place de marché sécurisée (Web + mobile) connectant des clients (particuliers
 
 Prérequis:
 - Node.js 18+ et npm
+- Un compte Supabase (gratuit)
 
 Étapes:
-1. Cloner le dépôt et se placer dans le dossier du projet.
-2. Créer un fichier `.env` à la racine avec vos variables:
-   - `VITE_SUPABASE_URL="https://<project>.supabase.co"`
-   - `VITE_SUPABASE_PUBLISHABLE_KEY="<public-anon-key>"`
-3. Installer les dépendances:
-   - `npm i`
-4. Lancer le serveur de développement:
-   - `npm run dev`
-5. Ouvrir l’application sur `http://localhost:8080`.
-6. (Optionnel) Lancer l’API locale minimaliste:
-   - `npm run server` (expose `http://localhost:5174`)
-   - Endpoints de test: `GET /health`, `GET /api/v1/ping`, `POST /api/v1/echo`
+1. **Cloner le dépôt** et se placer dans le dossier du projet.
+2. **Configurer Supabase** (voir [Guide détaillé](docs/supabase-setup.md)) :
+   - Créer un projet sur https://supabase.com
+   - Récupérer l'URL et la clé API
+   - Exécuter les migrations SQL
+3. **Créer un fichier `.env`** à la racine avec vos variables:
+   ```env
+   VITE_SUPABASE_URL=https://votre-projet.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=votre-cle-anon-publique
+   ```
+4. **Installer les dépendances**:
+   ```bash
+   npm install
+   ```
+5. **Lancer le serveur de développement**:
+   ```bash
+   npm run dev
+   ```
+6. **Ouvrir l'application** sur `http://localhost:8080`
+
+📖 **Guide complet de configuration Supabase** : [docs/supabase-setup.md](docs/supabase-setup.md)
+
+### API locale (optionnel)
+
+Lancer l'API locale minimaliste:
+```bash
+npm run server
+```
+Expose `http://localhost:5174` avec les endpoints :
+- `GET /health`
+- `GET /api/v1/ping`
+- `POST /api/v1/echo`
 
 Scripts utiles:
 - `npm run dev` — démarre le serveur Vite
