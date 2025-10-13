@@ -1,27 +1,31 @@
 import { Button } from "@/components/ui/button";
-import { Globe } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Globe, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/logo-batirnet.jpeg";
 
 const Navigation = () => {
   const [language, setLanguage] = useState<'fr' | 'en'>('fr');
 
-  const toggleLanguage = () => {
-    setLanguage(prev => prev === 'fr' ? 'en' : 'fr');
-  };
-
   const content = {
     fr: {
-      findPro: "Trouver un pro",
-      forPros: "Pour les pros",
+      findPro: "Trouver un professionnel",
+      discover: "Découvrir nos projets",
       login: "Connexion",
       signup: "S'inscrire",
+      currentLang: "Français",
     },
     en: {
-      findPro: "Find a pro",
-      forPros: "For pros",
+      findPro: "Find a professional",
+      discover: "Discover our projects",
       login: "Login",
       signup: "Sign up",
+      currentLang: "English",
     }
   };
 
@@ -40,27 +44,41 @@ const Navigation = () => {
             />
           </div>
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-8">
+          {/* Navigation Links - Centered */}
+          <div className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
             <a href="#how-it-works" className="text-foreground hover:text-primary transition-colors font-medium">
               {t.findPro}
             </a>
             <a href="#for-contractors" className="text-foreground hover:text-primary transition-colors font-medium">
-              {t.forPros}
+              {t.discover}
             </a>
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleLanguage}
-              className="rounded-full"
-            >
-              <Globe className="h-5 w-5" />
-              <span className="sr-only">Toggle language</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">
+                  <Globe className="h-5 w-5" />
+                  <span className="hidden sm:inline">{t.currentLang}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card">
+                <DropdownMenuItem 
+                  onClick={() => setLanguage('fr')}
+                  className="cursor-pointer"
+                >
+                  🇫🇷 Français
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setLanguage('en')}
+                  className="cursor-pointer"
+                >
+                  🇬🇧 English
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button variant="ghost" className="hidden sm:inline-flex">
               {t.login}
             </Button>
