@@ -245,20 +245,36 @@ const Auth = () => {
     setLoading(true);
 
     try {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        
-        if (error) throw error;
-        
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue sur BâtirNet !",
-        });
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       
-      // Redirect to dashboard for clients
-      navigate("/dashboard");
+      if (error) throw error;
+      if (!authData.user) throw new Error("Aucun utilisateur connecté");
+      
+      // Fetch user profile to determine where to redirect
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type, full_name')
+        .eq('id', authData.user.id)
+        .single();
+      
+      const userProfile = profile as { user_type: UserType; full_name: string } | null;
+      
+      toast({
+        title: "Connexion réussie",
+        description: userProfile?.full_name ? `Bienvenue ${userProfile.full_name} !` : "Bienvenue sur BâtirNet !",
+      });
+      
+      // Redirect based on user type
+      setTimeout(() => {
+        if (userProfile && userProfile.user_type === 'client') {
+          navigate("/dashboard");
+        } else {
+          navigate("/");
+        }
+      }, 1000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Email ou mot de passe incorrect";
       toast({
