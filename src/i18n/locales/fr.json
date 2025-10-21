@@ -1,0 +1,627 @@
+{
+  "common": {
+    "batirnet": "BâtirNet",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier",
+    "export": "Exporter",
+    "download": "Télécharger",
+    "upload": "Télécharger",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "client": "Client",
+    "professional": "Professionnel",
+    "unknown": "Inconnu"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "professionals": "Trouver un professionnel",
+    "projects": "Découvrir nos projets",
+    "dashboard": "Dashboard",
+    "messages": "Messages",
+    "contracts": "Contrats",
+    "notifications": "Notifications",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "Inscription"
+  },
+  "hero": {
+    "title": "Connectez-vous avec les meilleurs entrepreneurs du Québec",
+    "subtitle": "Plateforme sécurisée de mise en relation pour vos projets de construction et rénovation",
+    "cta_client": "Publier un projet",
+    "cta_pro": "Devenir professionnel",
+    "stats": {
+      "professionals": "Professionnels vérifiés",
+      "projects": "Projets réalisés",
+      "satisfaction": "Satisfaction client"
+    }
+  },
+  "auth": {
+    "title": "Bienvenue sur BâtirNet",
+    "subtitle": "Connectez-vous ou créez votre compte",
+    "login": {
+      "title": "Connexion",
+      "email": "Email",
+      "password": "Mot de passe",
+      "button": "Se connecter",
+      "forgot": "Mot de passe oublié ?",
+      "no_account": "Pas encore de compte ?",
+      "signup_link": "Inscrivez-vous"
+    },
+    "signup": {
+      "title": "Inscription",
+      "client": "Client",
+      "professional": "Professionnel",
+      "full_name": "Nom complet",
+      "email": "Email",
+      "password": "Mot de passe",
+      "phone": "Téléphone",
+      "company_name": "Nom de l'entreprise",
+      "rbq_number": "Numéro RBQ",
+      "rbq_certification": "Certification RBQ",
+      "services_offered": "Services offerts",
+      "insurance_info": "Informations d'assurance",
+      "button": "Créer mon compte",
+      "already_account": "Déjà un compte ?",
+      "login_link": "Connectez-vous",
+      "google": "Continuer avec Google"
+    },
+    "messages": {
+      "success": "Inscription réussie ! 🎉",
+      "success_description": "Votre compte a été créé avec succès",
+      "error": "Erreur",
+      "invalid_credentials": "Email ou mot de passe incorrect",
+      "email_required": "L'email est requis",
+      "password_required": "Le mot de passe est requis",
+      "fields_required": "Veuillez remplir tous les champs obligatoires"
+    }
+  },
+  "dashboard": {
+    "welcome": "Bonjour, {{name}} 👋",
+    "subtitle": "Bienvenue sur votre tableau de bord BâtirNet",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "projects": "Mes Projets",
+      "proposals": "Propositions",
+      "contracts": "Contrats",
+      "invoices": "Factures",
+      "activity": "Activité",
+      "favorites": "Favoris"
+    },
+    "stats": {
+      "active_projects": "Projets actifs",
+      "total_projects": "Sur {{total}} total",
+      "proposals_received": "Propositions reçues",
+      "pending_review": "En attente de révision",
+      "favorite_pros": "Professionnels favoris",
+      "in_shortlist": "Dans votre shortlist",
+      "active_contracts": "Contrats actifs",
+      "in_progress": "En cours d'exécution"
+    },
+    "quick_actions": {
+      "title": "Actions rapides",
+      "description": "Démarrez un nouveau projet ou explorez les professionnels",
+      "new_project": "Créer un nouveau projet",
+      "find_pro": "Trouver un professionnel",
+      "explore_projects": "Explorer les projets"
+    },
+    "recent_activity": {
+      "title": "Activité récente",
+      "description": "Dernières mises à jour sur vos projets",
+      "no_activity": "Aucune activité récente",
+      "create_first": "Créez votre premier projet pour commencer"
+    },
+    "projects": {
+      "title": "Mes Projets",
+      "description": "Gérez tous vos projets de construction et rénovation",
+      "new_project": "Nouveau projet",
+      "export_pdf": "Export PDF",
+      "no_projects": "Aucun projet",
+      "create_first": "Créez votre premier projet pour commencer",
+      "status": {
+        "open": "Ouvert",
+        "in_progress": "En cours",
+        "completed": "Complété",
+        "cancelled": "Annulé"
+      },
+      "actions": {
+        "view": "Voir les détails",
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
+      "delete_confirm": {
+        "title": "Supprimer le projet ?",
+        "description": "Cette action est irréversible. Le projet et toutes les propositions associées seront définitivement supprimés.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer"
+      }
+    },
+    "contracts": {
+      "title": "Mes Contrats",
+      "description": "Gérez vos contrats avec les professionnels",
+      "no_contracts": "Aucun contrat",
+      "coming_soon": "Fonctionnalité à venir",
+      "features": {
+        "title": "🚀 Fonctionnalité à venir",
+        "esign": "Signature électronique des contrats",
+        "templates": "Modèles de contrats personnalisables",
+        "milestones": "Suivi des jalons et paiements",
+        "archive": "Archivage sécurisé des documents"
+      }
+    },
+    "invoices": {
+      "title": "Mes Factures",
+      "description": "Consultez et téléchargez vos factures",
+      "no_invoices": "Aucune facture",
+      "coming_soon": "Fonctionnalité à venir",
+      "features": {
+        "title": "💳 Fonctionnalité à venir",
+        "auto_billing": "Facturation automatique par jalon",
+        "pdf_export": "Export PDF des factures",
+        "history": "Historique des paiements",
+        "receipts": "Reçus fiscaux disponibles"
+      }
+    },
+    "activity": {
+      "title": "Historique d'activité",
+      "description": "Toutes vos actions et interactions sur la plateforme",
+      "export_pdf": "Export PDF",
+      "no_activity": "Aucune activité récente",
+      "types": {
+        "project_created": "Projet créé",
+        "project_updated": "Projet mis à jour",
+        "project_deleted": "Projet supprimé",
+        "proposal_received": "Nouvelle proposition reçue"
+      }
+    },
+    "favorites": {
+      "title": "Professionnels favoris",
+      "description": "Votre shortlist de professionnels sélectionnés",
+      "description_compare": "Votre shortlist de professionnels sélectionnés pour comparaison",
+      "no_favorites": "Aucun favori pour le moment",
+      "discover": "Découvrir des professionnels",
+      "add_to_favorites": "Ajouter aux favoris",
+      "remove_from_favorites": "Retirer des favoris",
+      "in_favorites": "Dans les favoris",
+      "added": "Ajouté aux favoris ⭐",
+      "added_description": "Le professionnel a été ajouté à votre shortlist",
+      "removed": "Retiré des favoris",
+      "removed_description": "Le professionnel a été retiré de votre shortlist",
+      "login_required": "Connexion requise",
+      "login_required_description": "Vous devez être connecté pour ajouter des favoris",
+      "view_profile": "Voir le profil",
+      "your_notes": "Vos notes",
+      "add_notes_placeholder": "Ajoutez vos notes sur ce professionnel...",
+      "click_to_add_notes": "Cliquez pour ajouter des notes...",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "notes_saved": "Notes enregistrées",
+      "notes_saved_description": "Vos notes ont été mises à jour avec succès",
+      "select_for_compare": "Sélectionner pour comparer",
+      "remove_confirm_title": "Retirer des favoris ?",
+      "remove_confirm_description": "Ce professionnel sera retiré de votre shortlist. Vous pourrez toujours le rajouter plus tard.",
+      "compare": {
+        "title": "Comparaison des professionnels",
+        "description": "Comparez les détails, tarifs et disponibilités pour faire votre choix",
+        "selected": "professionnel sélectionné",
+        "selected_plural": "professionnels sélectionnés",
+        "compare_side_by_side": "Comparez côte-à-côte leurs profils, tarifs et disponibilités",
+        "compare_button": "Comparer",
+        "cancel": "Annuler",
+        "limit_reached": "Limite atteinte",
+        "limit_description": "Vous pouvez comparer jusqu'à 4 professionnels à la fois",
+        "min_selection": "Sélection insuffisante",
+        "min_selection_description": "Sélectionnez au moins 2 professionnels pour comparer",
+        "summary": "Résumé de la comparaison",
+        "lowest_price": "Prix le plus bas",
+        "best_rating": "Meilleure note",
+        "most_experience": "Plus d'expérience",
+        "fastest_response": "Réponse la plus rapide",
+        "location": "Localisation",
+        "experience": "Expérience",
+        "hourly_rate": "Taux horaire",
+        "availability": "Disponibilité",
+        "response_time": "Temps de réponse",
+        "activity": "Activité",
+        "rating": "Évaluation",
+        "completed_projects": "Projets complétés",
+        "services": "Services",
+        "not_specified": "Non renseigné"
+      }
+    }
+  },
+  "projects": {
+    "title": "Marketplace des Projets",
+    "search": "Rechercher un projet...",
+    "filters": {
+      "all_categories": "Toutes les catégories",
+      "all_regions": "Toutes les régions",
+      "all_budgets": "Tous les budgets"
+    },
+    "sort": {
+      "recent": "Plus récents",
+      "budget_asc": "Budget croissant",
+      "budget_desc": "Budget décroissant",
+      "proposals": "Plus de propositions"
+    },
+    "stats": {
+      "active_projects": "Projets actifs",
+      "total_proposals": "Propositions totales"
+    },
+    "card": {
+      "budget": "Budget",
+      "to_discuss": "À discuter",
+      "deadline": "Échéance",
+      "proposals": "propositions",
+      "views": "vues",
+      "view_details": "Voir détails",
+      "submit_proposal": "Soumettre proposition"
+    }
+  },
+  "professionals": {
+    "title": "Marketplace des Professionnels",
+    "search": "Rechercher un professionnel...",
+    "filters": {
+      "all_services": "Tous les services",
+      "all_regions": "Toutes les régions",
+      "all_budgets": "Tous les budgets",
+      "all_availability": "Toutes disponibilités",
+      "all_response_times": "Tous les temps de réponse",
+      "budget_label": "Budget (taux horaire)",
+      "availability_label": "Disponibilité",
+      "response_time_label": "Temps de réponse",
+      "reset": "Réinitialiser",
+      "budget_ranges": {
+        "under_50": "Moins de 50 $/h",
+        "50_75": "50 - 75 $/h",
+        "75_100": "75 - 100 $/h",
+        "100_150": "100 - 150 $/h",
+        "over_150": "150 $/h et plus"
+      },
+      "availability_options": {
+        "available_now": "Disponible immédiatement",
+        "within_2_weeks": "Disponible dans 2 semaines",
+        "within_1_month": "Disponible dans 1 mois",
+        "busy": "Occupé actuellement"
+      },
+      "response_time_options": {
+        "under_6h": "Moins de 6 heures",
+        "under_24h": "Moins de 24 heures",
+        "under_48h": "Moins de 48 heures"
+      }
+    },
+    "sort": {
+      "recent": "Plus récents",
+      "name": "Par nom",
+      "rating": "Meilleure note",
+      "proximity": "Proximité",
+      "activity": "Plus actifs",
+      "location_required": "localisation requise"
+    },
+    "stats": {
+      "verified": "Professionnels vérifiés",
+      "avg_rating": "Note moyenne"
+    },
+    "card": {
+      "verified": "Vérifié RBQ",
+      "years_exp": "ans d'expérience",
+      "reviews": "avis",
+      "projects": "projets réalisés",
+      "view_profile": "Voir profil",
+      "contact": "Contacter",
+      "hourly_rate": "$/h",
+      "available": "Disponible",
+      "busy": "Occupé",
+      "unavailable": "Non disponible",
+      "available_from": "dès le",
+      "response_time": "Répond en ~{{hours}}h",
+      "distance": "Distance",
+      "activity_score": "Score"
+    },
+    "geolocation": {
+      "disabled": "Localisation désactivée",
+      "enable": "Activer",
+      "enable_message": "Activez la géolocalisation pour trier par proximité",
+      "permission_denied": "Permission de géolocalisation refusée",
+      "not_supported": "Géolocalisation non supportée par votre navigateur"
+    },
+    "no_results": {
+      "title": "Aucun professionnel trouvé",
+      "description": "Essayez de modifier vos critères de recherche",
+      "reset_button": "Réinitialiser les filtres"
+    }
+  },
+  "new_project": {
+    "title": "Créer un nouveau projet",
+    "subtitle": "Décrivez votre projet pour recevoir des propositions de professionnels qualifiés",
+    "form": {
+      "title": "Titre du projet",
+      "title_placeholder": "Ex: Rénovation complète de cuisine",
+      "category": "Catégorie",
+      "category_placeholder": "Sélectionnez une catégorie",
+      "description": "Description",
+      "description_placeholder": "Décrivez votre projet en détail...",
+      "description_help": "Plus votre description est détaillée, meilleures seront les propositions",
+      "budget_min": "Budget minimum ($)",
+      "budget_max": "Budget maximum ($)",
+      "city": "Ville",
+      "city_placeholder": "Ex: Montréal",
+      "region": "Région",
+      "region_placeholder": "Sélectionnez une région",
+      "postal_code": "Code postal",
+      "postal_code_placeholder": "Ex: H1A 1A1",
+      "deadline": "Échéance souhaitée",
+      "deadline_placeholder": "Sélectionnez une date",
+      "files": "Photos ou documents",
+      "files_help": "Images (JPG, PNG) ou PDF • Max 5 fichiers • 5 Mo max chacun",
+      "upload_cta": "Cliquez pour télécharger"
+    },
+    "actions": {
+      "cancel": "Annuler",
+      "publish": "Publier le projet",
+      "publishing": "Création..."
+    },
+    "messages": {
+      "success": "Projet créé ! 🎉",
+      "success_description": "Votre projet a été publié avec succès",
+      "error": "Erreur",
+      "fields_required": "Veuillez remplir tous les champs obligatoires",
+      "invalid_budget": "Le budget maximum doit être supérieur au minimum"
+    }
+  },
+  "messaging": {
+    "title": "Messages",
+    "search_conversations": "Rechercher une conversation",
+    "no_conversations": "Aucune conversation",
+    "no_conversations_found": "Aucune conversation trouvée",
+    "start_conversation_hint": "Contactez un professionnel pour démarrer une conversation",
+    "no_messages_yet": "Aucun message",
+    "start_conversation": "Envoyez votre premier message",
+    "select_conversation": "Sélectionnez une conversation",
+    "select_conversation_hint": "Choisissez une conversation dans la liste pour commencer",
+    "type_message": "Tapez votre message...",
+    "send": "Envoyer",
+    "error_loading_messages": "Impossible de charger les messages",
+    "error_sending_message": "Impossible d'envoyer le message",
+    "contact": "Contacter"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "no_notifications": "Aucune notification",
+    "mark_all_read": "Tout marquer comme lu",
+    "all_read": "Tout lu",
+    "all_read_description": "Toutes les notifications ont été marquées comme lues",
+    "error_mark_read": "Impossible de marquer comme lu",
+    "view_all": "Voir toutes les notifications",
+    "types": {
+      "new_message": "Nouveau message",
+      "new_proposal": "Nouvelle soumission",
+      "proposal_accepted": "Soumission acceptée",
+      "proposal_rejected": "Soumission refusée",
+      "project_update": "Mise à jour du projet",
+      "review_received": "Nouvel avis reçu",
+      "payment_received": "Paiement reçu",
+      "milestone_completed": "Jalon complété",
+      "contract_signed": "Contrat signé",
+      "system_announcement": "Annonce système"
+    }
+  },
+  "contracts": {
+    "title": "Contrats",
+    "subtitle": "Gérez vos contrats et signatures électroniques",
+    "my_contracts": "Mes contrats",
+    "create_contract": "Créer un contrat",
+    "create_first_contract": "Créer votre premier contrat",
+    "no_contracts": "Aucun contrat",
+    "no_contracts_description": "Vous n'avez pas encore de contrats. Créez-en un pour commencer.",
+    "no_contracts_hint": "Cliquez sur l'onglet \"Créer un contrat\" pour commencer.",
+    "search_placeholder": "Rechercher dans les contrats...",
+    "filter_status": "Filtrer par statut",
+    "all_statuses": "Tous les statuts",
+    "sort_by": "Trier par",
+    "view": "Voir",
+    "not_found": "Contrat introuvable",
+    "not_found_description": "Le contrat demandé n'existe pas ou vous n'y avez pas accès.",
+    "error_loading_contracts": "Impossible de charger les contrats",
+    "error_loading_contract": "Impossible de charger le contrat",
+    "error_loading_templates": "Impossible de charger les modèles",
+    "error_signing": "Impossible de signer le contrat",
+    "signed_successfully": "Contrat signé",
+    "signed_successfully_description": "Votre signature a été enregistrée avec succès",
+    "back_to_list": "Retour à la liste",
+    "template_selected": "Modèle sélectionné",
+    "template_selected_description": "Le modèle de contrat a été sélectionné",
+    "custom_contract": "Contrat personnalisé",
+    "custom_contract_description": "Création de contrat personnalisé en cours de développement",
+    "status": {
+      "signed": "Signé",
+      "pending_client_signature": "En attente signature client",
+      "pending_professional_signature": "En attente signature professionnel",
+      "pending_both_signatures": "En attente signatures",
+      "draft": "Brouillon",
+      "cancelled": "Annulé",
+      "expired": "Expiré"
+    },
+    "sort": {
+      "created_at": "Date de création",
+      "title": "Titre",
+      "amount": "Montant"
+    },
+    "stats": {
+      "total_contracts": "Total des contrats",
+      "signed_contracts": "Contrats signés",
+      "pending_signatures": "En attente de signature",
+      "total_value": "Valeur totale"
+    },
+    "parties": "Parties",
+    "client": "Client",
+    "professional": "Professionnel",
+    "financial_terms": "Conditions financières",
+    "total_amount": "Montant total",
+    "deposit": "Acompte",
+    "timeline": "Échéancier",
+    "start_date": "Date de début",
+    "end_date": "Date de fin",
+    "estimated_duration": "Durée estimée",
+    "days": "jours",
+    "legal": "Aspects légaux",
+    "warranty": "Garantie",
+    "months": "mois",
+    "special_conditions": "Conditions spéciales",
+    "signatures": "Signatures",
+    "client_signature": "Signature client",
+    "professional_signature": "Signature professionnel",
+    "signed": "Signé",
+    "not_signed": "Non signé",
+    "signing": "Signature en cours...",
+    "sign_contract": "Signer le contrat",
+    "contract_content": "Contenu du contrat",
+    "amount": "Montant",
+    "created": "Créé",
+    "templates": {
+      "title": "Modèles de contrats",
+      "description": "Choisissez un modèle de contrat pour votre projet",
+      "create_custom": "Créer un modèle personnalisé",
+      "search_placeholder": "Rechercher un modèle...",
+      "filter_category": "Filtrer par catégorie",
+      "all_categories": "Toutes les catégories",
+      "no_templates": "Aucun modèle de contrat",
+      "no_templates_found": "Aucun modèle trouvé",
+      "try_different_filters": "Essayez avec d'autres filtres",
+      "create_first_template": "Créez votre premier modèle de contrat",
+      "use_template": "Utiliser ce modèle",
+      "preview": "Aperçu",
+      "copy": "Copier",
+      "template_copied": "Modèle copié",
+      "template_copied_description": "Le contenu du modèle a été copié dans le presse-papiers",
+      "error_copying_template": "Impossible de copier le modèle"
+    },
+    "categories": {
+      "construction": "Construction",
+      "renovation": "Rénovation",
+      "maintenance": "Maintenance",
+      "consultation": "Consultation"
+    },
+    "contract_created": "Contrat créé",
+    "contract_created_description": "Le contrat a été créé avec succès",
+    "error_creating_contract": "Impossible de créer le contrat",
+    "builder": {
+      "using_template": "Utilisation du modèle",
+      "fill_form_description": "Remplissez les informations ci-dessous pour générer le contrat",
+      "project_details": "Détails du projet",
+      "select_project": "Sélectionner un projet",
+      "select_project_placeholder": "Choisissez un projet existant",
+      "contract_title": "Titre du contrat",
+      "contract_title_placeholder": "Ex: Rénovation cuisine",
+      "description": "Description",
+      "description_placeholder": "Décrivez les travaux à effectuer...",
+      "professional_details": "Professionnel",
+      "select_professional": "Sélectionner un professionnel",
+      "select_professional_placeholder": "Choisissez un professionnel",
+      "financial_terms": "Conditions financières",
+      "total_amount": "Montant total",
+      "deposit_percentage": "Acompte",
+      "deposit_amount": "Montant de l'acompte",
+      "timeline": "Échéancier",
+      "start_date": "Date de début",
+      "end_date": "Date de fin",
+      "warranty_period": "Période de garantie",
+      "special_conditions": "Conditions spéciales",
+      "special_conditions_description": "Ajoutez des conditions ou clauses spécifiques à ce contrat",
+      "special_conditions_placeholder": "Ex: Permis de construire à la charge du client...",
+      "create_and_continue": "Créer le contrat"
+    },
+    "signature": {
+      "title": "Signature électronique",
+      "description": "Signez le contrat {{contract}} en tant que {{signer}}",
+      "signer": "Signataire",
+      "sign_here": "Signez ici",
+      "clear": "Effacer",
+      "instructions": "Utilisez votre souris ou votre doigt pour signer dans la zone ci-dessus",
+      "legal_notice_title": "Avis légal",
+      "legal_notice_text": "En signant ce document, vous confirmez que vous êtes autorisé à le faire et que votre signature a la même valeur légale qu'une signature manuscrite.",
+      "confirm_signature": "Confirmer la signature",
+      "sign": "Signer",
+      "empty_signature": "Signature vide",
+      "empty_signature_description": "Veuillez signer avant de confirmer",
+      "signed": "Signé",
+      "signed_description": "Le contrat a été signé par {{signer}}",
+      "canvas_signature": "Signature Canvas",
+      "docusign_signature": "Signature DocuSign"
+    },
+    "docusign": {
+      "configuration": "Configuration DocuSign",
+      "config_description": "Configurez votre intégration DocuSign pour la signature électronique professionnelle",
+      "demo_mode": "Mode démo",
+      "demo_mode_description": "Utilisez l'environnement de test DocuSign",
+      "demo_alert": "Mode démo activé - Les signatures ne sont pas juridiquement contraignantes",
+      "basic_config": "Configuration de base",
+      "base_path": "URL de base",
+      "account_id": "ID du compte",
+      "advanced_config": "Configuration avancée",
+      "integrator_key": "Clé d'intégration",
+      "user_id": "ID utilisateur",
+      "private_key": "Clé privée",
+      "expires_in": "Expiration (secondes)",
+      "initialized": "Initialisé",
+      "not_initialized": "Non initialisé",
+      "load_demo": "Charger la démo",
+      "save_config": "Sauvegarder",
+      "useful_links": "Liens utiles",
+      "developer_docs": "Documentation développeur",
+      "demo_sandbox": "Sandbox de démo",
+      "production": "Production",
+      "setup_required": "Configuration requise",
+      "setup_description": "DocuSign doit être configuré avant de pouvoir envoyer des contrats",
+      "configure": "Configurer DocuSign",
+      "send_for_signature": "Envoyer pour signature",
+      "send_contract": "Envoyer le contrat",
+      "contract_sent": "Contrat envoyé",
+      "contract_sent_description": "Le contrat a été envoyé pour signature via DocuSign",
+      "open_signing_url": "Ouvrir l'URL de signature",
+      "config_saved": "Configuration sauvegardée",
+      "config_saved_description": "DocuSign est maintenant configuré et prêt à être utilisé",
+      "missing_data": "Données manquantes",
+      "missing_data_description": "Certaines informations sont manquantes pour envoyer le contrat via DocuSign"
+    }
+  },
+  "footer": {
+    "tagline": "Votre plateforme de construction au Québec",
+    "about": {
+      "title": "À propos",
+      "about_us": "À propos de nous",
+      "how_it_works": "Comment ça marche",
+      "pricing": "Tarification",
+      "contact": "Contact"
+    },
+    "legal": {
+      "title": "Légal",
+      "terms": "Conditions d'utilisation",
+      "privacy": "Politique de confidentialité",
+      "cookies": "Politique de cookies"
+    },
+    "support": {
+      "title": "Support",
+      "help": "Centre d'aide",
+      "faq": "FAQ",
+      "contact": "Nous contacter"
+    },
+    "social": {
+      "title": "Suivez-nous"
+    },
+    "rights": "Tous droits réservés."
+  }
+}
+

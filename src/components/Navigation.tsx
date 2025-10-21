@@ -6,16 +6,19 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Globe, ChevronDown, Check, User, LogOut, LayoutDashboard } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { NotificationBell } from "@/components/NotificationBell";
 import logo from "@/assets/logo-batirnet.jpeg";
 
 const Navigation = () => {
-  const [language, setLanguage] = useState<'fr' | 'en'>('fr');
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { t } = useTranslation();
+  const [user, setUser] = useState<{id: string} | null>(null);
+  const [profile, setProfile] = useState<{user_type: string; full_name: string} | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,29 +59,12 @@ const Navigation = () => {
     navigate("/");
   };
 
-  const content = {
-    fr: {
-      findPro: "Trouver un professionnel",
-      discover: "Découvrir nos projets",
-      login: "Connexion",
-      signup: "S'inscrire",
-    },
-    en: {
-      findPro: "Find a professional",
-      discover: "Discover our projects",
-      login: "Login",
-      signup: "Sign up",
-    }
-  };
-
-  const t = content[language];
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
       <div className="container mx-auto px-6 lg:px-8">
         <div className="flex items-center h-20">
           {/* Logo */}
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3 flex-shrink-0 cursor-pointer" onClick={() => navigate("/")}>
             <img 
               src={logo} 
               alt="BâtirNet Logo" 
@@ -92,42 +78,20 @@ const Navigation = () => {
               onClick={() => navigate("/professionals")}
               className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap"
             >
-              {t.findPro}
+              {t('navigation.professionals')}
             </button>
             <button 
               onClick={() => navigate("/projects")}
               className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap"
             >
-              {t.discover}
+              {t('navigation.projects')}
             </button>
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-4 flex-shrink-0 ml-auto">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full">
-                  <Globe className="h-5 w-5" />
-                  <span className="sr-only">Changer la langue</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card z-50">
-                <DropdownMenuItem 
-                  onClick={() => setLanguage('fr')}
-                  className="cursor-pointer flex items-center justify-between gap-3"
-                >
-                  <span>🇫🇷 Français</span>
-                  {language === 'fr' && <Check className="h-4 w-4 text-primary" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setLanguage('en')}
-                  className="cursor-pointer flex items-center justify-between gap-3"
-                >
-                  <span>🇬🇧 English</span>
-                  {language === 'en' && <Check className="h-4 w-4 text-primary" />}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Language Switcher */}
+            <LanguageSwitcher />
             
             {user ? (
               <DropdownMenu>
@@ -141,7 +105,7 @@ const Navigation = () => {
                     {profile?.full_name || user.email}
                   </div>
                   <div className="px-2 py-1 text-xs text-muted-foreground">
-                    {profile?.user_type === 'client' ? 'Client' : 'Professionnel'}
+                    {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
                   </div>
                   <DropdownMenuSeparator />
                   {profile?.user_type === 'client' && (
@@ -150,15 +114,38 @@ const Navigation = () => {
                       className="cursor-pointer"
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Dashboard
+                      {t('navigation.dashboard')}
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/messages")}
+                    className="cursor-pointer"
+                  >
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    {t('navigation.messages')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/contracts")}
+                    className="cursor-pointer"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    {t('navigation.contracts')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => navigate("/notifications")}
+                    className="cursor-pointer"
+                  >
+                    <Bell className="mr-2 h-4 w-4" />
+                    {t('navigation.notifications')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
                     className="cursor-pointer text-red-600"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Déconnexion
+                    {t('navigation.logout')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -169,10 +156,10 @@ const Navigation = () => {
                   className="hidden sm:inline-flex"
                   onClick={() => navigate("/auth?mode=login")}
                 >
-                  {t.login}
+                  {t('navigation.login')}
                 </Button>
                 <Button onClick={() => navigate("/auth?mode=signup")}>
-                  {t.signup}
+                  {t('navigation.signup')}
                 </Button>
               </>
             )}

@@ -185,7 +185,18 @@ const Auth = () => {
       }
 
       // Save user profile to database
-      const profileData: any = {
+      const profileData: {
+        id: string;
+        email: string;
+        full_name: string;
+        phone: string | null;
+        user_type: string;
+        company_name: string | null;
+        rbq_number: string | null;
+        services_offered: string | null;
+        insurance_info: string | null;
+        is_rbq_verified: boolean;
+      } = {
         id: authData.user.id,
         email,
         full_name: fullName,
