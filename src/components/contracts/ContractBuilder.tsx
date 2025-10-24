@@ -59,7 +59,13 @@ export const ContractBuilder = ({
   const [loading, setLoading] = useState(false);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [clientProfile, setClientProfile] = useState<any>(null);
+  type ClientProfile = {
+    full_name?: string;
+    phone?: string | null;
+    email?: string;
+    address?: string | null;
+  };
+  const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   
   // Form data
   const [formData, setFormData] = useState({

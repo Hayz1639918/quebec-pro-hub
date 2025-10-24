@@ -2,24 +2,16 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pen, RotateCcw, Check, X, ExternalLink, Settings } from "lucide-react";
+import { Pen, RotateCcw, Check, X, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
-import { useDocuSign } from "@/hooks/useDocuSign";
-import { DocuSignConfigComponent } from "./DocuSignConfig";
-import type { ContractSigningData } from "@/services/docusign";
+import { signatureService, type SignatureData } from "@/services/signature-service";
+import { generateSignedContractPDF } from "@/lib/contract-pdf-generator";
+import { supabase } from "@/integrations/supabase/client";
+import type { Contract } from "@/types/contracts";
 
 interface ESignatureProps {
-  onSignatureComplete: (signatureData: {
-    signature_image: string;
-    signed_at: string;
-    ip_address?: string;
-    user_agent?: string;
-    coordinates?: { x: number; y: number };
-    docusign_envelope_id?: string;
-  }) => void;
+  onSignatureComplete: (signatureData: SignatureData) => void;
   signerName: string;
   contractTitle: string;
   contractContent?: string;
@@ -29,7 +21,8 @@ interface ESignatureProps {
   professionalName?: string;
   disabled?: boolean;
   trigger?: React.ReactNode;
-  useDocuSign?: boolean;
+  contract?: Contract; // Pour le téléchargement PDF
+  currentUserId?: string; // Pour l'audit trail
 }
 
 export const ESignature = ({
@@ -43,22 +36,14 @@ export const ESignature = ({
   professionalName,
   disabled = false,
   trigger,
-  useDocuSign = false,
+  contract,
+  currentUserId,
 }: ESignatureProps) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const { 
-    isInitialized: isDocuSignInitialized, 
-    sendContract, 
-    getSigningUrl, 
-    isLoading: isDocuSignLoading 
-  } = useDocuSign();
-  
   const [isOpen, setIsOpen] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [showDocuSignConfig, setShowDocuSignConfig] = useState(false);
-  const [docusignEnvelopeId, setDocusignEnvelopeId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [lastPoint, setLastPoint] = useState<{ x: number; y: number } | null>(null);
 
@@ -135,57 +120,9 @@ export const ESignature = ({
     setSignatureData(null);
   };
 
-  // Envoyer le contrat via DocuSign
-  const sendViaDocuSign = async () => {
-    if (!contractContent || !clientEmail || !clientName || !professionalEmail || !professionalName) {
-      toast({
-        variant: "destructive",
-        title: t('contracts.docusign.missing_data'),
-        description: t('contracts.docusign.missing_data_description'),
-      });
-      return;
-    }
+  // DocuSign functionality removed (using in-house canvas signature only)
 
-    const contractData: ContractSigningData = {
-      contractId: '', // Will be set by the parent component
-      contractTitle,
-      contractContent,
-      clientEmail,
-      clientName,
-      professionalEmail,
-      professionalName,
-      returnUrl: window.location.origin + '/contracts',
-    };
-
-    const envelope = await sendContract(contractData);
-    if (envelope) {
-      setDocusignEnvelopeId(envelope.envelopeId);
-      toast({
-        title: t('contracts.docusign.contract_sent'),
-        description: t('contracts.docusign.contract_sent_description'),
-      });
-    }
-  };
-
-  // Obtenir l'URL de signature DocuSign
-  const getDocuSignSigningUrl = async () => {
-    if (!docusignEnvelopeId) return;
-
-    const currentUserEmail = signerName === clientName ? clientEmail : professionalEmail;
-    if (!currentUserEmail) return;
-
-    const signingUrl = await getSigningUrl(
-      docusignEnvelopeId,
-      currentUserEmail,
-      window.location.origin + '/contracts'
-    );
-
-    if (signingUrl) {
-      window.open(signingUrl, '_blank');
-    }
-  };
-
-  const saveSignature = () => {
+  const saveSignature = async () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -207,35 +144,130 @@ export const ESignature = ({
       return;
     }
 
-    // Convert canvas to base64
-    const signatureImage = canvas.toDataURL('image/png');
-    setSignatureData(signatureImage);
+    try {
+      // Convert canvas to base64
+      const signatureImage = canvas.toDataURL('image/png');
+      setSignatureData(signatureImage);
 
-    // Get additional data
-    const ipAddress = '127.0.0.1'; // In a real app, get from API
-    const userAgent = navigator.userAgent;
-    const coordinates = lastPoint || { x: 0, y: 0 };
+      // Create signature with all security data
+      const signatureData = await signatureService.createSignature(
+        signatureImage,
+        contractContent || '',
+        lastPoint || { x: 0, y: 0 }
+      );
 
-    onSignatureComplete({
-      signature_image: signatureImage,
-      signed_at: new Date().toISOString(),
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      coordinates,
-      docusign_envelope_id: docusignEnvelopeId || undefined,
-    });
+      // Add audit trail entry
+      if (contract && currentUserId) {
+             await signatureService.addAuditTrailEntry(contract.id, {
+               event_type: 'signed',
+               user_id: currentUserId,
+               user_name: signerName,
+               created_at: signatureData.signed_at,
+               details: {
+                 verification_code: signatureData.verification_code,
+                 signature_method: 'canvas',
+               },
+             });
+      }
 
-    toast({
-      title: t('contracts.signature.signed'),
-      description: t('contracts.signature.signed_description', { signer: signerName }),
-    });
+      // Send confirmation email
+      if (contract) {
+        const recipientEmail = signerName === clientName ? clientEmail : professionalEmail;
+        if (recipientEmail) {
+          await signatureService.sendSignatureConfirmationEmail(
+            contract.id,
+            recipientEmail,
+            signerName,
+            signatureData.verification_code
+          );
+        }
+      }
 
-    setIsOpen(false);
+      onSignatureComplete(signatureData);
+
+      toast({
+        title: t('contracts.signature.signed'),
+        description: t('contracts.signature.signed_description', { 
+          signer: signerName,
+          code: signatureData.verification_code 
+        }),
+      });
+
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error creating signature:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur de signature",
+        description: "Une erreur est survenue lors de la création de la signature",
+      });
+    }
   };
 
   const cancelSignature = () => {
     clearSignature();
     setIsOpen(false);
+  };
+
+  // Télécharger le PDF du contrat signé
+  const handleDownloadPDF = async () => {
+    if (!contract) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Informations du contrat manquantes",
+      });
+      return;
+    }
+
+    try {
+      // Récupérer les signatures depuis la base de données
+      const { data: contractData } = await supabase
+        .from('contracts')
+        .select('client_signature_data, professional_signature_data')
+        .eq('id', contract.id)
+        .single();
+
+      if (!contractData) {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Contrat non trouvé",
+        });
+        return;
+      }
+
+      const clientSignature = contractData.client_signature_data as SignatureData | null;
+      const professionalSignature = contractData.professional_signature_data as SignatureData | null;
+
+      await generateSignedContractPDF(contract, clientSignature, professionalSignature);
+
+      // Ajouter une entrée d'audit
+      if (currentUserId) {
+        await signatureService.addAuditTrailEntry(contract.id, {
+          event_type: 'downloaded',
+          user_id: currentUserId,
+          user_name: signerName,
+          timestamp: new Date().toISOString(),
+          details: {
+            download_type: 'pdf',
+            downloaded_by: signerName,
+          },
+        });
+      }
+
+      toast({
+        title: "PDF généré",
+        description: "Le PDF du contrat a été généré avec succès",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de générer le PDF",
+      });
+    }
   };
 
   const isSignatureEmpty = () => {
@@ -272,15 +304,7 @@ export const ESignature = ({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue={useDocuSign ? "docusign" : "canvas"} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="canvas">{t('contracts.signature.canvas_signature')}</TabsTrigger>
-            <TabsTrigger value="docusign" disabled={!useDocuSign}>
-              {t('contracts.signature.docusign_signature')}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="canvas" className="space-y-6">
+        <div className="space-y-6">
             {/* Contract Info */}
             <Card>
               <CardHeader className="pb-3">
@@ -341,112 +365,31 @@ export const ESignature = ({
             </Card>
 
             {/* Actions */}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={cancelSignature}>
-                <X className="h-4 w-4 mr-2" />
-                {t('common.cancel')}
-              </Button>
-              <Button onClick={saveSignature} disabled={isSignatureEmpty()}>
-                <Check className="h-4 w-4 mr-2" />
-                {t('contracts.signature.confirm_signature')}
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="docusign" className="space-y-6">
-            {/* DocuSign Configuration */}
-            {!isDocuSignInitialized && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    {t('contracts.docusign.setup_required')}
-                  </CardTitle>
-                  <CardDescription>
-                    {t('contracts.docusign.setup_description')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => setShowDocuSignConfig(true)}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    {t('contracts.docusign.configure')}
+            <div className="flex justify-between items-center">
+              <div>
+                {contract && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Télécharger PDF
                   </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* DocuSign Actions */}
-            {isDocuSignInitialized && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{contractTitle}</CardTitle>
-                    <CardDescription>
-                      {t('contracts.docusign.send_for_signature')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {!docusignEnvelopeId ? (
-                      <Button 
-                        onClick={sendViaDocuSign} 
-                        disabled={isDocuSignLoading}
-                        className="w-full"
-                      >
-                        {isDocuSignLoading ? t('common.loading') : t('contracts.docusign.send_contract')}
-                      </Button>
-                    ) : (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                          <span className="font-medium">{t('contracts.docusign.contract_sent')}</span>
-                        </div>
-                        <Button 
-                          onClick={getDocuSignSigningUrl}
-                          disabled={isDocuSignLoading}
-                          className="w-full"
-                        >
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          {t('contracts.docusign.open_signing_url')}
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                )}
               </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
-                <X className="h-4 w-4 mr-2" />
-                {t('common.cancel')}
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={cancelSignature}>
+                  <X className="h-4 w-4 mr-2" />
+                  {t('common.cancel')}
+                </Button>
+                <Button onClick={saveSignature} disabled={isSignatureEmpty()}>
+                  <Check className="h-4 w-4 mr-2" />
+                  {t('contracts.signature.confirm_signature')}
+                </Button>
+              </div>
             </div>
-          </TabsContent>
-        </Tabs>
-
-        {/* DocuSign Configuration Modal */}
-        {showDocuSignConfig && (
-          <Dialog open={showDocuSignConfig} onOpenChange={setShowDocuSignConfig}>
-            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{t('contracts.docusign.configuration')}</DialogTitle>
-                <DialogDescription>
-                  {t('contracts.docusign.config_description')}
-                </DialogDescription>
-              </DialogHeader>
-              <DocuSignConfigComponent 
-                onConfigSaved={() => {
-                  setShowDocuSignConfig(false);
-                  toast({
-                    title: t('contracts.docusign.config_saved'),
-                    description: t('contracts.docusign.config_saved_description'),
-                  });
-                }}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );

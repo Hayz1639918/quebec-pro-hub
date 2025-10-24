@@ -32,7 +32,8 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     if (conversation) {
       fetchMessages();
       markConversationAsRead();
-      subscribeToMessages();
+      const cleanup = subscribeToMessages();
+      return cleanup;
     }
   }, [conversation?.id]);
 
@@ -96,7 +97,13 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
         },
         (payload) => {
           const newMsg = payload.new as Message;
-          setMessages((prev) => [...prev, newMsg]);
+          
+          // Ajouter le message seulement s'il n'existe pas déjà (éviter les doublons)
+          setMessages((prev) => {
+            const exists = prev.some(msg => msg.id === newMsg.id);
+            if (exists) return prev;
+            return [...prev, newMsg];
+          });
           
           // Mark as read if it's not from current user
           if (newMsg.receiver_id === userId) {
@@ -134,14 +141,24 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       const receiverId = conversation.other_participant_id;
       if (!receiverId) throw new Error('Receiver ID not found');
 
-      const { error } = await supabase.from('messages').insert({
+      const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversation.id,
         sender_id: userId,
         receiver_id: receiverId,
         content: newMessage.trim(),
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Ajouter le message immédiatement à la liste (optimistic update)
+      if (data) {
+        setMessages((prev) => {
+          // Vérifier que le message n'est pas déjà dans la liste (éviter les doublons avec Realtime)
+          const exists = prev.some(msg => msg.id === data.id);
+          if (exists) return prev;
+          return [...prev, data as Message];
+        });
+      }
 
       setNewMessage("");
     } catch (error) {

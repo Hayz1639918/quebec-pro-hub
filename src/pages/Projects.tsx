@@ -5,6 +5,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -112,9 +113,27 @@ const Projects = () => {
   const [selectedRegion, setSelectedRegion] = useState("Toutes les régions");
   const [selectedBudget, setSelectedBudget] = useState("Tous les budgets");
   const [sortBy, setSortBy] = useState("recent");
+  const [userId, setUserId] = useState<string | null>(null);
+  const [isProfessional, setIsProfessional] = useState<boolean>(false);
+  const [proposalFor, setProposalFor] = useState<string | null>(null);
+  const [proposalMessage, setProposalMessage] = useState("");
+  const [proposalBudget, setProposalBudget] = useState("");
+  const [proposalDuration, setProposalDuration] = useState("");
 
   useEffect(() => {
-    fetchProjects();
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setUserId(session.user.id);
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('user_type,is_rbq_verified')
+          .eq('id', session.user.id)
+          .single();
+        setIsProfessional(prof?.user_type === 'professional' && prof?.is_rbq_verified === true);
+      }
+      fetchProjects();
+    })();
   }, []);
 
   useEffect(() => {
@@ -212,11 +231,11 @@ const Projects = () => {
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Budget à discuter";
+    if (!min && !max) return "Budget � discuter";
     if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
     if (min) return `À partir de ${min.toLocaleString()} $`;
-    if (max) return `Jusqu'à ${max.toLocaleString()} $`;
-    return "Budget à discuter";
+    if (max) return `Jusqu'� ${max.toLocaleString()} $`;
+    return "Budget � discuter";
   };
 
   const formatDate = (dateString: string) => {
@@ -230,6 +249,40 @@ const Projects = () => {
     if (diffDays < 7) return `Il y a ${diffDays} jours`;
     if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
     return date.toLocaleDateString('fr-CA');
+  };
+
+  const submitProposal = async () => {
+    if (!userId || !proposalFor || !proposalMessage) return;
+    try {
+      const { error } = await supabase.from('proposals').insert({
+        project_id: proposalFor,
+        professional_id: userId,
+        message: proposalMessage,
+        estimated_budget: proposalBudget ? Number(proposalBudget) : null,
+        estimated_duration_days: proposalDuration ? Number(proposalDuration) : null,
+      });
+      if (error) throw error;
+      setProposalFor(null);
+      setProposalMessage("");
+      setProposalBudget("");
+      setProposalDuration("");
+    } catch (e) {
+      console.error('Error submitting proposal:', e);
+    }
+  };
+
+  const contactClient = async (clientId: string) => {
+    if (!userId) { navigate('/auth?mode=login'); return; }
+    try {
+      const { data: conversationId, error } = await supabase.rpc('get_or_create_conversation', {
+        user_1_id: userId,
+        user_2_id: clientId,
+      });
+      if (error) throw error;
+      if (conversationId) navigate(`/messages?conversation=${conversationId}`);
+    } catch (e) {
+      console.error('Error starting conversation:', e);
+    }
   };
 
   return (
@@ -500,14 +553,38 @@ const Projects = () => {
                         <Separator />
 
                         {/* Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button className="flex-1" onClick={() => navigate(`/project/${project.id}`)}>
                             Voir les détails
                           </Button>
-                          <Button variant="outline">
-                            Soumettre une proposition
-                          </Button>
+                          {isProfessional && (
+                            <Button variant="outline" onClick={() => setProposalFor(project.id)}>
+                              Soumettre une proposition
+                            </Button>
+                          )}
                         </div>
+                        {proposalFor === project.id && (
+                          <div className="mt-3 border rounded-lg p-3 space-y-3">
+                            <div>
+                              <Label>Message</Label>
+                              <Textarea rows={3} value={proposalMessage} onChange={e => setProposalMessage(e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label>Budget estimé (CAD)</Label>
+                                <Input type="number" value={proposalBudget} onChange={e => setProposalBudget(e.target.value)} />
+                              </div>
+                              <div>
+                                <Label>Durée (jours)</Label>
+                                <Input type="number" value={proposalDuration} onChange={e => setProposalDuration(e.target.value)} />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="outline" onClick={() => setProposalFor(null)}>Annuler</Button>
+                              <Button onClick={submitProposal} disabled={!proposalMessage}>Envoyer</Button>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
@@ -524,4 +601,8 @@ const Projects = () => {
 };
 
 export default Projects;
+
+
+/* eslint-disable no-irregular-whitespace */
+
 

@@ -558,45 +558,8 @@
       "empty_signature_description": "Veuillez signer avant de confirmer",
       "signed": "Signé",
       "signed_description": "Le contrat a été signé par {{signer}}",
-      "canvas_signature": "Signature Canvas",
-      "docusign_signature": "Signature DocuSign"
-    },
-    "docusign": {
-      "configuration": "Configuration DocuSign",
-      "config_description": "Configurez votre intégration DocuSign pour la signature électronique professionnelle",
-      "demo_mode": "Mode démo",
-      "demo_mode_description": "Utilisez l'environnement de test DocuSign",
-      "demo_alert": "Mode démo activé - Les signatures ne sont pas juridiquement contraignantes",
-      "basic_config": "Configuration de base",
-      "base_path": "URL de base",
-      "account_id": "ID du compte",
-      "advanced_config": "Configuration avancée",
-      "integrator_key": "Clé d'intégration",
-      "user_id": "ID utilisateur",
-      "private_key": "Clé privée",
-      "expires_in": "Expiration (secondes)",
-      "initialized": "Initialisé",
-      "not_initialized": "Non initialisé",
-      "load_demo": "Charger la démo",
-      "save_config": "Sauvegarder",
-      "useful_links": "Liens utiles",
-      "developer_docs": "Documentation développeur",
-      "demo_sandbox": "Sandbox de démo",
-      "production": "Production",
-      "setup_required": "Configuration requise",
-      "setup_description": "DocuSign doit être configuré avant de pouvoir envoyer des contrats",
-      "configure": "Configurer DocuSign",
-      "send_for_signature": "Envoyer pour signature",
-      "send_contract": "Envoyer le contrat",
-      "contract_sent": "Contrat envoyé",
-      "contract_sent_description": "Le contrat a été envoyé pour signature via DocuSign",
-      "open_signing_url": "Ouvrir l'URL de signature",
-      "config_saved": "Configuration sauvegardée",
-      "config_saved_description": "DocuSign est maintenant configuré et prêt à être utilisé",
-      "missing_data": "Données manquantes",
-      "missing_data_description": "Certaines informations sont manquantes pour envoyer le contrat via DocuSign"
-    }
-  },
+      "canvas_signature": "Signature Canvas"
+    }},
   "footer": {
     "tagline": "Votre plateforme de construction au Québec",
     "about": {
@@ -624,4 +587,5 @@
     "rights": "Tous droits réservés."
   }
 }
+
 

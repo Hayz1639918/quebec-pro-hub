@@ -558,44 +558,9 @@
       "empty_signature_description": "Please sign before confirming",
       "signed": "Signed",
       "signed_description": "The contract has been signed by {{signer}}",
-      "canvas_signature": "Canvas Signature",
-      "docusign_signature": "DocuSign Signature"
-    },
-    "docusign": {
-      "configuration": "DocuSign Configuration",
-      "config_description": "Configure your DocuSign integration for professional electronic signing",
-      "demo_mode": "Demo mode",
-      "demo_mode_description": "Use DocuSign test environment",
-      "demo_alert": "Demo mode enabled - Signatures are not legally binding",
-      "basic_config": "Basic configuration",
-      "base_path": "Base URL",
-      "account_id": "Account ID",
-      "advanced_config": "Advanced configuration",
-      "integrator_key": "Integrator key",
-      "user_id": "User ID",
-      "private_key": "Private key",
-      "expires_in": "Expires in (seconds)",
-      "initialized": "Initialized",
-      "not_initialized": "Not initialized",
-      "load_demo": "Load demo",
-      "save_config": "Save",
-      "useful_links": "Useful links",
-      "developer_docs": "Developer docs",
-      "demo_sandbox": "Demo sandbox",
-      "production": "Production",
-      "setup_required": "Setup required",
-      "setup_description": "DocuSign must be configured before sending contracts",
-      "configure": "Configure DocuSign",
-      "send_for_signature": "Send for signature",
-      "send_contract": "Send contract",
-      "contract_sent": "Contract sent",
-      "contract_sent_description": "The contract has been sent for signature via DocuSign",
-      "open_signing_url": "Open signing URL",
-      "config_saved": "Configuration saved",
-      "config_saved_description": "DocuSign is now configured and ready to use",
-      "missing_data": "Missing data",
-      "missing_data_description": "Some information is missing to send the contract via DocuSign"
+      "canvas_signature": "Canvas Signature"
     }
+    
   },
   "footer": {
     "tagline": "Your construction platform in Quebec",
@@ -624,4 +589,5 @@
     "rights": "All rights reserved."
   }
 }
+
 
