@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, Chrome, User, Building2, Phone, FileText, Upload, CheckCircle2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import logo from "@/assets/logo-batirnet.jpeg";
+import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];

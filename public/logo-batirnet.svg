@@ -1,0 +1,92 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fond blanc -->
+  <rect width="1024" height="1024" fill="white"/>
+  
+  <!-- Logo BN avec bâtiments -->
+  <g transform="translate(110, 270)">
+    <!-- Lettre B -->
+    <path d="M 110 0 L 240 0 C 290 0 330 10 330 60 C 330 90 310 110 280 120 C 320 130 350 150 350 190 C 350 240 310 280 240 280 L 110 280 L 110 0 Z M 150 100 L 150 240 L 230 240 C 270 240 290 220 290 200 C 290 180 270 160 230 160 L 150 160 L 150 100 Z M 150 40 L 150 120 L 220 120 C 260 120 280 100 280 80 C 280 60 260 40 220 40 L 150 40 Z" fill="#0066CC"/>
+    
+    <!-- Bâtiment tour (entre B et N) -->
+    <g transform="translate(450, 80)">
+      <!-- Base -->
+      <rect x="0" y="120" width="60" height="80" fill="#0066CC" stroke="#0066CC" stroke-width="2"/>
+      <!-- Étage 2 -->
+      <rect x="5" y="80" width="50" height="40" fill="#0066CC" stroke="#0066CC" stroke-width="2"/>
+      <!-- Étage 3 -->
+      <rect x="10" y="40" width="40" height="40" fill="#0066CC" stroke="#0066CC" stroke-width="2"/>
+      <!-- Toit/Flèche -->
+      <polygon points="30,0 15,40 45,40" fill="#0066CC"/>
+      <!-- Fenêtres -->
+      <rect x="15" y="50" width="10" height="15" fill="white"/>
+      <rect x="35" y="50" width="10" height="15" fill="white"/>
+      <rect x="15" y="90" width="10" height="15" fill="white"/>
+      <rect x="35" y="90" width="10" height="15" fill="white"/>
+      <rect x="15" y="130" width="10" height="15" fill="white"/>
+      <rect x="35" y="130" width="10" height="15" fill="white"/>
+      <rect x="15" y="165" width="10" height="15" fill="white"/>
+      <rect x="35" y="165" width="10" height="15" fill="white"/>
+    </g>
+    
+    <!-- Lettre N (avec bâtiment intégré) -->
+    <g transform="translate(580, 0)">
+      <!-- Barre gauche du N -->
+      <rect x="0" y="0" width="40" height="280" fill="#0066CC"/>
+      <!-- Barre diagonale du N avec structure de bâtiment -->
+      <polygon points="40,0 90,280 130,280 80,0" fill="#0066CC"/>
+      <!-- Barre droite du N (comme un bâtiment) -->
+      <rect x="90" y="0" width="40" height="280" fill="#0066CC"/>
+      <!-- Fenêtres sur la partie droite -->
+      <rect x="100" y="30" width="8" height="12" fill="white"/>
+      <rect x="112" y="30" width="8" height="12" fill="white"/>
+      <rect x="100" y="60" width="8" height="12" fill="white"/>
+      <rect x="112" y="60" width="8" height="12" fill="white"/>
+      <rect x="100" y="90" width="8" height="12" fill="white"/>
+      <rect x="112" y="90" width="8" height="12" fill="white"/>
+      <rect x="100" y="120" width="8" height="12" fill="white"/>
+      <rect x="112" y="120" width="8" height="12" fill="white"/>
+      <rect x="100" y="150" width="8" height="12" fill="white"/>
+      <rect x="112" y="150" width="8" height="12" fill="white"/>
+      <rect x="100" y="180" width="8" height="12" fill="white"/>
+      <rect x="112" y="180" width="8" height="12" fill="white"/>
+      <rect x="100" y="210" width="8" height="12" fill="white"/>
+      <rect x="112" y="210" width="8" height="12" fill="white"/>
+      <rect x="100" y="240" width="8" height="12" fill="white"/>
+      <rect x="112" y="240" width="8" height="12" fill="white"/>
+    </g>
+    
+    <!-- Petit bâtiment (à gauche) -->
+    <g transform="translate(20, 140)">
+      <rect x="0" y="0" width="50" height="70" fill="#0066CC"/>
+      <rect x="10" y="10" width="10" height="10" fill="white"/>
+      <rect x="30" y="10" width="10" height="10" fill="white"/>
+      <rect x="10" y="30" width="10" height="10" fill="white"/>
+      <rect x="30" y="30" width="10" height="10" fill="white"/>
+      <rect x="10" y="50" width="10" height="10" fill="white"/>
+      <rect x="30" y="50" width="10" height="10" fill="white"/>
+    </g>
+    
+    <!-- Grand bâtiment (à droite) -->
+    <g transform="translate(720, 100)">
+      <rect x="0" y="0" width="70" height="110" fill="#0066CC"/>
+      <rect x="10" y="10" width="12" height="15" fill="white"/>
+      <rect x="27" y="10" width="12" height="15" fill="white"/>
+      <rect x="48" y="10" width="12" height="15" fill="white"/>
+      <rect x="10" y="35" width="12" height="15" fill="white"/>
+      <rect x="27" y="35" width="12" height="15" fill="white"/>
+      <rect x="48" y="35" width="12" height="15" fill="white"/>
+      <rect x="10" y="60" width="12" height="15" fill="white"/>
+      <rect x="27" y="60" width="12" height="15" fill="white"/>
+      <rect x="48" y="60" width="12" height="15" fill="white"/>
+      <rect x="10" y="85" width="12" height="15" fill="white"/>
+      <rect x="27" y="85" width="12" height="15" fill="white"/>
+      <rect x="48" y="85" width="12" height="15" fill="white"/>
+    </g>
+  </g>
+  
+  <!-- Texte BâtirNet -->
+  <text x="512" y="720" font-family="Arial, sans-serif" font-size="120" font-weight="700" fill="#0066CC" text-anchor="middle">BâtirNet</text>
+</svg>
+
+
+

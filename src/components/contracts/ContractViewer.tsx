@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,10 +24,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Contract, ContractStatus } from "@/types/contracts";
+import type { SignatureData } from "@/services/signature-service";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { ESignature } from "./ESignature";
+import { Button as UIButton } from "@/components/ui/button";
 
 interface ContractViewerProps {
   contractId: string;
@@ -46,12 +49,26 @@ export const ContractViewer = ({
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
+  const [milestones, setMilestones] = useState<Array<{ id: string; title: string; amount: number; due_date: string | null; status: string }>>([]);
 
   useEffect(() => {
     if (contractId) {
       fetchContract();
+      fetchMilestones();
     }
   }, [contractId]);
+
+  const fetchMilestones = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contract_milestones')
+        .select('id,title,amount,due_date,status')
+        .eq('contract_id', contractId);
+      if (!error) setMilestones(data || []);
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchContract = async () => {
     try {
@@ -101,7 +118,7 @@ export const ContractViewer = ({
     }
   };
 
-  const handleSignContract = async (signatureData: any) => {
+  const handleSignContract = async (signatureData: SignatureData) => {
     if (!contract || !currentUserId) return;
 
     try {
@@ -162,6 +179,24 @@ export const ContractViewer = ({
         return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const requestValidation = async (milestoneId: string) => {
+    try {
+      await supabase.rpc('request_milestone_validation', { p_milestone: milestoneId });
+      await fetchMilestones();
+    } catch (e) {
+      console.error('Error requesting validation:', e);
+    }
+  };
+
+  const approveMilestone = async (milestoneId: string) => {
+    try {
+      await supabase.rpc('approve_milestone', { p_milestone: milestoneId });
+      await fetchMilestones();
+    } catch (e) {
+      console.error('Error approving milestone:', e);
     }
   };
 
@@ -293,13 +328,46 @@ export const ContractViewer = ({
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-96 w-full">
-            <div 
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: contract.contract_content }}
-            />
+            {(() => {
+              const sanitized = DOMPurify.sanitize(contract.contract_content ?? "", { USE_PROFILES: { html: true } });
+              return (
+                <div
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: sanitized }}
+                />
+              );
+            })()}
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {milestones.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              {t('contracts.milestones') || 'Jalons'}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {milestones.map(m => (
+              <div key={m.id} className="flex items-center justify-between border rounded p-3">
+                <div>
+                  <div className="font-medium">{m.title} — {formatCurrency(m.amount, contract?.currency || 'CAD')}</div>
+                  {m.due_date && <div className="text-xs text-muted-foreground">Échéance: {formatDate(m.due_date)}</div>}
+                  <div className="text-xs text-muted-foreground">Statut: {m.status}</div>
+                </div>
+                {currentUserId === contract?.professional_id && m.status === 'pending' && (
+                  <UIButton size="sm" onClick={() => requestValidation(m.id)}>Demander validation</UIButton>
+                )}
+                {currentUserId === contract?.client_id && m.status === 'requested' && (
+                  <UIButton size="sm" onClick={() => approveMilestone(m.id)}>Valider</UIButton>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Contract Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

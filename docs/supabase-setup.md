@@ -95,7 +95,7 @@ CREATE POLICY "Users can update own profile"
 
 -- Create storage buckets
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('certifications', 'certifications', true)
+VALUES ('certifications', 'certifications', false)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO storage.buckets (id, name, public)
@@ -103,15 +103,21 @@ VALUES ('projects', 'projects', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies
-CREATE POLICY "Anyone can view certifications"
+-- Private RBQ certifications: users can view only their own files (prefix with user_id)
+CREATE POLICY "Users can view own certifications"
   ON storage.objects FOR SELECT
-  USING (bucket_id = 'certifications');
+  USING (
+    bucket_id = 'certifications'
+    AND auth.role() = 'authenticated'
+    AND name LIKE auth.uid() || '%'
+  );
 
-CREATE POLICY "Authenticated users can upload certifications"
+CREATE POLICY "Users can upload own certifications"
   ON storage.objects FOR INSERT
   WITH CHECK (
     bucket_id = 'certifications' 
     AND auth.role() = 'authenticated'
+    AND name LIKE auth.uid() || '%'
   );
 
 CREATE POLICY "Anyone can view project files"

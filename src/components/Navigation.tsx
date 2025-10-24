@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
-import logo from "@/assets/logo-batirnet.jpeg";
+import logo from "/logo-batirnet.png";
 
 const Navigation = () => {
   const { t } = useTranslation();
@@ -68,7 +68,7 @@ const Navigation = () => {
             <img 
               src={logo} 
               alt="BâtirNet Logo" 
-              className="h-16 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
 
@@ -115,6 +115,15 @@ const Navigation = () => {
                     >
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       {t('navigation.dashboard')}
+                    </DropdownMenuItem>
+                  )}
+                  {profile?.user_type === 'professional' && (
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/pro/dashboard")}
+                      className="cursor-pointer"
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard Pro
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />

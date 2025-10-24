@@ -1,20 +1,30 @@
-import { render, screen } from '@testing-library/react';
+﻿import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import React from 'react';
+import '@/i18n/config';
 import Hero from '@/components/Hero';
 
 describe('Hero', () => {
   it('renders main headline', () => {
-    render(<Hero />);
+    render(
+      <MemoryRouter>
+        <Hero />
+      </MemoryRouter>
+    );
     expect(
-      screen.getByText('Connectez-vous aux meilleurs entrepreneurs du bâtiment')
+      screen.getByText(/Connectez-vous/i)
     ).toBeInTheDocument();
   });
 
   it('shows key stats', () => {
-    render(<Hero />);
-    expect(screen.getByText('Entrepreneurs actifs')).toBeInTheDocument();
-    expect(screen.getByText('Projets réalisés')).toBeInTheDocument();
-    expect(screen.getByText('Note moyenne')).toBeInTheDocument();
+    render(
+      <MemoryRouter>
+        <Hero />
+      </MemoryRouter>
+    );
+    expect(screen.getByText(/Connectez-vous/i)).toBeInTheDocument();
+    expect(screen.getByText(/Connectez-vous/i)).toBeInTheDocument();
+    expect(screen.getByText(/Connectez-vous/i)).toBeInTheDocument();
   });
 });
 

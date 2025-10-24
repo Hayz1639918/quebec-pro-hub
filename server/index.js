@@ -53,6 +53,14 @@ const server = http.createServer(async (req, res) => {
     return send(res, 200, { pong: true, time: new Date().toISOString() });
   }
 
+  // Get client IP (for audit metadata)
+  if (req.method === 'GET' && path === '/api/v1/client-ip') {
+    const xf = req.headers['x-forwarded-for'];
+    const forwarded = Array.isArray(xf) ? xf[0] : (xf || '');
+    const ip = (forwarded.split(',')[0] || req.socket.remoteAddress || 'unknown').trim();
+    return send(res, 200, { ip });
+  }
+
   if (req.method === 'POST' && path === '/api/v1/echo') {
     const body = await parseBody(req);
     return send(res, 200, { echo: body });
@@ -65,4 +73,3 @@ server.listen(PORT, HOST, () => {
   // eslint-disable-next-line no-console
   console.log(`API listening on http://${HOST}:${PORT}`);
 });
-
