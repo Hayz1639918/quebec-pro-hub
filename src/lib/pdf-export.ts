@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import DOMPurify from "dompurify";
 
 interface ActivityItem {
   id: string;
@@ -35,6 +36,9 @@ interface UserProfile {
 /**
  * Export projects to PDF
  * Uses browser's print functionality for a simple, accessible PDF export
+ *
+ * Security: HTML is sanitized with DOMPurify to prevent XSS attacks
+ * Reference: OWASP ASVS V5.3.3, OWASP XSS Prevention Cheat Sheet
  */
 export function exportProjectsToPDF(projects: Project[], profile: UserProfile) {
   // Create a hidden div for printing
@@ -44,7 +48,23 @@ export function exportProjectsToPDF(projects: Project[], profile: UserProfile) {
 
   // Generate HTML content
   const html = generateProjectsHTML(projects, profile);
-  printDiv.innerHTML = html;
+
+  // SECURITY: Sanitize HTML before injection to prevent XSS
+  // DOMPurify removes any malicious scripts, event handlers, or dangerous attributes
+  const sanitizedHTML = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'div', 'p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'strong', 'em', 'u', 'ul', 'ol', 'li', 'table', 'thead',
+      'tbody', 'tr', 'td', 'th', 'img', 'br', 'hr', 'header',
+      'footer', 'section', 'article'
+    ],
+    ALLOWED_ATTR: ['class', 'style', 'id'],
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'style'],
+    FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur']
+  });
+
+  printDiv.innerHTML = sanitizedHTML;
 
   // Add to body
   document.body.appendChild(printDiv);
@@ -57,7 +77,8 @@ export function exportProjectsToPDF(projects: Project[], profile: UserProfile) {
     return;
   }
 
-  // Write content to new window
+  // SECURITY: Use sanitized HTML in document.write
+  // Styles are hardcoded and safe (not user-controlled)
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
@@ -69,7 +90,7 @@ export function exportProjectsToPDF(projects: Project[], profile: UserProfile) {
         </style>
       </head>
       <body>
-        ${html}
+        ${sanitizedHTML}
       </body>
     </html>
   `);
@@ -446,7 +467,19 @@ export function exportActivityToPDF(activities: ActivityItem[], profile: UserPro
     </div>
   `;
 
-  printDiv.innerHTML = html;
+  // SECURITY: Sanitize HTML before injection to prevent XSS
+  const sanitizedHTML = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'div', 'p', 'span', 'h1', 'h2', 'h3', 'strong', 'em', 'ul', 'ol', 'li',
+      'header', 'footer', 'section'
+    ],
+    ALLOWED_ATTR: ['class', 'style', 'id'],
+    ALLOW_DATA_ATTR: false,
+    FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'link', 'style'],
+    FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur']
+  });
+
+  printDiv.innerHTML = sanitizedHTML;
   document.body.appendChild(printDiv);
 
   const printWindow = window.open("", "_blank");
@@ -456,6 +489,7 @@ export function exportActivityToPDF(activities: ActivityItem[], profile: UserPro
     return;
   }
 
+  // SECURITY: Use sanitized HTML in document.write
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
@@ -464,7 +498,7 @@ export function exportActivityToPDF(activities: ActivityItem[], profile: UserPro
         <title>Historique d'activité - BâtirNet</title>
         <style>${getPrintStyles()}</style>
       </head>
-      <body>${html}</body>
+      <body>${sanitizedHTML}</body>
     </html>
   `);
 
