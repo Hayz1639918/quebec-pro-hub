@@ -1,0 +1,38 @@
+# CodeQL Configuration for BâtirNet
+# Customizes which queries are run and which files are scanned
+# Reference: https://docs.github.com/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning
+
+name: "BâtirNet CodeQL Config"
+
+# Disable default queries (we'll use security-extended instead)
+disable-default-queries: false
+
+# Query packs to run
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Paths to exclude from analysis
+paths-ignore:
+  - 'node_modules/**'
+  - 'dist/**'
+  - 'build/**'
+  - '**/*.test.ts'
+  - '**/*.test.tsx'
+  - '**/*.test.js'
+  - '**/*.spec.ts'
+  - '**/*.spec.tsx'
+  - 'scripts/seed-*.js'  # Seed scripts are dev-only
+  - 'docs/**'
+  - '*.md'
+
+# Paths to explicitly include
+paths:
+  - 'src/**'
+  - 'server/**'
+  - 'supabase/migrations/**'
+
+# Query filters (optional - customize severity)
+# query-filters:
+#   - exclude:
+#       id: js/unused-local-variable
