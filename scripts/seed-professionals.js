@@ -42,10 +42,13 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
   }
 })
 
+// Default password for seeded users (DEVELOPMENT ONLY - change in production!)
+const SEED_DEFAULT_PASSWORD = process.env.SEED_DEFAULT_PASSWORD || 'Test123!'
+
 const professionals = [
   {
     email: 'jean.tremblay@batirnet.com',
-    password: 'Test123!',
+    password: SEED_DEFAULT_PASSWORD,
     full_name: 'Jean Tremblay',
     phone: '514-555-0101',
     company_name: 'Construction Tremblay Inc.',

@@ -1,0 +1,58 @@
+# Dependabot Configuration - BâtirNet
+# Automatically creates PRs to update dependencies
+# Reference: https://docs.github.com/code-security/dependabot/
+
+version: 2
+updates:
+  # npm dependencies (frontend + backend)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "00:00"
+      timezone: "America/Toronto"  # Québec timezone
+    open-pull-requests-limit: 10
+    reviewers:
+      - "hayz0622"  # Replace with your GitHub username
+    labels:
+      - "dependencies"
+      - "security"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # Group minor/patch updates
+    groups:
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "patch"
+    # Auto-merge patch updates for dev dependencies (optional)
+    # Allow version requirements for certain packages
+    allow:
+      - dependency-name: "*"
+        dependency-type: "all"
+    # Ignore specific packages (if needed)
+    ignore:
+      # Example: ignore major version updates for stable packages
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
