@@ -7,16 +7,18 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Configuration directe
-const SUPABASE_URL = 'https://gsnjnhxzacwjslirfxgy.supabase.co'
+// Configuration from environment variables
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-if (!SERVICE_ROLE_KEY) {
-  console.error('❌ SUPABASE_SERVICE_ROLE_KEY manquant')
-  console.log('💡 Définissez la variable d\'environnement:')
-  console.log('   Windows: $env:SUPABASE_SERVICE_ROLE_KEY="votre-cle"')
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error('❌ Environment variables manquantes')
+  console.log('💡 Définissez les variables d\'environnement:')
+  console.log('   VITE_SUPABASE_URL=https://your-project.supabase.co')
+  console.log('   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key')
+  console.log('\n   Windows: $env:SUPABASE_SERVICE_ROLE_KEY="votre-cle"')
   console.log('   Linux/Mac: export SUPABASE_SERVICE_ROLE_KEY="votre-cle"')
-  console.log('\n🔑 Trouvez votre clé dans Supabase Dashboard > Settings > API > service_role key')
+  console.log('\n🔑 Trouvez vos clés dans Supabase Dashboard > Settings > API')
   process.exit(1)
 }
 
@@ -27,10 +29,13 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   }
 })
 
+// Default password for seeded users (DEVELOPMENT ONLY - change in production!)
+const SEED_DEFAULT_PASSWORD = process.env.SEED_DEFAULT_PASSWORD || 'Test123!'
+
 const professionals = [
   {
     email: 'jean.tremblay@batirnet.com',
-    password: 'Test123!',
+    password: SEED_DEFAULT_PASSWORD,
     full_name: 'Jean Tremblay',
     phone: '514-555-0101',
     company_name: 'Construction Tremblay Inc.',
