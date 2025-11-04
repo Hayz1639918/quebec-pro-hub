@@ -19,9 +19,9 @@ const Footer = () => {
     ],
     legal: [
       { label: "Conditions d'utilisation", href: "#" },
-      { label: "Politique de confidentialité", href: "#" },
+      { label: "Politique de confidentialité", href: "/privacy-policy" },
       { label: "Politique de cookies", href: "#" },
-      { label: "Conformité PIPEDA", href: "#" },
+      { label: "Conformité Loi 25", href: "/privacy-policy" },
     ],
   };
 

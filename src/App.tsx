@@ -27,6 +27,7 @@ import ProContracts from "./pages/ProContracts";
 import ProPortfolio from "./pages/ProPortfolio";
 import ProCalendar from "./pages/ProCalendar";
 import ProjectDetails from "./pages/ProjectDetails";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
           <Route path="/contracts" element={<Contracts />} />
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
