@@ -29,6 +29,26 @@ const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Function to translate notification titles based on type
+  const getTranslatedTitle = (notification: Notification): string => {
+    // Map notification types to translation keys
+    const typeMap: Record<string, string> = {
+      'message': 'notifications.types.new_message',
+      'proposal': 'notifications.types.new_proposal',
+      'contract': 'notifications.types.contract_signed',
+      'payment': 'notifications.types.payment_received',
+      'review': 'notifications.types.review_posted',
+    };
+    
+    // If we have a translation key for this type, use it
+    if (typeMap[notification.type]) {
+      return t(typeMap[notification.type]);
+    }
+    
+    // Otherwise, fall back to the stored title
+    return notification.title;
+  };
+
   useEffect(() => {
     checkUser();
   }, []);
@@ -171,14 +191,14 @@ const Notifications = () => {
             </h1>
             {unreadCount > 0 && (
               <p className="text-muted-foreground mt-1">
-                {unreadCount} {unreadCount === 1 ? 'nouvelle notification' : 'nouvelles notifications'}
+                {unreadCount} {unreadCount === 1 ? t('notifications.new_notification') : t('notifications.new_notifications')}
               </p>
             )}
           </div>
           {unreadCount > 0 && (
             <Button onClick={markAllAsRead} variant="outline" size="sm">
               <CheckCircle className="h-4 w-4 mr-2" />
-              Tout marquer comme lu
+              {t('notifications.mark_all_read')}
             </Button>
           )}
         </div>
@@ -187,9 +207,9 @@ const Notifications = () => {
           <Card>
             <CardContent className="text-center py-12">
               <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">Aucune notification</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('notifications.no_notifications')}</h3>
               <p className="text-muted-foreground">
-                Vous n'avez pas encore de notifications
+                {t('notifications.no_notifications_yet')}
               </p>
             </CardContent>
           </Card>
@@ -213,12 +233,12 @@ const Notifications = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2 mb-1">
                         <h4 className="font-semibold text-sm">
-                          {notification.title}
+                          {getTranslatedTitle(notification)}
                         </h4>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           {!notification.read && (
                             <Badge variant="default" className="text-xs">
-                              Nouveau
+                              {t('notifications.new')}
                             </Badge>
                           )}
                           <Button

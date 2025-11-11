@@ -8,12 +8,6 @@ const Hero = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const features = [
-    "Entrepreneurs vérifiés et certifiés",
-    "Paiements sécurisés par jalons",
-    "Contrats intelligents avec e-signature"
-  ];
-
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
       {/* Background Gradient */}
@@ -25,7 +19,7 @@ const Hero = () => {
           <div className="space-y-8 animate-fade-in">
             <div className="inline-block">
               <span className="px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold">
-                🇨🇦 Plateforme canadienne de confiance
+                {t('hero.badge')}
               </span>
             </div>
             
@@ -39,12 +33,18 @@ const Hero = () => {
 
             {/* Key Features */}
             <div className="space-y-3">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span className="text-foreground font-medium">{feature}</span>
-                </div>
-              ))}
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="text-foreground font-medium">{t('hero.features.verified')}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="text-foreground font-medium">{t('hero.features.payments')}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="text-foreground font-medium">{t('hero.features.contracts')}</span>
+              </div>
             </div>
 
             {/* CTA Buttons */}

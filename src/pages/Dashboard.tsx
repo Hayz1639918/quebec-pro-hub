@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -77,6 +78,7 @@ interface Project {
 }
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<{ id: string } | null>(null);
@@ -305,8 +307,8 @@ const Dashboard = () => {
           activityList.push({
             id: `project_updated_${project.id}`,
             type: 'project_updated',
-            title: 'Projet mis à jour',
-            description: `Le projet "${project.title}" a été modifié`,
+            title: t('notifications.types.project_update'),
+            description: t('notifications.types.project_updated_desc', { title: project.title }),
             timestamp: project.updated_at,
             metadata: {
               projectTitle: project.title,
@@ -334,8 +336,10 @@ const Dashboard = () => {
           activityList.push({
             id: `proposal_${proposal.id}`,
             type: 'proposal_received',
-            title: 'Nouvelle proposition reçue',
-            description: `${proposal.profiles?.full_name || 'Un professionnel'} vous a envoyé une proposition`,
+            title: t('notifications.types.new_proposal'),
+            description: t('notifications.types.proposal_received_desc', { 
+              name: proposal.profiles?.full_name || t('notifications.types.a_professional') 
+            }),
             timestamp: proposal.created_at,
             metadata: {
               projectTitle: proposal.projects?.title,
@@ -372,8 +376,8 @@ const Dashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Projet supprimé",
-        description: "Le projet a été supprimé avec succès",
+        title: t('dashboard.projects.delete_success.title'),
+        description: t('dashboard.projects.delete_success.description'),
       });
 
       // Refresh projects
@@ -384,8 +388,8 @@ const Dashboard = () => {
       console.error('Error deleting project:', error);
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de supprimer le projet",
+        title: t('common.error'),
+        description: t('dashboard.projects.delete_error'),
       });
     }
   };
@@ -393,8 +397,8 @@ const Dashboard = () => {
   const handleEditProject = (projectId: string) => {
     // Navigate to edit page (to be implemented)
     toast({
-      title: "Fonctionnalité à venir",
-      description: "L'édition de projet sera bientôt disponible",
+      title: t('common.coming_soon'),
+      description: t('dashboard.projects.edit_coming_soon'),
     });
   };
 
@@ -407,16 +411,16 @@ const Dashboard = () => {
     if (projects.length === 0) {
       toast({
         variant: "destructive",
-        title: "Aucun projet",
-        description: "Vous n'avez aucun projet à exporter",
+        title: t('dashboard.projects.no_projects'),
+        description: t('dashboard.export.no_projects_to_export'),
       });
       return;
     }
 
     exportProjectsToPDF(projects, profile);
     toast({
-      title: "Export en cours",
-      description: "Votre PDF est en cours de génération",
+      title: t('dashboard.export.in_progress'),
+      description: t('dashboard.export.pdf_generating'),
     });
   };
 
@@ -424,16 +428,16 @@ const Dashboard = () => {
     if (activities.length === 0) {
       toast({
         variant: "destructive",
-        title: "Aucune activité",
-        description: "Vous n'avez aucune activité à exporter",
+        title: t('dashboard.recent_activity.no_activity'),
+        description: t('dashboard.export.no_activity_to_export'),
       });
       return;
     }
 
     exportActivityToPDF(activities, profile);
     toast({
-      title: "Export en cours",
-      description: "Votre PDF est en cours de génération",
+      title: t('dashboard.export.in_progress'),
+      description: t('dashboard.export.pdf_generating'),
     });
   };
 
@@ -457,7 +461,7 @@ const Dashboard = () => {
               Bonjour, {profile?.full_name || 'Client'} 👋
             </h1>
             <p className="text-muted-foreground">
-              Bienvenue sur votre tableau de bord BâtirNet
+              {t('dashboard.subtitle')}
             </p>
           </div>
 
@@ -465,52 +469,52 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Projets actifs</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.stats.active_projects')}</CardTitle>
                 <TrendingUp className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.activeProjects}</div>
                 <p className="text-xs text-muted-foreground">
-                  Sur {stats.totalProjects} total
+                  {t('dashboard.stats.total_projects', { total: stats.totalProjects })}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Propositions reçues</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.stats.proposals_received')}</CardTitle>
                 <MessageSquare className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.proposalsReceived}</div>
                 <p className="text-xs text-muted-foreground">
-                  En attente de révision
+                  {t('dashboard.stats.pending_review')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Professionnels favoris</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.stats.favorite_pros')}</CardTitle>
                 <Heart className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats.favoritesPros}</div>
                 <p className="text-xs text-muted-foreground">
-                  Dans votre shortlist
+                  {t('dashboard.stats.in_shortlist')}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Contrats actifs</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('dashboard.stats.active_contracts')}</CardTitle>
                 <FileText className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">0</div>
                 <p className="text-xs text-muted-foreground">
-                  En cours d'exécution
+                  {t('dashboard.stats.in_progress')}
                 </p>
               </CardContent>
             </Card>
@@ -521,34 +525,34 @@ const Dashboard = () => {
             <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
               <TabsTrigger value="overview">
                 <LayoutDashboard className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Vue d'ensemble</span>
-                <span className="sm:hidden">Accueil</span>
+                <span className="hidden sm:inline">{t('dashboard.tabs.overview')}</span>
+                <span className="sm:hidden">{t('dashboard.tabs.home')}</span>
               </TabsTrigger>
               <TabsTrigger value="projects">
                 <Briefcase className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Projets</span>
-                <span className="sm:hidden">Projets</span>
+                <span className="hidden sm:inline">{t('dashboard.tabs.projects')}</span>
+                <span className="sm:hidden">{t('dashboard.tabs.projects')}</span>
               </TabsTrigger>
               <TabsTrigger value="proposals">
                 <MessageSquare className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Propositions</span>
-                <span className="sm:hidden">Offres</span>
+                <span className="hidden sm:inline">{t('dashboard.tabs.proposals')}</span>
+                <span className="sm:hidden">{t('dashboard.tabs.offers')}</span>
               </TabsTrigger>
               <TabsTrigger value="contracts" className="hidden lg:flex">
                 <FileText className="h-4 w-4 mr-2" />
-                Contrats
+                {t('dashboard.tabs.contracts')}
               </TabsTrigger>
               <TabsTrigger value="invoices" className="hidden lg:flex">
                 <Receipt className="h-4 w-4 mr-2" />
-                Factures
+                {t('dashboard.tabs.invoices')}
               </TabsTrigger>
               <TabsTrigger value="activity" className="hidden lg:flex">
                 <Activity className="h-4 w-4 mr-2" />
-                Activité
+                {t('dashboard.tabs.activity')}
               </TabsTrigger>
               <TabsTrigger value="favorites" className="hidden lg:flex">
                 <Heart className="h-4 w-4 mr-2" />
-                Favoris
+                {t('dashboard.tabs.favorites')}
               </TabsTrigger>
             </TabsList>
 
@@ -558,9 +562,9 @@ const Dashboard = () => {
                 {/* Quick Actions */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Actions rapides</CardTitle>
+                    <CardTitle>{t('dashboard.quick_actions.title')}</CardTitle>
                     <CardDescription>
-                      Démarrez un nouveau projet ou explorez les professionnels
+                      {t('dashboard.quick_actions.description')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -570,7 +574,7 @@ const Dashboard = () => {
                       onClick={() => navigate("/dashboard/new-project")}
                     >
                       <Plus className="mr-2 h-5 w-5" />
-                      Créer un nouveau projet
+                      {t('dashboard.quick_actions.new_project')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -579,7 +583,7 @@ const Dashboard = () => {
                       onClick={() => navigate("/professionals")}
                     >
                       <Star className="mr-2 h-5 w-5" />
-                      Trouver un professionnel
+                      {t('dashboard.quick_actions.find_pro')}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -588,7 +592,7 @@ const Dashboard = () => {
                       onClick={() => navigate("/projects")}
                     >
                       <Briefcase className="mr-2 h-5 w-5" />
-                      Explorer les projets
+                      {t('dashboard.quick_actions.explore_projects')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -596,23 +600,23 @@ const Dashboard = () => {
                 {/* Recent Activity */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>Activité récente</CardTitle>
+                    <CardTitle>{t('dashboard.recent_activity.title')}</CardTitle>
                     <CardDescription>
-                      Dernières mises à jour sur vos projets
+                      {t('dashboard.recent_activity.description')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {stats.totalProjects === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
                         <Clock className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                        <p>Aucune activité récente</p>
-                        <p className="text-sm mt-1">Créez votre premier projet pour commencer</p>
+                        <p>{t('dashboard.recent_activity.no_activity')}</p>
+                        <p className="text-sm mt-1">{t('dashboard.recent_activity.create_first')}</p>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 text-sm">
                           <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          <span>Compte créé avec succès</span>
+                          <span>{t('dashboard.recent_activity.account_created')}</span>
                         </div>
                       </div>
                     )}
@@ -626,10 +630,10 @@ const Dashboard = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <TrendingUp className="h-5 w-5 text-primary" />
-                      Guide de démarrage
+                      {t('dashboard.getting_started.title')}
                     </CardTitle>
                     <CardDescription>
-                      Suivez ces étapes pour démarrer votre premier projet
+                      {t('dashboard.getting_started.description')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -639,9 +643,9 @@ const Dashboard = () => {
                           <span className="text-sm font-semibold text-primary">1</span>
                         </div>
                         <div>
-                          <h4 className="font-semibold">Créez votre projet</h4>
+                          <h4 className="font-semibold">{t('dashboard.getting_started.step1_title')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Décrivez votre projet, budget et délais
+                            {t('dashboard.getting_started.step1_desc')}
                           </p>
                         </div>
                       </div>
@@ -650,9 +654,9 @@ const Dashboard = () => {
                           <span className="text-sm font-semibold text-primary">2</span>
                         </div>
                         <div>
-                          <h4 className="font-semibold">Recevez des propositions</h4>
+                          <h4 className="font-semibold">{t('dashboard.getting_started.step2_title')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Les professionnels qualifiés vous enverront leurs offres
+                            {t('dashboard.getting_started.step2_desc')}
                           </p>
                         </div>
                       </div>
@@ -661,9 +665,9 @@ const Dashboard = () => {
                           <span className="text-sm font-semibold text-primary">3</span>
                         </div>
                         <div>
-                          <h4 className="font-semibold">Comparez et choisissez</h4>
+                          <h4 className="font-semibold">{t('dashboard.getting_started.step3_title')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Évaluez les offres et sélectionnez le meilleur professionnel
+                            {t('dashboard.getting_started.step3_desc')}
                           </p>
                         </div>
                       </div>
@@ -672,9 +676,9 @@ const Dashboard = () => {
                           <span className="text-sm font-semibold text-primary">4</span>
                         </div>
                         <div>
-                          <h4 className="font-semibold">Signez et démarrez</h4>
+                          <h4 className="font-semibold">{t('dashboard.getting_started.step4_title')}</h4>
                           <p className="text-sm text-muted-foreground">
-                            Formalisez l'accord et suivez l'avancement
+                            {t('dashboard.getting_started.step4_desc')}
                           </p>
                         </div>
                       </div>
@@ -690,21 +694,21 @@ const Dashboard = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Mes Projets</CardTitle>
+                      <CardTitle>{t('dashboard.projects.title')}</CardTitle>
                       <CardDescription>
-                        Gérez tous vos projets de construction et rénovation
+                        {t('dashboard.projects.description')}
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
                       {projects.length > 0 && (
                         <Button variant="outline" size="sm" onClick={handleExportProjectsPDF}>
                           <Download className="mr-2 h-4 w-4" />
-                          Export PDF
+                          {t('dashboard.export.export_pdf')}
                         </Button>
                       )}
                       <Button onClick={() => navigate("/dashboard/new-project")}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Nouveau
+                        {t('common.new')}
                       </Button>
                     </div>
                   </div>
@@ -713,18 +717,18 @@ const Dashboard = () => {
                   {loadingProjects ? (
                     <div className="text-center py-12">
                       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                      <p className="text-muted-foreground mt-4">Chargement...</p>
+                      <p className="text-muted-foreground mt-4">{t('common.loading')}</p>
                     </div>
                   ) : stats.totalProjects === 0 ? (
                     <div className="text-center py-12">
                       <Briefcase className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Aucun projet</h3>
+                      <h3 className="text-lg font-semibold mb-2">{t('dashboard.projects.no_projects')}</h3>
                       <p className="text-muted-foreground mb-6">
-                        Créez votre premier projet pour commencer
+                        {t('dashboard.projects.create_first')}
                       </p>
                       <Button onClick={() => navigate("/dashboard/new-project")}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Créer un projet
+                        {t('dashboard.quick_actions.new_project')}
                       </Button>
                     </div>
                   ) : (
@@ -743,16 +747,16 @@ const Dashboard = () => {
             <TabsContent value="proposals">
               <Card>
                 <CardHeader>
-                  <CardTitle>Propositions reçues</CardTitle>
+                  <CardTitle>{t('dashboard.proposals.title')}</CardTitle>
                   <CardDescription>
-                    Consultez toutes les propositions des professionnels
+                    {t('dashboard.proposals.description')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-12">
                     <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground">
-                      Aucune proposition pour le moment
+                      {t('dashboard.proposals.no_proposals')}
                     </p>
                   </div>
                 </CardContent>
@@ -765,9 +769,9 @@ const Dashboard = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Mes Contrats</CardTitle>
+                      <CardTitle>{t('dashboard.contracts.title')}</CardTitle>
                       <CardDescription>
-                        Gérez vos contrats avec les professionnels
+                        {t('dashboard.contracts.description')}
                       </CardDescription>
                     </div>
                   </div>
@@ -775,9 +779,9 @@ const Dashboard = () => {
                 <CardContent>
                   <div className="text-center py-12">
                     <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">Aucun contrat</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('dashboard.contracts.no_contracts')}</h3>
                     <p className="text-muted-foreground mb-4">
-                      Les contrats signés avec les professionnels apparaîtront ici
+                      {t('dashboard.contracts.no_contracts_desc')}
                     </p>
                     <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-left max-w-md mx-auto">
                       <p className="font-semibold text-blue-900 mb-2">🚀 Fonctionnalité à venir</p>
@@ -799,9 +803,9 @@ const Dashboard = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Mes Factures</CardTitle>
+                      <CardTitle>{t('dashboard.invoices.title')}</CardTitle>
                       <CardDescription>
-                        Consultez et téléchargez vos factures
+                        {t('dashboard.invoices.description')}
                       </CardDescription>
                     </div>
                   </div>
@@ -809,9 +813,9 @@ const Dashboard = () => {
                 <CardContent>
                   <div className="text-center py-12">
                     <Receipt className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">Aucune facture</h3>
+                    <h3 className="text-lg font-semibold mb-2">{t('dashboard.invoices.no_invoices')}</h3>
                     <p className="text-muted-foreground mb-4">
-                      Vos factures de paiements et transactions apparaîtront ici
+                      {t('dashboard.invoices.no_invoices_desc')}
                     </p>
                     <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-left max-w-md mx-auto">
                       <p className="font-semibold text-green-900 mb-2">💳 Fonctionnalité à venir</p>
@@ -833,15 +837,15 @@ const Dashboard = () => {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>Historique d'activité</CardTitle>
+                      <CardTitle>{t('dashboard.activity_timeline.title')}</CardTitle>
                       <CardDescription>
-                        Toutes vos actions et interactions sur la plateforme
+                        {t('dashboard.activity_timeline.description')}
                       </CardDescription>
                     </div>
                     {activities.length > 0 && (
                       <Button variant="outline" size="sm" onClick={handleExportActivityPDF}>
                         <Download className="mr-2 h-4 w-4" />
-                        Export PDF
+                        {t('dashboard.export.export_pdf')}
                       </Button>
                     )}
                   </div>
@@ -856,9 +860,9 @@ const Dashboard = () => {
             <TabsContent value="favorites">
               <Card>
                 <CardHeader>
-                  <CardTitle>Professionnels favoris</CardTitle>
+                  <CardTitle>{t('dashboard.favorites.title')}</CardTitle>
                   <CardDescription>
-                    Votre shortlist de professionnels sélectionnés pour comparaison
+                    {t('dashboard.favorites.description')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

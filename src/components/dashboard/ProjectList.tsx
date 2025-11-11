@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
@@ -80,8 +81,16 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ProjectList({ projects, onDelete, onEdit, onView }: ProjectListProps) {
+  const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  
+  const STATUS_LABELS: Record<string, string> = {
+    open: t('projects.status.open'),
+    in_progress: t('projects.status.in_progress'),
+    completed: t('projects.status.completed'),
+    cancelled: t('projects.status.cancelled'),
+  };
 
   const handleDeleteClick = (id: string) => {
     setSelectedProjectId(id);
@@ -97,11 +106,11 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return "À discuter";
+    if (!min && !max) return t('projects.to_discuss');
     if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
-    if (min) return `À partir de ${min.toLocaleString()} $`;
-    if (max) return `Jusqu'à ${max.toLocaleString()} $`;
-    return "À discuter";
+    if (min) return `${t('projects.from')} ${min.toLocaleString()} $`;
+    if (max) return `${t('projects.up_to')} ${max.toLocaleString()} $`;
+    return t('projects.to_discuss');
   };
 
   if (projects.length === 0) {
@@ -116,14 +125,14 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Projet</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Localisation</TableHead>
-                <TableHead>Propositions</TableHead>
-                <TableHead>Vues</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('dashboard.project_list.project')}</TableHead>
+                <TableHead>{t('dashboard.project_list.status')}</TableHead>
+                <TableHead>{t('dashboard.project_list.budget')}</TableHead>
+                <TableHead>{t('dashboard.project_list.location')}</TableHead>
+                <TableHead>{t('dashboard.project_list.proposals')}</TableHead>
+                <TableHead>{t('dashboard.project_list.views')}</TableHead>
+                <TableHead>{t('dashboard.project_list.date')}</TableHead>
+                <TableHead className="text-right">{t('dashboard.project_list.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,7 +189,7 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                     {project.deadline && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                         <Calendar className="h-3 w-3" />
-                        Échéance: {format(new Date(project.deadline), "d MMM yyyy", { locale: fr })}
+                        {t('dashboard.project_list.deadline')}: {format(new Date(project.deadline), "d MMM yyyy", { locale: fr })}
                       </div>
                     )}
                   </TableCell>
@@ -192,18 +201,18 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>{t('dashboard.project_list.actions')}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {onView && (
                           <DropdownMenuItem onClick={() => onView(project.id)}>
                             <ExternalLink className="mr-2 h-4 w-4" />
-                            Voir les détails
+                            {t('dashboard.project_list.view_details')}
                           </DropdownMenuItem>
                         )}
                         {onEdit && (
                           <DropdownMenuItem onClick={() => onEdit(project.id)}>
                             <Pencil className="mr-2 h-4 w-4" />
-                            Modifier
+                            {t('dashboard.project_list.edit')}
                           </DropdownMenuItem>
                         )}
                         {onDelete && (
@@ -214,7 +223,7 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                               className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Supprimer
+                              {t('dashboard.project_list.delete')}
                             </DropdownMenuItem>
                           </>
                         )}
@@ -318,7 +327,7 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                   <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      Créé le {format(new Date(project.created_at), "d MMM yyyy", { locale: fr })}
+                      {t('dashboard.project_list.created_on')} {format(new Date(project.created_at), "d MMM yyyy", { locale: fr })}
                     </div>
                     {project.deadline && (
                       <div>
@@ -337,19 +346,18 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer le projet ?</AlertDialogTitle>
+            <AlertDialogTitle>{t('dashboard.project_list.delete_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Cette action est irréversible. Le projet et toutes les propositions associées seront
-              définitivement supprimés.
+              {t('dashboard.project_list.delete_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Supprimer
+              {t('dashboard.project_list.delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

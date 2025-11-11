@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 const ProKpis = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [stats, setStats] = useState({
@@ -46,8 +48,8 @@ const ProKpis = () => {
       <main className='container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1'>
         <Card>
           <CardHeader>
-            <CardTitle>Mes KPIs</CardTitle>
-            <CardDescription>Améliorez votre réputation grâce à ces indicateurs</CardDescription>
+            <CardTitle>{t('pro_kpis.title')}</CardTitle>
+            <CardDescription>{t('pro_kpis.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>

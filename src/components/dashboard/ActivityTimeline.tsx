@@ -1,5 +1,6 @@
 import { format, formatDistanceToNow } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   CheckCircle2,
@@ -57,6 +58,9 @@ const ACTIVITY_COLORS: Record<string, string> = {
 };
 
 export default function ActivityTimeline({ activities, loading }: ActivityTimelineProps) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language === 'fr' ? fr : enUS;
+  
   if (loading) {
     return (
       <div className="space-y-4">
@@ -81,9 +85,9 @@ export default function ActivityTimeline({ activities, loading }: ActivityTimeli
     return (
       <div className="text-center py-12">
         <Clock className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-        <h3 className="text-lg font-semibold mb-2">Aucune activité récente</h3>
+        <h3 className="text-lg font-semibold mb-2">{t('dashboard.activity_timeline.no_activity')}</h3>
         <p className="text-muted-foreground">
-          Votre historique d'activité apparaîtra ici
+          {t('dashboard.activity_timeline.no_activity_desc')}
         </p>
       </div>
     );
@@ -121,7 +125,7 @@ export default function ActivityTimeline({ activities, loading }: ActivityTimeli
                     <span className="text-xs text-muted-foreground whitespace-nowrap">
                       {formatDistanceToNow(new Date(activity.timestamp), {
                         addSuffix: true,
-                        locale: fr,
+                        locale,
                       })}
                     </span>
                   </div>

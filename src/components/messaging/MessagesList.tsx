@@ -58,16 +58,26 @@ export const MessagesList = ({
       }
 
       // Add computed fields for easier display
-      const conversationsWithOther = (data || []).map((conv) => {
+      const conversationsWithOther = await Promise.all((data || []).map(async (conv) => {
         const isParticipant1 = conv.participant_1_id === userId;
+        
+        // Calculate correct unread count: only messages WHERE current user is the receiver
+        const { count: actualUnreadCount } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversation_id', conv.id)
+          .eq('receiver_id', userId)
+          .eq('is_read', false);
+        
         return {
           ...conv,
           other_participant_id: isParticipant1 ? conv.participant_2_id : conv.participant_1_id,
           other_participant_name: isParticipant1 ? conv.participant_2_name : conv.participant_1_name,
           other_participant_avatar: isParticipant1 ? conv.participant_2_avatar : conv.participant_1_avatar,
           other_participant_type: isParticipant1 ? conv.participant_2_type : conv.participant_1_type,
+          unread_count: actualUnreadCount || 0,
         };
-      });
+      }));
 
       setConversations(conversationsWithOther);
     } catch (error) {

@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const CTA = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -18,10 +20,9 @@ const CTA = () => {
               <div className="inline-flex p-4 rounded-xl bg-primary/10 mb-6">
                 <ArrowRight className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="mb-4">Vous avez un projet ?</h3>
+              <h3 className="mb-4">{t('cta.client.title')}</h3>
               <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                Trouvez l'entrepreneur parfait pour votre projet de construction ou rénovation. 
-                Gratuit pour les clients, simple et sécurisé.
+                {t('cta.client.description')}
               </p>
             </div>
             
@@ -32,14 +33,14 @@ const CTA = () => {
                 className="w-full"
                 onClick={() => navigate("/auth?mode=signup")}
               >
-                Créer un projet gratuitement
+                {t('cta.client.button')}
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span>✓ Sans engagement</span>
+                <span>✓ {t('cta.client.benefits.commitment')}</span>
                 <span>•</span>
-                <span>✓ Réponses sous 24h</span>
+                <span>✓ {t('cta.client.benefits.response')}</span>
                 <span>•</span>
-                <span>✓ 100% gratuit</span>
+                <span>✓ {t('cta.client.benefits.free')}</span>
               </div>
             </div>
           </div>
@@ -50,10 +51,9 @@ const CTA = () => {
               <div className="inline-flex p-4 rounded-xl bg-accent/10 mb-6">
                 <Briefcase className="h-8 w-8 text-accent" />
               </div>
-              <h3 className="mb-4">Vous êtes entrepreneur ?</h3>
+              <h3 className="mb-4">{t('cta.contractor.title')}</h3>
               <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                Rejoignez BâtirNet et accédez à des milliers de projets qualifiés. 
-                Développez votre activité avec des outils professionnels.
+                {t('cta.contractor.description')}
               </p>
             </div>
             
@@ -64,12 +64,12 @@ const CTA = () => {
                 className="w-full"
                 onClick={() => navigate("/auth?mode=signup")}
               >
-                Devenir partenaire
+                {t('cta.contractor.button')}
               </Button>
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span>✓ Essai gratuit 30 jours</span>
+                <span>✓ {t('cta.contractor.benefits.trial')}</span>
                 <span>•</span>
-                <span>✓ Paiements sécurisés</span>
+                <span>✓ {t('cta.contractor.benefits.payments')}</span>
               </div>
             </div>
           </div>

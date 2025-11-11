@@ -4,6 +4,7 @@
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
+    "coming_soon": "Fonctionnalité à venir",
     "cancel": "Annuler",
     "save": "Enregistrer",
     "delete": "Supprimer",
@@ -42,50 +43,172 @@
     "subtitle": "Plateforme sécurisée de mise en relation pour vos projets de construction et rénovation",
     "cta_client": "Publier un projet",
     "cta_pro": "Devenir professionnel",
+    "badge": "🇨🇦 Plateforme canadienne de confiance",
+    "features": {
+      "verified": "Entrepreneurs vérifiés et certifiés",
+      "payments": "Paiements sécurisés par jalons",
+      "contracts": "Contrats intelligents avec e-signature"
+    },
     "stats": {
       "professionals": "Professionnels vérifiés",
       "projects": "Projets réalisés",
       "satisfaction": "Satisfaction client"
     }
   },
+  "features": {
+    "title": "Une plateforme complète et sécurisée",
+    "subtitle": "BâtirNet combine technologie de pointe et simplicité pour offrir la meilleure expérience aux clients et entrepreneurs.",
+    "list": {
+      "security": {
+        "title": "Sécurité maximale",
+        "description": "Vérifications RBQ, assurances, permis. Paiements protégés avec système de jalons."
+      },
+      "quality": {
+        "title": "Qualité garantie",
+        "description": "Évaluations détaillées sur ponctualité, qualité, respect des délais et communication."
+      },
+      "time": {
+        "title": "Gain de temps",
+        "description": "Trouvez rapidement les meilleurs pros grâce à nos filtres intelligents et recommandations."
+      },
+      "communication": {
+        "title": "Communication fluide",
+        "description": "Messagerie intégrée, notifications en temps réel et suivi de projet centralisé."
+      },
+      "contracts": {
+        "title": "Contrats intelligents",
+        "description": "Bibliothèque de modèles par type de travaux, e-signature et versioning automatique."
+      },
+      "multilingual": {
+        "title": "Multilingue",
+        "description": "Interface disponible en français et anglais, avec support pour d'autres langues."
+      }
+    },
+    "for_contractors": {
+      "title": "Pour les entrepreneurs",
+      "description": "Développez votre activité avec des clients qualifiés et des outils professionnels."
+    },
+    "for_clients": {
+      "title": "Pour les clients",
+      "description": "Réalisez vos projets en toute confiance avec les meilleurs professionnels."
+    }
+  },
+  "how_it_works": {
+    "title": "Comment ça fonctionne",
+    "subtitle": "En quatre étapes simples, trouvez l'entrepreneur parfait et gérez votre projet en toute sérénité.",
+    "steps": {
+      "find": {
+        "title": "Trouvez le bon pro",
+        "description": "Recherchez et comparez les entrepreneurs qualifiés selon votre projet, budget et localisation."
+      },
+      "sign": {
+        "title": "Signez en ligne",
+        "description": "Créez un contrat intelligent avec jalons de paiement et e-signature sécurisée."
+      },
+      "pay": {
+        "title": "Paiements sécurisés",
+        "description": "Payez par étapes selon l'avancement du projet. Vos fonds sont protégés jusqu'à validation."
+      },
+      "review": {
+        "title": "Évaluez la qualité",
+        "description": "Notez votre expérience pour aider la communauté et garantir la qualité du service."
+      }
+    }
+  },
+  "cta": {
+    "client": {
+      "title": "Vous avez un projet ?",
+      "description": "Trouvez l'entrepreneur parfait pour votre projet de construction ou rénovation. Gratuit pour les clients, simple et sécurisé.",
+      "button": "Créer un projet gratuitement",
+      "benefits": {
+        "commitment": "Sans engagement",
+        "response": "Réponses sous 24h",
+        "free": "100% gratuit"
+      }
+    },
+    "contractor": {
+      "title": "Vous êtes entrepreneur ?",
+      "description": "Rejoignez BâtirNet et accédez à des milliers de projets qualifiés. Développez votre activité avec des outils professionnels.",
+      "button": "Devenir partenaire",
+      "benefits": {
+        "trial": "Essai gratuit 30 jours",
+        "payments": "Paiements sécurisés"
+      }
+    }
+  },
   "auth": {
     "title": "Bienvenue sur BâtirNet",
-    "subtitle": "Connectez-vous ou créez votre compte",
+    "subtitle_login": "Connectez-vous à votre compte BâtirNet",
+    "subtitle_signup": "Créez votre compte BâtirNet",
+    "or": "OU",
     "login": {
       "title": "Connexion",
-      "email": "Email",
+      "email": "Adresse email",
+      "email_placeholder": "nom@exemple.com",
       "password": "Mot de passe",
+      "password_placeholder": "••••••••",
       "button": "Se connecter",
+      "button_loading": "Chargement...",
       "forgot": "Mot de passe oublié ?",
-      "no_account": "Pas encore de compte ?",
-      "signup_link": "Inscrivez-vous"
+      "no_account": "Pas encore de compte ? S'inscrire",
+      "signup_link": "S'inscrire"
     },
     "signup": {
       "title": "Inscription",
       "client": "Client",
       "professional": "Professionnel",
       "full_name": "Nom complet",
-      "email": "Email",
+      "full_name_placeholder": "Jean Dupont",
+      "email": "Adresse email",
+      "email_placeholder": "nom@exemple.com",
       "password": "Mot de passe",
+      "password_placeholder": "Minimum 6 caractères",
       "phone": "Téléphone",
+      "phone_placeholder": "(514) 123-4567",
       "company_name": "Nom de l'entreprise",
+      "company_placeholder": "Construction ABC Inc.",
       "rbq_number": "Numéro RBQ",
+      "rbq_number_placeholder": "1234-5678-01",
       "rbq_certification": "Certification RBQ",
+      "rbq_upload": "Télécharger la certification RBQ",
+      "rbq_upload_hint": "PDF, JPG ou PNG (max 5 Mo)",
+      "rbq_uploaded": "Cliquez pour changer",
       "services_offered": "Services offerts",
-      "insurance_info": "Informations d'assurance",
+      "services_placeholder": "Ex: Rénovation résidentielle, construction neuve, toiture...",
+      "insurance_info": "Informations sur l'assurance",
+      "insurance_placeholder": "Nom de l'assureur, numéro de police...",
+      "client_description": "En tant que client, vous pourrez créer des projets, demander des devis et collaborer avec des entrepreneurs qualifiés.",
       "button": "Créer mon compte",
-      "already_account": "Déjà un compte ?",
-      "login_link": "Connectez-vous",
-      "google": "Continuer avec Google"
+      "button_loading": "Création du compte...",
+      "already_account": "Déjà un compte ? Se connecter",
+      "login_link": "Se connecter",
+      "google": "Continuer avec Google",
+      "required": "*"
     },
     "messages": {
       "success": "Inscription réussie ! 🎉",
-      "success_description": "Votre compte a été créé avec succès",
+      "success_client": "Votre compte a été créé avec succès !",
+      "success_pro": "Votre compte professionnel a été créé. Nous vérifierons votre certification RBQ sous peu.",
+      "login_success": "Connexion réussie",
+      "welcome": "Bienvenue {{name}} !",
+      "welcome_default": "Bienvenue sur BâtirNet !",
       "error": "Erreur",
       "invalid_credentials": "Email ou mot de passe incorrect",
-      "email_required": "L'email est requis",
-      "password_required": "Le mot de passe est requis",
-      "fields_required": "Veuillez remplir tous les champs obligatoires"
+      "invalid_file_type": "Format de fichier invalide",
+      "invalid_file_type_description": "Veuillez télécharger un fichier PDF, JPG ou PNG",
+      "file_too_large": "Fichier trop volumineux",
+      "file_too_large_description": "La taille maximale est de 5 Mo",
+      "upload_error": "Erreur lors du téléchargement",
+      "upload_error_description": "Impossible de télécharger la certification RBQ",
+      "missing_fields": "Champs requis manquants",
+      "missing_fields_description": "Veuillez remplir tous les champs obligatoires",
+      "rbq_required": "Certification RBQ requise",
+      "rbq_required_description": "Veuillez télécharger votre certification RBQ",
+      "no_user_created": "Aucun utilisateur créé",
+      "profile_error": "Impossible de créer le profil utilisateur",
+      "signup_error": "Une erreur est survenue lors de l'inscription",
+      "no_user_logged": "Aucun utilisateur connecté",
+      "google_error": "Impossible de se connecter avec Google"
     }
   },
   "dashboard": {
@@ -93,12 +216,20 @@
     "subtitle": "Bienvenue sur votre tableau de bord BâtirNet",
     "tabs": {
       "overview": "Vue d'ensemble",
-      "projects": "Mes Projets",
+      "home": "Accueil",
+      "projects": "Projets",
       "proposals": "Propositions",
+      "offers": "Offres",
       "contracts": "Contrats",
       "invoices": "Factures",
       "activity": "Activité",
       "favorites": "Favoris"
+    },
+    "export": {
+      "in_progress": "Export en cours",
+      "pdf_generating": "Votre PDF est en cours de génération",
+      "no_projects_to_export": "Vous n'avez aucun projet à exporter",
+      "no_activity_to_export": "Vous n'avez aucune activité à exporter"
     },
     "stats": {
       "active_projects": "Projets actifs",
@@ -117,11 +248,68 @@
       "find_pro": "Trouver un professionnel",
       "explore_projects": "Explorer les projets"
     },
+    "project_list": {
+      "project": "Projet",
+      "status": "Statut",
+      "budget": "Budget",
+      "location": "Localisation",
+      "proposals": "Propositions",
+      "views": "Vues",
+      "date": "Date",
+      "actions": "Actions",
+      "deadline": "Échéance",
+      "created_on": "Créé le",
+      "view_details": "Voir les détails",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "delete_title": "Supprimer le projet ?",
+      "delete_description": "Cette action est irréversible. Le projet et toutes les propositions associées seront définitivement supprimés."
+    },
+    "proposals": {
+      "title": "Propositions reçues",
+      "description": "Consultez toutes les propositions des professionnels",
+      "no_proposals": "Aucune proposition pour le moment"
+    },
+    "contracts": {
+      "title": "Mes Contrats",
+      "description": "Gérez vos contrats avec les professionnels",
+      "no_contracts": "Aucun contrat",
+      "no_contracts_desc": "Les contrats signés avec les professionnels apparaîtront ici"
+    },
+    "invoices": {
+      "title": "Mes Factures",
+      "description": "Consultez et téléchargez vos factures",
+      "no_invoices": "Aucune facture",
+      "no_invoices_desc": "Vos factures de paiements et transactions apparaîtront ici"
+    },
+    "favorites": {
+      "title": "Professionnels favoris",
+      "description": "Votre shortlist de professionnels sélectionnés pour comparaison"
+    },
+    "activity_timeline": {
+      "title": "Historique d'activité",
+      "description": "Toutes vos actions et interactions sur la plateforme",
+      "no_activity": "Aucune activité récente",
+      "no_activity_desc": "Votre historique d'activité apparaîtra ici"
+    },
     "recent_activity": {
       "title": "Activité récente",
       "description": "Dernières mises à jour sur vos projets",
       "no_activity": "Aucune activité récente",
-      "create_first": "Créez votre premier projet pour commencer"
+      "create_first": "Créez votre premier projet pour commencer",
+      "account_created": "Compte créé avec succès"
+    },
+    "getting_started": {
+      "title": "Guide de démarrage",
+      "description": "Suivez ces étapes pour démarrer votre premier projet",
+      "step1_title": "Créez votre projet",
+      "step1_desc": "Décrivez votre projet, budget et délais",
+      "step2_title": "Recevez des propositions",
+      "step2_desc": "Les professionnels qualifiés vous enverront leurs offres",
+      "step3_title": "Comparez et choisissez",
+      "step3_desc": "Évaluez les offres et sélectionnez le meilleur professionnel",
+      "step4_title": "Signez et démarrez",
+      "step4_desc": "Formalisez l'accord et suivez l'avancement"
     },
     "projects": {
       "title": "Mes Projets",
@@ -146,7 +334,13 @@
         "description": "Cette action est irréversible. Le projet et toutes les propositions associées seront définitivement supprimés.",
         "cancel": "Annuler",
         "confirm": "Supprimer"
-      }
+      },
+      "delete_success": {
+        "title": "Projet supprimé",
+        "description": "Le projet a été supprimé avec succès"
+      },
+      "delete_error": "Impossible de supprimer le projet",
+      "edit_coming_soon": "L'édition de projet sera bientôt disponible"
     },
     "contracts": {
       "title": "Mes Contrats",
@@ -244,11 +438,26 @@
   },
   "projects": {
     "title": "Marketplace des Projets",
-    "search": "Rechercher un projet...",
+    "search": "Rechercher un projet par titre, description ou catégorie...",
+    "loading": "Chargement des projets...",
+    "hero": {
+      "title": "Découvrez les projets disponibles",
+      "subtitle": "Trouvez des opportunités de projets de construction et rénovation près de chez vous"
+    },
     "filters": {
       "all_categories": "Toutes les catégories",
       "all_regions": "Toutes les régions",
-      "all_budgets": "Tous les budgets"
+      "all_budgets": "Tous les budgets",
+      "kitchen_bathroom": "Cuisine et salle de bain",
+      "extension": "Extension et agrandissement",
+      "budgets": {
+        "under_5k": "Moins de 5 000 $",
+        "5k_10k": "5 000 $ - 10 000 $",
+        "10k_25k": "10 000 $ - 25 000 $",
+        "25k_50k": "25 000 $ - 50 000 $",
+        "50k_100k": "50 000 $ - 100 000 $",
+        "over_100k": "Plus de 100 000 $"
+      }
     },
     "sort": {
       "recent": "Plus récents",
@@ -258,7 +467,15 @@
     },
     "stats": {
       "active_projects": "Projets actifs",
-      "total_proposals": "Propositions totales"
+      "total_proposals": "Propositions envoyées",
+      "proposals_per_project": "Propositions/projet",
+      "results_count": "{{count}} projet trouvé",
+      "results_count_plural": "{{count}} projets trouvés"
+    },
+    "no_results": {
+      "title": "Aucun projet trouvé",
+      "description": "Essayez de modifier vos critères de recherche",
+      "reset": "Réinitialiser les filtres"
     },
     "card": {
       "budget": "Budget",
@@ -266,13 +483,28 @@
       "deadline": "Échéance",
       "proposals": "propositions",
       "views": "vues",
-      "view_details": "Voir détails",
-      "submit_proposal": "Soumettre proposition"
+      "view_details": "Voir les détails",
+      "submit_proposal": "Soumettre une proposition",
+      "published": "Publié"
+    }
+  },
+  "proposals": {
+    "form": {
+      "message": "Message",
+      "budget": "Budget estimé (CAD)",
+      "duration": "Durée (jours)",
+      "cancel": "Annuler",
+      "send": "Envoyer"
     }
   },
   "professionals": {
     "title": "Marketplace des Professionnels",
+    "hero_title": "Trouvez votre entrepreneur qualifié",
+    "hero_subtitle": "Découvrez des professionnels vérifiés RBQ pour tous vos projets de construction et rénovation",
     "search": "Rechercher un professionnel...",
+    "search_placeholder": "Rechercher par nom, entreprise ou service...",
+    "loading": "Chargement des professionnels...",
+    "filters_title": "Filtres",
     "filters": {
       "all_services": "Tous les services",
       "all_regions": "Toutes les régions",
@@ -283,6 +515,8 @@
       "availability_label": "Disponibilité",
       "response_time_label": "Temps de réponse",
       "reset": "Réinitialiser",
+      "show_filters": "Afficher les filtres",
+      "hide_filters": "Masquer les filtres",
       "budget_ranges": {
         "under_50": "Moins de 50 $/h",
         "50_75": "50 - 75 $/h",
@@ -300,6 +534,32 @@
         "under_6h": "Moins de 6 heures",
         "under_24h": "Moins de 24 heures",
         "under_48h": "Moins de 48 heures"
+      },
+      "services": {
+        "all": "Tous les services",
+        "residential_renovation": "Rénovation résidentielle",
+        "new_construction": "Construction neuve",
+        "roofing": "Toiture",
+        "plumbing": "Plomberie",
+        "electricity": "Électricité",
+        "carpentry": "Menuiserie",
+        "masonry": "Maçonnerie",
+        "painting": "Peinture",
+        "insulation": "Isolation",
+        "landscaping": "Aménagement paysager"
+      },
+      "regions": {
+        "all": "Toutes les régions",
+        "montreal": "Montréal",
+        "quebec": "Québec",
+        "laval": "Laval",
+        "gatineau": "Gatineau",
+        "longueuil": "Longueuil",
+        "sherbrooke": "Sherbrooke",
+        "saguenay": "Saguenay",
+        "trois_rivieres": "Trois-Rivières",
+        "terrebonne": "Terrebonne",
+        "saint_jean": "Saint-Jean-sur-Richelieu"
       }
     },
     "sort": {
@@ -308,17 +568,21 @@
       "rating": "Meilleure note",
       "proximity": "Proximité",
       "activity": "Plus actifs",
-      "location_required": "localisation requise"
+      "location_required": "localisation requise",
+      "sort_by": "Trier par"
     },
     "stats": {
       "verified": "Professionnels vérifiés",
-      "avg_rating": "Note moyenne"
+      "avg_rating": "Note moyenne",
+      "results_count": "{{count}} professionnel",
+      "results_count_plural": "{{count}} professionnels"
     },
     "card": {
       "verified": "Vérifié RBQ",
       "years_exp": "ans d'expérience",
       "reviews": "avis",
       "projects": "projets réalisés",
+      "project": "projet réalisé",
       "view_profile": "Voir profil",
       "contact": "Contacter",
       "hourly_rate": "$/h",
@@ -328,7 +592,8 @@
       "available_from": "dès le",
       "response_time": "Répond en ~{{hours}}h",
       "distance": "Distance",
-      "activity_score": "Score"
+      "activity_score": "Score",
+      "profile_in_dev": "Page de profil en développement. Utilisez le bouton \"Contacter\" pour communiquer !"
     },
     "geolocation": {
       "disabled": "Localisation désactivée",
@@ -347,6 +612,8 @@
     "title": "Créer un nouveau projet",
     "subtitle": "Décrivez votre projet pour recevoir des propositions de professionnels qualifiés",
     "form": {
+      "project_info": "Informations du projet",
+      "required_fields_note": "Les champs marqués d'un * sont obligatoires",
       "title": "Titre du projet",
       "title_placeholder": "Ex: Rénovation complète de cuisine",
       "category": "Catégorie",
@@ -354,31 +621,48 @@
       "description": "Description",
       "description_placeholder": "Décrivez votre projet en détail...",
       "description_help": "Plus votre description est détaillée, meilleures seront les propositions",
+      "budget": "Budget",
       "budget_min": "Budget minimum ($)",
       "budget_max": "Budget maximum ($)",
+      "budget_min_placeholder": "Ex: 10000",
+      "budget_max_placeholder": "Ex: 25000",
       "city": "Ville",
-      "city_placeholder": "Ex: Montréal",
       "region": "Région",
+      "from": "À partir de",
+      "up_to": "Jusqu'à",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "days_ago": "Il y a {{count}} jours",
+      "weeks_ago": "Il y a {{count}} semaines",
+      "city_placeholder": "Ex: Montréal",
       "region_placeholder": "Sélectionnez une région",
       "postal_code": "Code postal",
       "postal_code_placeholder": "Ex: H1A 1A1",
       "deadline": "Échéance souhaitée",
-      "deadline_placeholder": "Sélectionnez une date",
-      "files": "Photos ou documents",
-      "files_help": "Images (JPG, PNG) ou PDF • Max 5 fichiers • 5 Mo max chacun",
-      "upload_cta": "Cliquez pour télécharger"
-    },
-    "actions": {
-      "cancel": "Annuler",
-      "publish": "Publier le projet",
-      "publishing": "Création..."
+      "select_date": "Sélectionnez une date",
+      "files": "Photos ou documents (optionnel)",
+      "click_to_upload": "Cliquez pour télécharger",
+      "file_requirements": "Images (JPG, PNG) ou PDF • Max 5 fichiers • 5 Mo max chacun",
+      "creating": "Création...",
+      "submit": "Publier le projet"
     },
     "messages": {
-      "success": "Projet créé ! 🎉",
-      "success_description": "Votre projet a été publié avec succès",
-      "error": "Erreur",
-      "fields_required": "Veuillez remplir tous les champs obligatoires",
-      "invalid_budget": "Le budget maximum doit être supérieur au minimum"
+      "login_required": "Connexion requise",
+      "login_required_desc": "Vous devez être connecté pour créer un projet",
+      "access_denied": "Accès refusé",
+      "clients_only": "Seuls les clients peuvent créer des projets",
+      "invalid_format": "Format invalide",
+      "invalid_format_desc": "{{filename}} n'est pas un format accepté",
+      "file_too_large": "Fichier trop volumineux",
+      "file_too_large_desc": "{{filename}} dépasse 5 Mo",
+      "not_logged_in": "Utilisateur non connecté",
+      "required_fields": "Champs requis",
+      "fill_required_fields": "Veuillez remplir tous les champs obligatoires",
+      "invalid_budget": "Budget invalide",
+      "invalid_budget_desc": "Le budget maximum doit être supérieur au minimum",
+      "success_title": "Projet créé ! 🎉",
+      "success_desc": "Votre projet a été publié avec succès",
+      "creation_error": "Erreur lors de la création du projet"
     }
   },
   "messaging": {
@@ -395,11 +679,94 @@
     "send": "Envoyer",
     "error_loading_messages": "Impossible de charger les messages",
     "error_sending_message": "Impossible d'envoyer le message",
-    "contact": "Contacter"
+    "contact": "Contacter",
+    "sent_message_about": "vous a envoyé un message concernant votre projet"
+  },
+  "project_details": {
+    "back_to_projects": "Retour aux projets",
+    "submit_proposal": "Soumettre une proposition",
+    "submit_proposal_description": "Proposez vos services pour ce projet",
+    "your_message": "Votre message",
+    "describe_proposal": "Décrivez votre approche et expérience pertinente...",
+    "estimated_budget": "Budget estimé",
+    "optional": "optionnel",
+    "estimated_delay": "Délai estimé (jours)",
+    "send_proposal": "Envoyer la proposition",
+    "contact_client": "Contacter le client",
+    "project_details": "Détails du projet",
+    "project_info": "Informations du projet",
+    "budget": "Budget",
+    "category": "Catégorie",
+    "location": "Localisation",
+    "deadline": "Échéance",
+    "no_deadline": "Non spécifiée",
+    "published": "Publié le",
+    "views": "vues",
+    "proposals": "propositions",
+    "client_info": "Information client",
+    "error_loading": "Impossible de charger les détails du projet",
+    "error_pro_only": "Vous devez être connecté en tant que professionnel",
+    "error_pro_submit": "Vous devez être connecté en tant que professionnel pour soumettre une proposition",
+    "error_message_required": "Veuillez entrer un message",
+    "error_already_submitted": "Vous avez déjà soumis une proposition pour ce projet",
+    "error_sending": "Erreur lors de l'envoi de la proposition",
+    "error_conversation": "Erreur lors de l'ouverture de la conversation",
+    "success_submitted": "Proposition envoyée avec succès !",
+    "not_found": "Projet introuvable",
+    "not_found_desc": "Ce projet n'existe pas ou a été supprimé."
+  },
+  "pro_kpis": {
+    "title": "Mes KPIs",
+    "description": "Améliorez votre réputation grâce à ces indicateurs",
+    "proposals_sent": "Soumissions envoyées",
+    "proposals_accepted": "Soumissions acceptées",
+    "acceptance_rate": "Taux d'acceptation",
+    "avg_rating": "Note moyenne",
+    "total_reviews": "Évaluations reçues"
+  },
+  "pro_dashboard": {
+    "title": "Dashboard Professionnel",
+    "subtitle": "Vue d'ensemble de votre activité sur BâtirNet",
+    "quick_actions": {
+      "title": "Actions rapides",
+      "description": "Accédez rapidement aux fonctions essentielles",
+      "browse_projects": "Parcourir les projets",
+      "messaging": "Messagerie",
+      "my_contracts": "Mes contrats",
+      "my_profile": "Mon profil"
+    },
+    "new_projects": {
+      "title": "Nouveaux projets",
+      "description": "Opportunités récentes sur la plateforme",
+      "no_projects": "Aucun nouveau projet",
+      "published": "Publié",
+      "view_details": "Voir détails"
+    },
+    "overview": {
+      "title": "Vue d'ensemble",
+      "description": "Résumé de votre performance",
+      "response_rate": "Taux de réponse",
+      "acceptance_rate": "Taux d'acceptation",
+      "avg_rating": "Note moyenne",
+      "total_reviews": "avis"
+    },
+    "stats": {
+      "active_projects": "Projets actifs",
+      "proposals_sent": "Soumissions envoyées",
+      "proposals_accepted": "Soumissions acceptées",
+      "acceptance_rate": "Taux d'acceptation",
+      "avg_rating": "Note moyenne",
+      "unread_messages": "Messages non lus",
+      "pending_contracts": "Contrats en attente"
+    }
   },
   "notifications": {
     "title": "Notifications",
     "no_notifications": "Aucune notification",
+    "no_notifications_yet": "Vous n'avez pas encore de notifications",
+    "new_notification": "nouvelle notification",
+    "new_notifications": "nouvelles notifications",
+    "new": "Nouveau",
     "mark_all_read": "Tout marquer comme lu",
     "all_read": "Tout lu",
     "all_read_description": "Toutes les notifications ont été marquées comme lues",
@@ -407,11 +774,15 @@
     "view_all": "Voir toutes les notifications",
     "types": {
       "new_message": "Nouveau message",
-      "new_proposal": "Nouvelle soumission",
+      "new_proposal": "Nouvelle proposition reçue",
+      "proposal_received_desc": "{{name}} vous a envoyé une proposition",
+      "a_professional": "Un professionnel",
       "proposal_accepted": "Soumission acceptée",
       "proposal_rejected": "Soumission refusée",
-      "project_update": "Mise à jour du projet",
+      "project_update": "Projet mis à jour",
+      "project_updated_desc": "Le projet \"{{title}}\" a été modifié",
       "review_received": "Nouvel avis reçu",
+      "review_posted": "Avis publié",
       "payment_received": "Paiement reçu",
       "milestone_completed": "Jalon complété",
       "contract_signed": "Contrat signé",
@@ -561,30 +932,30 @@
       "canvas_signature": "Signature Canvas"
     }},
   "footer": {
-    "tagline": "Votre plateforme de construction au Québec",
-    "about": {
-      "title": "À propos",
-      "about_us": "À propos de nous",
-      "how_it_works": "Comment ça marche",
-      "pricing": "Tarification",
+    "tagline": "La plateforme canadienne de confiance pour connecter clients et entrepreneurs du bâtiment.",
+    "made_with_love": "Fait avec ❤️ au Canada 🇨🇦",
+    "rights": "Tous droits réservés.",
+    "company": {
+      "title": "Entreprise",
+      "about": "À propos",
+      "careers": "Carrières",
+      "blog": "Blog",
       "contact": "Contact"
+    },
+    "resources": {
+      "title": "Ressources",
+      "help_center": "Centre d'aide",
+      "client_guide": "Guide du client",
+      "contractor_guide": "Guide de l'entrepreneur",
+      "faq": "FAQ"
     },
     "legal": {
       "title": "Légal",
       "terms": "Conditions d'utilisation",
       "privacy": "Politique de confidentialité",
-      "cookies": "Politique de cookies"
-    },
-    "support": {
-      "title": "Support",
-      "help": "Centre d'aide",
-      "faq": "FAQ",
-      "contact": "Nous contacter"
-    },
-    "social": {
-      "title": "Suivez-nous"
-    },
-    "rights": "Tous droits réservés."
+      "cookies": "Politique de cookies",
+      "compliance": "Conformité Loi 25"
+    }
   }
 }
 

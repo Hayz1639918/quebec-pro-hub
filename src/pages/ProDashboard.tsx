@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -56,6 +57,7 @@ interface Project {
 }
 
 const ProDashboard = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -202,7 +204,7 @@ const ProDashboard = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dashboard Professionnel</h1>
           <p className="text-muted-foreground">
-            Vue d'ensemble de votre activité sur BâtirNet
+            {t('pro_dashboard.subtitle')}
           </p>
         </div>
 
@@ -212,7 +214,7 @@ const ProDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Projets actifs</p>
+                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.active_projects')}</p>
                   <p className="text-3xl font-bold">{stats.activeProjects}</p>
                 </div>
                 <Briefcase className="h-8 w-8 text-blue-500" />
@@ -224,7 +226,7 @@ const ProDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Taux d'acceptation</p>
+                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.acceptance_rate')}</p>
                   <p className="text-3xl font-bold">{stats.acceptanceRate}%</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-500" />
@@ -239,7 +241,7 @@ const ProDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Note moyenne</p>
+                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.avg_rating')}</p>
                   <p className="text-3xl font-bold">{stats.averageRating.toFixed(1)}</p>
                 </div>
                 <Star className="h-8 w-8 text-yellow-400" />
@@ -252,7 +254,7 @@ const ProDashboard = () => {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Messages non lus</p>
+                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.unread_messages')}</p>
                   <p className="text-3xl font-bold">{stats.unreadMessages}</p>
                 </div>
                 <MessageSquare className="h-8 w-8 text-purple-500" />
@@ -267,8 +269,8 @@ const ProDashboard = () => {
         {/* Quick Actions */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Actions rapides</CardTitle>
-            <CardDescription>Accédez rapidement aux fonctions essentielles</CardDescription>
+            <CardTitle>{t('pro_dashboard.quick_actions.title')}</CardTitle>
+            <CardDescription>{t('pro_dashboard.quick_actions.description')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -278,7 +280,7 @@ const ProDashboard = () => {
                 onClick={() => navigate('/projects')}
               >
                 <Eye className="h-6 w-6" />
-                <span>Parcourir les projets</span>
+                <span>{t('pro_dashboard.quick_actions.browse_projects')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -286,7 +288,7 @@ const ProDashboard = () => {
                 onClick={() => navigate('/messages')}
               >
                 <MessageSquare className="h-6 w-6" />
-                <span>Messagerie</span>
+                <span>{t('pro_dashboard.quick_actions.messaging')}</span>
                 {stats.unreadMessages > 0 && (
                   <Badge variant="destructive" className="text-xs">
                     {stats.unreadMessages}
@@ -299,7 +301,7 @@ const ProDashboard = () => {
                 onClick={() => navigate('/contracts')}
               >
                 <FileText className="h-6 w-6" />
-                <span>Mes contrats</span>
+                <span>{t('pro_dashboard.quick_actions.my_contracts')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -307,7 +309,7 @@ const ProDashboard = () => {
                 onClick={() => navigate('/pro/profile')}
               >
                 <Users className="h-6 w-6" />
-                <span>Mon profil</span>
+                <span>{t('pro_dashboard.quick_actions.my_profile')}</span>
               </Button>
             </div>
           </CardContent>
@@ -317,14 +319,14 @@ const ProDashboard = () => {
           {/* Recent Projects */}
           <Card>
             <CardHeader>
-              <CardTitle>Nouveaux projets</CardTitle>
-              <CardDescription>Opportunités récentes sur la plateforme</CardDescription>
+              <CardTitle>{t('pro_dashboard.new_projects.title')}</CardTitle>
+              <CardDescription>{t('pro_dashboard.new_projects.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {recentProjects.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">Aucun nouveau projet</p>
+                  <p className="text-sm">{t('pro_dashboard.new_projects.no_projects')}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -344,14 +346,14 @@ const ProDashboard = () => {
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-xs text-muted-foreground">
-                          Publié {format(new Date(project.created_at), 'PPP', { locale: fr })}
+                          {t('pro_dashboard.new_projects.published')} {format(new Date(project.created_at), 'PPP', { locale: fr })}
                         </span>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => navigate(`/projects?selected=${project.id}`)}
                         >
-                          Voir détails
+                          {t('pro_dashboard.new_projects.view_details')}
                         </Button>
                       </div>
                     </div>
@@ -364,14 +366,14 @@ const ProDashboard = () => {
           {/* Performance Overview */}
           <Card>
             <CardHeader>
-              <CardTitle>Vue d'ensemble</CardTitle>
-              <CardDescription>Résumé de votre performance</CardDescription>
+              <CardTitle>{t('pro_dashboard.overview.title')}</CardTitle>
+              <CardDescription>{t('pro_dashboard.overview.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Taux de réponse</span>
+                    <span className="text-sm font-medium">{t('pro_dashboard.overview.response_rate')}</span>
                     <span className="text-sm font-bold">{stats.proposalsSent > 0 ? '100%' : '0%'}</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -386,7 +388,7 @@ const ProDashboard = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Taux d'acceptation</span>
+                    <span className="text-sm font-medium">{t('pro_dashboard.overview.acceptance_rate')}</span>
                     <span className="text-sm font-bold">{stats.acceptanceRate}%</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -416,7 +418,7 @@ const ProDashboard = () => {
                     </div>
                     <div className="border rounded-lg p-3">
                       <p className="text-2xl font-bold">{stats.averageRating.toFixed(1)}</p>
-                      <p className="text-xs text-muted-foreground">Note moyenne</p>
+                      <p className="text-xs text-muted-foreground">{t('pro_dashboard.overview.avg_rating')}</p>
                     </div>
                   </div>
                 </div>

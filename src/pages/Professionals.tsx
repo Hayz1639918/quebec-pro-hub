@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -77,69 +78,70 @@ interface Professional {
   distance?: number;
 }
 
-const SERVICES = [
-  "Tous les services",
-  "Rénovation résidentielle",
-  "Construction neuve",
-  "Toiture",
-  "Plomberie",
-  "Électricité",
-  "Menuiserie",
-  "Maçonnerie",
-  "Peinture",
-  "Isolation",
-  "Aménagement paysager",
-];
-
-const REGIONS = [
-  "Toutes les régions",
-  "Montréal",
-  "Québec",
-  "Laval",
-  "Gatineau",
-  "Longueuil",
-  "Sherbrooke",
-  "Saguenay",
-  "Trois-Rivières",
-  "Terrebonne",
-  "Saint-Jean-sur-Richelieu",
-];
-
-const BUDGET_RANGES = [
-  "Tous les budgets",
-  "Moins de 50 $/h",
-  "50 - 75 $/h",
-  "75 - 100 $/h",
-  "100 - 150 $/h",
-  "150 $/h et plus",
-];
-
-const AVAILABILITY_OPTIONS = [
-  "Toutes disponibilités",
-  "Disponible immédiatement",
-  "Disponible dans 2 semaines",
-  "Disponible dans 1 mois",
-  "Occupé actuellement",
-];
-
-const RESPONSE_TIME_OPTIONS = [
-  "Tous les temps de réponse",
-  "Moins de 6 heures",
-  "Moins de 24 heures",
-  "Moins de 48 heures",
-];
-
 const Professionals = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  const SERVICES = [
+    t('professionals.filters.services.all'),
+    t('professionals.filters.services.residential_renovation'),
+    t('professionals.filters.services.new_construction'),
+    t('professionals.filters.services.roofing'),
+    t('professionals.filters.services.plumbing'),
+    t('professionals.filters.services.electricity'),
+    t('professionals.filters.services.carpentry'),
+    t('professionals.filters.services.masonry'),
+    t('professionals.filters.services.painting'),
+    t('professionals.filters.services.insulation'),
+    t('professionals.filters.services.landscaping'),
+  ];
+
+  const REGIONS = [
+    t('professionals.filters.regions.all'),
+    t('professionals.filters.regions.montreal'),
+    t('professionals.filters.regions.quebec'),
+    t('professionals.filters.regions.laval'),
+    t('professionals.filters.regions.gatineau'),
+    t('professionals.filters.regions.longueuil'),
+    t('professionals.filters.regions.sherbrooke'),
+    t('professionals.filters.regions.saguenay'),
+    t('professionals.filters.regions.trois_rivieres'),
+    t('professionals.filters.regions.terrebonne'),
+    t('professionals.filters.regions.saint_jean'),
+  ];
+
+  const BUDGET_RANGES = [
+    t('professionals.filters.all_budgets'),
+    t('professionals.filters.budget_ranges.under_50'),
+    t('professionals.filters.budget_ranges.50_75'),
+    t('professionals.filters.budget_ranges.75_100'),
+    t('professionals.filters.budget_ranges.100_150'),
+    t('professionals.filters.budget_ranges.over_150'),
+  ];
+
+  const AVAILABILITY_OPTIONS = [
+    t('professionals.filters.all_availability'),
+    t('professionals.filters.availability_options.available_now'),
+    t('professionals.filters.availability_options.within_2_weeks'),
+    t('professionals.filters.availability_options.within_1_month'),
+    t('professionals.filters.availability_options.busy'),
+  ];
+
+  const RESPONSE_TIME_OPTIONS = [
+    t('professionals.filters.all_response_times'),
+    t('professionals.filters.response_time_options.under_6h'),
+    t('professionals.filters.response_time_options.under_24h'),
+    t('professionals.filters.response_time_options.under_48h'),
+  ];
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [filteredProfessionals, setFilteredProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedService, setSelectedService] = useState("Tous les services");
-  const [selectedRegion, setSelectedRegion] = useState("Toutes les régions");
-  const [selectedBudget, setSelectedBudget] = useState("Tous les budgets");
-  const [selectedAvailability, setSelectedAvailability] = useState("Toutes disponibilités");
-  const [selectedResponseTime, setSelectedResponseTime] = useState("Tous les temps de réponse");
+  const [selectedService, setSelectedService] = useState(SERVICES[0]);
+  const [selectedRegion, setSelectedRegion] = useState(REGIONS[0]);
+  const [selectedBudget, setSelectedBudget] = useState(BUDGET_RANGES[0]);
+  const [selectedAvailability, setSelectedAvailability] = useState(AVAILABILITY_OPTIONS[0]);
+  const [selectedResponseTime, setSelectedResponseTime] = useState(RESPONSE_TIME_OPTIONS[0]);
   const [sortBy, setSortBy] = useState("recent");
   const [showFilters, setShowFilters] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -359,10 +361,10 @@ const Professionals = () => {
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-4xl lg:text-5xl font-bold">
-              Trouvez votre entrepreneur qualifié
+              {t('professionals.hero_title')}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Découvrez des professionnels vérifiés RBQ pour tous vos projets de construction et rénovation
+              {t('professionals.hero_subtitle')}
             </p>
             
             {/* Main Search Bar */}
@@ -370,7 +372,7 @@ const Professionals = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Rechercher par nom, entreprise ou service..."
+                placeholder={t('professionals.search_placeholder')}
                 className="pl-12 pr-4 h-14 text-lg"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -381,17 +383,17 @@ const Professionals = () => {
             <div className="flex items-center justify-center gap-8 pt-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{professionals.length}</div>
-                <div className="text-sm text-muted-foreground">Professionnels vérifiés</div>
+                <div className="text-sm text-muted-foreground">{t('professionals.stats.verified')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">100%</div>
-                <div className="text-sm text-muted-foreground">Certifiés RBQ</div>
+                <div className="text-sm text-muted-foreground">{t('professionals.card.verified')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">4.8/5</div>
-                <div className="text-sm text-muted-foreground">Note moyenne</div>
+                <div className="text-sm text-muted-foreground">{t('professionals.stats.avg_rating')}</div>
               </div>
             </div>
           </div>
@@ -409,28 +411,28 @@ const Professionals = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <SlidersHorizontal className="h-5 w-5" />
-                      Filtres
+                      {t('professionals.filters_title')}
                     </CardTitle>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setSelectedService("Tous les services");
-                        setSelectedRegion("Toutes les régions");
-                        setSelectedBudget("Tous les budgets");
-                        setSelectedAvailability("Toutes disponibilités");
-                        setSelectedResponseTime("Tous les temps de réponse");
+                        setSelectedService(SERVICES[0]);
+                        setSelectedRegion(REGIONS[0]);
+                        setSelectedBudget(BUDGET_RANGES[0]);
+                        setSelectedAvailability(AVAILABILITY_OPTIONS[0]);
+                        setSelectedResponseTime(RESPONSE_TIME_OPTIONS[0]);
                         setSearchTerm("");
                       }}
                     >
-                      Réinitialiser
+                      {t('professionals.filters.reset')}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Service Filter */}
                   <div className="space-y-2">
-                    <Label>Type de service</Label>
+                    <Label>{t('professionals.filters.all_services')}</Label>
                     <Select value={selectedService} onValueChange={setSelectedService}>
                       <SelectTrigger>
                         <SelectValue />
@@ -447,7 +449,7 @@ const Professionals = () => {
 
                   {/* Region Filter */}
                   <div className="space-y-2">
-                    <Label>Région</Label>
+                    <Label>{t('professionals.filters.all_regions')}</Label>
                     <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                       <SelectTrigger>
                         <SelectValue />
@@ -468,7 +470,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      Budget (taux horaire)
+                      {t('professionals.filters.budget_label')}
                     </Label>
                     <Select value={selectedBudget} onValueChange={setSelectedBudget}>
                       <SelectTrigger>
@@ -488,7 +490,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      Disponibilité
+                      {t('professionals.filters.availability_label')}
                     </Label>
                     <Select value={selectedAvailability} onValueChange={setSelectedAvailability}>
                       <SelectTrigger>
@@ -508,7 +510,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      Temps de réponse
+                      {t('professionals.filters.response_time_label')}
                     </Label>
                     <Select value={selectedResponseTime} onValueChange={setSelectedResponseTime}>
                       <SelectTrigger>
@@ -528,28 +530,28 @@ const Professionals = () => {
 
                   {/* Sort By */}
                   <div className="space-y-2">
-                    <Label>Trier par</Label>
+                    <Label>{t('professionals.sort.sort_by')}</Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="recent">Plus récents</SelectItem>
-                        <SelectItem value="name">Nom (A-Z)</SelectItem>
-                        <SelectItem value="rating">Meilleures notes</SelectItem>
+                        <SelectItem value="recent">{t('professionals.sort.recent')}</SelectItem>
+                        <SelectItem value="name">{t('professionals.sort.name')}</SelectItem>
+                        <SelectItem value="rating">{t('professionals.sort.rating')}</SelectItem>
                         <SelectItem value="proximity">
                           <div className="flex items-center gap-2">
                             <NavigationIcon className="h-4 w-4" />
-                            Proximité
+                            {t('professionals.sort.proximity')}
                             {!userLocation && (
-                              <span className="text-xs text-muted-foreground">(localisation requise)</span>
+                              <span className="text-xs text-muted-foreground">({t('professionals.sort.location_required')})</span>
                             )}
                           </div>
                         </SelectItem>
                         <SelectItem value="activity">
                           <div className="flex items-center gap-2">
                             <TrendingUp className="h-4 w-4" />
-                            Plus actifs
+                            {t('professionals.sort.activity')}
                           </div>
                         </SelectItem>
                       </SelectContent>
@@ -562,9 +564,9 @@ const Professionals = () => {
                       <div className="flex items-start gap-2">
                         <NavigationIcon className="h-4 w-4 text-orange-600 mt-0.5" />
                         <div>
-                          <p className="font-medium text-orange-900">Localisation désactivée</p>
+                          <p className="font-medium text-orange-900">{t('professionals.geolocation.disabled')}</p>
                           <p className="text-orange-700 text-xs mt-1">
-                            Activez la géolocalisation pour trier par proximité
+                            {t('professionals.geolocation.enable_message')}
                           </p>
                           <Button
                             size="sm"
@@ -572,7 +574,7 @@ const Professionals = () => {
                             className="mt-2"
                             onClick={requestUserLocation}
                           >
-                            Activer
+                            {t('professionals.geolocation.enable')}
                           </Button>
                         </div>
                       </div>
@@ -586,7 +588,10 @@ const Professionals = () => {
             <div className="flex-1">
               <div className="mb-6 flex items-center justify-between">
                 <p className="text-muted-foreground">
-                  {filteredProfessionals.length} professionnel{filteredProfessionals.length !== 1 ? 's' : ''} trouvé{filteredProfessionals.length !== 1 ? 's' : ''}
+                  {filteredProfessionals.length === 1 
+                    ? t('professionals.stats.results_count', { count: filteredProfessionals.length })
+                    : t('professionals.stats.results_count_plural', { count: filteredProfessionals.length })
+                  }
                 </p>
               </div>
 
@@ -611,22 +616,22 @@ const Professionals = () => {
                 <Card className="text-center py-12">
                   <CardContent>
                     <Building2 className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Aucun professionnel trouvé</h3>
+                    <h3 className="text-xl font-semibold mb-2">{t('professionals.no_results.title')}</h3>
                     <p className="text-muted-foreground mb-6">
-                      Essayez de modifier vos critères de recherche
+                      {t('professionals.no_results.description')}
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedService("Tous les services");
-                        setSelectedRegion("Toutes les régions");
-                        setSelectedBudget("Tous les budgets");
-                        setSelectedAvailability("Toutes disponibilités");
-                        setSelectedResponseTime("Tous les temps de réponse");
+                        setSelectedService(SERVICES[0]);
+                        setSelectedRegion(REGIONS[0]);
+                        setSelectedBudget(BUDGET_RANGES[0]);
+                        setSelectedAvailability(AVAILABILITY_OPTIONS[0]);
+                        setSelectedResponseTime(RESPONSE_TIME_OPTIONS[0]);
                         setSearchTerm("");
                       }}
                     >
-                      Réinitialiser les filtres
+                      {t('professionals.no_results.reset_button')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -643,7 +648,7 @@ const Professionals = () => {
                               {pro.is_rbq_verified && (
                                 <Badge variant="default" className="ml-2">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                                  Vérifié
+                                  {t('professionals.card.verified')}
                                 </Badge>
                               )}
                             </CardTitle>
@@ -689,14 +694,14 @@ const Professionals = () => {
                         <div className="flex items-center gap-4">
                           {pro.years_experience && (
                             <div className="text-sm">
-                              <span className="font-medium">{pro.years_experience} ans</span>
-                              <span className="text-muted-foreground"> d'expérience</span>
+                              <span className="font-medium">{pro.years_experience}</span>
+                              <span className="text-muted-foreground"> {t('professionals.card.years_exp')}</span>
                             </div>
                           )}
                           {sortBy === 'activity' && pro.activity_score !== null && pro.activity_score > 0 && (
                             <Badge variant="secondary" className="text-xs">
                               <TrendingUp className="h-3 w-3 mr-1" />
-                              Score: {pro.activity_score.toFixed(0)}/100
+                              {t('professionals.card.activity_score')}: {pro.activity_score.toFixed(0)}/100
                             </Badge>
                           )}
                         </div>
@@ -786,14 +791,14 @@ const Professionals = () => {
                             />
                           ))}
                           <span className="text-sm text-muted-foreground ml-1">
-                            ({pro.average_rating.toFixed(1)} • {pro.total_reviews} avis)
+                            ({pro.average_rating.toFixed(1)} • {pro.total_reviews} {t('professionals.card.reviews')})
                           </span>
                         </div>
 
                         {/* Projects count */}
                         {pro.total_projects > 0 && (
                           <div className="text-sm text-muted-foreground">
-                            <span className="font-semibold text-foreground">{pro.total_projects}</span> projet{pro.total_projects > 1 ? 's' : ''} réalisé{pro.total_projects > 1 ? 's' : ''}
+                            <span className="font-semibold text-foreground">{pro.total_projects}</span> {pro.total_projects === 1 ? t('professionals.card.project') : t('professionals.card.projects')}
                           </div>
                         )}
 
@@ -804,17 +809,16 @@ const Professionals = () => {
                           <Button 
                             className="flex-1" 
                             onClick={() => {
-                              // TODO: Créer la page de profil détaillé
-                              alert('Page de profil en développement. Utilisez le bouton "Contacter" pour communiquer !');
+                              alert(t('professionals.card.profile_in_dev'));
                             }}
                           >
-                            Voir le profil
+                            {t('professionals.card.view_profile')}
                           </Button>
                           <Button 
                             variant="outline" 
                             size="icon"
                             onClick={() => handleStartConversation(pro.id)}
-                            title="Contacter"
+                            title={t('professionals.card.contact')}
                           >
                             <MessageSquare className="h-4 w-4" />
                           </Button>

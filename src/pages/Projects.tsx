@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -49,53 +50,6 @@ interface Project {
   views_count: number;
 }
 
-const CATEGORIES = [
-  "Toutes les catégories",
-  "Rénovation résidentielle",
-  "Construction neuve",
-  "Toiture",
-  "Plomberie",
-  "Électricité",
-  "Menuiserie",
-  "Maçonnerie",
-  "Peinture",
-  "Isolation",
-  "Aménagement paysager",
-  "Cuisine et salle de bain",
-  "Extension et agrandissement",
-];
-
-const REGIONS = [
-  "Toutes les régions",
-  "Montréal",
-  "Québec",
-  "Laval",
-  "Gatineau",
-  "Longueuil",
-  "Sherbrooke",
-  "Saguenay",
-  "Trois-Rivières",
-  "Terrebonne",
-  "Saint-Jean-sur-Richelieu",
-];
-
-const BUDGETS = [
-  "Tous les budgets",
-  "Moins de 5 000 $",
-  "5 000 $ - 10 000 $",
-  "10 000 $ - 25 000 $",
-  "25 000 $ - 50 000 $",
-  "50 000 $ - 100 000 $",
-  "Plus de 100 000 $",
-];
-
-const STATUS_LABELS = {
-  open: "Ouvert",
-  in_progress: "En cours",
-  completed: "Complété",
-  cancelled: "Annulé",
-};
-
 const STATUS_COLORS = {
   open: "bg-green-100 text-green-800",
   in_progress: "bg-blue-100 text-blue-800",
@@ -104,14 +58,62 @@ const STATUS_COLORS = {
 };
 
 const Projects = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const CATEGORIES = [
+    t('projects.filters.all_categories'),
+    t('professionals.filters.services.residential_renovation'),
+    t('professionals.filters.services.new_construction'),
+    t('professionals.filters.services.roofing'),
+    t('professionals.filters.services.plumbing'),
+    t('professionals.filters.services.electricity'),
+    t('professionals.filters.services.carpentry'),
+    t('professionals.filters.services.masonry'),
+    t('professionals.filters.services.painting'),
+    t('professionals.filters.services.insulation'),
+    t('professionals.filters.services.landscaping'),
+    t('projects.filters.kitchen_bathroom'),
+    t('projects.filters.extension'),
+  ];
+
+  const REGIONS = [
+    t('projects.filters.all_regions'),
+    t('professionals.filters.regions.montreal'),
+    t('professionals.filters.regions.quebec'),
+    t('professionals.filters.regions.laval'),
+    t('professionals.filters.regions.gatineau'),
+    t('professionals.filters.regions.longueuil'),
+    t('professionals.filters.regions.sherbrooke'),
+    t('professionals.filters.regions.saguenay'),
+    t('professionals.filters.regions.trois_rivieres'),
+    t('professionals.filters.regions.terrebonne'),
+    t('professionals.filters.regions.saint_jean'),
+  ];
+
+  const BUDGETS = [
+    t('projects.filters.all_budgets'),
+    t('projects.filters.budgets.under_5k'),
+    t('projects.filters.budgets.5k_10k'),
+    t('projects.filters.budgets.10k_25k'),
+    t('projects.filters.budgets.25k_50k'),
+    t('projects.filters.budgets.50k_100k'),
+    t('projects.filters.budgets.over_100k'),
+  ];
+
+  const STATUS_LABELS = {
+    open: t('dashboard.projects.status.open'),
+    in_progress: t('dashboard.projects.status.in_progress'),
+    completed: t('dashboard.projects.status.completed'),
+    cancelled: t('dashboard.projects.status.cancelled'),
+  };
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Toutes les catégories");
-  const [selectedRegion, setSelectedRegion] = useState("Toutes les régions");
-  const [selectedBudget, setSelectedBudget] = useState("Tous les budgets");
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [selectedRegion, setSelectedRegion] = useState(REGIONS[0]);
+  const [selectedBudget, setSelectedBudget] = useState(BUDGETS[0]);
   const [sortBy, setSortBy] = useState("recent");
   const [userId, setUserId] = useState<string | null>(null);
   const [isProfessional, setIsProfessional] = useState<boolean>(false);
@@ -231,11 +233,11 @@ const Projects = () => {
   };
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return "Budget � discuter";
+    if (!min && !max) return t('projects.card.to_discuss');
     if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
-    if (min) return `À partir de ${min.toLocaleString()} $`;
-    if (max) return `Jusqu'� ${max.toLocaleString()} $`;
-    return "Budget � discuter";
+    if (min) return `${t('new_project.form.from')} ${min.toLocaleString()} $`;
+    if (max) return `${t('new_project.form.up_to')} ${max.toLocaleString()} $`;
+    return t('projects.card.to_discuss');
   };
 
   const formatDate = (dateString: string) => {
@@ -244,10 +246,10 @@ const Projects = () => {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return "Hier";
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} semaines`;
+    if (diffDays === 0) return t('new_project.form.today');
+    if (diffDays === 1) return t('new_project.form.yesterday');
+    if (diffDays < 7) return t('new_project.form.days_ago', { count: diffDays });
+    if (diffDays < 30) return t('new_project.form.weeks_ago', { count: Math.floor(diffDays / 7) });
     return date.toLocaleDateString('fr-CA');
   };
 
@@ -294,10 +296,10 @@ const Projects = () => {
         <div className="container mx-auto px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-4xl lg:text-5xl font-bold">
-              Découvrez les projets disponibles
+              {t('projects.hero.title')}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Trouvez des opportunités de projets de construction et rénovation près de chez vous
+              {t('projects.hero.subtitle')}
             </p>
             
             {/* Main Search Bar */}
@@ -305,7 +307,7 @@ const Projects = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Rechercher un projet par titre, description ou catégorie..."
+                placeholder={t('projects.search')}
                 className="pl-12 pr-4 h-14 text-lg"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -316,21 +318,21 @@ const Projects = () => {
             <div className="flex items-center justify-center gap-8 pt-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{projects.length}</div>
-                <div className="text-sm text-muted-foreground">Projets actifs</div>
+                <div className="text-sm text-muted-foreground">{t('projects.stats.active_projects')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {projects.reduce((acc, p) => acc + p.proposals_count, 0)}
                 </div>
-                <div className="text-sm text-muted-foreground">Propositions envoyées</div>
+                <div className="text-sm text-muted-foreground">{t('projects.stats.total_proposals')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
                   {projects.length > 0 ? Math.round(projects.reduce((acc, p) => acc + p.proposals_count, 0) / projects.length) : 0}
                 </div>
-                <div className="text-sm text-muted-foreground">Propositions/projet</div>
+                <div className="text-sm text-muted-foreground">{t('projects.stats.proposals_per_project')}</div>
               </div>
             </div>
           </div>
@@ -348,26 +350,26 @@ const Projects = () => {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
                       <SlidersHorizontal className="h-5 w-5" />
-                      Filtres
+                      {t('professionals.filters_title')}
                     </CardTitle>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        setSelectedCategory("Toutes les catégories");
-                        setSelectedRegion("Toutes les régions");
-                        setSelectedBudget("Tous les budgets");
+                        setSelectedCategory(CATEGORIES[0]);
+                        setSelectedRegion(REGIONS[0]);
+                        setSelectedBudget(BUDGETS[0]);
                         setSearchTerm("");
                       }}
                     >
-                      Réinitialiser
+                      {t('professionals.filters.reset')}
                     </Button>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Category Filter */}
                   <div className="space-y-2">
-                    <Label>Catégorie</Label>
+                    <Label>{t('new_project.form.category')}</Label>
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                       <SelectTrigger>
                         <SelectValue />
@@ -384,7 +386,7 @@ const Projects = () => {
 
                   {/* Region Filter */}
                   <div className="space-y-2">
-                    <Label>Région</Label>
+                    <Label>{t('new_project.form.region')}</Label>
                     <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                       <SelectTrigger>
                         <SelectValue />
@@ -401,7 +403,7 @@ const Projects = () => {
 
                   {/* Budget Filter */}
                   <div className="space-y-2">
-                    <Label>Budget</Label>
+                    <Label>{t('new_project.form.budget')}</Label>
                     <Select value={selectedBudget} onValueChange={setSelectedBudget}>
                       <SelectTrigger>
                         <SelectValue />
@@ -418,16 +420,16 @@ const Projects = () => {
 
                   {/* Sort By */}
                   <div className="space-y-2">
-                    <Label>Trier par</Label>
+                    <Label>{t('professionals.sort.sort_by')}</Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="recent">Plus récents</SelectItem>
-                        <SelectItem value="budget_high">Budget élevé</SelectItem>
-                        <SelectItem value="budget_low">Budget faible</SelectItem>
-                        <SelectItem value="proposals">Plus de propositions</SelectItem>
+                        <SelectItem value="recent">{t('projects.sort.recent')}</SelectItem>
+                        <SelectItem value="budget_high">{t('projects.sort.budget_desc')}</SelectItem>
+                        <SelectItem value="budget_low">{t('projects.sort.budget_asc')}</SelectItem>
+                        <SelectItem value="proposals">{t('projects.sort.proposals')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -439,7 +441,10 @@ const Projects = () => {
             <div className="flex-1">
               <div className="mb-6 flex items-center justify-between">
                 <p className="text-muted-foreground">
-                  {filteredProjects.length} projet{filteredProjects.length !== 1 ? 's' : ''} trouvé{filteredProjects.length !== 1 ? 's' : ''}
+                  {filteredProjects.length === 1 
+                    ? t('projects.stats.results_count', { count: filteredProjects.length })
+                    : t('projects.stats.results_count_plural', { count: filteredProjects.length })
+                  }
                 </p>
               </div>
 
@@ -464,20 +469,20 @@ const Projects = () => {
                 <Card className="text-center py-12">
                   <CardContent>
                     <Briefcase className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">Aucun projet trouvé</h3>
+                    <h3 className="text-xl font-semibold mb-2">{t('projects.no_results.title')}</h3>
                     <p className="text-muted-foreground mb-6">
-                      Essayez de modifier vos critères de recherche
+                      {t('projects.no_results.description')}
                     </p>
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedCategory("Toutes les catégories");
-                        setSelectedRegion("Toutes les régions");
-                        setSelectedBudget("Tous les budgets");
+                        setSelectedCategory(CATEGORIES[0]);
+                        setSelectedRegion(REGIONS[0]);
+                        setSelectedBudget(BUDGETS[0]);
                         setSearchTerm("");
                       }}
                     >
-                      Réinitialiser les filtres
+                      {t('projects.no_results.reset')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -497,7 +502,7 @@ const Projects = () => {
                             <CardDescription className="flex items-center gap-4 text-sm">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-4 w-4" />
-                                Publié {formatDate(project.created_at)}
+                                {t('projects.card.published')} {formatDate(project.created_at)}
                               </span>
                               {(project.city || project.region) && (
                                 <span className="flex items-center gap-1">
@@ -533,7 +538,7 @@ const Projects = () => {
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              Échéance: {new Date(project.deadline).toLocaleDateString('fr-CA')}
+                              {t('projects.card.deadline')}: {new Date(project.deadline).toLocaleDateString('fr-CA')}
                             </span>
                           </div>
                         )}
@@ -542,11 +547,11 @@ const Projects = () => {
                         <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
                           <span className="flex items-center gap-1">
                             <MessageSquare className="h-4 w-4" />
-                            {project.proposals_count} proposition{project.proposals_count !== 1 ? 's' : ''}
+                            {project.proposals_count} {t('projects.card.proposals')}
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="h-4 w-4" />
-                            {project.views_count} vue{project.views_count !== 1 ? 's' : ''}
+                            {project.views_count} {t('projects.card.views')}
                           </span>
                         </div>
 
@@ -555,33 +560,33 @@ const Projects = () => {
                         {/* Actions */}
                         <div className="flex gap-2 flex-wrap">
                           <Button className="flex-1" onClick={() => navigate(`/project/${project.id}`)}>
-                            Voir les détails
+                            {t('projects.card.view_details')}
                           </Button>
                           {isProfessional && (
                             <Button variant="outline" onClick={() => setProposalFor(project.id)}>
-                              Soumettre une proposition
+                              {t('projects.card.submit_proposal')}
                             </Button>
                           )}
                         </div>
                         {proposalFor === project.id && (
                           <div className="mt-3 border rounded-lg p-3 space-y-3">
                             <div>
-                              <Label>Message</Label>
+                              <Label>{t('proposals.form.message')}</Label>
                               <Textarea rows={3} value={proposalMessage} onChange={e => setProposalMessage(e.target.value)} />
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                               <div>
-                                <Label>Budget estimé (CAD)</Label>
+                                <Label>{t('proposals.form.budget')}</Label>
                                 <Input type="number" value={proposalBudget} onChange={e => setProposalBudget(e.target.value)} />
                               </div>
                               <div>
-                                <Label>Durée (jours)</Label>
+                                <Label>{t('proposals.form.duration')}</Label>
                                 <Input type="number" value={proposalDuration} onChange={e => setProposalDuration(e.target.value)} />
                               </div>
                             </div>
                             <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setProposalFor(null)}>Annuler</Button>
-                              <Button onClick={submitProposal} disabled={!proposalMessage}>Envoyer</Button>
+                              <Button variant="outline" onClick={() => setProposalFor(null)}>{t('proposals.form.cancel')}</Button>
+                              <Button onClick={submitProposal} disabled={!proposalMessage}>{t('proposals.form.send')}</Button>
                             </div>
                           </div>
                         )}

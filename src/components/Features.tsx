@@ -1,49 +1,51 @@
 import { Shield, Award, Clock, MessageSquare, FileCheck, Globe2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import contractorImage from "@/assets/contractor-profile.jpg";
 import clientImage from "@/assets/client-success.jpg";
 
-const features = [
-  {
-    icon: Shield,
-    title: "Sécurité maximale",
-    description: "Vérifications RBQ, assurances, permis. Paiements protégés avec système de jalons.",
-  },
-  {
-    icon: Award,
-    title: "Qualité garantie",
-    description: "Évaluations détaillées sur ponctualité, qualité, respect des délais et communication.",
-  },
-  {
-    icon: Clock,
-    title: "Gain de temps",
-    description: "Trouvez rapidement les meilleurs pros grâce à nos filtres intelligents et recommandations.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Communication fluide",
-    description: "Messagerie intégrée, notifications en temps réel et suivi de projet centralisé.",
-  },
-  {
-    icon: FileCheck,
-    title: "Contrats intelligents",
-    description: "Bibliothèque de modèles par type de travaux, e-signature et versioning automatique.",
-  },
-  {
-    icon: Globe2,
-    title: "Multilingue",
-    description: "Interface disponible en français et anglais, avec support pour d'autres langues.",
-  },
-];
-
 const Features = () => {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: Shield,
+      title: t('features.list.security.title'),
+      description: t('features.list.security.description'),
+    },
+    {
+      icon: Award,
+      title: t('features.list.quality.title'),
+      description: t('features.list.quality.description'),
+    },
+    {
+      icon: Clock,
+      title: t('features.list.time.title'),
+      description: t('features.list.time.description'),
+    },
+    {
+      icon: MessageSquare,
+      title: t('features.list.communication.title'),
+      description: t('features.list.communication.description'),
+    },
+    {
+      icon: FileCheck,
+      title: t('features.list.contracts.title'),
+      description: t('features.list.contracts.description'),
+    },
+    {
+      icon: Globe2,
+      title: t('features.list.multilingual.title'),
+      description: t('features.list.multilingual.description'),
+    },
+  ];
   return (
     <section className="py-24 bg-gradient-subtle">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="mb-6">Une plateforme complète et sécurisée</h2>
+          <h2 className="mb-6">{t('features.title')}</h2>
           <p className="text-xl text-muted-foreground">
-            BâtirNet combine technologie de pointe et simplicité pour offrir la meilleure expérience aux clients et entrepreneurs.
+            {t('features.subtitle')}
           </p>
         </div>
 
@@ -77,9 +79,9 @@ const Features = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-8">
               <div className="text-background">
-                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">Pour les entrepreneurs</h3>
+                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">{t('features.for_contractors.title')}</h3>
                 <p className="text-primary-foreground/90">
-                  Développez votre activité avec des clients qualifiés et des outils professionnels.
+                  {t('features.for_contractors.description')}
                 </p>
               </div>
             </div>
@@ -93,9 +95,9 @@ const Features = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-8">
               <div className="text-background">
-                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">Pour les clients</h3>
+                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">{t('features.for_clients.title')}</h3>
                 <p className="text-primary-foreground/90">
-                  Réalisez vos projets en toute confiance avec les meilleurs professionnels.
+                  {t('features.for_clients.description')}
                 </p>
               </div>
             </div>

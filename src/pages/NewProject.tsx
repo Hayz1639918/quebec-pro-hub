@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -22,37 +23,38 @@ import { CalendarIcon, Upload, X } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-const CATEGORIES = [
-  "Rénovation résidentielle",
-  "Construction neuve",
-  "Toiture",
-  "Plomberie",
-  "Électricité",
-  "Menuiserie",
-  "Maçonnerie",
-  "Peinture",
-  "Isolation",
-  "Aménagement paysager",
-  "Cuisine et salle de bain",
-  "Extension et agrandissement",
-];
-
-const REGIONS = [
-  "Montréal",
-  "Québec",
-  "Laval",
-  "Gatineau",
-  "Longueuil",
-  "Sherbrooke",
-  "Saguenay",
-  "Trois-Rivières",
-  "Terrebonne",
-  "Saint-Jean-sur-Richelieu",
-];
-
 const NewProject = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const CATEGORIES = [
+    t('professionals.filters.services.residential_renovation'),
+    t('professionals.filters.services.new_construction'),
+    t('professionals.filters.services.roofing'),
+    t('professionals.filters.services.plumbing'),
+    t('professionals.filters.services.electricity'),
+    t('professionals.filters.services.carpentry'),
+    t('professionals.filters.services.masonry'),
+    t('professionals.filters.services.painting'),
+    t('professionals.filters.services.insulation'),
+    t('professionals.filters.services.landscaping'),
+    t('projects.filters.kitchen_bathroom'),
+    t('projects.filters.extension'),
+  ];
+
+  const REGIONS = [
+    t('professionals.filters.regions.montreal'),
+    t('professionals.filters.regions.quebec'),
+    t('professionals.filters.regions.laval'),
+    t('professionals.filters.regions.gatineau'),
+    t('professionals.filters.regions.longueuil'),
+    t('professionals.filters.regions.sherbrooke'),
+    t('professionals.filters.regions.saguenay'),
+    t('professionals.filters.regions.trois_rivieres'),
+    t('professionals.filters.regions.terrebonne'),
+    t('professionals.filters.regions.saint_jean'),
+  ];
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   
@@ -78,8 +80,8 @@ const NewProject = () => {
     if (!session) {
       toast({
         variant: "destructive",
-        title: "Connexion requise",
-        description: "Vous devez être connecté pour créer un projet",
+        title: t('new_project.messages.login_required'),
+        description: t('new_project.messages.login_required_desc'),
       });
       navigate("/auth?mode=login");
       return;
@@ -95,8 +97,8 @@ const NewProject = () => {
     if (profile?.user_type !== 'client') {
       toast({
         variant: "destructive",
-        title: "Accès refusé",
-        description: "Seuls les clients peuvent créer des projets",
+        title: t('new_project.messages.access_denied'),
+        description: t('new_project.messages.clients_only'),
       });
       navigate("/dashboard");
       return;
@@ -116,8 +118,8 @@ const NewProject = () => {
       if (!validTypes.includes(file.type)) {
         toast({
           variant: "destructive",
-          title: "Format invalide",
-          description: `${file.name} n'est pas un format accepté`,
+          title: t('new_project.messages.invalid_format'),
+          description: t('new_project.messages.invalid_format_desc', { filename: file.name }),
         });
         return false;
       }
@@ -125,8 +127,8 @@ const NewProject = () => {
       if (file.size > maxSize) {
         toast({
           variant: "destructive",
-          title: "Fichier trop volumineux",
-          description: `${file.name} dépasse 5 Mo`,
+          title: t('new_project.messages.file_too_large'),
+          description: t('new_project.messages.file_too_large_desc', { filename: file.name }),
         });
         return false;
       }
@@ -174,8 +176,8 @@ const NewProject = () => {
     if (!userId) {
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Utilisateur non connecté",
+        title: t('common.error'),
+        description: t('new_project.messages.not_logged_in'),
       });
       return;
     }
@@ -184,8 +186,8 @@ const NewProject = () => {
     if (!title || !description || !category) {
       toast({
         variant: "destructive",
-        title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires",
+        title: t('new_project.messages.required_fields'),
+        description: t('new_project.messages.fill_required_fields'),
       });
       return;
     }
@@ -193,8 +195,8 @@ const NewProject = () => {
     if (budgetMin && budgetMax && parseFloat(budgetMax) < parseFloat(budgetMin)) {
       toast({
         variant: "destructive",
-        title: "Budget invalide",
-        description: "Le budget maximum doit être supérieur au minimum",
+        title: t('new_project.messages.invalid_budget'),
+        description: t('new_project.messages.invalid_budget_desc'),
       });
       return;
     }
@@ -240,17 +242,17 @@ const NewProject = () => {
       }
 
       toast({
-        title: "Projet créé ! 🎉",
-        description: "Votre projet a été publié avec succès",
+        title: t('new_project.messages.success_title'),
+        description: t('new_project.messages.success_desc'),
       });
 
       navigate("/dashboard");
     } catch (error) {
       console.error('Error creating project:', error);
-      const errorMessage = error instanceof Error ? error.message : "Erreur lors de la création du projet";
+      const errorMessage = error instanceof Error ? error.message : t('new_project.messages.creation_error');
       toast({
         variant: "destructive",
-        title: "Erreur",
+        title: t('common.error'),
         description: errorMessage,
       });
     } finally {
@@ -265,27 +267,27 @@ const NewProject = () => {
       <div className="flex-1 pt-24 pb-12">
         <div className="container mx-auto px-6 lg:px-8 max-w-3xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Créer un nouveau projet</h1>
+            <h1 className="text-3xl font-bold mb-2">{t('new_project.title')}</h1>
             <p className="text-muted-foreground">
-              Décrivez votre projet pour recevoir des propositions de professionnels qualifiés
+              {t('new_project.subtitle')}
             </p>
           </div>
 
           <form onSubmit={handleSubmit}>
             <Card>
               <CardHeader>
-                <CardTitle>Informations du projet</CardTitle>
+                <CardTitle>{t('new_project.form.project_info')}</CardTitle>
                 <CardDescription>
-                  Les champs marqués d'un * sont obligatoires
+                  {t('new_project.form.required_fields_note')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Title */}
                 <div className="space-y-2">
-                  <Label htmlFor="title">Titre du projet *</Label>
+                  <Label htmlFor="title">{t('new_project.form.title')} *</Label>
                   <Input
                     id="title"
-                    placeholder="Ex: Rénovation complète de cuisine"
+                    placeholder={t('new_project.form.title_placeholder')}
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     required
@@ -294,10 +296,10 @@ const NewProject = () => {
 
                 {/* Category */}
                 <div className="space-y-2">
-                  <Label htmlFor="category">Catégorie *</Label>
+                  <Label htmlFor="category">{t('new_project.form.category')} *</Label>
                   <Select value={category} onValueChange={setCategory} required>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez une catégorie" />
+                      <SelectValue placeholder={t('new_project.form.category_placeholder')} />
                     </SelectTrigger>
                     <SelectContent>
                       {CATEGORIES.map((cat) => (
@@ -311,39 +313,39 @@ const NewProject = () => {
 
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
+                  <Label htmlFor="description">{t('new_project.form.description')} *</Label>
                   <Textarea
                     id="description"
-                    placeholder="Décrivez votre projet en détail..."
+                    placeholder={t('new_project.form.description_placeholder')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={5}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Plus votre description est détaillée, meilleures seront les propositions
+                    {t('new_project.form.description_help')}
                   </p>
                 </div>
 
                 {/* Budget */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="budgetMin">Budget minimum ($)</Label>
+                    <Label htmlFor="budgetMin">{t('new_project.form.budget_min')}</Label>
                     <Input
                       id="budgetMin"
                       type="number"
-                      placeholder="Ex: 10000"
+                      placeholder={t('new_project.form.budget_min_placeholder')}
                       value={budgetMin}
                       onChange={(e) => setBudgetMin(e.target.value)}
                       min="0"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="budgetMax">Budget maximum ($)</Label>
+                    <Label htmlFor="budgetMax">{t('new_project.form.budget_max')}</Label>
                     <Input
                       id="budgetMax"
                       type="number"
-                      placeholder="Ex: 25000"
+                      placeholder={t('new_project.form.budget_max_placeholder')}
                       value={budgetMax}
                       onChange={(e) => setBudgetMax(e.target.value)}
                       min="0"
@@ -354,19 +356,19 @@ const NewProject = () => {
                 {/* Location */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">Ville</Label>
+                    <Label htmlFor="city">{t('new_project.form.city')}</Label>
                     <Input
                       id="city"
-                      placeholder="Ex: Montréal"
+                      placeholder={t('new_project.form.city_placeholder')}
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="region">Région</Label>
+                    <Label htmlFor="region">{t('new_project.form.region')}</Label>
                     <Select value={region} onValueChange={setRegion}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez une région" />
+                        <SelectValue placeholder={t('new_project.form.region_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         {REGIONS.map((reg) => (
@@ -380,10 +382,10 @@ const NewProject = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">Code postal</Label>
+                  <Label htmlFor="postalCode">{t('new_project.form.postal_code')}</Label>
                   <Input
                     id="postalCode"
-                    placeholder="Ex: H1A 1A1"
+                    placeholder={t('new_project.form.postal_code_placeholder')}
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
                     maxLength={7}
@@ -392,7 +394,7 @@ const NewProject = () => {
 
                 {/* Deadline */}
                 <div className="space-y-2">
-                  <Label>Échéance souhaitée</Label>
+                  <Label>{t('new_project.form.deadline')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -400,7 +402,7 @@ const NewProject = () => {
                         className="w-full justify-start text-left font-normal"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deadline ? format(deadline, "PPP", { locale: fr }) : "Sélectionnez une date"}
+                        {deadline ? format(deadline, "PPP", { locale: fr }) : t('new_project.form.select_date')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -417,7 +419,7 @@ const NewProject = () => {
 
                 {/* File Upload */}
                 <div className="space-y-2">
-                  <Label>Photos ou documents (optionnel)</Label>
+                  <Label>{t('new_project.form.files')}</Label>
                   <div className="border-2 border-dashed rounded-lg p-6 text-center">
                     <Input
                       type="file"
@@ -433,10 +435,10 @@ const NewProject = () => {
                     >
                       <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                       <span className="text-sm font-medium">
-                        Cliquez pour télécharger
+                        {t('new_project.form.click_to_upload')}
                       </span>
                       <span className="text-xs text-muted-foreground mt-1">
-                        Images (JPG, PNG) ou PDF • Max 5 fichiers • 5 Mo max chacun
+                        {t('new_project.form.file_requirements')}
                       </span>
                     </Label>
                   </div>
@@ -475,10 +477,10 @@ const NewProject = () => {
                 disabled={loading}
                 className="flex-1"
               >
-                Annuler
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={loading} className="flex-1">
-                {loading ? "Création..." : "Publier le projet"}
+                {loading ? t('new_project.form.creating') : t('new_project.form.submit')}
               </Button>
             </div>
           </form>

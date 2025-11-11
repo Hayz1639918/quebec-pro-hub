@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,16 +58,17 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-red-500',
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Ouvert',
-  in_progress: 'En cours',
-  completed: 'Complété',
-  cancelled: 'Annulé',
-};
-
 const ProjectDetails = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  
+  const STATUS_LABELS: Record<string, string> = {
+    open: t('projects.status.open'),
+    in_progress: t('projects.status.in_progress'),
+    completed: t('projects.status.completed'),
+    cancelled: t('projects.status.cancelled'),
+  };
   const [project, setProject] = useState<Project | null>(null);
   const [client, setClient] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
@@ -121,7 +123,7 @@ const ProjectDetails = () => {
       setClient(clientData);
     } catch (error) {
       console.error('Erreur lors du chargement du projet:', error);
-      toast.error('Impossible de charger les détails du projet');
+      toast.error(t('project_details.error_loading'));
     } finally {
       setLoading(false);
     }
@@ -142,7 +144,7 @@ const ProjectDetails = () => {
 
   const handleContactClient = async () => {
     if (!currentUser || currentUser.user_type !== 'professional') {
-      toast.error('Vous devez être connecté en tant que professionnel');
+      toast.error(t('project_details.error_pro_only'));
       return;
     }
 
@@ -194,8 +196,8 @@ const ProjectDetails = () => {
           .insert({
             user_id: project.client_id,
             type: 'message',
-            title: 'Nouveau message',
-            message: `${currentUser.company_name || currentUser.full_name} vous a envoyé un message concernant votre projet "${project.title}"`,
+            title: t('notifications.types.new_message'),
+            message: `${currentUser.company_name || currentUser.full_name} ${t('messages.sent_message_about')} "${project.title}"`,
             metadata: { conversation_id: conversationId, project_id: id },
           });
       }
@@ -204,18 +206,18 @@ const ProjectDetails = () => {
       navigate(`/messages?conversation=${conversationId}`);
     } catch (error) {
       console.error('Erreur lors de la création de la conversation:', error);
-      toast.error('Erreur lors de l\'ouverture de la conversation');
+      toast.error(t('project_details.error_conversation'));
     }
   };
 
   const handleSubmitProposal = async () => {
     if (!currentUser || currentUser.user_type !== 'professional') {
-      toast.error('Vous devez être connecté en tant que professionnel pour soumettre une proposition');
+      toast.error(t('project_details.error_pro_submit'));
       return;
     }
 
     if (!proposalMessage.trim()) {
-      toast.error('Veuillez entrer un message');
+      toast.error(t('project_details.error_message_required'));
       return;
     }
 
@@ -233,7 +235,7 @@ const ProjectDetails = () => {
         .maybeSingle();
 
       if (existingProposal) {
-        toast.error('Vous avez déjà soumis une proposition pour ce projet');
+        toast.error(t('project_details.error_already_submitted'));
         setSubmitting(false);
         return;
       }
@@ -326,7 +328,7 @@ const ProjectDetails = () => {
           },
         });
 
-      toast.success('Proposition envoyée avec succès !');
+      toast.success(t('project_details.success_submitted'));
       setProposalMessage('');
       setProposalBudget('');
       setProposalDelay('');
@@ -337,7 +339,7 @@ const ProjectDetails = () => {
       }, 1500);
     } catch (error) {
       console.error('Erreur lors de l\'envoi de la proposition:', error);
-      toast.error('Erreur lors de l\'envoi de la proposition');
+      toast.error(t('project_details.error_sending'));
     } finally {
       setSubmitting(false);
     }
@@ -365,10 +367,10 @@ const ProjectDetails = () => {
         <main className="flex-1 flex items-center justify-center pt-24">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2">Projet introuvable</h1>
-            <p className="text-muted-foreground mb-4">Ce projet n'existe pas ou a été supprimé.</p>
+            <p className="text-muted-foreground mb-4">{t('project_details.not_found_desc')}</p>
             <Button onClick={() => navigate('/projects')}>
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Retour aux projets
+              {t('project_details.back_to_projects')}
             </Button>
           </div>
         </main>
@@ -392,7 +394,7 @@ const ProjectDetails = () => {
           onClick={() => navigate('/projects')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Retour aux projets
+          {t('project_details.back_to_projects')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

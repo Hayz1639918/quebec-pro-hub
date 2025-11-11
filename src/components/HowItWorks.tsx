@@ -1,37 +1,39 @@
 import { Search, FileText, CreditCard, CheckCircle2 } from "lucide-react";
-
-const steps = [
-  {
-    icon: Search,
-    title: "Trouvez le bon pro",
-    description: "Recherchez et comparez les entrepreneurs qualifiés selon votre projet, budget et localisation.",
-  },
-  {
-    icon: FileText,
-    title: "Signez en ligne",
-    description: "Créez un contrat intelligent avec jalons de paiement et e-signature sécurisée.",
-  },
-  {
-    icon: CreditCard,
-    title: "Paiements sécurisés",
-    description: "Payez par étapes selon l'avancement du projet. Vos fonds sont protégés jusqu'à validation.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Évaluez la qualité",
-    description: "Notez votre expérience pour aider la communauté et garantir la qualité du service.",
-  },
-];
+import { useTranslation } from "react-i18next";
 
 const HowItWorks = () => {
+  const { t } = useTranslation();
+
+  const steps = [
+    {
+      icon: Search,
+      title: t('how_it_works.steps.find.title'),
+      description: t('how_it_works.steps.find.description'),
+    },
+    {
+      icon: FileText,
+      title: t('how_it_works.steps.sign.title'),
+      description: t('how_it_works.steps.sign.description'),
+    },
+    {
+      icon: CreditCard,
+      title: t('how_it_works.steps.pay.title'),
+      description: t('how_it_works.steps.pay.description'),
+    },
+    {
+      icon: CheckCircle2,
+      title: t('how_it_works.steps.review.title'),
+      description: t('how_it_works.steps.review.description'),
+    },
+  ];
   return (
     <section id="how-it-works" className="py-24 bg-background">
       <div className="container mx-auto px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="mb-6">Comment ça fonctionne</h2>
+          <h2 className="mb-6">{t('how_it_works.title')}</h2>
           <p className="text-xl text-muted-foreground">
-            En quatre étapes simples, trouvez l'entrepreneur parfait et gérez votre projet en toute sérénité.
+            {t('how_it_works.subtitle')}
           </p>
         </div>
 

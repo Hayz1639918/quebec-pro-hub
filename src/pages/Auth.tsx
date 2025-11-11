@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ type UserType = "client" | "professional";
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const mode = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
@@ -86,8 +88,8 @@ const Auth = () => {
       if (!validTypes.includes(file.type)) {
         toast({
           variant: "destructive",
-          title: "Format de fichier invalide",
-          description: "Veuillez télécharger un fichier PDF, JPG ou PNG",
+          title: t('auth.messages.invalid_file_type'),
+          description: t('auth.messages.invalid_file_type_description'),
         });
         return;
       }
@@ -95,8 +97,8 @@ const Auth = () => {
       if (file.size > 5 * 1024 * 1024) {
         toast({
           variant: "destructive",
-          title: "Fichier trop volumineux",
-          description: "La taille maximale est de 5 Mo",
+          title: t('auth.messages.file_too_large'),
+          description: t('auth.messages.file_too_large_description'),
         });
         return;
       }
@@ -128,8 +130,8 @@ const Auth = () => {
       console.error('Error uploading RBQ certification:', error);
       toast({
         variant: "destructive",
-        title: "Erreur lors du téléchargement",
-        description: "Impossible de télécharger la certification RBQ",
+        title: t('auth.messages.upload_error'),
+        description: t('auth.messages.upload_error_description'),
       });
       return null;
     }
@@ -145,8 +147,8 @@ const Auth = () => {
         if (!companyName || !rbqNumber) {
           toast({
             variant: "destructive",
-            title: "Champs requis manquants",
-            description: "Veuillez remplir tous les champs obligatoires",
+            title: t('auth.messages.missing_fields'),
+            description: t('auth.messages.missing_fields_description'),
           });
           setLoading(false);
           return;
@@ -154,8 +156,8 @@ const Auth = () => {
         if (!rbqFile) {
           toast({
             variant: "destructive",
-            title: "Certification RBQ requise",
-            description: "Veuillez télécharger votre certification RBQ",
+            title: t('auth.messages.rbq_required'),
+            description: t('auth.messages.rbq_required_description'),
           });
           setLoading(false);
           return;
@@ -176,7 +178,7 @@ const Auth = () => {
       });
 
       if (signUpError) throw signUpError;
-      if (!authData.user) throw new Error("Aucun utilisateur créé");
+      if (!authData.user) throw new Error(t('auth.messages.no_user_created'));
 
       // Upload RBQ certification for professionals
       let rbqCertificationUrl = null;
@@ -216,14 +218,14 @@ const Auth = () => {
       if (profileError) {
         console.error('Error creating user profile:', profileError);
         // If profile creation fails, we should inform the user
-        throw new Error('Impossible de créer le profil utilisateur');
+        throw new Error(t('auth.messages.profile_error'));
       }
 
       toast({
-        title: "Inscription réussie ! 🎉",
+        title: t('auth.messages.success'),
         description: userType === "professional" 
-          ? "Votre compte professionnel a été créé. Nous vérifierons votre certification RBQ sous peu."
-          : "Votre compte a été créé avec succès !",
+          ? t('auth.messages.success_pro')
+          : t('auth.messages.success_client'),
       });
 
       // Redirect based on user type
@@ -240,10 +242,10 @@ const Auth = () => {
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue lors de l'inscription";
+      const errorMessage = error instanceof Error ? error.message : t('auth.messages.signup_error');
       toast({
         variant: "destructive",
-        title: "Erreur",
+        title: t('auth.messages.error'),
         description: errorMessage,
       });
     } finally {
@@ -262,7 +264,7 @@ const Auth = () => {
       });
       
       if (error) throw error;
-      if (!authData.user) throw new Error("Aucun utilisateur connecté");
+      if (!authData.user) throw new Error(t('auth.messages.no_user_logged'));
       
       // Fetch user profile to determine where to redirect
       const { data: profile } = await supabase
@@ -274,8 +276,10 @@ const Auth = () => {
       const userProfile = profile as { user_type: UserType; full_name: string } | null;
       
       toast({
-        title: "Connexion réussie",
-        description: userProfile?.full_name ? `Bienvenue ${userProfile.full_name} !` : "Bienvenue sur BâtirNet !",
+        title: t('auth.messages.login_success'),
+        description: userProfile?.full_name 
+          ? t('auth.messages.welcome', { name: userProfile.full_name })
+          : t('auth.messages.welcome_default'),
       });
       
       // Redirect based on user type
@@ -287,10 +291,10 @@ const Auth = () => {
         }
       }, 1000);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Email ou mot de passe incorrect";
+      const errorMessage = error instanceof Error ? error.message : t('auth.messages.invalid_credentials');
       toast({
         variant: "destructive",
-        title: "Erreur",
+        title: t('auth.messages.error'),
         description: errorMessage,
       });
     } finally {
@@ -309,10 +313,10 @@ const Auth = () => {
       
       if (error) throw error;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Impossible de se connecter avec Google";
+      const errorMessage = error instanceof Error ? error.message : t('auth.messages.google_error');
       toast({
         variant: "destructive",
-        title: "Erreur",
+        title: t('auth.messages.error'),
         description: errorMessage,
       });
     }
@@ -331,12 +335,12 @@ const Auth = () => {
           </div>
           <div>
             <CardTitle className="text-2xl">
-              {isLogin ? "Connexion" : "Inscription"}
+              {isLogin ? t('auth.login.title') : t('auth.signup.title')}
             </CardTitle>
             <CardDescription>
               {isLogin 
-                ? "Connectez-vous à votre compte BâtirNet" 
-                : "Créez votre compte BâtirNet"}
+                ? t('auth.subtitle_login')
+                : t('auth.subtitle_signup')}
             </CardDescription>
           </div>
         </CardHeader>
@@ -349,7 +353,7 @@ const Auth = () => {
             type="button"
           >
             <Chrome className="mr-2 h-5 w-5" />
-            Continuer avec Google
+            {t('auth.signup.google')}
           </Button>
           )}
 
@@ -357,7 +361,7 @@ const Auth = () => {
           <div className="relative">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              OU
+              {t('auth.or')}
             </span>
           </div>
           )}
@@ -366,13 +370,13 @@ const Auth = () => {
             // Login Form
             <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse email</Label>
+              <Label htmlFor="email">{t('auth.login.email')}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="nom@exemple.com"
+                  placeholder={t('auth.login.email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -382,13 +386,13 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
+              <Label htmlFor="password">{t('auth.login.password')}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder={t('auth.login.password_placeholder')}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
@@ -403,7 +407,7 @@ const Auth = () => {
               className="w-full"
               disabled={loading}
             >
-                {loading ? "Chargement..." : "Se connecter"}
+                {loading ? t('auth.login.button_loading') : t('auth.login.button')}
               </Button>
             </form>
           ) : (
@@ -412,11 +416,11 @@ const Auth = () => {
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="client">
                   <User className="mr-2 h-4 w-4" />
-                  Client
+                  {t('auth.signup.client')}
                 </TabsTrigger>
                 <TabsTrigger value="professional">
                   <Building2 className="mr-2 h-4 w-4" />
-                  Professionnel
+                  {t('auth.signup.professional')}
                 </TabsTrigger>
               </TabsList>
 
@@ -424,13 +428,13 @@ const Auth = () => {
                 {/* Common Fields */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Adresse email *</Label>
+                    <Label htmlFor="signup-email">{t('auth.signup.email')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-email"
                         type="email"
-                        placeholder="nom@exemple.com"
+                        placeholder={t('auth.signup.email_placeholder')}
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="pl-10"
@@ -440,13 +444,13 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Mot de passe *</Label>
+                    <Label htmlFor="signup-password">{t('auth.signup.password')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="signup-password"
                         type="password"
-                        placeholder="Minimum 6 caractères"
+                        placeholder={t('auth.signup.password_placeholder')}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10"
@@ -457,13 +461,13 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="fullname">Nom complet *</Label>
+                    <Label htmlFor="fullname">{t('auth.signup.full_name')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="fullname"
                         type="text"
-                        placeholder="Jean Dupont"
+                        placeholder={t('auth.signup.full_name_placeholder')}
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         className="pl-10"
@@ -473,13 +477,13 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Téléphone</Label>
+                    <Label htmlFor="phone">{t('auth.signup.phone')}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="(514) 123-4567"
+                        placeholder={t('auth.signup.phone_placeholder')}
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="pl-10"
@@ -491,13 +495,13 @@ const Auth = () => {
                 {/* Professional-specific fields */}
                 <TabsContent value="professional" className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label htmlFor="company">Nom de l'entreprise *</Label>
+                    <Label htmlFor="company">{t('auth.signup.company_name')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="company"
                         type="text"
-                        placeholder="Construction ABC Inc."
+                        placeholder={t('auth.signup.company_placeholder')}
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
                         className="pl-10"
@@ -507,13 +511,13 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rbq">Numéro RBQ *</Label>
+                    <Label htmlFor="rbq">{t('auth.signup.rbq_number')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         id="rbq"
                         type="text"
-                        placeholder="1234-5678-01"
+                        placeholder={t('auth.signup.rbq_number_placeholder')}
                         value={rbqNumber}
                         onChange={(e) => setRbqNumber(e.target.value)}
                         className="pl-10"
@@ -523,7 +527,7 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="rbq-file">Certification RBQ *</Label>
+                    <Label htmlFor="rbq-file">{t('auth.signup.rbq_certification')} {t('auth.signup.required')}</Label>
                     <div className="relative">
                       <Input
                         id="rbq-file"
@@ -542,17 +546,17 @@ const Auth = () => {
                               <CheckCircle2 className="mx-auto h-8 w-8 text-green-600" />
                               <p className="text-sm font-medium">{rbqFile.name}</p>
                               <p className="text-xs text-muted-foreground">
-                                Cliquez pour changer
+                                {t('auth.signup.rbq_uploaded')}
                               </p>
                             </>
                           ) : (
                             <>
                               <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                               <p className="text-sm font-medium">
-                                Télécharger la certification RBQ
+                                {t('auth.signup.rbq_upload')}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                PDF, JPG ou PNG (max 5 Mo)
+                                {t('auth.signup.rbq_upload_hint')}
                               </p>
                             </>
                           )}
@@ -562,10 +566,10 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="services">Services offerts</Label>
+                    <Label htmlFor="services">{t('auth.signup.services_offered')}</Label>
                     <Textarea
                       id="services"
-                      placeholder="Ex: Rénovation résidentielle, construction neuve, toiture..."
+                      placeholder={t('auth.signup.services_placeholder')}
                       value={servicesOffered}
                       onChange={(e) => setServicesOffered(e.target.value)}
                       rows={3}
@@ -573,10 +577,10 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="insurance">Informations sur l'assurance</Label>
+                    <Label htmlFor="insurance">{t('auth.signup.insurance_info')}</Label>
                     <Textarea
                       id="insurance"
-                      placeholder="Nom de l'assureur, numéro de police..."
+                      placeholder={t('auth.signup.insurance_placeholder')}
                       value={insuranceInfo}
                       onChange={(e) => setInsuranceInfo(e.target.value)}
                       rows={2}
@@ -586,8 +590,7 @@ const Auth = () => {
 
                 <TabsContent value="client" className="mt-4">
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    En tant que client, vous pourrez créer des projets, demander des devis 
-                    et collaborer avec des entrepreneurs qualifiés.
+                    {t('auth.signup.client_description')}
                   </p>
                 </TabsContent>
 
@@ -596,7 +599,7 @@ const Auth = () => {
                   className="w-full mt-6"
                   disabled={loading}
                 >
-                  {loading ? "Création du compte..." : "Créer mon compte"}
+                  {loading ? t('auth.signup.button_loading') : t('auth.signup.button')}
             </Button>
           </form>
             </Tabs>
@@ -609,8 +612,8 @@ const Auth = () => {
               className="text-primary hover:underline"
             >
               {isLogin 
-                ? "Pas encore de compte ? S'inscrire" 
-                : "Déjà un compte ? Se connecter"}
+                ? t('auth.login.no_account')
+                : t('auth.signup.already_account')}
             </button>
           </div>
         </CardContent>
