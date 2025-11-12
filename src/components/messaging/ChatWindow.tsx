@@ -5,7 +5,21 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Send, MessageSquare, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { 
+  Send, 
+  MessageSquare, 
+  Loader2, 
+  AlertCircle, 
+  RefreshCw, 
+  Trash2,
+  MoreVertical 
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Conversation, Message } from "@/types/messaging";
@@ -21,6 +35,8 @@ interface PendingMessage extends Message {
   isPending?: boolean;
   isFailed?: boolean;
   tempId?: string;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
 }
 
 interface ChatWindowProps {
@@ -41,6 +57,10 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
+  
+  // ✅ Phase 2: IntersectionObserver for reliable read receipts
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     if (conversation) {
@@ -172,8 +192,107 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       });
 
       if (error) throw error;
+      
+      // Update local state to show read status immediately
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === messageId ? { ...msg, is_read: true, read_at: new Date().toISOString() } : msg
+        )
+      );
     } catch (error) {
       console.error('Error marking message as read:', error);
+    }
+  };
+
+  // ✅ Phase 2: Setup IntersectionObserver for reliable read receipts
+  useEffect(() => {
+    // Create observer that marks messages as read when visible
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const messageId = entry.target.getAttribute('data-message-id');
+            const senderId = entry.target.getAttribute('data-sender-id');
+            
+            // Only mark as read if it's not the current user's message
+            if (messageId && senderId !== userId) {
+              markMessageAsRead(messageId);
+              // Stop observing this message once marked as read
+              observerRef.current?.unobserve(entry.target);
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.5, // Message must be 50% visible
+        root: scrollAreaRef.current,
+      }
+    );
+
+    return () => {
+      // Cleanup observer on unmount
+      observerRef.current?.disconnect();
+    };
+  }, [userId]);
+
+  // ✅ Phase 2: Observe messages for read receipts
+  useEffect(() => {
+    if (!observerRef.current) return;
+
+    // Observe all unread messages that are not from current user
+    messageRefs.current.forEach((element, messageId) => {
+      const message = messages.find((m) => m.id === messageId);
+      if (message && !message.is_read && message.sender_id !== userId) {
+        observerRef.current?.observe(element);
+      }
+    });
+
+    // Cleanup old refs
+    return () => {
+      messageRefs.current.forEach((element) => {
+        observerRef.current?.unobserve(element);
+      });
+    };
+  }, [messages, userId]);
+
+  // ✅ Phase 2: Soft delete message function
+  const softDeleteMessage = async (messageId: string) => {
+    try {
+      const { data, error } = await supabase.rpc('soft_delete_message', {
+        message_id: messageId,
+        deleter_id: userId,
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        // Update local state to show message as deleted
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === messageId
+              ? { ...msg, deleted_at: new Date().toISOString(), deleted_by: userId }
+              : msg
+          )
+        );
+
+        toast({
+          title: "Message supprimé",
+          description: "Le message a été supprimé avec succès.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Erreur",
+          description: "Impossible de supprimer ce message.",
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la suppression.",
+      });
     }
   };
 
@@ -405,21 +524,55 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
               const isOwnMessage = message.sender_id === userId;
               const isPending = message.isPending;
               const isFailed = message.isFailed;
+              const isDeleted = !!message.deleted_at;
               
               return (
                 <div
                   key={message.id || message.tempId}
-                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group`}
+                  ref={(el) => {
+                    if (el && message.id && !message.tempId) {
+                      messageRefs.current.set(message.id, el);
+                    }
+                  }}
+                  data-message-id={message.id}
+                  data-sender-id={message.sender_id}
                 >
                   <div
                     className={`max-w-[70%] rounded-lg p-3 relative ${
-                      isFailed
+                      isDeleted
+                        ? 'bg-muted/50 border border-dashed'
+                        : isFailed
                         ? 'bg-destructive/10 border border-destructive'
                         : isOwnMessage
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted'
-                    } ${isPending ? 'opacity-60' : ''}`}
+                    } ${isPending ? 'opacity-60' : ''} ${isDeleted ? 'italic' : ''}`}
                   >
+                    {/* Delete Button (only for own non-deleted messages) */}
+                    {isOwnMessage && !isDeleted && !isPending && !isFailed && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => softDeleteMessage(message.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+
                     {/* Failed Message Indicator */}
                     {isFailed && (
                       <div className="flex items-center gap-2 mb-2 text-destructive text-xs font-medium">
@@ -436,10 +589,21 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                       </div>
                     )}
                     
-                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    {/* Message Content */}
+                    {isDeleted ? (
+                      <p className="text-sm text-muted-foreground">
+                        🗑️ Message supprimé
+                      </p>
+                    ) : (
+                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                    )}
+                    
+                    {/* Timestamp and Status */}
                     <p
                       className={`text-xs mt-1 flex items-center gap-1 ${
-                        isFailed
+                        isDeleted
+                          ? 'text-muted-foreground'
+                          : isFailed
                           ? 'text-destructive'
                           : isOwnMessage 
                           ? 'text-primary-foreground/70' 
@@ -450,10 +614,10 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                       {isPending && (
                         <Loader2 className="h-3 w-3 animate-spin ml-1" />
                       )}
-                      {isOwnMessage && !isPending && !isFailed && message.is_read && (
+                      {isOwnMessage && !isPending && !isFailed && !isDeleted && message.is_read && (
                         <span className="ml-2">✓✓</span>
                       )}
-                      {isOwnMessage && !isPending && !isFailed && !message.is_read && (
+                      {isOwnMessage && !isPending && !isFailed && !isDeleted && !message.is_read && (
                         <span className="ml-2">✓</span>
                       )}
                     </p>

@@ -32,8 +32,27 @@ export const MessagesList = ({
   useEffect(() => {
     if (userId) {
       fetchConversations();
-      subscribeToConversations();
+      const cleanup = subscribeToConversations();
+      return cleanup;
     }
+  }, [userId]);
+
+  // ✅ Phase 2: Monitor active channels (prevent subscription leaks)
+  useEffect(() => {
+    const channels = supabase.getChannels();
+    const messagingChannels = channels.filter(
+      (ch) => ch.topic.includes('conversations') || ch.topic.includes('messages')
+    );
+    
+    // Warn if too many channels (potential leak)
+    if (messagingChannels.length > 10) {
+      console.warn(
+        `⚠️ Too many messaging channels active: ${messagingChannels.length}. Potential memory leak!`
+      );
+    }
+    
+    // Log for monitoring
+    console.log(`📡 Active messaging channels: ${messagingChannels.length}`);
   }, [userId]);
 
   const fetchConversations = async () => {
@@ -104,8 +123,11 @@ export const MessagesList = ({
   };
 
   const subscribeToConversations = () => {
+    // ✅ Phase 2: Improved subscription with proper cleanup
+    const channelName = `conversations_${userId}_${Date.now()}`;
+    
     const channel = supabase
-      .channel('conversations_changes')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -143,7 +165,9 @@ export const MessagesList = ({
       )
       .subscribe();
 
+    // Return cleanup function that properly removes channel
     return () => {
+      console.log(`🧹 Cleaning up channel: ${channelName}`);
       supabase.removeChannel(channel);
     };
   };
