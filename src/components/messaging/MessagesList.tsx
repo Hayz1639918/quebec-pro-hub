@@ -40,34 +40,50 @@ export const MessagesList = ({
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
+      // Fetch conversations
+      const { data: conversationsData, error: convsError } = await supabase
         .from('conversations_with_details')
         .select('*')
         .or(`participant_1_id.eq.${userId},participant_2_id.eq.${userId}`)
         .order('last_message_at', { ascending: false, nullsFirst: false })
         .order('updated_at', { ascending: false });
 
-      if (error) {
+      if (convsError) {
         // If view doesn't exist yet, silently fail
-        if (error.code === '42P01' || error.message.includes('does not exist')) {
+        if (convsError.code === '42P01' || convsError.message.includes('does not exist')) {
           console.warn('Conversations table not yet created. Please apply migration 007_add_messaging_and_notifications.sql');
           setConversations([]);
           return;
         }
-        throw error;
+        throw convsError;
       }
 
-      // Add computed fields for easier display
-      const conversationsWithOther = await Promise.all((data || []).map(async (conv) => {
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([]);
+        return;
+      }
+
+      // ✅ OPTIMIZATION: Fetch ALL unread counts in ONE query using IN clause
+      const conversationIds = conversationsData.map(c => c.id);
+      
+      const { data: unreadMessages, error: unreadError } = await supabase
+        .from('messages')
+        .select('conversation_id')
+        .in('conversation_id', conversationIds)
+        .eq('receiver_id', userId)
+        .eq('is_read', false);
+
+      if (unreadError) throw unreadError;
+
+      // Count unread messages per conversation
+      const unreadCounts = (unreadMessages || []).reduce((acc, msg) => {
+        acc[msg.conversation_id] = (acc[msg.conversation_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Map conversations with computed fields (no async needed!)
+      const conversationsWithOther = conversationsData.map((conv) => {
         const isParticipant1 = conv.participant_1_id === userId;
-        
-        // Calculate correct unread count: only messages WHERE current user is the receiver
-        const { count: actualUnreadCount } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversation_id', conv.id)
-          .eq('receiver_id', userId)
-          .eq('is_read', false);
         
         return {
           ...conv,
@@ -75,9 +91,9 @@ export const MessagesList = ({
           other_participant_name: isParticipant1 ? conv.participant_2_name : conv.participant_1_name,
           other_participant_avatar: isParticipant1 ? conv.participant_2_avatar : conv.participant_1_avatar,
           other_participant_type: isParticipant1 ? conv.participant_2_type : conv.participant_1_type,
-          unread_count: actualUnreadCount || 0,
+          unread_count: unreadCounts[conv.id] || 0,
         };
-      }));
+      });
 
       setConversations(conversationsWithOther);
     } catch (error) {
