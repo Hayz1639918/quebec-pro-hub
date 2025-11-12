@@ -62,7 +62,7 @@ ALTER TABLE proposals
   ADD COLUMN IF NOT EXISTS timeline_details JSONB DEFAULT '[]',
   ADD COLUMN IF NOT EXISTS insurance_proof_url TEXT,
   ADD COLUMN IF NOT EXISTS rbq_license_number VARCHAR(50),
-  ADD COLUMN IF NOT EXISTS references JSONB DEFAULT '[]',
+  ADD COLUMN IF NOT EXISTS "references" JSONB DEFAULT '[]',
   ADD COLUMN IF NOT EXISTS warranty_offered_months INTEGER,
   ADD COLUMN IF NOT EXISTS payment_terms_accepted BOOLEAN DEFAULT true,
   ADD COLUMN IF NOT EXISTS additional_documents JSONB DEFAULT '[]',
@@ -77,7 +77,7 @@ COMMENT ON COLUMN proposals.budget_breakdown IS 'Detailed cost breakdown by cate
 COMMENT ON COLUMN proposals.timeline_details IS 'Detailed timeline with milestones';
 COMMENT ON COLUMN proposals.insurance_proof_url IS 'URL to insurance certificate';
 COMMENT ON COLUMN proposals.rbq_license_number IS 'RBQ license number';
-COMMENT ON COLUMN proposals.references IS 'Client references with contact info';
+COMMENT ON COLUMN proposals."references" IS 'Client references with contact info';
 COMMENT ON COLUMN proposals.warranty_offered_months IS 'Warranty period offered';
 COMMENT ON COLUMN proposals.valid_until IS 'Proposal validity end date';
 
