@@ -147,7 +147,7 @@ BEGIN
       )
     );
   ELSE
-    -- Update existing notification with count
+    -- Update existing notification with count (using subquery for ORDER BY + LIMIT)
     UPDATE notifications
     SET 
       message = sender_name || ' vous a envoyé ' || (recent_notif_count + 1) || ' messages',
@@ -157,13 +157,17 @@ BEGIN
         to_jsonb(recent_notif_count + 1)
       ),
       created_at = NOW()  -- Update timestamp to keep it recent
-    WHERE user_id = NEW.receiver_id
-      AND type = 'new_message'
-      AND metadata->>'conversation_id' = NEW.conversation_id::text
-      AND created_at > NOW() - grouping_window
-      AND is_read = FALSE
-    ORDER BY created_at DESC
-    LIMIT 1;
+    WHERE id = (
+      SELECT id
+      FROM notifications
+      WHERE user_id = NEW.receiver_id
+        AND type = 'new_message'
+        AND metadata->>'conversation_id' = NEW.conversation_id::text
+        AND created_at > NOW() - grouping_window
+        AND is_read = FALSE
+      ORDER BY created_at DESC
+      LIMIT 1
+    );
   END IF;
   
   RETURN NEW;
