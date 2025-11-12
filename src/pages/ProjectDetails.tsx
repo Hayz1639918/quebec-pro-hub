@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import ProfessionalProposalForm from '@/components/forms/ProfessionalProposalForm';
 import { 
   MapPin, 
   Calendar, 
@@ -74,8 +75,9 @@ const ProjectDetails = () => {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [showProposalForm, setShowProposalForm] = useState(false);
   
-  // Formulaire de proposition
+  // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
   const [proposalBudget, setProposalBudget] = useState('');
   const [proposalDelay, setProposalDelay] = useState('');
@@ -491,63 +493,70 @@ const ProjectDetails = () => {
 
             {/* Formulaire de proposition (pour professionnels) */}
             {isProfessional && !isProjectOwner && project.status === 'open' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Soumettre une proposition</CardTitle>
-                  <CardDescription>
-                    Présentez votre offre au client pour ce projet
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      placeholder="Décrivez votre expertise, votre approche pour ce projet..."
-                      value={proposalMessage}
-                      onChange={(e) => setProposalMessage(e.target.value)}
-                      rows={6}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="budget">Budget proposé ($)</Label>
-                      <Input
-                        id="budget"
-                        type="number"
-                        placeholder="ex: 25000"
-                        value={proposalBudget}
-                        onChange={(e) => setProposalBudget(e.target.value)}
-                        min="0"
-                        step="100"
+              <>
+                {!showProposalForm ? (
+                  <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                    <CardHeader>
+                      <CardTitle className="text-green-900">
+                        Soumettre une soumission professionnelle
+                      </CardTitle>
+                      <CardDescription>
+                        Remplissez une soumission détaillée conforme aux standards québécois avec export PDF
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Formulaire en 5 sections professionnelles</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Décomposition budgétaire détaillée</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Calendrier et équipe inclus</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <span className="text-green-600">✓</span>
+                          <span>Export PDF automatique (format québécois)</span>
+                        </div>
+                      </div>
+                      <Button 
+                        onClick={() => setShowProposalForm(true)}
+                        className="w-full bg-green-600 hover:bg-green-700"
+                        size="lg"
+                      >
+                        <Send className="mr-2 h-5 w-5" />
+                        Créer ma soumission professionnelle
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Soumission professionnelle</CardTitle>
+                      <CardDescription>
+                        Remplissez tous les détails de votre proposition
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ProfessionalProposalForm
+                        projectId={project.id}
+                        professionalId={currentUser.id}
+                        onSuccess={() => {
+                          setShowProposalForm(false);
+                          toast.success('Soumission envoyée avec succès !');
+                          // Refresh project data to update proposal count
+                          fetchProjectDetails();
+                        }}
+                        onCancel={() => setShowProposalForm(false)}
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="delay">Délai estimé (jours)</Label>
-                      <Input
-                        id="delay"
-                        type="number"
-                        placeholder="ex: 30"
-                        value={proposalDelay}
-                        onChange={(e) => setProposalDelay(e.target.value)}
-                        min="1"
-                        step="1"
-                      />
-                    </div>
-                  </div>
-
-                  <Button 
-                    onClick={handleSubmitProposal} 
-                    disabled={submitting || !proposalMessage.trim()}
-                    className="w-full"
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    {submitting ? 'Envoi en cours...' : 'Envoyer la proposition'}
-                  </Button>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
             )}
           </div>
 

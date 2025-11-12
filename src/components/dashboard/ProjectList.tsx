@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -41,6 +42,7 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
+  FileText,
 } from "lucide-react";
 
 interface Project {
@@ -82,6 +84,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ProjectList({ projects, onDelete, onEdit, onView }: ProjectListProps) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   
@@ -209,6 +212,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                             {t('dashboard.project_list.view_details')}
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => navigate(`/tender/${project.id}`)}>
+                          <FileText className="mr-2 h-4 w-4" />
+                          Voir l'appel d'offres (PDF)
+                        </DropdownMenuItem>
                         {onEdit && (
                           <DropdownMenuItem onClick={() => onEdit(project.id)}>
                             <Pencil className="mr-2 h-4 w-4" />
@@ -263,6 +270,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                           Voir les détails
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem onClick={() => navigate(`/tender/${project.id}`)}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Voir l'appel d'offres (PDF)
+                      </DropdownMenuItem>
                       {onEdit && (
                         <DropdownMenuItem onClick={() => onEdit(project.id)}>
                           <Pencil className="mr-2 h-4 w-4" />
