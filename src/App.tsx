@@ -28,6 +28,8 @@ import ProPortfolio from "./pages/ProPortfolio";
 import ProCalendar from "./pages/ProCalendar";
 import ProjectDetails from "./pages/ProjectDetails";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TenderView from "./pages/TenderView";
+import ProposalView from "./pages/ProposalView";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +45,8 @@ const App = () => (
           <Route path="/professionals" element={<Professionals />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/project/:id" element={<ProjectDetails />} />
+          <Route path="/tender/:id" element={<TenderView />} />
+          <Route path="/proposal/:id" element={<ProposalView />} />
           <Route path="/pro/dashboard" element={<ProDashboard />} />
           <Route path="/pro/profile" element={<ProProfile />} />
           <Route path="/pro/subscription" element={<ProSubscription />} />

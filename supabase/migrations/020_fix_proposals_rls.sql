@@ -43,3 +43,10 @@ CREATE POLICY "Professionals can delete own proposals"
 -- The application logic should ensure only professionals can submit proposals
 
 
+
+
+
+
+
+
+

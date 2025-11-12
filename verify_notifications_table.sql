@@ -35,3 +35,10 @@ WHERE schemaname = 'public'
   AND tablename = 'notifications';
 
 
+
+
+
+
+
+
+

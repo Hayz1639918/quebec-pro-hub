@@ -40,7 +40,7 @@ CREATE POLICY "Business logic notifications"
       JOIN projects proj ON p.project_id = proj.id
       WHERE p.professional_id = auth.uid()
         AND proj.client_id = notifications.user_id
-        AND p.status IN ('pending', 'accepted', 'in_progress')
+        AND p.status IN ('pending', 'accepted')
     )
     OR
     -- Case 3: Client can notify professionals who have proposals on their projects
@@ -53,10 +53,9 @@ CREATE POLICY "Business logic notifications"
     OR
     -- Case 4: Users with active conversations can notify each other
     EXISTS (
-      SELECT 1 FROM conversation_participants cp1
-      JOIN conversation_participants cp2 ON cp1.conversation_id = cp2.conversation_id
-      WHERE cp1.user_id = auth.uid()
-        AND cp2.user_id = notifications.user_id
+      SELECT 1 FROM conversations c
+      WHERE (c.participant_1_id = auth.uid() AND c.participant_2_id = notifications.user_id)
+         OR (c.participant_2_id = auth.uid() AND c.participant_1_id = notifications.user_id)
     )
   );
 
@@ -111,8 +110,8 @@ CREATE TRIGGER trigger_audit_notification_creation
 -- This allowed ANY user to spam ANY other user with notifications.
 -- The new policy (Option B above) restricts notifications to:
 -- 1. Self-notifications
--- 2. Professional → Client (if they have an active proposal)
+-- 2. Professional → Client (if they have a pending/accepted proposal)
 -- 3. Client → Professional (if they have a proposal on client's project)
--- 4. Users in active conversations
+-- 4. Users with active conversations (participant_1 or participant_2)
 --
 -- This aligns with the business model of BâtirNet while preventing abuse.
