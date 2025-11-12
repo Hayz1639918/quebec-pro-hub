@@ -214,8 +214,12 @@ BEGIN
   END IF;
 END $$;
 
-RAISE NOTICE '✅ Migration 023 completed: Messaging production optimizations applied';
-RAISE NOTICE '📊 Rate limit: 20 messages per minute per user';
-RAISE NOTICE '📏 Message max length: 5000 characters';
-RAISE NOTICE '⚡ Unread count queries optimized with composite index';
+-- Final success message
+DO $$
+BEGIN
+  RAISE NOTICE '✅ Migration 023 completed: Messaging production optimizations applied';
+  RAISE NOTICE '📊 Rate limit: 20 messages per minute per user';
+  RAISE NOTICE '📏 Message max length: 5000 characters';
+  RAISE NOTICE '⚡ Unread count queries optimized with composite index';
+END $$;
 
