@@ -280,11 +280,6 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={styles.companyName}>
             {professional?.company_name || professional?.full_name}
           </Text>
-          {professional?.address && (
-            <Text style={styles.companyInfo}>
-              📍 {professional.address}, {professional.city}, {professional.region} {professional.postal_code}
-            </Text>
-          )}
           {professional?.phone && (
             <Text style={styles.companyInfo}>📞 {professional.phone}</Text>
           )}
@@ -304,11 +299,6 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={styles.paragraph}>
             {client?.company_name || client?.full_name}
           </Text>
-          {client?.address && (
-            <Text style={styles.paragraph}>
-              {client.address}, {client.city}, {client.region} {client.postal_code}
-            </Text>
-          )}
         </View>
 
         {/* Objet de la soumission */}

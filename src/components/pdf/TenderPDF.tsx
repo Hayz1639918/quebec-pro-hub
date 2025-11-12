@@ -233,11 +233,6 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
           <Text style={styles.paragraph}>
             {client?.company_name || client?.full_name}
           </Text>
-          {client?.address && (
-            <Text style={styles.paragraph}>
-              {client.address}, {client.city}, {client.region} {client.postal_code}
-            </Text>
-          )}
           {client?.email && (
             <Text style={styles.paragraph}>Courriel : {client.email}</Text>
           )}

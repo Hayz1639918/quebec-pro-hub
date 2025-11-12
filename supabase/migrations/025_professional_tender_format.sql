@@ -170,11 +170,7 @@ SELECT
   pr.full_name as client_name,
   pr.company_name as client_company,
   pr.email as client_email,
-  pr.phone as client_phone,
-  pr.address as client_address,
-  pr.city as client_city,
-  pr.region as client_region,
-  pr.postal_code as client_postal_code
+  pr.phone as client_phone
 FROM projects p
 LEFT JOIN profiles pr ON p.client_id = pr.id;
 
@@ -197,11 +193,7 @@ SELECT
   pro.company_name as professional_company,
   pro.email as professional_email,
   pro.phone as professional_phone,
-  pro.rbq_license as professional_rbq,
-  pro.address as professional_address,
-  pro.city as professional_city,
-  pro.region as professional_region,
-  pro.postal_code as professional_postal_code
+  pro.rbq_number as professional_rbq
 FROM proposals prop
 LEFT JOIN projects proj ON prop.project_id = proj.id
 LEFT JOIN profiles client ON proj.client_id = client.id

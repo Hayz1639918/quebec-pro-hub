@@ -59,10 +59,6 @@ const TenderView = () => {
           client_company,
           client_email,
           client_phone,
-          client_address,
-          client_city,
-          client_region,
-          client_postal_code,
           ...projectData
         } = tenderData;
 
@@ -72,10 +68,6 @@ const TenderView = () => {
           company_name: client_company,
           email: client_email,
           phone: client_phone,
-          address: client_address,
-          city: client_city,
-          region: client_region,
-          postal_code: client_postal_code,
         });
       }
     } catch (error: any) {
@@ -202,11 +194,6 @@ const TenderView = () => {
                 </h3>
                 <div className="space-y-1 text-sm">
                   <p className="font-medium">{client.company_name || client.full_name}</p>
-                  {client.address && (
-                    <p className="text-gray-600">
-                      {client.address}, {client.city}, {client.region} {client.postal_code}
-                    </p>
-                  )}
                   {client.email && <p className="text-gray-600">{client.email}</p>}
                   {client.phone && <p className="text-gray-600">{client.phone}</p>}
                 </div>

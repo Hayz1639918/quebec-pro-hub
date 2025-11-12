@@ -84,10 +84,6 @@ const ProposalView = () => {
           professional_email,
           professional_phone,
           professional_rbq,
-          professional_address,
-          professional_city,
-          professional_region,
-          professional_postal_code,
           ...proposalOnly
         } = proposalData;
 
@@ -110,10 +106,6 @@ const ProposalView = () => {
           email: professional_email,
           phone: professional_phone,
           rbq_license: professional_rbq,
-          address: professional_address,
-          city: professional_city,
-          region: professional_region,
-          postal_code: professional_postal_code,
         });
       }
     } catch (error: any) {
@@ -329,11 +321,6 @@ const ProposalView = () => {
                   <p className="font-medium">
                     {professional.company_name || professional.full_name}
                   </p>
-                  {professional.address && (
-                    <p className="text-gray-600">
-                      {professional.address}, {professional.city}, {professional.region}
-                    </p>
-                  )}
                   {professional.phone && <p className="text-gray-600">{professional.phone}</p>}
                   {professional.email && <p className="text-gray-600">{professional.email}</p>}
                   {proposal.rbq_license_number && (
