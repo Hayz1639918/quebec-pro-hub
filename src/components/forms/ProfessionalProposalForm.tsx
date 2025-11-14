@@ -213,6 +213,37 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
 
       if (error) throw error;
 
+      // Get project details to find client_id
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('client_id, title')
+        .eq('id', projectId)
+        .single();
+
+      // Get professional details
+      const { data: professionalData } = await supabase
+        .from('profiles')
+        .select('full_name, company_name')
+        .eq('id', professionalId)
+        .single();
+
+      // Create notification for client
+      if (projectData && professionalData) {
+        await supabase
+          .from('notifications')
+          .insert({
+            user_id: projectData.client_id,
+            type: 'proposal',
+            title: 'Nouvelle proposition reçue',
+            message: `${professionalData.company_name || professionalData.full_name} a soumis une proposition pour "${projectData.title}"`,
+            metadata: {
+              proposal_id: proposal.id,
+              project_id: projectId,
+              professional_id: professionalId,
+            },
+          });
+      }
+
       toast.success('Soumission envoyée avec succès !');
       
       if (onSuccess) {

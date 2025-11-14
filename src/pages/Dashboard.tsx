@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProjectList from "@/components/dashboard/ProjectList";
+import ProposalsList from "@/components/dashboard/ProposalsList";
 import ActivityTimeline, { ActivityItem } from "@/components/dashboard/ActivityTimeline";
 import FavoritesList from "@/components/dashboard/FavoritesList";
 import CompareDialog from "@/components/dashboard/CompareDialog";
@@ -85,6 +86,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [proposals, setProposals] = useState<any[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteProfessional[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -147,6 +149,31 @@ const Dashboard = () => {
     }
   };
 
+  const fetchProposals = async (projectIds: string[]) => {
+    if (projectIds.length === 0) {
+      setProposals([]);
+      return;
+    }
+
+    try {
+      const { data: proposalsData, error: proposalsError } = await supabase
+        .from('proposals')
+        .select(`
+          *,
+          professional:professional_id(full_name, company_name),
+          project:project_id(title)
+        `)
+        .in('project_id', projectIds)
+        .order('created_at', { ascending: false });
+
+      if (proposalsError) throw proposalsError;
+
+      setProposals(proposalsData || []);
+    } catch (error) {
+      console.error('Error fetching proposals:', error);
+    }
+  };
+
   const fetchStats = async (userId: string) => {
     try {
       setLoadingProjects(true);
@@ -164,12 +191,17 @@ const Dashboard = () => {
 
       const activeProjects = projectsData?.filter(p => p.status === 'open' || p.status === 'in_progress').length || 0;
       const totalProjects = projectsData?.length || 0;
+      
+      const projectIds = projectsData?.map(p => p.id) || [];
+
+      // Fetch proposals with details
+      await fetchProposals(projectIds);
 
       // Count proposals
       const { count: proposalsCount } = await supabase
         .from('proposals')
         .select('id', { count: 'exact', head: true })
-        .in('project_id', projectsData?.map(p => p.id) || []);
+        .in('project_id', projectIds);
 
       // Get favorites count (if table exists)
       let favoritesCount = 0;
@@ -753,12 +785,17 @@ const Dashboard = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      {t('dashboard.proposals.no_proposals')}
-                    </p>
-                  </div>
+                  <ProposalsList 
+                    proposals={proposals} 
+                    onStatusUpdate={() => {
+                      // Refresh proposals and stats after status update
+                      const projectIds = projects.map(p => p.id);
+                      fetchProposals(projectIds);
+                      if (user?.id) {
+                        fetchStats(user.id);
+                      }
+                    }}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
