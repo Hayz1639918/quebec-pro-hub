@@ -30,6 +30,7 @@ import ProjectDetails from "./pages/ProjectDetails";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TenderView from "./pages/TenderView";
 import ProposalView from "./pages/ProposalView";
+import ProfessionalProfile from "./pages/ProfessionalProfile";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
           <Route path="/project/:id" element={<ProjectDetails />} />
           <Route path="/tender/:id" element={<TenderView />} />
           <Route path="/proposal/:id" element={<ProposalView />} />
+          <Route path="/professional/:id" element={<ProfessionalProfile />} />
           <Route path="/pro/dashboard" element={<ProDashboard />} />
           <Route path="/pro/profile" element={<ProProfile />} />
           <Route path="/pro/subscription" element={<ProSubscription />} />

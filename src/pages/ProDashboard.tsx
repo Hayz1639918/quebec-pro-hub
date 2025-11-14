@@ -21,6 +21,8 @@ import {
   AlertCircle,
   Plus,
   Eye,
+  Edit,
+  User,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -273,7 +275,23 @@ const ProDashboard = () => {
             <CardDescription>{t('pro_dashboard.quick_actions.description')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              <Button
+                variant="default"
+                className="h-auto py-4 flex-col gap-2 bg-blue-600 hover:bg-blue-700"
+                onClick={() => navigate('/pro/profile')}
+              >
+                <Edit className="h-6 w-6" />
+                <span>Modifier mon profil</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-4 flex-col gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                onClick={() => navigate(`/professional/${userId}`)}
+              >
+                <User className="h-6 w-6" />
+                <span>Visualiser mon profil</span>
+              </Button>
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col gap-2"
@@ -282,6 +300,8 @@ const ProDashboard = () => {
                 <Eye className="h-6 w-6" />
                 <span>{t('pro_dashboard.quick_actions.browse_projects')}</span>
               </Button>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col gap-2"
@@ -306,10 +326,10 @@ const ProDashboard = () => {
               <Button
                 variant="outline"
                 className="h-auto py-4 flex-col gap-2"
-                onClick={() => navigate('/pro/profile')}
+                onClick={() => navigate('/pro/portfolio')}
               >
-                <Users className="h-6 w-6" />
-                <span>{t('pro_dashboard.quick_actions.my_profile')}</span>
+                <Briefcase className="h-6 w-6" />
+                <span>Mon portfolio</span>
               </Button>
             </div>
           </CardContent>

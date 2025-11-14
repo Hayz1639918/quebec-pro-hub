@@ -1,0 +1,467 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import Navigation from '@/components/Navigation';
+import Footer from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Building2,
+  Star,
+  Award,
+  CheckCircle,
+  MessageSquare,
+  Briefcase,
+  FileText,
+  Shield,
+  Calendar,
+  ArrowLeft,
+} from 'lucide-react';
+import { toast } from 'sonner';
+
+interface ProfessionalProfile {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string | null;
+  company_name: string | null;
+  rbq_number: string | null;
+  rbq_certification_url: string | null;
+  services_offered: string | null;
+  insurance_info: string | null;
+  is_rbq_verified: boolean;
+  created_at: string;
+  bio?: string;
+  city?: string;
+  region?: string;
+}
+
+const ProfessionalProfile = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<ProfessionalProfile | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    proposalsCount: 0,
+    acceptedProposals: 0,
+    averageRating: 0,
+    reviewsCount: 0,
+  });
+
+  useEffect(() => {
+    fetchCurrentUser();
+    fetchProfile();
+    fetchStats();
+  }, [id]);
+
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', id)
+        .eq('user_type', 'professional')
+        .single();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast.error('Professionnel introuvable');
+        navigate('/professionals');
+        return;
+      }
+
+      setProfile(data);
+    } catch (error: any) {
+      console.error('Error fetching profile:', error);
+      toast.error('Erreur lors du chargement du profil');
+      navigate('/professionals');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      // Count proposals
+      const { count: proposalsCount } = await supabase
+        .from('proposals')
+        .select('id', { count: 'exact', head: true })
+        .eq('professional_id', id);
+
+      // Count accepted proposals
+      const { count: acceptedCount } = await supabase
+        .from('proposals')
+        .select('id', { count: 'exact', head: true })
+        .eq('professional_id', id)
+        .eq('status', 'accepted');
+
+      setStats({
+        proposalsCount: proposalsCount || 0,
+        acceptedProposals: acceptedCount || 0,
+        averageRating: 4.5, // TODO: Calculer depuis la table reviews
+        reviewsCount: 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleContact = async () => {
+    if (!currentUserId) {
+      toast.error('Vous devez être connecté pour contacter ce professionnel');
+      navigate('/auth');
+      return;
+    }
+
+    if (currentUserId === id) {
+      toast.error('Vous ne pouvez pas vous envoyer un message à vous-même');
+      return;
+    }
+
+    try {
+      // Déterminer l'ordre des participants
+      const participant1 = currentUserId < id! ? currentUserId : id!;
+      const participant2 = currentUserId < id! ? id! : currentUserId;
+
+      // Vérifier si une conversation existe déjà
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('participant_1_id', participant1)
+        .eq('participant_2_id', participant2)
+        .maybeSingle();
+
+      let conversationId = existingConversation?.id;
+
+      if (!conversationId) {
+        // Créer une nouvelle conversation
+        const { data: newConversation, error: convError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_1_id: participant1,
+            participant_2_id: participant2,
+          })
+          .select()
+          .single();
+
+        if (convError) throw convError;
+        conversationId = newConversation.id;
+
+        // Envoyer un message automatique
+        await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: currentUserId,
+            receiver_id: id,
+            content: `Bonjour, je suis intéressé(e) par vos services.`,
+          });
+      }
+
+      // Rediriger vers la conversation
+      navigate(`/messages?conversation=${conversationId}`);
+    } catch (error: any) {
+      console.error('Error creating conversation:', error);
+      toast.error('Erreur lors de la création de la conversation');
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center">Chargement...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return null;
+  }
+
+  const isOwnProfile = currentUserId === id;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Header avec bouton retour */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+        </div>
+
+        {isOwnProfile && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800 text-center">
+              👁️ <strong>Aperçu</strong> : Ceci est la vue que les clients voient de votre profil
+            </p>
+          </div>
+        )}
+
+        {/* En-tête du profil */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Avatar */}
+              <div className="flex-shrink-0">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src="" alt={profile.full_name} />
+                  <AvatarFallback className="text-3xl bg-blue-100 text-blue-600">
+                    {getInitials(profile.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+
+              {/* Informations principales */}
+              <div className="flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h1 className="text-3xl font-bold mb-2">{profile.full_name}</h1>
+                    {profile.company_name && (
+                      <div className="flex items-center gap-2 text-lg text-gray-600 mb-2">
+                        <Building2 className="h-5 w-5" />
+                        {profile.company_name}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      {profile.is_rbq_verified && (
+                        <Badge className="bg-green-600">
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          RBQ Vérifié
+                        </Badge>
+                      )}
+                      {profile.rbq_number && (
+                        <Badge variant="outline">
+                          <Award className="h-3 w-3 mr-1" />
+                          {profile.rbq_number}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  {!isOwnProfile && (
+                    <Button onClick={handleContact} className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Contacter
+                    </Button>
+                  )}
+                </div>
+
+                {/* Statistiques */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">{stats.proposalsCount}</div>
+                    <div className="text-sm text-gray-600">Propositions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{stats.acceptedProposals}</div>
+                    <div className="text-sm text-gray-600">Acceptées</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1 text-2xl font-bold text-yellow-600">
+                      <Star className="h-6 w-6 fill-yellow-400" />
+                      {stats.averageRating}
+                    </div>
+                    <div className="text-sm text-gray-600">Note moyenne</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-600">{stats.reviewsCount}</div>
+                    <div className="text-sm text-gray-600">Avis</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Colonne principale */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Services offerts */}
+            {profile.services_offered && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    Services offerts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-700 whitespace-pre-wrap">{profile.services_offered}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Assurances */}
+            {profile.insurance_info && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5" />
+                    Assurances
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-700 whitespace-pre-wrap">{profile.insurance_info}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Certifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Certifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {profile.rbq_number && (
+                    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium">Licence RBQ</p>
+                          <p className="text-sm text-gray-600">{profile.rbq_number}</p>
+                        </div>
+                      </div>
+                      {profile.rbq_certification_url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(profile.rbq_certification_url!, '_blank')}
+                        >
+                          Voir le certificat
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Colonne latérale */}
+          <div className="space-y-6">
+            {/* Coordonnées */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {profile.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span>{profile.phone}</span>
+                  </div>
+                )}
+                {profile.email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4 text-gray-400" />
+                    <span>{profile.email}</span>
+                  </div>
+                )}
+                {(profile.city || profile.region) && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-400" />
+                    <span>
+                      {profile.city}
+                      {profile.city && profile.region && ', '}
+                      {profile.region}
+                    </span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Calendar className="h-4 w-4" />
+                  Membre depuis {new Date(profile.created_at).getFullYear()}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            {!isOwnProfile && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardHeader>
+                  <CardTitle className="text-blue-900">Intéressé(e) ?</CardTitle>
+                  <CardDescription className="text-blue-700">
+                    Contactez ce professionnel pour discuter de votre projet
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button onClick={handleContact} className="w-full gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Envoyer un message
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isOwnProfile && (
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader>
+                  <CardTitle className="text-green-900">C'est votre profil</CardTitle>
+                  <CardDescription className="text-green-700">
+                    Modifiez vos informations pour améliorer votre visibilité
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={() => navigate('/pro/profile')}
+                    className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Modifier mon profil
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default ProfessionalProfile;
+
