@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const ProposalView = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [proposal, setProposal] = useState<any>(null);
   const [project, setProject] = useState<any>(null);
@@ -41,7 +42,12 @@ const ProposalView = () => {
   useEffect(() => {
     fetchCurrentUser();
     fetchProposalDetails();
-  }, [id]);
+    
+    // Afficher automatiquement la prévisualisation PDF si demandé
+    if (searchParams.get('showPDF') === 'true') {
+      setShowPDFViewer(true);
+    }
+  }, [id, searchParams]);
 
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();

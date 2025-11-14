@@ -225,7 +225,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                             <Eye className="mr-2 h-4 w-4" />
                             Voir les détails
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}`)}>
+                          <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}?showPDF=true`)}>
                             <FileText className="mr-2 h-4 w-4" />
                             Voir le PDF
                           </DropdownMenuItem>
@@ -310,11 +310,18 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => navigate(`/proposal/${proposal.id}`)}
                       >
                         <Eye className="h-4 w-4 mr-2" />
-                        Voir
+                        Détails
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/proposal/${proposal.id}?showPDF=true`)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        PDF
                       </Button>
                       {proposal.status === "pending" && (
                         <>

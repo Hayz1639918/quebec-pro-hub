@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ const TenderView = () => {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   
   const [project, setProject] = useState<any>(null);
   const [client, setClient] = useState<any>(null);
@@ -37,7 +38,12 @@ const TenderView = () => {
 
   useEffect(() => {
     fetchTenderDetails();
-  }, [id]);
+    
+    // Afficher automatiquement la prévisualisation PDF si demandé
+    if (searchParams.get('showPDF') === 'true') {
+      setShowPDFViewer(true);
+    }
+  }, [id, searchParams]);
 
   const fetchTenderDetails = async () => {
     try {
