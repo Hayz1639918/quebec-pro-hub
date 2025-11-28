@@ -39,11 +39,11 @@
     "signup": "Sign Up"
   },
   "hero": {
-    "title": "Connect with Quebec's Best Contractors",
-    "subtitle": "Secure platform to connect for your construction and renovation projects",
+    "title": "Connect with the Best Contractors",
+    "subtitle": "Secure international platform for your construction and renovation projects",
     "cta_client": "Post a Project",
     "cta_pro": "Become a Professional",
-    "badge": "🇨🇦 Trusted Canadian Platform",
+    "badge": "🌍 Trusted International Platform",
     "features": {
       "verified": "Verified and certified contractors",
       "payments": "Secure milestone-based payments",

@@ -275,7 +275,7 @@ export const NotificationBell = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="justify-center cursor-pointer"
-              onClick={() => navigate('/dashboard/notifications')}
+              onClick={() => navigate('/notifications')}
             >
               {t('notifications.view_all')}
             </DropdownMenuItem>

@@ -39,11 +39,11 @@
     "signup": "Inscription"
   },
   "hero": {
-    "title": "Connectez-vous avec les meilleurs entrepreneurs du Québec",
-    "subtitle": "Plateforme sécurisée de mise en relation pour vos projets de construction et rénovation",
+    "title": "Connectez-vous avec les meilleurs entrepreneurs",
+    "subtitle": "Plateforme internationale sécurisée pour vos projets de construction et rénovation",
     "cta_client": "Publier un projet",
     "cta_pro": "Devenir professionnel",
-    "badge": "🇨🇦 Plateforme canadienne de confiance",
+    "badge": "🌍 Plateforme internationale de confiance",
     "features": {
       "verified": "Entrepreneurs vérifiés et certifiés",
       "payments": "Paiements sécurisés par jalons",

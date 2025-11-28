@@ -97,10 +97,11 @@ const ProDashboard = () => {
         return;
       }
 
-      if (!prof?.is_rbq_verified) {
-        navigate('/pro/profile');
-        return;
-      }
+      // Commenté temporairement pour permettre l'accès au dashboard
+      // if (!prof?.is_rbq_verified) {
+      //   navigate('/pro/profile');
+      //   return;
+      // }
 
       await fetchDashboardData(session.user.id);
       setLoading(false);

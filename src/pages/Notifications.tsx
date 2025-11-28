@@ -17,9 +17,15 @@ interface Notification {
   type: string;
   title: string;
   message: string;
-  link: string | null;
-  read: boolean;
+  action_url: string | null;
+  is_read: boolean;
   created_at: string;
+  metadata?: {
+    proposal_id?: string;
+    project_id?: string;
+    conversation_id?: string;
+    professional_id?: string;
+  } | null;
 }
 
 const Notifications = () => {
@@ -91,14 +97,14 @@ const Notifications = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
 
       if (error) throw error;
 
       setNotifications(prev =>
         prev.map(notif =>
-          notif.id === notificationId ? { ...notif, read: true } : notif
+          notif.id === notificationId ? { ...notif, is_read: true } : notif
         )
       );
     } catch (error) {
@@ -112,14 +118,14 @@ const Notifications = () => {
     try {
       const { error } = await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('user_id', userId)
-        .eq('read', false);
+        .eq('is_read', false);
 
       if (error) throw error;
 
       setNotifications(prev =>
-        prev.map(notif => ({ ...notif, read: true }))
+        prev.map(notif => ({ ...notif, is_read: true }))
       );
     } catch (error) {
       console.error('Error marking all as read:', error);
@@ -145,8 +151,58 @@ const Notifications = () => {
 
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
-    if (notification.link) {
-      navigate(notification.link);
+    
+    // Try action_url first
+    if (notification.action_url) {
+      navigate(notification.action_url);
+      return;
+    }
+    
+    // Build navigation URL based on type and metadata
+    const metadata = notification.metadata;
+    if (metadata) {
+      switch (notification.type) {
+        case 'proposal':
+          if (metadata.proposal_id) {
+            navigate(`/proposal/${metadata.proposal_id}?showPDF=true`);
+          } else if (metadata.project_id) {
+            navigate(`/tender/${metadata.project_id}`);
+          }
+          break;
+        case 'message':
+          if (metadata.conversation_id) {
+            navigate(`/messages?conversation=${metadata.conversation_id}`);
+          } else {
+            navigate('/messages');
+          }
+          break;
+        case 'contract':
+          navigate('/contracts');
+          break;
+        case 'payment':
+          navigate('/dashboard');
+          break;
+        case 'review':
+          navigate('/pro/reviews');
+          break;
+        default:
+          navigate('/dashboard');
+      }
+    } else {
+      // Fallback based on type
+      switch (notification.type) {
+        case 'message':
+          navigate('/messages');
+          break;
+        case 'proposal':
+          navigate('/dashboard');
+          break;
+        case 'contract':
+          navigate('/contracts');
+          break;
+        default:
+          navigate('/dashboard');
+      }
     }
   };
 
@@ -161,7 +217,7 @@ const Notifications = () => {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   if (loading) {
     return (
@@ -219,14 +275,14 @@ const Notifications = () => {
               <Card
                 key={notification.id}
                 className={`cursor-pointer transition-colors hover:bg-accent/5 ${
-                  !notification.read ? 'bg-primary/5 border-primary/20' : ''
+                  !notification.is_read ? 'bg-primary/5 border-primary/20' : ''
                 }`}
                 onClick={() => handleNotificationClick(notification)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className={`p-2 rounded-full ${
-                      !notification.read ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                      !notification.is_read ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                     }`}>
                       {getNotificationIcon(notification.type)}
                     </div>
@@ -236,7 +292,7 @@ const Notifications = () => {
                           {getTranslatedTitle(notification)}
                         </h4>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {!notification.read && (
+                          {!notification.is_read && (
                             <Badge variant="default" className="text-xs">
                               {t('notifications.new')}
                             </Badge>

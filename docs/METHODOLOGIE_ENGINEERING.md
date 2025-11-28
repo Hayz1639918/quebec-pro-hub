@@ -562,3 +562,5 @@ BâtirNet utilise actuellement une **architecture monolithe** via Supabase, ce q
 **Prochaine révision:** Après lancement production
 
 
+
+

@@ -236,6 +236,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
             type: 'proposal',
             title: 'Nouvelle proposition reçue',
             message: `${professionalData.company_name || professionalData.full_name} a soumis une proposition pour "${projectData.title}"`,
+            action_url: `/proposal/${proposal.id}?showPDF=true`,
             metadata: {
               proposal_id: proposal.id,
               project_id: projectId,

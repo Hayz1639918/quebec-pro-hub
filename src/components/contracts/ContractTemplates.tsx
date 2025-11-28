@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Search, Filter, Plus, Eye, Copy } from "lucide-react";
+import { FileText, Search, Filter, Plus, Eye, Copy, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { ContractTemplate, ContractCategory } from "@/types/contracts";
@@ -74,7 +74,7 @@ export const ContractTemplates = ({
     return matchesSearch && matchesCategory;
   });
 
-  const getCategoryColor = (category: ContractCategory) => {
+  const getCategoryColor = (category: ContractCategory | string) => {
     switch (category) {
       case 'construction':
         return 'bg-blue-100 text-blue-800';
@@ -84,12 +84,18 @@ export const ContractTemplates = ({
         return 'bg-yellow-100 text-yellow-800';
       case 'consultation':
         return 'bg-purple-100 text-purple-800';
+      case 'preliminary':
+        return 'bg-violet-100 text-violet-800';
+      case 'subcontract':
+        return 'bg-orange-100 text-orange-800';
+      case 'acceptance':
+        return 'bg-emerald-100 text-emerald-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getCategoryLabel = (category: ContractCategory) => {
+  const getCategoryLabel = (category: ContractCategory | string) => {
     switch (category) {
       case 'construction':
         return t('contracts.categories.construction');
@@ -99,6 +105,12 @@ export const ContractTemplates = ({
         return t('contracts.categories.maintenance');
       case 'consultation':
         return t('contracts.categories.consultation');
+      case 'preliminary':
+        return 'Contrat préliminaire';
+      case 'subcontract':
+        return 'Sous-traitance';
+      case 'acceptance':
+        return 'Réception';
       default:
         return category;
     }
@@ -174,14 +186,17 @@ export const ContractTemplates = ({
           />
         </div>
         <Select value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as ContractCategory | "all")}>
-          <SelectTrigger className="w-48">
+          <SelectTrigger className="w-56">
             <Filter className="h-4 w-4 mr-2" />
             <SelectValue placeholder={t('contracts.templates.filter_category')} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t('contracts.templates.all_categories')}</SelectItem>
+            <SelectItem value="preliminary">Contrat préliminaire</SelectItem>
             <SelectItem value="construction">{t('contracts.categories.construction')}</SelectItem>
             <SelectItem value="renovation">{t('contracts.categories.renovation')}</SelectItem>
+            <SelectItem value="subcontract">Sous-traitance</SelectItem>
+            <SelectItem value="acceptance">Réception des travaux</SelectItem>
             <SelectItem value="maintenance">{t('contracts.categories.maintenance')}</SelectItem>
             <SelectItem value="consultation">{t('contracts.categories.consultation')}</SelectItem>
           </SelectContent>
@@ -221,6 +236,9 @@ export const ContractTemplates = ({
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
                       {template.name}
+                      {(template as any).is_custom && (
+                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                      )}
                     </CardTitle>
                     <CardDescription className="mt-1">
                       {template.description}
@@ -232,14 +250,22 @@ export const ContractTemplates = ({
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Custom badge */}
+                {(template as any).is_custom && (
+                  <Badge variant="outline" className="text-xs">
+                    <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                    Modèle personnalisé
+                  </Badge>
+                )}
+                
                 {/* Variables count */}
                 <div className="text-sm text-muted-foreground">
-                  <span className="font-medium">{Object.keys(template.variables).length}</span> variables disponibles
+                  <span className="font-medium">{Object.keys(template.variables || {}).length}</span> variables disponibles
                 </div>
 
                 {/* Version */}
                 <div className="text-xs text-muted-foreground">
-                  Version {template.version}
+                  Version {template.version || 1}
                 </div>
 
                 {/* Actions */}

@@ -5,8 +5,7 @@ import {
   Text, 
   View, 
   StyleSheet,
-  Font,
-  Image
+  Font
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -22,172 +21,231 @@ Font.register({
   ]
 });
 
-// Styles professionnels québécois
+// Styles RBQ / APCHQ - Style officiel gouvernemental
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Roboto',
-    fontSize: 10,
-    paddingTop: 30,
-    paddingBottom: 60,
-    paddingHorizontal: 40,
-    lineHeight: 1.5,
-  },
-  // En-tête
-  header: {
-    marginBottom: 20,
-    borderBottom: '2 solid #2563eb',
-    paddingBottom: 10,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
-  },
-  tenderTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    color: '#1e40af',
-    marginBottom: 5,
-  },
-  tenderNumber: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: '#2563eb',
-    marginBottom: 3,
-  },
-  headerInfo: {
     fontSize: 9,
-    color: '#4b5563',
-    marginBottom: 2,
+    paddingTop: 25,
+    paddingBottom: 50,
+    paddingHorizontal: 30,
+    lineHeight: 1.4,
+    backgroundColor: '#ffffff',
   },
-  // Sections
-  section: {
-    marginTop: 15,
-    marginBottom: 10,
+  // Instructions en haut
+  instructionBox: {
+    backgroundColor: '#f5f5f5',
+    border: '1 solid #cccccc',
+    padding: 8,
+    marginBottom: 15,
+    fontSize: 8,
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: '#1e40af',
+  instructionText: {
+    fontSize: 8,
+    color: '#333333',
+  },
+  // Ligne de champs
+  fieldRow: {
+    flexDirection: 'row',
     marginBottom: 8,
-    borderBottom: '1 solid #93c5fd',
-    paddingBottom: 4,
+    alignItems: 'flex-end',
   },
-  subsectionTitle: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: '#2563eb',
-    marginTop: 10,
-    marginBottom: 5,
+  fieldLabel: {
+    fontSize: 9,
+    fontWeight: 400,
+    marginRight: 3,
   },
-  paragraph: {
+  fieldValue: {
+    flex: 1,
+    borderBottom: '1 solid #333333',
+    fontSize: 9,
+    paddingBottom: 2,
+    minHeight: 12,
+  },
+  fieldValueSmall: {
+    width: 100,
+    borderBottom: '1 solid #333333',
+    fontSize: 9,
+    paddingBottom: 2,
+    marginRight: 15,
+  },
+  // En-têtes de section style RBQ (gris foncé avec texte blanc)
+  sectionHeader: {
+    backgroundColor: '#4a4a4a',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  sectionHeaderText: {
+    color: '#ffffff',
     fontSize: 10,
-    marginBottom: 8,
-    textAlign: 'justify',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  // Sous-sections
+  subsectionHeader: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  subsectionHeaderText: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: '#333333',
+  },
+  // Contenu de section
+  sectionContent: {
+    paddingHorizontal: 5,
+    marginBottom: 10,
   },
   // Tableaux
   table: {
     width: '100%',
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 8,
+    marginBottom: 8,
+    border: '1 solid #cccccc',
   },
   tableRow: {
     flexDirection: 'row',
-    borderBottom: '1 solid #e5e7eb',
-    paddingVertical: 5,
+    borderBottom: '1 solid #cccccc',
   },
-  tableHeader: {
+  tableRowLast: {
     flexDirection: 'row',
-    backgroundColor: '#dbeafe',
-    borderBottom: '2 solid #2563eb',
-    paddingVertical: 6,
-    fontWeight: 700,
   },
-  tableCol: {
-    flex: 1,
-    paddingHorizontal: 5,
-  },
-  tableColNarrow: {
-    width: '20%',
-    paddingHorizontal: 5,
-  },
-  tableColWide: {
-    width: '40%',
-    paddingHorizontal: 5,
-  },
-  tableCellHeader: {
-    fontSize: 9,
-    fontWeight: 700,
-    color: '#1e40af',
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#e8e8e8',
+    borderBottom: '1 solid #999999',
   },
   tableCell: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    borderRight: '1 solid #cccccc',
+  },
+  tableCellLast: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+  },
+  tableCellHeader: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    fontWeight: 700,
+    borderRight: '1 solid #cccccc',
+  },
+  tableCellHeaderLast: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    fontWeight: 700,
+  },
+  // Cases à cocher
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    marginLeft: 10,
+  },
+  checkbox: {
+    width: 10,
+    height: 10,
+    border: '1 solid #333333',
+    marginRight: 6,
+    backgroundColor: '#ffffff',
+  },
+  checkboxChecked: {
+    width: 10,
+    height: 10,
+    border: '1 solid #333333',
+    marginRight: 6,
+    backgroundColor: '#333333',
+  },
+  checkboxLabel: {
     fontSize: 9,
   },
-  // Listes
-  list: {
-    marginLeft: 15,
-    marginTop: 5,
+  // Texte normal
+  paragraph: {
+    fontSize: 9,
+    marginBottom: 6,
+    textAlign: 'justify',
   },
+  boldText: {
+    fontWeight: 700,
+  },
+  // Liste
   listItem: {
     flexDirection: 'row',
-    marginBottom: 4,
+    marginBottom: 3,
+    paddingLeft: 10,
   },
-  bullet: {
-    width: 15,
-    fontSize: 10,
-    color: '#2563eb',
+  listBullet: {
+    width: 10,
+    fontSize: 9,
   },
   listText: {
     flex: 1,
-    fontSize: 10,
-  },
-  // Informations importantes
-  importantBox: {
-    backgroundColor: '#fef3c7',
-    border: '1 solid #f59e0b',
-    padding: 10,
-    marginVertical: 10,
-    borderRadius: 4,
-  },
-  importantTitle: {
-    fontSize: 11,
-    fontWeight: 700,
-    color: '#b45309',
-    marginBottom: 5,
-  },
-  importantText: {
     fontSize: 9,
-    color: '#78350f',
+  },
+  // Zone de texte libre
+  textArea: {
+    border: '1 solid #333333',
+    minHeight: 60,
+    padding: 5,
+    marginTop: 4,
+    marginBottom: 8,
   },
   // Pied de page
   footer: {
     position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
+    bottom: 20,
+    left: 30,
+    right: 30,
+    borderTop: '1 solid #cccccc',
+    paddingTop: 8,
+  },
+  footerText: {
+    fontSize: 7,
+    color: '#666666',
     textAlign: 'center',
-    color: '#6b7280',
-    fontSize: 8,
-    borderTop: '1 solid #d1d5db',
-    paddingTop: 10,
   },
   pageNumber: {
     position: 'absolute',
-    bottom: 15,
-    right: 40,
+    bottom: 20,
+    right: 30,
     fontSize: 8,
-    color: '#6b7280',
+    color: '#666666',
   },
-  // Badges
-  badge: {
-    backgroundColor: '#dbeafe',
-    color: '#1e40af',
-    padding: '3 8',
-    borderRadius: 3,
-    fontSize: 9,
+  // Titre principal
+  mainTitle: {
+    fontSize: 14,
     fontWeight: 700,
-    display: 'inline-block',
-    marginRight: 5,
+    textAlign: 'center',
+    marginBottom: 3,
+    textTransform: 'uppercase',
+  },
+  subtitle: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#555555',
+  },
+  // Encadré important
+  importantBox: {
+    border: '2 solid #333333',
+    padding: 10,
+    marginVertical: 10,
+    backgroundColor: '#fffde7',
+  },
+  importantTitle: {
+    fontWeight: 700,
+    fontSize: 10,
+    marginBottom: 5,
   },
 });
 
@@ -198,12 +256,12 @@ interface TenderPDFProps {
 
 export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
   const formatDate = (date: string | null) => {
-    if (!date) return 'Non spécifiée';
+    if (!date) return '______________________';
     return format(new Date(date), 'dd MMMM yyyy', { locale: fr });
   };
 
   const formatCurrency = (amount: number | null) => {
-    if (!amount) return 'Non spécifié';
+    if (!amount) return '____________';
     return new Intl.NumberFormat('fr-CA', {
       style: 'currency',
       currency: 'CAD',
@@ -212,214 +270,222 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
 
   return (
     <Document>
-      {/* PAGE 1: Page de garde */}
+      {/* PAGE 1 */}
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          <Text style={styles.tenderTitle}>APPEL D'OFFRES</Text>
-          <Text style={styles.tenderNumber}>
-            {project.tender_number || 'N° à générer'}
-          </Text>
-          <Text style={styles.headerInfo}>
-            Date de publication : {formatDate(project.created_at)}
-          </Text>
-          <Text style={styles.headerInfo}>
-            Date limite de soumission : {formatDate(project.submission_deadline)}
+        {/* Titre */}
+        <Text style={styles.mainTitle}>APPEL D'OFFRES</Text>
+        <Text style={styles.subtitle}>Document de soumission</Text>
+
+        {/* Instructions */}
+        <View style={styles.instructionBox}>
+          <Text style={styles.instructionText}>
+            Inscrire les informations pertinentes sur cette page et elles seront automatiquement affichées dans le formulaire. 
+            Les soumissionnaires doivent prendre connaissance de l'ensemble des documents avant de soumettre leur offre.
           </Text>
         </View>
 
-        {/* Informations du client */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>1. DONNEUR D'OUVRAGE</Text>
-          <Text style={styles.paragraph}>
-            {client?.company_name || client?.full_name}
-          </Text>
-          {client?.email && (
-            <Text style={styles.paragraph}>Courriel : {client.email}</Text>
-          )}
-          {client?.phone && (
-            <Text style={styles.paragraph}>Téléphone : {client.phone}</Text>
-          )}
+        {/* Champs d'en-tête */}
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>N° de dossier :</Text>
+          <Text style={styles.fieldValueSmall}>{project.tender_number || ''}</Text>
+          <Text style={styles.fieldLabel}>Date de publication :</Text>
+          <Text style={styles.fieldValueSmall}>{formatDate(project.created_at)}</Text>
         </View>
 
-        {/* Titre et description du projet */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>2. OBJET DE L'APPEL D'OFFRES</Text>
-          <Text style={[styles.paragraph, { fontWeight: 700, fontSize: 12 }]}>
-            {project.title}
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Date limite de soumission :</Text>
+          <Text style={styles.fieldValue}>{formatDate(project.submission_deadline)}</Text>
+        </View>
+
+        {/* SECTION: INFORMATIONS DU DONNEUR D'OUVRAGE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>INFORMATIONS DU DONNEUR D'OUVRAGE</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Nom / Raison sociale :</Text>
+            <Text style={styles.fieldValue}>{client?.company_name || client?.full_name || ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Courriel :</Text>
+            <Text style={styles.fieldValueSmall}>{client?.email || ''}</Text>
+            <Text style={styles.fieldLabel}>Téléphone :</Text>
+            <Text style={styles.fieldValue}>{client?.phone || ''}</Text>
+          </View>
+        </View>
+
+        {/* SECTION: INFORMATIONS DU PROJET */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>INFORMATIONS DU PROJET</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Titre du projet :</Text>
+            <Text style={styles.fieldValue}>{project.title || ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Lieu des travaux :</Text>
+            <Text style={styles.fieldValue}>{project.city ? `${project.city}, ${project.region}` : ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Catégorie :</Text>
+            <Text style={styles.fieldValueSmall}>{project.category || ''}</Text>
+            <Text style={styles.fieldLabel}>Type :</Text>
+            <Text style={styles.fieldValue}>{project.project_type || ''}</Text>
+          </View>
+        </View>
+
+        {/* Description de l'immeuble / type de travaux */}
+        <View style={styles.subsectionHeader}>
+          <Text style={styles.subsectionHeaderText}>Description des travaux</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'construction' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Construction neuve</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'renovation' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Rénovation</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'agrandissement' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Agrandissement</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'autre' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Autre : _______________</Text>
+          </View>
+        </View>
+
+        {/* SECTION: BUDGET ET ÉCHÉANCIER */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>BUDGET ET ÉCHÉANCIER</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Budget estimatif :</Text>
+            <Text style={styles.fieldValueSmall}>{formatCurrency(project.budget_min)}</Text>
+            <Text style={styles.fieldLabel}>à</Text>
+            <Text style={styles.fieldValue}>{formatCurrency(project.budget_max)}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Date de début prévue :</Text>
+            <Text style={styles.fieldValueSmall}>{formatDate(project.project_start_date)}</Text>
+            <Text style={styles.fieldLabel}>Date de fin prévue :</Text>
+            <Text style={styles.fieldValue}>{formatDate(project.project_end_date)}</Text>
+          </View>
+        </View>
+
+        {/* SECTION: DATES IMPORTANTES */}
+        <View style={styles.importantBox}>
+          <Text style={styles.importantTitle}>DATES IMPORTANTES</Text>
+          {project.site_visit_date && (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Visite de chantier :</Text>
+              <Text style={styles.fieldValue}>{formatDate(project.site_visit_date)}</Text>
+            </View>
+          )}
+          {project.questions_deadline && (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Date limite pour questions :</Text>
+              <Text style={styles.fieldValue}>{formatDate(project.questions_deadline)}</Text>
+            </View>
+          )}
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Date limite de soumission :</Text>
+            <Text style={styles.fieldValue}>{formatDate(project.submission_deadline)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            BâtirNet - Plateforme de mise en relation professionnelle
           </Text>
+        </View>
+        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+          `Page ${pageNumber} / ${totalPages}`
+        )} fixed />
+      </Page>
+
+      {/* PAGE 2: Description détaillée */}
+      <Page size="A4" style={styles.page}>
+        
+        {/* DESCRIPTION DÉTAILLÉE DES TRAVAUX */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>DESCRIPTION DÉTAILLÉE DES TRAVAUX</Text>
+        </View>
+        <View style={styles.sectionContent}>
           <Text style={styles.paragraph}>{project.description}</Text>
-          
           {project.work_description_detailed && (
             <>
-              <Text style={styles.subsectionTitle}>Description détaillée</Text>
-              <Text style={styles.paragraph}>
-                {project.work_description_detailed}
-              </Text>
+              <View style={styles.subsectionHeader}>
+                <Text style={styles.subsectionHeaderText}>Spécifications supplémentaires</Text>
+              </View>
+              <Text style={styles.paragraph}>{project.work_description_detailed}</Text>
             </>
           )}
         </View>
 
-        {/* Renseignements généraux */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>3. RENSEIGNEMENTS GÉNÉRAUX</Text>
-          
-          <View style={styles.table}>
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Catégorie :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>{project.category}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Type de travaux :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>
-                  {project.project_type || 'Non spécifié'}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Lieu des travaux :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>
-                  {project.city}, {project.region}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Budget estimatif :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>
-                  {formatCurrency(project.budget_min)} à {formatCurrency(project.budget_max)}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Début prévue :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>
-                  {formatDate(project.project_start_date)}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.tableRow}>
-              <View style={styles.tableColNarrow}>
-                <Text style={styles.tableCell}>Fin prévue :</Text>
-              </View>
-              <View style={[styles.tableColWide, { flex: 2 }]}>
-                <Text style={styles.tableCell}>
-                  {formatDate(project.project_end_date)}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        {/* Dates importantes */}
-        <View style={styles.importantBox}>
-          <Text style={styles.importantTitle}>📅 DATES IMPORTANTES</Text>
-          {project.site_visit_date && (
-            <Text style={styles.importantText}>
-              • Visite de chantier : {formatDate(project.site_visit_date)}
-            </Text>
-          )}
-          {project.questions_deadline && (
-            <Text style={styles.importantText}>
-              • Date limite pour questions : {formatDate(project.questions_deadline)}
-            </Text>
-          )}
-          <Text style={styles.importantText}>
-            • Date limite de soumission : {formatDate(project.submission_deadline)}
-          </Text>
-        </View>
-
-        <Text style={styles.footer}>
-          BâtirNet - Plateforme de mise en relation - www.batirnet.ca
-        </Text>
-        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-          `Page ${pageNumber} sur ${totalPages}`
-        )} fixed />
-      </Page>
-
-      {/* PAGE 2: Spécifications techniques et exigences */}
-      <Page size="A4" style={styles.page}>
-        {/* Spécifications techniques */}
+        {/* SPÉCIFICATIONS TECHNIQUES */}
         {project.technical_specifications && Array.isArray(project.technical_specifications) && project.technical_specifications.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>4. SPÉCIFICATIONS TECHNIQUES</Text>
-            {project.technical_specifications.map((spec: any, index: number) => (
-              <View key={index} style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>
-                  {typeof spec === 'string' ? spec : spec.description || spec.name}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Jalons et échéancier */}
-        {project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>5. JALONS DU PROJET</Text>
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <View style={[styles.tableCol, { flex: 2 }]}>
-                  <Text style={styles.tableCellHeader}>Jalon</Text>
-                </View>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCellHeader}>Date prévue</Text>
-                </View>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCellHeader}>Livrables</Text>
-                </View>
-              </View>
-              {project.milestones.map((milestone: any, index: number) => (
-                <View key={index} style={styles.tableRow}>
-                  <View style={[styles.tableCol, { flex: 2 }]}>
-                    <Text style={styles.tableCell}>{milestone.name || milestone.title}</Text>
-                  </View>
-                  <View style={styles.tableCol}>
-                    <Text style={styles.tableCell}>
-                      {milestone.date ? formatDate(milestone.date) : 'À déterminer'}
-                    </Text>
-                  </View>
-                  <View style={styles.tableCol}>
-                    <Text style={styles.tableCell}>
-                      {milestone.deliverables || 'N/A'}
-                    </Text>
-                  </View>
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>SPÉCIFICATIONS TECHNIQUES</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              {project.technical_specifications.map((spec: any, index: number) => (
+                <View key={index} style={styles.listItem}>
+                  <Text style={styles.listBullet}>•</Text>
+                  <Text style={styles.listText}>
+                    {typeof spec === 'string' ? spec : spec.description || spec.name}
+                  </Text>
                 </View>
               ))}
             </View>
-          </View>
+          </>
         )}
 
-        {/* Exigences d'assurance */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>6. EXIGENCES D'ASSURANCE ET DE LICENCE</Text>
-          
-          <Text style={styles.subsectionTitle}>6.1 Assurances requises</Text>
+        {/* JALONS DU PROJET */}
+        {project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>JALONS DU PROJET</Text>
+            </View>
+            <View style={styles.table}>
+              <View style={styles.tableHeaderRow}>
+                <Text style={styles.tableCellHeader}>Jalon</Text>
+                <Text style={styles.tableCellHeader}>Date prévue</Text>
+                <Text style={styles.tableCellHeaderLast}>Livrables</Text>
+              </View>
+              {project.milestones.map((milestone: any, index: number) => (
+                <View key={index} style={index === project.milestones.length - 1 ? styles.tableRowLast : styles.tableRow}>
+                  <Text style={styles.tableCell}>{milestone.name || milestone.title}</Text>
+                  <Text style={styles.tableCell}>
+                    {milestone.date ? formatDate(milestone.date) : 'À déterminer'}
+                  </Text>
+                  <Text style={styles.tableCellLast}>
+                    {milestone.deliverables || 'N/A'}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* EXIGENCES D'ASSURANCE ET LICENCE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>EXIGENCES D'ASSURANCE ET LICENCE</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Assurances requises</Text>
+          </View>
           {project.insurance_requirements && Object.keys(project.insurance_requirements).length > 0 ? (
-            <View style={styles.list}>
+            <>
               {project.insurance_requirements.liability && (
                 <View style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.listBullet}>•</Text>
                   <Text style={styles.listText}>
                     Responsabilité civile générale : {formatCurrency(project.insurance_requirements.liability)}
                   </Text>
@@ -427,233 +493,175 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
               )}
               {project.insurance_requirements.professional && (
                 <View style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
+                  <Text style={styles.listBullet}>•</Text>
                   <Text style={styles.listText}>
                     Responsabilité professionnelle : {formatCurrency(project.insurance_requirements.professional)}
                   </Text>
                 </View>
               )}
-            </View>
+            </>
           ) : (
             <Text style={styles.paragraph}>
-              Les soumissionnaires doivent détenir les assurances requises conformément aux lois du Québec.
+              Les soumissionnaires doivent détenir les assurances requises conformément aux lois en vigueur.
             </Text>
           )}
 
-          <Text style={styles.subsectionTitle}>6.2 Licences RBQ requises</Text>
-          {project.licensing_requirements && Object.keys(project.licensing_requirements).length > 0 ? (
-            <View style={styles.list}>
-              {Object.entries(project.licensing_requirements).map(([key, value]: [string, any]) => (
-                <View key={key} style={styles.listItem}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.listText}>{value}</Text>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <Text style={styles.paragraph}>
-              Le soumissionnaire doit détenir une licence RBQ valide et en règle pour la catégorie de travaux demandée.
-            </Text>
-          )}
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Licences requises</Text>
+          </View>
+          <Text style={styles.paragraph}>
+            Le soumissionnaire doit détenir une licence valide et en règle pour la catégorie de travaux demandée.
+          </Text>
         </View>
 
-        {/* Critères d'évaluation */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>7. CRITÈRES D'ÉVALUATION</Text>
-          {project.evaluation_criteria && Object.keys(project.evaluation_criteria).length > 0 ? (
-            <View style={styles.table}>
-              <View style={styles.tableHeader}>
-                <View style={[styles.tableCol, { flex: 2 }]}>
-                  <Text style={styles.tableCellHeader}>Critère</Text>
-                </View>
-                <View style={styles.tableCol}>
-                  <Text style={styles.tableCellHeader}>Pondération</Text>
-                </View>
-              </View>
-              {Object.entries(project.evaluation_criteria).map(([key, value]: [string, any]) => (
-                <View key={key} style={styles.tableRow}>
-                  <View style={[styles.tableCol, { flex: 2 }]}>
-                    <Text style={styles.tableCell}>{key}</Text>
-                  </View>
-                  <View style={styles.tableCol}>
-                    <Text style={styles.tableCell}>{value}%</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.list}>
-              <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>Prix proposé : 40%</Text>
-              </View>
-              <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>Expérience et références : 30%</Text>
-              </View>
-              <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>Méthodologie et échéancier : 20%</Text>
-              </View>
-              <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>Garanties et assurances : 10%</Text>
-              </View>
-            </View>
-          )}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            BâtirNet - Plateforme de mise en relation professionnelle
+          </Text>
         </View>
-
-        <Text style={styles.footer}>
-          BâtirNet - Plateforme de mise en relation - www.batirnet.ca
-        </Text>
         <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-          `Page ${pageNumber} sur ${totalPages}`
+          `Page ${pageNumber} / ${totalPages}`
         )} fixed />
       </Page>
 
-      {/* PAGE 3: Modalités de soumission */}
+      {/* PAGE 3: Critères et modalités */}
       <Page size="A4" style={styles.page}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>8. MODALITÉS DE SOUMISSION</Text>
-          
-          <Text style={styles.subsectionTitle}>8.1 Documents requis</Text>
-          <View style={styles.list}>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>1.</Text>
-              <Text style={styles.listText}>
-                Formulaire de soumission dûment complété et signé
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>2.</Text>
-              <Text style={styles.listText}>
-                Copie de la licence RBQ valide
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>3.</Text>
-              <Text style={styles.listText}>
-                Certificats d'assurance en vigueur
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>4.</Text>
-              <Text style={styles.listText}>
-                Devis détaillé et échéancier proposé
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>5.</Text>
-              <Text style={styles.listText}>
-                Minimum trois (3) références de projets similaires
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>6.</Text>
-              <Text style={styles.listText}>
-                Liste des sous-traitants (si applicable)
-              </Text>
-            </View>
-          </View>
-
-          <Text style={styles.subsectionTitle}>8.2 Mode de transmission</Text>
-          <Text style={styles.paragraph}>
-            Les soumissions doivent être transmises par voie électronique via la plateforme BâtirNet avant la date et l'heure limite indiquées.
-          </Text>
-
-          <Text style={styles.subsectionTitle}>8.3 Validité de la soumission</Text>
-          <Text style={styles.paragraph}>
-            Les soumissions devront demeurer valides pour une période minimale de quatre-vingt-dix (90) jours suivant la date limite de dépôt.
-          </Text>
+        
+        {/* CRITÈRES D'ÉVALUATION */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>CRITÈRES D'ÉVALUATION</Text>
         </View>
-
-        {/* Conditions de paiement */}
-        {project.payment_terms && Object.keys(project.payment_terms).length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>9. CONDITIONS DE PAIEMENT</Text>
-            <Text style={styles.paragraph}>
-              {project.payment_terms.description || 'Selon les modalités standards de l\'industrie'}
-            </Text>
-            {project.payment_terms.schedule && (
-              <View style={styles.list}>
-                {Object.entries(project.payment_terms.schedule).map(([key, value]: [string, any]) => (
-                  <View key={key} style={styles.listItem}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.listText}>{key} : {value}</Text>
-                  </View>
-                ))}
+        {project.evaluation_criteria && Object.keys(project.evaluation_criteria).length > 0 ? (
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCellHeader, { flex: 3 }]}>Critère</Text>
+              <Text style={styles.tableCellHeaderLast}>Pondération</Text>
+            </View>
+            {Object.entries(project.evaluation_criteria).map(([key, value]: [string, any], index: number) => (
+              <View key={key} style={index === Object.entries(project.evaluation_criteria).length - 1 ? styles.tableRowLast : styles.tableRow}>
+                <Text style={[styles.tableCell, { flex: 3 }]}>{key}</Text>
+                <Text style={styles.tableCellLast}>{value}%</Text>
               </View>
-            )}
+            ))}
+          </View>
+        ) : (
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCellHeader, { flex: 3 }]}>Critère</Text>
+              <Text style={styles.tableCellHeaderLast}>Pondération</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Prix proposé</Text>
+              <Text style={styles.tableCellLast}>40%</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Expérience et références</Text>
+              <Text style={styles.tableCellLast}>30%</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Méthodologie et échéancier</Text>
+              <Text style={styles.tableCellLast}>20%</Text>
+            </View>
+            <View style={styles.tableRowLast}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Garanties et assurances</Text>
+              <Text style={styles.tableCellLast}>10%</Text>
+            </View>
           </View>
         )}
 
-        {/* Garantie */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>10. GARANTIE ET RESPONSABILITÉS</Text>
-          <Text style={styles.paragraph}>
-            L'entrepreneur retenu devra fournir une garantie de {project.warranty_period_months || 12} mois sur l'ensemble des travaux réalisés, couvrant les défauts de matériaux et de main-d'œuvre.
-          </Text>
+        {/* MODALITÉS DE SOUMISSION */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>MODALITÉS DE SOUMISSION</Text>
         </View>
-
-        {/* Conditions générales */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>11. CONDITIONS GÉNÉRALES</Text>
-          <View style={styles.list}>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                Le donneur d'ouvrage se réserve le droit d'accepter ou de refuser toute soumission, et ce, sans obligation de justifier sa décision.
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                La soumission la plus basse ne sera pas nécessairement retenue.
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                Les frais de préparation et de soumission sont à la charge du soumissionnaire.
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                Toute modification à l'appel d'offres sera communiquée à tous les soumissionnaires inscrits.
-              </Text>
-            </View>
-            <View style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                Les travaux devront être effectués conformément aux normes et codes en vigueur au Québec.
-              </Text>
-            </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Documents requis</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Formulaire de soumission dûment complété et signé</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Copie de la licence valide</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Certificats d'assurance en vigueur</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Devis détaillé et échéancier proposé</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Minimum trois (3) références de projets similaires</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Liste des sous-traitants (si applicable)</Text>
           </View>
         </View>
 
-        {/* Contact pour questions */}
-        <View style={styles.importantBox}>
-          <Text style={styles.importantTitle}>📞 PERSONNE-RESSOURCE</Text>
-          <Text style={styles.importantText}>
-            Pour toute question concernant cet appel d'offres, veuillez contacter :
-          </Text>
-          <Text style={styles.importantText}>
-            {client?.full_name || client?.company_name}
-          </Text>
-          {client?.email && (
-            <Text style={styles.importantText}>Courriel : {client.email}</Text>
-          )}
-          {client?.phone && (
-            <Text style={styles.importantText}>Téléphone : {client.phone}</Text>
-          )}
+        {/* CONDITIONS GÉNÉRALES */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>CONDITIONS GÉNÉRALES</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>1.</Text>
+            <Text style={styles.listText}>
+              Le donneur d'ouvrage se réserve le droit d'accepter ou de refuser toute soumission sans obligation de justifier sa décision.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>2.</Text>
+            <Text style={styles.listText}>
+              La soumission la plus basse ne sera pas nécessairement retenue.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>3.</Text>
+            <Text style={styles.listText}>
+              Les soumissions devront demeurer valides pour une période minimale de quatre-vingt-dix (90) jours.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>4.</Text>
+            <Text style={styles.listText}>
+              Les travaux devront être effectués conformément aux normes et codes en vigueur.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>5.</Text>
+            <Text style={styles.listText}>
+              L'entrepreneur retenu devra fournir une garantie de {project.warranty_period_months || 12} mois sur les travaux.
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.footer}>
-          BâtirNet - Plateforme de mise en relation - www.batirnet.ca
-        </Text>
+        {/* PERSONNE-RESSOURCE */}
+        <View style={styles.importantBox}>
+          <Text style={styles.importantTitle}>PERSONNE-RESSOURCE</Text>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Nom :</Text>
+            <Text style={styles.fieldValue}>{client?.full_name || client?.company_name || ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Courriel :</Text>
+            <Text style={styles.fieldValueSmall}>{client?.email || ''}</Text>
+            <Text style={styles.fieldLabel}>Tél. :</Text>
+            <Text style={styles.fieldValue}>{client?.phone || ''}</Text>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            BâtirNet - Plateforme de mise en relation professionnelle
+          </Text>
+        </View>
         <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-          `Page ${pageNumber} sur ${totalPages}`
+          `Page ${pageNumber} / ${totalPages}`
         )} fixed />
       </Page>
     </Document>
@@ -661,4 +669,3 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
 };
 
 export default TenderPDF;
-

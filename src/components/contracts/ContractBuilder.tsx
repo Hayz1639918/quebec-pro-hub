@@ -171,7 +171,7 @@ export const ContractBuilder = ({
       warranty_period: formData.warranty_period_months || '12',
       special_conditions: formData.special_conditions || 'Aucune condition spéciale',
       signature_date: format(new Date(), 'yyyy-MM-dd'),
-      signature_location: 'Québec, Canada'
+      signature_location: ''
     };
 
     // Remplacer les variables dans le template

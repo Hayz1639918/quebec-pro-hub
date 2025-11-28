@@ -200,6 +200,7 @@ const ProjectDetails = () => {
             type: 'message',
             title: t('notifications.types.new_message'),
             message: `${currentUser.company_name || currentUser.full_name} ${t('messages.sent_message_about')} "${project.title}"`,
+            action_url: `/messages?conversation=${conversationId}`,
             metadata: { conversation_id: conversationId, project_id: id },
           });
       }
@@ -323,6 +324,7 @@ const ProjectDetails = () => {
           type: 'proposal',
           title: 'Nouvelle proposition reçue',
           message: `${currentUser.company_name || currentUser.full_name} a soumis une proposition pour votre projet "${project?.title}"`,
+          action_url: `/proposal/${proposalData.id}?showPDF=true`,
           metadata: { 
             project_id: id, 
             proposal_id: proposalData.id,
