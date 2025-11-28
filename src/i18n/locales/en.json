@@ -486,6 +486,15 @@
       "view_details": "View Details",
       "submit_proposal": "Submit a Proposal",
       "published": "Published"
+    },
+    "map": {
+      "title": "Projects Near You",
+      "view_map": "Map",
+      "view_list": "List",
+      "radius": "Radius",
+      "km": "km",
+      "no_location": "Location not available",
+      "projects_count": "{{count}} project(s) in this area"
     }
   },
   "proposals": {
@@ -594,6 +603,15 @@
       "distance": "Distance",
       "activity_score": "Score",
       "profile_in_dev": "Profile page under development. Use the \"Contact\" button to communicate!"
+    },
+    "map": {
+      "title": "Professionals Near You",
+      "view_map": "Map",
+      "view_list": "List",
+      "radius": "Radius",
+      "km": "km",
+      "no_location": "Location not available",
+      "professionals_count": "{{count}} professional(s) in this area"
     },
     "geolocation": {
       "disabled": "Location Disabled",

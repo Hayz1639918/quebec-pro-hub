@@ -486,6 +486,15 @@
       "view_details": "Voir les détails",
       "submit_proposal": "Soumettre une proposition",
       "published": "Publié"
+    },
+    "map": {
+      "title": "Projets près de vous",
+      "view_map": "Carte",
+      "view_list": "Liste",
+      "radius": "Rayon",
+      "km": "km",
+      "no_location": "Localisation non disponible",
+      "projects_count": "{{count}} projet(s) dans ce secteur"
     }
   },
   "proposals": {
@@ -594,6 +603,15 @@
       "distance": "Distance",
       "activity_score": "Score",
       "profile_in_dev": "Page de profil en développement. Utilisez le bouton \"Contacter\" pour communiquer !"
+    },
+    "map": {
+      "title": "Professionnels près de vous",
+      "view_map": "Carte",
+      "view_list": "Liste",
+      "radius": "Rayon",
+      "km": "km",
+      "no_location": "Localisation non disponible",
+      "professionals_count": "{{count}} professionnel(s) dans ce secteur"
     },
     "geolocation": {
       "disabled": "Localisation désactivée",

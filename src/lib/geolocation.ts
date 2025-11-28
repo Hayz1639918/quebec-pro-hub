@@ -190,3 +190,98 @@ export function sortByProximity<T extends { latitude: number | null; longitude: 
     });
 }
 
+/**
+ * Geocode a postal code to coordinates using Nominatim API (OpenStreetMap)
+ * @param postalCode - Postal code (Canadian format: A1A 1A1)
+ * @param country - Country code (default: 'CA' for Canada)
+ * @returns Promise with coordinates or null if not found
+ */
+export async function geocodePostalCode(
+  postalCode: string,
+  country: string = 'CA'
+): Promise<Coordinates | null> {
+  try {
+    // Clean and format postal code
+    const cleanedPostalCode = postalCode.trim().toUpperCase().replace(/\s+/g, ' ');
+    
+    // Validate Canadian postal code format (A1A 1A1)
+    if (country === 'CA') {
+      const canadianPostalCodeRegex = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/;
+      if (!canadianPostalCodeRegex.test(cleanedPostalCode.replace(/\s/g, ''))) {
+        console.warn('Invalid Canadian postal code format');
+        return null;
+      }
+    }
+
+    // Use Nominatim API (free, no API key required)
+    // Rate limit: 1 request per second
+    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(
+      cleanedPostalCode
+    )}&country=${country}&format=json&limit=1`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'BatirNet/1.0', // Required by Nominatim
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Geocoding API error:', response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      return {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+      };
+    }
+
+    console.warn('No results found for postal code:', cleanedPostalCode);
+    return null;
+  } catch (error) {
+    console.error('Error geocoding postal code:', error);
+    return null;
+  }
+}
+
+/**
+ * Geocode a full address to coordinates
+ * @param address - Full address string
+ * @returns Promise with coordinates or null if not found
+ */
+export async function geocodeAddress(address: string): Promise<Coordinates | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      address
+    )}&format=json&limit=1`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'BatirNet/1.0',
+      },
+    });
+
+    if (!response.ok) {
+      console.error('Geocoding API error:', response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      return {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    return null;
+  }
+}
+

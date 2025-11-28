@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -29,7 +30,12 @@ import {
   Briefcase,
   Eye,
   MessageSquare,
+  Map,
+  List,
 } from "lucide-react";
+
+// Lazy load the map component
+const InteractiveMap = lazy(() => import("@/components/map/InteractiveMap"));
 
 interface Project {
   id: string;
@@ -48,6 +54,8 @@ interface Project {
   updated_at: string;
   proposals_count: number;
   views_count: number;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 const STATUS_COLORS = {
@@ -121,6 +129,9 @@ const Projects = () => {
   const [proposalMessage, setProposalMessage] = useState("");
   const [proposalBudget, setProposalBudget] = useState("");
   const [proposalDuration, setProposalDuration] = useState("");
+  const [showMap, setShowMap] = useState(true);
+  const [mapRadius, setMapRadius] = useState(50);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -336,6 +347,65 @@ const Projects = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section */}
+      <section className="py-6 bg-background">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              {t('projects.map.title', 'Projets près de vous')}
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant={showMap ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowMap(true)}
+              >
+                <Map className="h-4 w-4 mr-2" />
+                {t('projects.map.view_map', 'Carte')}
+              </Button>
+              <Button
+                variant={!showMap ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowMap(false)}
+              >
+                <List className="h-4 w-4 mr-2" />
+                {t('projects.map.view_list', 'Liste')}
+              </Button>
+            </div>
+          </div>
+          
+          {showMap && (
+            <Suspense fallback={
+              <Skeleton className="h-[400px] w-full rounded-lg" />
+            }>
+              <InteractiveMap
+                mode="projects"
+                projects={filteredProjects
+                  .filter(p => p.latitude && p.longitude)
+                  .map(p => ({
+                    id: p.id,
+                    title: p.title,
+                    category: p.category,
+                    budget_min: p.budget_min,
+                    budget_max: p.budget_max,
+                    city: p.city,
+                    region: p.region,
+                    status: p.status,
+                    latitude: p.latitude!,
+                    longitude: p.longitude!,
+                    created_at: p.created_at,
+                  }))}
+                onRadiusChange={setMapRadius}
+                onLocationChange={(lat, lng) => setUserLocation({ lat, lng })}
+                defaultRadius={mapRadius}
+                height="400px"
+              />
+            </Suspense>
+          )}
         </div>
       </section>
 

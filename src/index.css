@@ -109,3 +109,56 @@ All colors MUST be HSL.
     @apply text-3xl md:text-4xl;
   }
 }
+
+/* Leaflet Map Styles */
+@layer components {
+  .leaflet-container {
+    @apply rounded-lg;
+    font-family: inherit;
+    cursor: grab;
+  }
+
+  .leaflet-container.leaflet-dragging {
+    cursor: grabbing;
+  }
+
+  .leaflet-popup-content-wrapper {
+    @apply rounded-lg shadow-lg;
+  }
+
+  .leaflet-popup-content {
+    @apply m-3;
+  }
+
+  .project-marker {
+    filter: hue-rotate(200deg) saturate(1.2);
+    cursor: pointer;
+  }
+
+  .professional-marker {
+    filter: hue-rotate(100deg) saturate(1.2);
+    cursor: pointer;
+  }
+
+  .user-location-marker {
+    filter: hue-rotate(0deg) saturate(1.5) brightness(1.1);
+  }
+
+  .leaflet-control-zoom {
+    @apply border-none shadow-lg;
+  }
+
+  .leaflet-control-zoom a {
+    @apply bg-white hover:bg-gray-50 transition-colors;
+    border: 1px solid #e5e7eb !important;
+  }
+
+  .leaflet-control-zoom a:hover {
+    @apply bg-gray-100;
+  }
+
+  /* Better touch/drag interaction */
+  .leaflet-interactive {
+    cursor: pointer;
+  }
+}

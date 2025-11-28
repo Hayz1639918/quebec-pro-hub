@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -35,7 +36,12 @@ import {
   Navigation as NavigationIcon,
   TrendingUp,
   MessageSquare,
+  Map,
+  List,
 } from "lucide-react";
+
+// Lazy load the map component
+const InteractiveMap = lazy(() => import("@/components/map/InteractiveMap"));
 
 interface Professional {
   id: string;
@@ -147,6 +153,8 @@ const Professionals = () => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [userId, setUserId] = useState<string | null>(null);
+  const [showMap, setShowMap] = useState(true);
+  const [mapRadius, setMapRadius] = useState(50);
 
   useEffect(() => {
     fetchProfessionals();
@@ -397,6 +405,68 @@ const Professionals = () => {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Interactive Map Section */}
+      <section className="py-6 bg-background">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary" />
+              {t('professionals.map.title', 'Professionnels près de vous')}
+            </h2>
+            <div className="flex gap-2">
+              <Button
+                variant={showMap ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowMap(true)}
+              >
+                <Map className="h-4 w-4 mr-2" />
+                {t('professionals.map.view_map', 'Carte')}
+              </Button>
+              <Button
+                variant={!showMap ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowMap(false)}
+              >
+                <List className="h-4 w-4 mr-2" />
+                {t('professionals.map.view_list', 'Liste')}
+              </Button>
+            </div>
+          </div>
+          
+          {showMap && (
+            <Suspense fallback={
+              <Skeleton className="h-[400px] w-full rounded-lg" />
+            }>
+              <InteractiveMap
+                mode="professionals"
+                professionals={filteredProfessionals
+                  .filter(p => p.latitude && p.longitude)
+                  .map(p => ({
+                    id: p.id,
+                    full_name: p.full_name,
+                    company_name: p.company_name,
+                    city: p.city,
+                    region: p.region,
+                    latitude: p.latitude!,
+                    longitude: p.longitude!,
+                    service_radius_km: p.travel_distance_km || 50,
+                    services_offered: p.services_offered,
+                    years_experience: p.years_experience,
+                    is_rbq_verified: p.is_rbq_verified,
+                    rbq_number: p.rbq_number,
+                    average_rating: p.average_rating || 0,
+                    total_reviews: p.total_reviews || 0,
+                  }))}
+                onRadiusChange={setMapRadius}
+                onLocationChange={(lat, lng) => setUserLocation({ lat, lng })}
+                defaultRadius={mapRadius}
+                height="400px"
+              />
+            </Suspense>
+          )}
         </div>
       </section>
 

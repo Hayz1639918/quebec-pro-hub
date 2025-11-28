@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { MapPin } from "lucide-react";
+import { geocodePostalCode } from "@/lib/geolocation";
 
 type Availability = 'available' | 'busy' | 'unavailable';
 
@@ -51,6 +53,11 @@ const ProProfile = () => {
   const [profile, setProfile] = useState<ProProfileFields>({});
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
   const [newItem, setNewItem] = useState<PortfolioItem>({ title: "", description: "", image_url: "", project_date: "", category: "" });
+  
+  // Geolocation
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -65,6 +72,46 @@ const ProProfile = () => {
       setLoading(false);
     })();
   }, []);
+
+  // Auto-geocode when postal code changes
+  useEffect(() => {
+    const geocodeWithDelay = async () => {
+      const postalCode = profile.postal_code;
+      if (postalCode && postalCode.length >= 6) {
+        setGeocoding(true);
+        try {
+          const coords = await geocodePostalCode(postalCode);
+          if (coords) {
+            setLatitude(coords.latitude);
+            setLongitude(coords.longitude);
+            toast({
+              title: "📍 Localisation détectée",
+              description: "Votre profil sera visible sur la carte",
+            });
+          } else {
+            setLatitude(null);
+            setLongitude(null);
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+          setLatitude(null);
+          setLongitude(null);
+        } finally {
+          setGeocoding(false);
+        }
+      } else {
+        setLatitude(null);
+        setLongitude(null);
+      }
+    };
+
+    // Debounce geocoding (wait 500ms after user stops typing)
+    const timer = setTimeout(() => {
+      geocodeWithDelay();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [profile.postal_code, toast]);
 
   const fetchProfile = async (uid: string) => {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
@@ -98,6 +145,8 @@ const ProProfile = () => {
           postal_code: profile.postal_code || null,
           website_url: profile.website_url || null,
           bio: profile.bio || null,
+          latitude: latitude,
+          longitude: longitude,
           hourly_rate_min: profile.hourly_rate_min ? Number(profile.hourly_rate_min) : null,
           hourly_rate_max: profile.hourly_rate_max ? Number(profile.hourly_rate_max) : null,
           daily_rate_min: profile.daily_rate_min ? Number(profile.daily_rate_min) : null,
@@ -159,7 +208,28 @@ const ProProfile = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2"><Label>Ville</Label><Input value={profile.city || ''} onChange={e => setProfile({ ...profile, city: e.target.value })} /></div>
                 <div className="space-y-2"><Label>Région</Label><Input value={profile.region || ''} onChange={e => setProfile({ ...profile, region: e.target.value })} /></div>
-                <div className="space-y-2"><Label>Code postal</Label><Input value={profile.postal_code || ''} onChange={e => setProfile({ ...profile, postal_code: e.target.value })} /></div>
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    Code postal
+                    {geocoding && <span className="text-xs text-muted-foreground">🔄 Géolocalisation...</span>}
+                    {!geocoding && latitude && longitude && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        Position détectée
+                      </span>
+                    )}
+                  </Label>
+                  <Input 
+                    value={profile.postal_code || ''} 
+                    onChange={e => setProfile({ ...profile, postal_code: e.target.value.toUpperCase() })} 
+                    maxLength={7}
+                  />
+                  {latitude && longitude && (
+                    <p className="text-xs text-muted-foreground">
+                      📍 {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°W
+                    </p>
+                  )}
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Taux horaire min (CAD)</Label><Input type="number" value={profile.hourly_rate_min || ''} onChange={e => setProfile({ ...profile, hourly_rate_min: e.target.value })} /></div>

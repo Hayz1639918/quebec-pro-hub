@@ -19,9 +19,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import {Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X } from "lucide-react";
+import { CalendarIcon, Upload, X, MapPin } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { geocodePostalCode } from "@/lib/geolocation";
 
 const NewProject = () => {
   const { t } = useTranslation();
@@ -69,10 +70,54 @@ const NewProject = () => {
   const [postalCode, setPostalCode] = useState("");
   const [deadline, setDeadline] = useState<Date>();
   const [files, setFiles] = useState<File[]>([]);
+  
+  // Geolocation
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
 
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Auto-geocode when postal code changes
+  useEffect(() => {
+    const geocodeWithDelay = async () => {
+      if (postalCode.length >= 6) { // Canadian postal code without space
+        setGeocoding(true);
+        try {
+          const coords = await geocodePostalCode(postalCode);
+          if (coords) {
+            setLatitude(coords.latitude);
+            setLongitude(coords.longitude);
+            toast({
+              title: "📍 Localisation détectée",
+              description: "Votre projet sera visible sur la carte",
+            });
+          } else {
+            setLatitude(null);
+            setLongitude(null);
+          }
+        } catch (error) {
+          console.error('Geocoding error:', error);
+          setLatitude(null);
+          setLongitude(null);
+        } finally {
+          setGeocoding(false);
+        }
+      } else {
+        setLatitude(null);
+        setLongitude(null);
+      }
+    };
+
+    // Debounce geocoding (wait 500ms after user stops typing)
+    const timer = setTimeout(() => {
+      geocodeWithDelay();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [postalCode, toast]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -219,6 +264,8 @@ const NewProject = () => {
           postal_code: postalCode || null,
           deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
           status: 'open',
+          latitude: latitude,
+          longitude: longitude,
         })
         .select()
         .single();
@@ -382,14 +429,32 @@ const NewProject = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">{t('new_project.form.postal_code')}</Label>
+                  <Label htmlFor="postalCode" className="flex items-center gap-2">
+                    {t('new_project.form.postal_code')}
+                    {geocoding && (
+                      <span className="text-xs text-muted-foreground">
+                        🔄 Géolocalisation en cours...
+                      </span>
+                    )}
+                    {!geocoding && latitude && longitude && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        Position détectée
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="postalCode"
                     placeholder={t('new_project.form.postal_code_placeholder')}
                     value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
+                    onChange={(e) => setPostalCode(e.target.value.toUpperCase())}
                     maxLength={7}
                   />
+                  {latitude && longitude && (
+                    <p className="text-xs text-muted-foreground">
+                      📍 Coordonnées: {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°W
+                    </p>
+                  )}
                 </div>
 
                 {/* Deadline */}
