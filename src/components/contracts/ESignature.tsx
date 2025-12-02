@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Pen, RotateCcw, Check, X, Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Pen, RotateCcw, Check, X, Download, Type, PenTool } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { signatureService, type SignatureData } from "@/services/signature-service";
@@ -46,62 +48,98 @@ export const ESignature = ({
   const [signatureData, setSignatureData] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [lastPoint, setLastPoint] = useState<{ x: number; y: number } | null>(null);
+  const [signatureMode, setSignatureMode] = useState<'draw' | 'type'>('draw');
+  const [typedSignature, setTypedSignature] = useState(signerName);
 
+  // Initialize canvas when dialog opens
   useEffect(() => {
-    if (isOpen && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        // Set canvas size
-        canvas.width = canvas.offsetWidth * 2;
-        canvas.height = canvas.offsetHeight * 2;
-        ctx.scale(2, 2);
-        
-        // Set drawing properties
-        ctx.strokeStyle = '#000000';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
+    if (isOpen && canvasRef.current && signatureMode === 'draw') {
+      initializeCanvas();
     }
-  }, [isOpen]);
+  }, [isOpen, signatureMode]);
 
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (disabled) return;
-    
-    setIsDrawing(true);
+  const initializeCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
     
-    setLastPoint({ x, y });
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      // Reset canvas size (fixed dimensions)
+      canvas.width = 400;
+      canvas.height = 160;
+      
+      // Set drawing properties
+      ctx.strokeStyle = '#1e3a5f';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Clear canvas with white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, 400, 160);
+    }
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Get coordinates from mouse or touch event
+  const getEventCoordinates = (e: React.MouseEvent | React.TouchEvent) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate scale factor between CSS display size and canvas internal size
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX: number, clientY: number;
+    
+    if ('touches' in e) {
+      // Touch event
+      const touch = e.touches[0];
+      if (!touch) return null;
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Calculate position relative to canvas, accounting for CSS scaling
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (disabled) return;
+    e.preventDefault();
+    
+    setIsDrawing(true);
+    const coords = getEventCoordinates(e);
+    if (coords) {
+      setLastPoint(coords);
+    }
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || disabled) return;
+    e.preventDefault();
     
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx || !lastPoint) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const coords = getEventCoordinates(e);
+    if (!ctx || !lastPoint || !coords) return;
 
     ctx.beginPath();
     ctx.moveTo(lastPoint.x, lastPoint.y);
-    ctx.lineTo(x, y);
+    ctx.lineTo(coords.x, coords.y);
     ctx.stroke();
 
-    setLastPoint({ x, y });
+    setLastPoint(coords);
   };
 
   const stopDrawing = () => {
@@ -110,44 +148,104 @@ export const ESignature = ({
   };
 
   const clearSignature = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (signatureMode === 'draw') {
+      initializeCanvas();
+    }
+    setTypedSignature(signerName);
     setSignatureData(null);
   };
 
-  // DocuSign functionality removed (using in-house canvas signature only)
-
-  const saveSignature = async () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    // Check if there's any content on the canvas
+  // Generate signature image from typed text
+  const generateTypedSignatureImage = (): string => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 200;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    
+    if (!ctx) return '';
+    
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Signature styling - cursive font
+    ctx.fillStyle = '#1e3a5f';
+    ctx.font = 'italic 48px "Brush Script MT", "Segoe Script", cursive';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw the signature text
+    ctx.fillText(typedSignature, canvas.width / 2, canvas.height / 2);
+    
+    // Add underline
+    const textWidth = ctx.measureText(typedSignature).width;
+    ctx.beginPath();
+    ctx.strokeStyle = '#1e3a5f';
+    ctx.lineWidth = 1;
+    ctx.moveTo((canvas.width - textWidth) / 2, canvas.height / 2 + 30);
+    ctx.lineTo((canvas.width + textWidth) / 2, canvas.height / 2 + 30);
+    ctx.stroke();
+    
+    return canvas.toDataURL('image/png');
+  };
+
+  // Check if canvas has drawing content
+  const hasCanvasContent = (): boolean => {
+    const canvas = canvasRef.current;
+    if (!canvas) return false;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return false;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const hasContent = imageData.data.some((value, index) => {
-      return index % 4 === 3 && value > 0; // Check alpha channel
-    });
+    
+    // Check if any pixel is not white (RGB 255,255,255)
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      const r = imageData.data[i];
+      const g = imageData.data[i + 1];
+      const b = imageData.data[i + 2];
+      
+      // If pixel is not white, there's content
+      if (r !== 255 || g !== 255 || b !== 255) {
+        return true;
+      }
+    }
+    return false;
+  };
 
-    if (!hasContent) {
-      toast({
-        variant: "destructive",
-        title: t('contracts.signature.empty_signature'),
-        description: t('contracts.signature.empty_signature_description'),
-      });
-      return;
+  const saveSignature = async () => {
+    let signatureImage: string;
+
+    if (signatureMode === 'draw') {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      if (!hasCanvasContent()) {
+        toast({
+          variant: "destructive",
+          title: t('contracts.signature.empty_signature'),
+          description: t('contracts.signature.empty_signature_description'),
+        });
+        return;
+      }
+
+      signatureImage = canvas.toDataURL('image/png');
+    } else {
+      // Typed signature mode
+      if (!typedSignature.trim()) {
+        toast({
+          variant: "destructive",
+          title: t('contracts.signature.empty_signature'),
+          description: "Veuillez entrer votre nom pour la signature",
+        });
+        return;
+      }
+      signatureImage = generateTypedSignatureImage();
     }
 
+    setSignatureData(signatureImage);
+
     try {
-      // Convert canvas to base64
-      const signatureImage = canvas.toDataURL('image/png');
-      setSignatureData(signatureImage);
 
       // Create signature with all security data
       const signatureData = await signatureService.createSignature(
@@ -158,16 +256,16 @@ export const ESignature = ({
 
       // Add audit trail entry
       if (contract && currentUserId) {
-             await signatureService.addAuditTrailEntry(contract.id, {
-               event_type: 'signed',
-               user_id: currentUserId,
-               user_name: signerName,
-               created_at: signatureData.signed_at,
-               details: {
-                 verification_code: signatureData.verification_code,
-                 signature_method: 'canvas',
-               },
-             });
+        await signatureService.addAuditTrailEntry(contract.id, {
+          event_type: 'signed',
+          user_id: currentUserId,
+          user_name: signerName,
+          created_at: signatureData.signed_at,
+          details: {
+            verification_code: signatureData.verification_code,
+            signature_method: signatureMode === 'draw' ? 'dessin' : 'texte',
+          },
+        });
       }
 
       // Send confirmation email
@@ -271,16 +369,10 @@ export const ESignature = ({
   };
 
   const isSignatureEmpty = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return true;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return true;
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    return !imageData.data.some((value, index) => {
-      return index % 4 === 3 && value > 0;
-    });
+    if (signatureMode === 'type') {
+      return !typedSignature.trim();
+    }
+    return !hasCanvasContent();
   };
 
   return (
@@ -315,37 +407,95 @@ export const ESignature = ({
               </CardHeader>
             </Card>
 
-            {/* Signature Canvas */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">{t('contracts.signature.sign_here')}</h4>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearSignature}
-                  disabled={isSignatureEmpty()}
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  {t('contracts.signature.clear')}
-                </Button>
-              </div>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <canvas
-                  ref={canvasRef}
-                  className="w-full h-32 cursor-crosshair"
-                  onMouseDown={startDrawing}
-                  onMouseMove={draw}
-                  onMouseUp={stopDrawing}
-                  onMouseLeave={stopDrawing}
-                  style={{ touchAction: 'none' }}
+            {/* Signature Tabs */}
+            <Tabs value={signatureMode} onValueChange={(v) => setSignatureMode(v as 'draw' | 'type')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="draw" className="flex items-center gap-2">
+                  <PenTool className="h-4 w-4" />
+                  Dessiner
+                </TabsTrigger>
+                <TabsTrigger value="type" className="flex items-center gap-2">
+                  <Type className="h-4 w-4" />
+                  Taper
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Draw signature */}
+              <TabsContent value="draw" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">{t('contracts.signature.sign_here')}</h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSignature}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    {t('contracts.signature.clear')}
+                  </Button>
+                </div>
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 bg-white">
+                  <canvas
+                    ref={canvasRef}
+                    width={400}
+                    height={160}
+                    className="cursor-crosshair bg-white rounded block mx-auto"
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={draw}
+                    onTouchEnd={stopDrawing}
+                    style={{ touchAction: 'none', width: '100%', maxWidth: '400px', height: '160px' }}
+                  />
+                </div>
+                
+                <p className="text-sm text-muted-foreground text-center">
+                  {t('contracts.signature.instructions')} (souris ou écran tactile)
+                </p>
+              </TabsContent>
+
+              {/* Type signature */}
+              <TabsContent value="type" className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">Tapez votre signature</h4>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setTypedSignature(signerName)}
+                  >
+                    <RotateCcw className="h-4 w-4 mr-2" />
+                    Réinitialiser
+                  </Button>
+                </div>
+                
+                <Input
+                  value={typedSignature}
+                  onChange={(e) => setTypedSignature(e.target.value)}
+                  placeholder="Entrez votre nom complet"
+                  className="text-lg"
                 />
-              </div>
-              
-              <p className="text-sm text-muted-foreground text-center">
-                {t('contracts.signature.instructions')}
-              </p>
-            </div>
+                
+                {/* Preview of typed signature */}
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 bg-white min-h-24 flex items-center justify-center">
+                  <p 
+                    className="text-4xl text-center"
+                    style={{ 
+                      fontFamily: '"Brush Script MT", "Segoe Script", cursive',
+                      fontStyle: 'italic',
+                      color: '#1e3a5f'
+                    }}
+                  >
+                    {typedSignature || signerName}
+                  </p>
+                </div>
+                
+                <p className="text-sm text-muted-foreground text-center">
+                  Votre signature apparaîtra comme ci-dessus
+                </p>
+              </TabsContent>
+            </Tabs>
 
             {/* Legal Notice */}
             <Card className="bg-blue-50 border-blue-200">

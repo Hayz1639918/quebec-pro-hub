@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -28,7 +28,14 @@ import {
   Download,
   Receipt,
   Activity,
+  Hammer,
+  ClipboardList,
+  Eye,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface UserProfile {
   id: string;
@@ -76,12 +83,81 @@ interface Project {
   updated_at: string;
   proposals_count: number;
   views_count: number;
+  assigned_professional_id?: string | null;
+  progress_percentage?: number;
+  progress_status?: string;
+  current_phase?: string | null;
+  contract_id?: string | null;
+  // Contract signature info
+  contract_signed?: boolean;
+  client_signed_at?: string | null;
+  professional_signed_at?: string | null;
+}
+
+interface ActiveProject {
+  id: string;
+  title: string;
+  category: string;
+  progress_percentage: number;
+  progress_status: string;
+  current_phase: string | null;
+  professional_name: string;
+  professional_id: string;
+  contract_id: string | null;
+  contract_signed: boolean;
+  unread_reports: number;
+}
+
+interface ProjectReport {
+  id: string;
+  project_id: string;
+  project_title: string;
+  title: string;
+  content: string;
+  report_type: string;
+  progress_percentage: number | null;
+  professional_name: string;
+  created_at: string;
+  is_read_by_client: boolean;
+}
+
+interface PendingContract {
+  id: string;
+  title: string;
+  project_title: string | null;
+  project_id: string | null;
+  professional_name: string;
+  company_name: string | null;
+  total_amount: number;
+  created_at: string;
+  client_signed_at: string | null;
+  professional_signed_at: string | null;
+}
+
+interface ClientContract {
+  id: string;
+  title: string;
+  project_title: string | null;
+  project_id: string | null;
+  professional_name: string;
+  company_name: string | null;
+  total_amount: number;
+  status: string;
+  created_at: string;
+  client_signed_at: string | null;
+  professional_signed_at: string | null;
 }
 
 const Dashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+  
+  // Get initial tab from URL or default to "overview"
+  const initialTab = searchParams.get('tab') || 'overview';
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
   const [user, setUser] = useState<{ id: string } | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +165,10 @@ const Dashboard = () => {
   const [proposals, setProposals] = useState<any[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteProfessional[]>([]);
+  const [activeProjects, setActiveProjects] = useState<ActiveProject[]>([]);
+  const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
+  const [pendingContracts, setPendingContracts] = useState<PendingContract[]>([]);
+  const [allContracts, setAllContracts] = useState<ClientContract[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
@@ -141,6 +221,9 @@ const Dashboard = () => {
       // Fetch stats
       await fetchStats(session.user.id);
       await fetchFavorites(session.user.id);
+      await fetchActiveProjectsAndReports(session.user.id);
+      await fetchPendingContracts(session.user.id);
+      await fetchAllContracts(session.user.id);
     } catch (error) {
       console.error('Error checking user:', error);
       navigate("/auth?mode=login");
@@ -178,21 +261,36 @@ const Dashboard = () => {
     try {
       setLoadingProjects(true);
       
-      // Fetch all projects with details
+      // Fetch all projects with contract details
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          contracts:contract_id (
+            id,
+            client_signed_at,
+            professional_signed_at
+          )
+        `)
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
 
-      setProjects(projectsData || []);
+      // Transform data to include contract signature info
+      const transformedProjects: Project[] = (projectsData || []).map((p: any) => ({
+        ...p,
+        contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
+        client_signed_at: p.contracts?.client_signed_at || null,
+        professional_signed_at: p.contracts?.professional_signed_at || null,
+      }));
 
-      const activeProjects = projectsData?.filter(p => p.status === 'open' || p.status === 'in_progress').length || 0;
-      const totalProjects = projectsData?.length || 0;
+      setProjects(transformedProjects);
+
+      const activeProjects = transformedProjects?.filter(p => p.status === 'open' || p.status === 'in_progress').length || 0;
+      const totalProjects = transformedProjects?.length || 0;
       
-      const projectIds = projectsData?.map(p => p.id) || [];
+      const projectIds = transformedProjects?.map(p => p.id) || [];
 
       // Fetch proposals with details
       await fetchProposals(projectIds);
@@ -226,7 +324,7 @@ const Dashboard = () => {
       });
 
       // Generate activities from projects
-      await generateActivities(projectsData || [], userId);
+      await generateActivities(transformedProjects || [], userId);
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
@@ -268,6 +366,248 @@ const Dashboard = () => {
       }
     } finally {
       setLoadingFavorites(false);
+    }
+  };
+
+  const fetchActiveProjectsAndReports = async (userId: string) => {
+    try {
+      // Fetch projects with assigned professional
+      // Note: This requires migration 031_project_workflow_notifications.sql to be applied
+      const { data: assignedProjectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select(`
+          id,
+          title,
+          category,
+          progress_percentage,
+          progress_status,
+          current_phase,
+          contract_id,
+          assigned_professional_id,
+          profiles:assigned_professional_id (full_name, company_name),
+          contracts:contract_id (client_signed_at, professional_signed_at)
+        `)
+        .eq('client_id', userId)
+        .not('assigned_professional_id', 'is', null)
+        .order('updated_at', { ascending: false });
+
+      // If columns don't exist yet (migration not applied), silently return
+      if (projectsError) {
+        console.warn('Active projects query failed (migration 031 may not be applied yet):', projectsError.message);
+        setActiveProjects([]);
+        setProjectReports([]);
+        return;
+      }
+
+      if (assignedProjectsData && assignedProjectsData.length > 0) {
+        const projectIds = assignedProjectsData.map(p => p.id);
+        
+        // Count unread reports for each project (project_reports table may not exist)
+        let unreadCountByProject: Record<string, number> = {};
+        try {
+          const { data: reportsCount } = await supabase
+            .from('project_reports')
+            .select('project_id')
+            .in('project_id', projectIds)
+            .eq('is_read_by_client', false);
+          
+          reportsCount?.forEach(r => {
+            unreadCountByProject[r.project_id] = (unreadCountByProject[r.project_id] || 0) + 1;
+          });
+        } catch (e) {
+          console.warn('project_reports table may not exist yet');
+        }
+
+        const formattedProjects: ActiveProject[] = assignedProjectsData.map((p: any) => ({
+          id: p.id,
+          title: p.title,
+          category: p.category,
+          progress_percentage: p.progress_percentage || 0,
+          progress_status: p.progress_status || 'not_started',
+          current_phase: p.current_phase,
+          professional_name: p.profiles?.company_name || p.profiles?.full_name || 'Entrepreneur',
+          professional_id: p.assigned_professional_id,
+          contract_id: p.contract_id,
+          contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
+          unread_reports: unreadCountByProject[p.id] || 0,
+        }));
+
+        setActiveProjects(formattedProjects);
+
+        // Fetch recent reports (table may not exist)
+        try {
+          const { data: reportsData } = await supabase
+            .from('project_reports')
+            .select(`
+              id,
+              project_id,
+              title,
+              content,
+              report_type,
+              progress_percentage,
+              created_at,
+              is_read_by_client,
+              projects:project_id (title),
+              profiles:professional_id (full_name, company_name)
+            `)
+            .in('project_id', projectIds)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (reportsData) {
+            const formattedReports: ProjectReport[] = reportsData.map((r: any) => ({
+              id: r.id,
+              project_id: r.project_id,
+              project_title: r.projects?.title || 'Projet',
+              title: r.title,
+              content: r.content,
+              report_type: r.report_type,
+              progress_percentage: r.progress_percentage,
+              professional_name: r.profiles?.company_name || r.profiles?.full_name || 'Entrepreneur',
+              created_at: r.created_at,
+              is_read_by_client: r.is_read_by_client,
+            }));
+            setProjectReports(formattedReports);
+          }
+        } catch (e) {
+          console.warn('Could not fetch project reports');
+          setProjectReports([]);
+        }
+      } else {
+        setActiveProjects([]);
+        setProjectReports([]);
+      }
+    } catch (error) {
+      console.warn('Error fetching active projects (migration may not be applied):', error);
+      setActiveProjects([]);
+      setProjectReports([]);
+    }
+  };
+
+  const markReportAsRead = async (reportId: string) => {
+    try {
+      await supabase
+        .from('project_reports')
+        .update({ is_read_by_client: true })
+        .eq('id', reportId);
+
+      // Update local state
+      setProjectReports(prev => 
+        prev.map(r => r.id === reportId ? { ...r, is_read_by_client: true } : r)
+      );
+    } catch (error) {
+      console.error('Error marking report as read:', error);
+    }
+  };
+
+  const fetchPendingContracts = async (userId: string) => {
+    try {
+      // Fetch contracts where client hasn't signed yet
+      const { data: contractsData, error } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          title,
+          project_id,
+          total_amount,
+          created_at,
+          client_signed_at,
+          professional_signed_at,
+          projects:project_id (title),
+          profiles:professional_id (full_name, company_name)
+        `)
+        .eq('client_id', userId)
+        .is('client_signed_at', null)
+        .in('status', ['draft', 'pending', 'active'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error fetching pending contracts:', error.message);
+        setPendingContracts([]);
+        return;
+      }
+
+      if (contractsData) {
+        const formatted: PendingContract[] = contractsData.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          project_title: c.projects?.title || null,
+          project_id: c.project_id,
+          professional_name: c.profiles?.full_name || 'Entrepreneur',
+          company_name: c.profiles?.company_name || null,
+          total_amount: c.total_amount,
+          created_at: c.created_at,
+          client_signed_at: c.client_signed_at,
+          professional_signed_at: c.professional_signed_at,
+        }));
+        setPendingContracts(formatted);
+      }
+    } catch (error) {
+      console.warn('Error fetching pending contracts:', error);
+      setPendingContracts([]);
+    }
+  };
+
+  const fetchAllContracts = async (userId: string) => {
+    try {
+      // Fetch all contracts for the client (signed first, then pending)
+      const { data: contractsData, error } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          title,
+          project_id,
+          total_amount,
+          status,
+          created_at,
+          client_signed_at,
+          professional_signed_at,
+          projects:project_id (title),
+          profiles:professional_id (full_name, company_name)
+        `)
+        .eq('client_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error fetching all contracts:', error.message);
+        setAllContracts([]);
+        return;
+      }
+
+      if (contractsData) {
+        const formatted: ClientContract[] = contractsData.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          project_title: c.projects?.title || null,
+          project_id: c.project_id,
+          professional_name: c.profiles?.full_name || 'Entrepreneur',
+          company_name: c.profiles?.company_name || null,
+          total_amount: c.total_amount,
+          status: c.status,
+          created_at: c.created_at,
+          client_signed_at: c.client_signed_at,
+          professional_signed_at: c.professional_signed_at,
+        }));
+        
+        // Sort: fully signed first, then pending signature, then others
+        formatted.sort((a, b) => {
+          const aFullySigned = a.client_signed_at && a.professional_signed_at;
+          const bFullySigned = b.client_signed_at && b.professional_signed_at;
+          const aPending = !a.client_signed_at;
+          const bPending = !b.client_signed_at;
+          
+          if (aPending && !bPending) return -1; // Pending first (needs action)
+          if (!aPending && bPending) return 1;
+          if (aFullySigned && !bFullySigned) return -1;
+          if (!aFullySigned && bFullySigned) return 1;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        
+        setAllContracts(formatted);
+      }
+    } catch (error) {
+      console.warn('Error fetching all contracts:', error);
+      setAllContracts([]);
     }
   };
 
@@ -553,7 +893,11 @@ const Dashboard = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="overview" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value);
+            // Update URL without adding to history
+            setSearchParams(value === 'overview' ? {} : { tab: value }, { replace: true });
+          }} className="space-y-6">
             <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
               <TabsTrigger value="overview">
                 <LayoutDashboard className="h-4 w-4 mr-2" />
@@ -647,7 +991,7 @@ const Dashboard = () => {
                     ) : (
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 text-sm">
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                          <CheckCircle2 className="h-4 w-4 text-success" />
                           <span>{t('dashboard.recent_activity.account_created')}</span>
                         </div>
                       </div>
@@ -655,6 +999,198 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Pending Contracts - Contracts awaiting signature */}
+              {pendingContracts.length > 0 && (
+                <Card className="border-warning/30 bg-warning-light">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-warning" />
+                      Contrats en attente de signature
+                      <Badge variant="destructive" className="ml-2">{pendingContracts.length}</Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      Ces contrats nécessitent votre signature pour démarrer les travaux
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {pendingContracts.map((contract) => (
+                        <div 
+                          key={contract.id} 
+                          className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => navigate(`/contracts?contract=${contract.id}`)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold mb-1">{contract.title}</h4>
+                              <div className="text-sm text-muted-foreground space-y-1">
+                                {contract.project_title && (
+                                  <p>Projet: {contract.project_title}</p>
+                                )}
+                                <p>De: {contract.company_name || contract.professional_name}</p>
+                                <p className="font-medium text-foreground">
+                                  Montant: {contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2">
+                              <Badge variant="outline" className="bg-warning-light text-warning border-warning/50">
+                                En attente
+                              </Badge>
+                              {contract.professional_signed_at && (
+                                <span className="text-xs text-success flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Signé par l'entrepreneur
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-3 flex justify-between items-center">
+                            <span className="text-xs text-muted-foreground">
+                              Reçu le {format(new Date(contract.created_at), 'dd MMM yyyy', { locale: fr })}
+                            </span>
+                            <Button size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground">
+                              Voir et signer
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Active Projects with Progress */}
+              {activeProjects.length > 0 && (
+                <Card className="border-success/30 bg-success-light">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Hammer className="h-5 w-5 text-success" />
+                      Projets en cours
+                    </CardTitle>
+                    <CardDescription>
+                      Suivez l'avancement de vos projets avec les entrepreneurs assignés
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {activeProjects.slice(0, 3).map((project) => (
+                        <div key={project.id} className="border rounded-lg p-4 bg-white">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <h4 className="font-semibold mb-1">{project.title}</h4>
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Badge variant="outline">{project.category}</Badge>
+                                <span>• {project.professional_name}</span>
+                              </div>
+                            </div>
+                            {project.unread_reports > 0 && (
+                              <Badge variant="destructive" className="ml-2">
+                                {project.unread_reports} nouveau{project.unread_reports > 1 ? 'x' : ''} rapport{project.unread_reports > 1 ? 's' : ''}
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          {/* Progress bar */}
+                          <div className="mb-3">
+                            <div className="flex items-center justify-between text-sm mb-1">
+                              <span className="text-muted-foreground">Avancement</span>
+                              <span className="font-semibold">{project.progress_percentage}%</span>
+                            </div>
+                            <Progress value={project.progress_percentage} className="h-2" />
+                            {project.current_phase && (
+                              <p className="text-xs text-muted-foreground mt-1">Phase: {project.current_phase}</p>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            {project.contract_id && !project.contract_signed && (
+                              <Button
+                                size="sm"
+                                className="bg-warning hover:bg-warning/90"
+                                onClick={() => navigate(`/contracts?contract=${project.contract_id}`)}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                Signer le contrat
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/messages?user=${project.professional_id}`)}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-1" />
+                              Contacter
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      {activeProjects.length > 3 && (
+                        <Button variant="link" className="w-full" onClick={() => {/* TODO: tab switch */}}>
+                          Voir tous les projets en cours ({activeProjects.length})
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Recent Reports */}
+              {projectReports.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardList className="h-5 w-5 text-primary" />
+                      Rapports récents
+                    </CardTitle>
+                    <CardDescription>
+                      Dernières mises à jour de vos entrepreneurs
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {projectReports.slice(0, 5).map((report) => (
+                        <div 
+                          key={report.id} 
+                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                            !report.is_read_by_client ? 'bg-primary-light border-primary/20' : 'hover:bg-muted/50'
+                          }`}
+                          onClick={() => {
+                            if (!report.is_read_by_client) {
+                              markReportAsRead(report.id);
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-sm">{report.title}</h4>
+                                {!report.is_read_by_client && (
+                                  <Badge variant="default" className="text-xs">Nouveau</Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {report.project_title} • {report.professional_name}
+                              </p>
+                              <p className="text-sm text-muted-foreground line-clamp-2">{report.content}</p>
+                              {report.progress_percentage !== null && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <Progress value={report.progress_percentage} className="h-1.5 flex-1 max-w-32" />
+                                  <span className="text-xs font-medium">{report.progress_percentage}%</span>
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground whitespace-nowrap ml-3">
+                              {format(new Date(report.created_at), 'dd MMM', { locale: fr })}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Getting Started Guide */}
               {stats.totalProjects === 0 && (
@@ -740,7 +1276,7 @@ const Dashboard = () => {
                       )}
                       <Button onClick={() => navigate("/dashboard/new-project")}>
                         <Plus className="mr-2 h-4 w-4" />
-                        {t('common.new')}
+                        {t('dashboard.projects.new_project')}
                       </Button>
                     </div>
                   </div>
@@ -765,7 +1301,30 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <ProjectList
-                      projects={projects}
+                      projects={[...projects].sort((a, b) => {
+                        // Projects with signed contracts first
+                        const aSigned = a.contract_signed === true;
+                        const bSigned = b.contract_signed === true;
+                        const aHasPendingContract = a.contract_id && !a.contract_signed;
+                        const bHasPendingContract = b.contract_id && !b.contract_signed;
+                        const aInProgress = a.status === 'in_progress';
+                        const bInProgress = b.status === 'in_progress';
+                        
+                        // Signed contracts first
+                        if (aSigned && !bSigned) return -1;
+                        if (!aSigned && bSigned) return 1;
+                        
+                        // Then pending contracts
+                        if (aHasPendingContract && !bHasPendingContract) return -1;
+                        if (!aHasPendingContract && bHasPendingContract) return 1;
+                        
+                        // Then in progress
+                        if (aInProgress && !bInProgress) return -1;
+                        if (!aInProgress && bInProgress) return 1;
+                        
+                        // Then by date
+                        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                      })}
                       onDelete={handleDeleteProject}
                       onEdit={handleEditProject}
                       onView={handleViewProject}
@@ -808,28 +1367,84 @@ const Dashboard = () => {
                     <div>
                       <CardTitle>{t('dashboard.contracts.title')}</CardTitle>
                       <CardDescription>
-                        {t('dashboard.contracts.description')}
+                        Contrats reçus des entrepreneurs
                       </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">{t('dashboard.contracts.no_contracts')}</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {t('dashboard.contracts.no_contracts_desc')}
-                    </p>
-                    <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-left max-w-md mx-auto">
-                      <p className="font-semibold text-blue-900 mb-2">🚀 Fonctionnalité à venir</p>
-                      <ul className="text-blue-800 space-y-1 list-disc list-inside">
-                        <li>Signature électronique des contrats</li>
-                        <li>Modèles de contrats personnalisables</li>
-                        <li>Suivi des jalons et paiements</li>
-                        <li>Archivage sécurisé des documents</li>
-                      </ul>
+                  {allContracts.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                      <h3 className="text-lg font-semibold mb-2">Aucun contrat</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Vous recevrez les contrats des entrepreneurs une fois vos soumissions acceptées
+                      </p>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {allContracts.map((contract) => {
+                        const isFullySigned = contract.client_signed_at && contract.professional_signed_at;
+                        const needsClientSignature = !contract.client_signed_at;
+                        const needsProSignature = !contract.professional_signed_at;
+                        
+                        return (
+                          <div 
+                            key={contract.id}
+                            className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
+                              needsClientSignature ? 'bg-warning-light border-warning/30' : 
+                              isFullySigned ? 'bg-success-light border-success/30' : 'bg-white'
+                            }`}
+                            onClick={() => navigate(`/contracts?contract=${contract.id}`)}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold mb-1">{contract.title}</h4>
+                                <div className="text-sm text-muted-foreground space-y-1">
+                                  {contract.project_title && (
+                                    <p>Projet: {contract.project_title}</p>
+                                  )}
+                                  <p>De: {contract.company_name || contract.professional_name}</p>
+                                  <p className="font-medium text-foreground">
+                                    {contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                {needsClientSignature ? (
+                                  <Badge className="bg-warning">À signer</Badge>
+                                ) : isFullySigned ? (
+                                  <Badge className="bg-success">Signé ✓</Badge>
+                                ) : needsProSignature ? (
+                                  <Badge variant="outline" className="text-warning border-warning">
+                                    En attente signature entrepreneur
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline">{contract.status}</Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="mt-3 flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">
+                                Reçu le {format(new Date(contract.created_at), 'dd MMM yyyy', { locale: fr })}
+                              </span>
+                              {needsClientSignature && (
+                                <Button size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground">
+                                  Voir et signer
+                                </Button>
+                              )}
+                              {isFullySigned && (
+                                <Button size="sm" variant="outline">
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Voir le contrat
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -854,9 +1469,9 @@ const Dashboard = () => {
                     <p className="text-muted-foreground mb-4">
                       {t('dashboard.invoices.no_invoices_desc')}
                     </p>
-                    <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-sm text-left max-w-md mx-auto">
-                      <p className="font-semibold text-green-900 mb-2">💳 Fonctionnalité à venir</p>
-                      <ul className="text-green-800 space-y-1 list-disc list-inside">
+                    <div className="mt-6 p-4 bg-success-light border border-success/30 rounded-lg text-sm text-left max-w-md mx-auto">
+                      <p className="font-semibold text-foreground mb-2">💳 Fonctionnalité à venir</p>
+                      <ul className="text-muted-foreground space-y-1 list-disc list-inside">
                         <li>Facturation automatique par jalon</li>
                         <li>Export PDF des factures</li>
                         <li>Historique des paiements</li>

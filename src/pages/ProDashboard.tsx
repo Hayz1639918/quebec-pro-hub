@@ -23,7 +23,13 @@ import {
   Eye,
   Edit,
   User,
+  ClipboardList,
+  Hammer,
+  Send,
+  PlayCircle,
+  PauseCircle,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -58,6 +64,34 @@ interface Project {
   proposal_count: number;
 }
 
+interface AssignedProject {
+  id: string;
+  title: string;
+  category: string;
+  city: string | null;
+  progress_percentage: number;
+  progress_status: string;
+  current_phase: string | null;
+  contract_id: string | null;
+  client_id: string;
+  client_name: string;
+  contract_status: string | null;
+  contract_signed: boolean;
+  start_date: string | null;
+}
+
+interface PendingContract {
+  id: string;
+  title: string;
+  project_title: string | null;
+  project_id: string | null;
+  client_name: string;
+  total_amount: number;
+  created_at: string;
+  client_signed_at: string | null;
+  professional_signed_at: string | null;
+}
+
 const ProDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -74,7 +108,9 @@ const ProDashboard = () => {
     pendingContracts: 0,
   });
   const [recentProjects, setRecentProjects] = useState<Project[]>([]);
+  const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -104,9 +140,57 @@ const ProDashboard = () => {
       // }
 
       await fetchDashboardData(session.user.id);
+      await fetchPendingContractsList(session.user.id);
       setLoading(false);
     })();
   }, []);
+
+  const fetchPendingContractsList = async (uid: string) => {
+    try {
+      // Fetch contracts where professional hasn't signed yet
+      const { data: contractsData, error } = await supabase
+        .from('contracts')
+        .select(`
+          id,
+          title,
+          project_id,
+          total_amount,
+          created_at,
+          client_signed_at,
+          professional_signed_at,
+          projects:project_id (title),
+          profiles:client_id (full_name, company_name)
+        `)
+        .eq('professional_id', uid)
+        .is('professional_signed_at', null)
+        .in('status', ['draft', 'pending', 'active'])
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error fetching pending contracts:', error.message);
+        setPendingContractsList([]);
+        return;
+      }
+
+      if (contractsData) {
+        const formatted: PendingContract[] = contractsData.map((c: any) => ({
+          id: c.id,
+          title: c.title,
+          project_title: c.projects?.title || null,
+          project_id: c.project_id,
+          client_name: c.profiles?.company_name || c.profiles?.full_name || 'Client',
+          total_amount: c.total_amount,
+          created_at: c.created_at,
+          client_signed_at: c.client_signed_at,
+          professional_signed_at: c.professional_signed_at,
+        }));
+        setPendingContractsList(formatted);
+      }
+    } catch (error) {
+      console.warn('Error fetching pending contracts:', error);
+      setPendingContractsList([]);
+    }
+  };
 
   const fetchDashboardData = async (uid: string) => {
     try {
@@ -175,6 +259,55 @@ const ProDashboard = () => {
         .limit(5);
 
       setRecentProjects(projectsData || []);
+
+      // Fetch assigned projects (where this professional was accepted)
+      // Note: This requires migration 031_project_workflow_notifications.sql to be applied
+      try {
+        const { data: assignedProjectsData, error: assignedError } = await supabase
+          .from('projects')
+          .select(`
+            id,
+            title,
+            category,
+            city,
+            progress_percentage,
+            progress_status,
+            current_phase,
+            contract_id,
+            client_id,
+            profiles:client_id (full_name, company_name),
+            contracts:contract_id (status, client_signed_at, professional_signed_at, start_date)
+          `)
+          .eq('assigned_professional_id', uid)
+          .order('updated_at', { ascending: false })
+          .limit(10);
+
+        // If error (columns don't exist yet), silently ignore
+        if (assignedError) {
+          console.warn('Assigned projects query failed (migration 031 may not be applied yet):', assignedError.message);
+          setAssignedProjects([]);
+        } else if (assignedProjectsData) {
+          const formattedAssignedProjects: AssignedProject[] = assignedProjectsData.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            category: p.category,
+            city: p.city,
+            progress_percentage: p.progress_percentage || 0,
+            progress_status: p.progress_status || 'not_started',
+            current_phase: p.current_phase,
+            contract_id: p.contract_id,
+            client_id: p.client_id,
+            client_name: p.profiles?.company_name || p.profiles?.full_name || 'Client',
+            contract_status: p.contracts?.status || null,
+            contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
+            start_date: p.contracts?.start_date || null,
+          }));
+          setAssignedProjects(formattedAssignedProjects);
+        }
+      } catch (assignedErr) {
+        console.warn('Could not fetch assigned projects:', assignedErr);
+        setAssignedProjects([]);
+      }
     } catch (e) {
       console.error('Error fetching dashboard data:', e);
     }
@@ -220,7 +353,7 @@ const ProDashboard = () => {
                   <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.active_projects')}</p>
                   <p className="text-3xl font-bold">{stats.activeProjects}</p>
                 </div>
-                <Briefcase className="h-8 w-8 text-blue-500" />
+                <Briefcase className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -232,7 +365,7 @@ const ProDashboard = () => {
                   <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.acceptance_rate')}</p>
                   <p className="text-3xl font-bold">{stats.acceptanceRate}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-500" />
+                <TrendingUp className="h-8 w-8 text-success" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 {stats.proposalsAccepted}/{stats.proposalsSent} propositions
@@ -247,7 +380,7 @@ const ProDashboard = () => {
                   <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.avg_rating')}</p>
                   <p className="text-3xl font-bold">{stats.averageRating.toFixed(1)}</p>
                 </div>
-                <Star className="h-8 w-8 text-yellow-400" />
+                <Star className="h-8 w-8 text-warning" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">{stats.totalReviews} avis</p>
             </CardContent>
@@ -260,7 +393,7 @@ const ProDashboard = () => {
                   <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.unread_messages')}</p>
                   <p className="text-3xl font-bold">{stats.unreadMessages}</p>
                 </div>
-                <MessageSquare className="h-8 w-8 text-purple-500" />
+                <MessageSquare className="h-8 w-8 text-primary" />
               </div>
               <p className="text-xs text-muted-foreground mt-2">
                 {stats.pendingContracts} contrats en attente
@@ -268,6 +401,65 @@ const ProDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Contracts - Contracts awaiting professional signature */}
+        {pendingContractsList.length > 0 && (
+          <Card className="mb-8 border-warning/30 bg-warning-light">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-warning" />
+                Contrats à signer
+                <Badge variant="destructive" className="ml-2">{pendingContractsList.length}</Badge>
+              </CardTitle>
+              <CardDescription>Ces contrats nécessitent votre signature</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {pendingContractsList.map((contract) => (
+                  <div 
+                    key={contract.id} 
+                    className="border rounded-lg p-4 bg-white hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/contracts?contract=${contract.id}`)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold mb-1">{contract.title}</h4>
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          {contract.project_title && (
+                            <p>Projet: {contract.project_title}</p>
+                          )}
+                          <p>Client: {contract.client_name}</p>
+                          <p className="font-medium text-foreground">
+                            Montant: {contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge variant="outline" className="bg-warning-light text-warning border-warning/50">
+                          À signer
+                        </Badge>
+                        {contract.client_signed_at && (
+                          <span className="text-xs text-success flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Signé par le client
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-3 flex justify-between items-center">
+                      <span className="text-xs text-muted-foreground">
+                        Créé le {format(new Date(contract.created_at), 'dd MMM yyyy', { locale: fr })}
+                      </span>
+                      <Button size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground">
+                        Voir et signer
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Quick Actions */}
         <Card className="mb-8">
@@ -279,15 +471,20 @@ const ProDashboard = () => {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               <Button
                 variant="default"
-                className="h-auto py-4 flex-col gap-2 bg-blue-600 hover:bg-blue-700"
-                onClick={() => navigate('/pro/profile')}
+                className="h-auto py-4 flex-col gap-2 bg-primary hover:bg-primary/90"
+                onClick={() => navigate('/pro/my-projects')}
               >
-                <Edit className="h-6 w-6" />
-                <span>Modifier mon profil</span>
+                <Hammer className="h-6 w-6" />
+                <span>{t('pro_dashboard.quick_actions.my_projects')}</span>
+                {assignedProjects.length > 0 && (
+                  <Badge variant="secondary" className="bg-white text-primary">
+                    {assignedProjects.length}
+                  </Badge>
+                )}
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+                className="h-auto py-4 flex-col gap-2 border-primary text-primary hover:bg-primary/5"
                 onClick={() => navigate(`/professional/${userId}`)}
               >
                 <User className="h-6 w-6" />
@@ -399,7 +596,7 @@ const ProDashboard = () => {
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-green-500"
+                      className="h-full bg-success"
                       style={{ width: stats.proposalsSent > 0 ? '100%' : '0%' }}
                     />
                   </div>
@@ -414,7 +611,7 @@ const ProDashboard = () => {
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-blue-500"
+                      className="h-full bg-primary"
                       style={{ width: `${stats.acceptanceRate}%` }}
                     />
                   </div>
@@ -475,7 +672,7 @@ const ProDashboard = () => {
           <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/reviews')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Star className="h-8 w-8 text-yellow-400" />
+                <Star className="h-8 w-8 text-warning" />
                 <div>
                   <p className="font-semibold">Mes évaluations</p>
                   <p className="text-xs text-muted-foreground">Gérer ma réputation</p>
@@ -487,7 +684,7 @@ const ProDashboard = () => {
           <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/subcontractors')}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-blue-500" />
+                <Users className="h-8 w-8 text-primary" />
                 <div>
                   <p className="font-semibold">Mes sous-traitants</p>
                   <p className="text-xs text-muted-foreground">Gérer mon équipe</p>

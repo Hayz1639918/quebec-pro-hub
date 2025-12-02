@@ -43,6 +43,9 @@ import {
   Trash2,
   ExternalLink,
   FileText,
+  CheckCircle2,
+  PlayCircle,
+  Clock,
 } from "lucide-react";
 
 interface Project {
@@ -59,6 +62,13 @@ interface Project {
   created_at: string;
   proposals_count: number;
   views_count: number;
+  // Contract info (optional)
+  contract_id?: string | null;
+  progress_percentage?: number;
+  assigned_professional_id?: string | null;
+  contract_signed?: boolean;
+  client_signed_at?: string | null;
+  professional_signed_at?: string | null;
 }
 
 interface ProjectListProps {
@@ -76,10 +86,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  open: "bg-green-100 text-green-800 border-green-200",
-  in_progress: "bg-blue-100 text-blue-800 border-blue-200",
+  open: "bg-success-light text-success border-success/30",
+  in_progress: "bg-primary-light text-primary border-primary/30",
   completed: "bg-gray-100 text-gray-800 border-gray-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
+  cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
 export default function ProjectList({ projects, onDelete, onEdit, onView }: ProjectListProps) {
@@ -139,23 +149,57 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map((project) => (
-                <TableRow key={project.id}>
+              {projects.map((project) => {
+                const hasSignedContract = project.contract_signed === true;
+                const hasContract = !!project.contract_id;
+                const hasPendingContract = hasContract && !hasSignedContract;
+                const isInProgress = project.status === 'in_progress';
+                
+                return (
+                <TableRow 
+                  key={project.id} 
+                  className={`cursor-pointer hover:bg-muted/50 ${hasSignedContract ? 'bg-success-light' : ''}`}
+                  onClick={() => navigate(`/project/${project.id}`)}
+                >
                   <TableCell>
                     <div>
-                      <div className="font-medium">{project.title}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{project.title}</span>
+                        {hasSignedContract && (
+                          <Badge className="bg-success text-white text-xs">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            Contrat signé
+                          </Badge>
+                        )}
+                        {hasPendingContract && (
+                          <Badge variant="outline" className="text-warning border-warning text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            En attente signature
+                          </Badge>
+                        )}
+                      </div>
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         {project.description}
                       </div>
-                      <Badge variant="outline" className="mt-1 text-xs">
-                        {project.category}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {project.category}
+                        </Badge>
+                        {isInProgress && project.progress_percentage !== undefined && (
+                          <span className="text-xs text-muted-foreground">
+                            Avancement: {project.progress_percentage}%
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge className={STATUS_COLORS[project.status]} variant="outline">
-                      {STATUS_LABELS[project.status]}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {isInProgress && <PlayCircle className="h-3 w-3 text-primary" />}
+                      <Badge className={STATUS_COLORS[project.status]} variant="outline">
+                        {STATUS_LABELS[project.status]}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-sm">
@@ -238,19 +282,38 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
 
         {/* Mobile View - Cards */}
         <div className="md:hidden space-y-4">
-          {projects.map((project) => (
-            <Card key={project.id}>
+          {projects.map((project) => {
+            const hasSignedContract = project.contract_signed === true;
+            const hasContract = !!project.contract_id;
+            const hasPendingContract = hasContract && !hasSignedContract;
+            const isInProgress = project.status === 'in_progress';
+            
+            return (
+            <Card 
+              key={project.id} 
+              className={`cursor-pointer hover:shadow-md transition-shadow ${hasSignedContract ? 'border-success/50 bg-success-light' : ''}`}
+              onClick={() => navigate(`/project/${project.id}`)}
+            >
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-lg">{project.title}</CardTitle>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <CardTitle className="text-lg">{project.title}</CardTitle>
+                      {hasSignedContract && (
+                        <Badge className="bg-success text-white text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Signé
+                        </Badge>
+                      )}
+                    </div>
                     <CardDescription className="line-clamp-2 mt-1">
                       {project.description}
                     </CardDescription>
@@ -349,7 +412,8 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       </div>
 

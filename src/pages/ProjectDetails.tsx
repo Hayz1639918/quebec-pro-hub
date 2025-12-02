@@ -22,7 +22,11 @@ import {
   ArrowLeft,
   Send,
   Eye,
-  Clock
+  Clock,
+  FileText,
+  CheckCircle2,
+  ClipboardList,
+  ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -43,6 +47,32 @@ interface Project {
   proposals_count: number;
   views_count: number;
   client_id: string;
+  contract_id?: string | null;
+  assigned_professional_id?: string | null;
+  progress_percentage?: number;
+  current_phase?: string | null;
+}
+
+interface ProjectContract {
+  id: string;
+  title: string;
+  status: string;
+  total_amount: number;
+  created_at: string;
+  client_signed_at: string | null;
+  professional_signed_at: string | null;
+  professional_name: string;
+  company_name: string | null;
+}
+
+interface ProjectReport {
+  id: string;
+  title: string;
+  report_type: string;
+  content: string;
+  progress_percentage: number | null;
+  created_at: string;
+  is_read_by_client: boolean;
 }
 
 interface Profile {
@@ -76,6 +106,8 @@ const ProjectDetails = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showProposalForm, setShowProposalForm] = useState(false);
+  const [projectContract, setProjectContract] = useState<ProjectContract | null>(null);
+  const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   
   // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
@@ -87,6 +119,68 @@ const ProjectDetails = () => {
     fetchCurrentUser();
     incrementViewCount();
   }, [id]);
+
+  useEffect(() => {
+    if (project?.id) {
+      fetchProjectDocuments();
+    }
+  }, [project?.id]);
+
+  const fetchProjectDocuments = async () => {
+    if (!project?.id) return;
+
+    try {
+      // Fetch contract if exists
+      if (project.contract_id) {
+        const { data: contractData } = await supabase
+          .from('contracts')
+          .select(`
+            id,
+            title,
+            status,
+            total_amount,
+            created_at,
+            client_signed_at,
+            professional_signed_at,
+            profiles:professional_id (full_name, company_name)
+          `)
+          .eq('id', project.contract_id)
+          .single();
+
+        if (contractData) {
+          setProjectContract({
+            id: contractData.id,
+            title: contractData.title,
+            status: contractData.status,
+            total_amount: contractData.total_amount,
+            created_at: contractData.created_at,
+            client_signed_at: contractData.client_signed_at,
+            professional_signed_at: contractData.professional_signed_at,
+            professional_name: (contractData.profiles as any)?.full_name || 'Entrepreneur',
+            company_name: (contractData.profiles as any)?.company_name || null,
+          });
+        }
+      }
+
+      // Fetch reports
+      try {
+        const { data: reportsData } = await supabase
+          .from('project_reports')
+          .select('*')
+          .eq('project_id', project.id)
+          .order('created_at', { ascending: false });
+
+        if (reportsData) {
+          setProjectReports(reportsData);
+        }
+      } catch (e) {
+        // Table might not exist
+        console.warn('Could not fetch project reports');
+      }
+    } catch (error) {
+      console.warn('Error fetching project documents:', error);
+    }
+  };
 
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -372,7 +466,13 @@ const ProjectDetails = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2">Projet introuvable</h1>
             <p className="text-muted-foreground mb-4">{t('project_details.not_found_desc')}</p>
-            <Button onClick={() => navigate('/projects')}>
+            <Button onClick={() => {
+              if (currentUser?.user_type === 'client') {
+                navigate('/dashboard?tab=projects');
+              } else {
+                navigate('/projects');
+              }
+            }}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               {t('project_details.back_to_projects')}
             </Button>
@@ -395,10 +495,16 @@ const ProjectDetails = () => {
         <Button 
           variant="ghost" 
           className="mb-6"
-          onClick={() => navigate('/projects')}
+          onClick={() => {
+            if (currentUser?.user_type === 'client') {
+              navigate('/dashboard?tab=projects');
+            } else {
+              navigate('/projects');
+            }
+          }}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('project_details.back_to_projects')}
+          {currentUser?.user_type === 'client' ? 'Retour à mes projets' : t('project_details.back_to_projects')}
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -561,6 +667,141 @@ const ProjectDetails = () => {
               </>
             )}
           </div>
+
+          {/* Section Documents du projet - pour le client propriétaire */}
+          {isProjectOwner && (projectContract || projectReports.length > 0) && (
+            <div className="lg:col-span-2 space-y-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documents du projet
+              </h2>
+              
+              {/* Contrat */}
+              {projectContract && (
+                <Card className={projectContract.client_signed_at && projectContract.professional_signed_at ? 'border-green-300 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          {projectContract.title}
+                        </CardTitle>
+                        <CardDescription>
+                          Par {projectContract.company_name || projectContract.professional_name}
+                        </CardDescription>
+                      </div>
+                      {projectContract.client_signed_at && projectContract.professional_signed_at ? (
+                        <Badge className="bg-green-600 text-white">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Signé
+                        </Badge>
+                      ) : !projectContract.client_signed_at ? (
+                        <Badge className="bg-orange-500 text-white">
+                          À signer
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-yellow-600 border-yellow-400">
+                          En attente signature entrepreneur
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        <p>Montant: <span className="font-medium text-foreground">{projectContract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
+                        <p>Créé le {format(new Date(projectContract.created_at), 'dd MMM yyyy', { locale: fr })}</p>
+                      </div>
+                      <Button 
+                        onClick={() => navigate(`/contracts?contract=${projectContract.id}`)}
+                        className={projectContract.client_signed_at ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        {!projectContract.client_signed_at ? 'Voir et signer' : 'Voir le contrat'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Rapports */}
+              {projectReports.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardList className="h-5 w-5" />
+                      Rapports de l'entrepreneur ({projectReports.length})
+                      {projectReports.filter(r => !r.is_read_by_client).length > 0 && (
+                        <Badge variant="destructive" className="ml-2">
+                          {projectReports.filter(r => !r.is_read_by_client).length} nouveau(x)
+                        </Badge>
+                      )}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {projectReports.map((report) => (
+                        <div 
+                          key={report.id}
+                          className={`border rounded-lg p-4 transition-colors ${!report.is_read_by_client ? 'bg-blue-50 border-blue-300 shadow-sm' : 'hover:bg-muted/30'}`}
+                          onClick={async () => {
+                            if (!report.is_read_by_client) {
+                              try {
+                                await supabase
+                                  .from('project_reports')
+                                  .update({ is_read_by_client: true })
+                                  .eq('id', report.id);
+                                setProjectReports(prev => 
+                                  prev.map(r => r.id === report.id ? { ...r, is_read_by_client: true } : r)
+                                );
+                              } catch (e) {
+                                console.warn('Could not mark report as read');
+                              }
+                            }
+                          }}
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-lg">{report.title}</h4>
+                                {!report.is_read_by_client && (
+                                  <Badge className="bg-blue-600 text-xs">Nouveau</Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground capitalize">
+                                Type: {report.report_type.replace(/_/g, ' ')}
+                              </p>
+                            </div>
+                            {report.progress_percentage !== null && (
+                              <div className="text-right">
+                                <p className="text-xs text-muted-foreground mb-1">Avancement</p>
+                                <Badge variant="outline" className="text-lg font-bold">
+                                  {report.progress_percentage}%
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="bg-white rounded-lg p-3 border mb-3">
+                            <p className="text-sm whitespace-pre-wrap">{report.content}</p>
+                          </div>
+                          
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>
+                              {format(new Date(report.created_at), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}
+                            </span>
+                            {!report.is_read_by_client && (
+                              <span className="text-blue-600 font-medium">Cliquez pour marquer comme lu</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
           {/* Colonne latérale */}
           <div className="space-y-6">

@@ -748,6 +748,7 @@
     "quick_actions": {
       "title": "Quick Actions",
       "description": "Quickly access essential functions",
+      "my_projects": "Active Projects",
       "browse_projects": "Browse Projects",
       "messaging": "Messaging",
       "my_contracts": "My Contracts",
@@ -776,6 +777,29 @@
       "avg_rating": "Average Rating",
       "unread_messages": "Unread Messages",
       "pending_contracts": "Pending Contracts"
+    }
+  },
+  "pro_my_projects": {
+    "title": "My Active Projects",
+    "subtitle": "Projects where your proposal was accepted",
+    "back_to_dashboard": "Back to Dashboard",
+    "no_projects": "No active projects",
+    "no_projects_description": "You don't have any assigned projects yet. Browse available projects and submit proposals.",
+    "browse_projects": "Browse Projects",
+    "progress": "Progress",
+    "current_phase": "Current Phase",
+    "create_contract": "Create Contract",
+    "view_contract": "View Contract",
+    "manage_progress": "Manage Progress",
+    "send_report": "Send Report",
+    "contact_client": "Contact Client",
+    "status": {
+      "awaiting_contract": "Awaiting Contract",
+      "contract_to_sign": "Contract to Sign",
+      "starts_on": "Starts on",
+      "completed": "Completed",
+      "in_progress": "In Progress",
+      "ready_to_start": "Ready to Start"
     }
   },
   "notifications": {

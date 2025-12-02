@@ -31,6 +31,10 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TenderView from "./pages/TenderView";
 import ProposalView from "./pages/ProposalView";
 import ProfessionalProfile from "./pages/ProfessionalProfile";
+import ProjectProgress from "./pages/ProjectProgress";
+import ProjectReport from "./pages/ProjectReport";
+import ProMyProjects from "./pages/ProMyProjects";
+import ClientProfile from "./pages/ClientProfile";
 
 const queryClient = new QueryClient();
 
@@ -61,7 +65,11 @@ const App = () => (
           <Route path="/pro/contracts" element={<ProContracts />} />
           <Route path="/pro/portfolio" element={<ProPortfolio />} />
           <Route path="/pro/calendar" element={<ProCalendar />} />
+          <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
+          <Route path="/pro/project/:id/report" element={<ProjectReport />} />
+          <Route path="/pro/my-projects" element={<ProMyProjects />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/profile" element={<ClientProfile />} />
           <Route path="/dashboard/new-project" element={<NewProject />} />
           <Route path="/messages" element={<Messages />} />
           <Route path="/contracts" element={<Contracts />} />

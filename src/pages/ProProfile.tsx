@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin } from "lucide-react";
 import { geocodePostalCode } from "@/lib/geolocation";
@@ -32,6 +33,10 @@ const ProProfile = () => {
   const [saving, setSaving] = useState(false);
 
   type ProProfileFields = {
+    full_name?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    address?: string | null;
     services_offered?: string | null;
     city?: string | null;
     region?: string | null;
@@ -139,6 +144,9 @@ const ProProfile = () => {
       const { error } = await supabase
         .from('profiles')
         .update({
+          full_name: profile.full_name || null,
+          phone: profile.phone || null,
+          address: profile.address || null,
           services_offered: profile.services_offered || null,
           city: profile.city || null,
           region: profile.region || null,
@@ -201,6 +209,30 @@ const ProProfile = () => {
               <CardDescription>Renseignez vos services, zones et tarifs indicatifs</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Personal & Contact Info */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Informations personnelles</h4>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nom complet</Label>
+                  <Input value={profile.full_name || ''} onChange={e => setProfile({ ...profile, full_name: e.target.value })} placeholder="Votre nom complet" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Téléphone</Label>
+                  <Input value={profile.phone || ''} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="(514) 123-4567" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Adresse (pour les contrats et documents officiels)</Label>
+                <Input value={profile.address || ''} onChange={e => setProfile({ ...profile, address: e.target.value })} placeholder="123 rue Exemple" />
+              </div>
+              
+              <Separator className="my-4" />
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Services et localisation</h4>
+              </div>
               <div className="space-y-2">
                 <Label>Services offerts (séparés par des virgules)</Label>
                 <Textarea value={profile.services_offered || ''} onChange={e => setProfile({ ...profile, services_offered: e.target.value })} rows={3} />

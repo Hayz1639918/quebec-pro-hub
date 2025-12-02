@@ -17,9 +17,11 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 13% 14%;
 
+    /* Couleur principale - Bleu professionnel BâtirNet */
     --primary: 214 84% 42%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 214 84% 35%;
+    --primary-light: 214 84% 95%;
 
     --secondary: 210 17% 98%;
     --secondary-foreground: 222 13% 14%;
@@ -27,11 +29,11 @@ All colors MUST be HSL.
     --muted: 210 17% 96%;
     --muted-foreground: 215 14% 50%;
 
-    --accent: 215 25% 27%; /* Bleu-gris foncé professionnel */
+    --accent: 215 25% 27%;
     --accent-foreground: 0 0% 100%;
     --accent-hover: 215 25% 20%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 214 20% 90%;
@@ -39,6 +41,19 @@ All colors MUST be HSL.
     --ring: 214 84% 42%;
 
     --radius: 0.75rem;
+
+    /* Couleurs sémantiques unifiées */
+    --success: 152 69% 40%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 152 69% 95%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 92% 95%;
+    
+    --info: 214 84% 42%;
+    --info-foreground: 0 0% 100%;
+    --info-light: 214 84% 95%;
 
     --gradient-hero: linear-gradient(135deg, hsl(214 84% 42%), hsl(214 84% 52%));
     --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 17% 98%));
@@ -63,6 +78,7 @@ All colors MUST be HSL.
     --primary: 214 84% 52%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 214 84% 60%;
+    --primary-light: 214 84% 20%;
 
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -70,7 +86,7 @@ All colors MUST be HSL.
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 215 25% 27%; /* Bleu-gris foncé professionnel */
+    --accent: 215 25% 27%;
     --accent-foreground: 0 0% 100%;
     --accent-hover: 215 25% 35%;
 
@@ -80,6 +96,19 @@ All colors MUST be HSL.
     --border: 217 33% 20%;
     --input: 217 33% 20%;
     --ring: 214 84% 52%;
+
+    /* Couleurs sémantiques unifiées - Dark mode */
+    --success: 152 69% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-light: 152 69% 15%;
+    
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 92% 15%;
+    
+    --info: 214 84% 52%;
+    --info-foreground: 0 0% 100%;
+    --info-light: 214 84% 20%;
   }
 }
 
@@ -108,6 +137,30 @@ All colors MUST be HSL.
   h3 {
     @apply text-3xl md:text-4xl;
   }
+}
+
+/* Utility classes for semantic colors */
+@layer utilities {
+  /* Success colors */
+  .bg-success { background-color: hsl(var(--success)); }
+  .bg-success-light { background-color: hsl(var(--success-light)); }
+  .text-success { color: hsl(var(--success)); }
+  .border-success { border-color: hsl(var(--success)); }
+  
+  /* Warning colors */
+  .bg-warning { background-color: hsl(var(--warning)); }
+  .bg-warning-light { background-color: hsl(var(--warning-light)); }
+  .text-warning { color: hsl(var(--warning)); }
+  .border-warning { border-color: hsl(var(--warning)); }
+  
+  /* Info colors */
+  .bg-info { background-color: hsl(var(--info)); }
+  .bg-info-light { background-color: hsl(var(--info-light)); }
+  .text-info { color: hsl(var(--info)); }
+  .border-info { border-color: hsl(var(--info)); }
+  
+  /* Primary light */
+  .bg-primary-light { background-color: hsl(var(--primary-light)); }
 }
 
 /* Leaflet Map Styles */

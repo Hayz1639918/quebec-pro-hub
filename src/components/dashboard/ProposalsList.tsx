@@ -109,6 +109,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     setProcessing(true);
     try {
       const newStatus = selectedProposal.action === "accept" ? "accepted" : "rejected";
+      const proposal = proposals.find(p => p.id === selectedProposal.id);
       
       const { error } = await supabase
         .from("proposals")
@@ -116,6 +117,42 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         .eq("id", selectedProposal.id);
 
       if (error) throw error;
+
+      // La notification sera créée automatiquement par le trigger SQL
+      // Mais on peut aussi créer une notification ici pour être sûr
+      if (proposal) {
+        const notificationType = selectedProposal.action === "accept" ? "proposal_accepted" : "proposal_rejected";
+        const notificationTitle = selectedProposal.action === "accept" 
+          ? "Proposition acceptée ! 🎉"
+          : "Proposition non retenue";
+        const notificationMessage = selectedProposal.action === "accept"
+          ? `Votre proposition pour le projet a été acceptée !`
+          : `Votre proposition pour le projet n'a pas été retenue.`;
+
+        await supabase.from("notifications").insert({
+          user_id: proposal.professional_id,
+          type: notificationType,
+          title: notificationTitle,
+          message: notificationMessage,
+          related_project_id: proposal.project_id,
+          action_url: selectedProposal.action === "accept" ? "/pro/dashboard" : "/projects",
+          metadata: {
+            proposal_id: proposal.id,
+            project_id: proposal.project_id,
+          },
+        });
+
+        // Si accepté, assigner le professionnel au projet
+        if (selectedProposal.action === "accept") {
+          await supabase
+            .from("projects")
+            .update({ 
+              assigned_professional_id: proposal.professional_id,
+              status: "in_progress"
+            })
+            .eq("id", proposal.project_id);
+        }
+      }
 
       toast.success(
         selectedProposal.action === "accept"

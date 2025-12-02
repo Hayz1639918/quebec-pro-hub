@@ -19,6 +19,7 @@ const Navigation = () => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string} | null>(null);
   const [profile, setProfile] = useState<{user_type: string; full_name: string} | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,11 +32,54 @@ const Navigation = () => {
         fetchProfile(session.user.id);
       } else {
         setProfile(null);
+        setUnreadNotifications(0);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Real-time subscription for notifications + polling
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Fetch immediately
+    fetchUnreadNotifications(user.id);
+
+    // Real-time subscription
+    const channel = supabase
+      .channel('navigation-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          fetchUnreadNotifications(user.id);
+        }
+      )
+      .subscribe();
+
+    // Polling every 10 seconds as backup
+    const interval = setInterval(() => {
+      fetchUnreadNotifications(user.id);
+    }, 10000);
+
+    // Refresh when window gets focus
+    const handleFocus = () => {
+      fetchUnreadNotifications(user.id);
+    };
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user?.id]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -52,6 +96,29 @@ const Navigation = () => {
       .eq('id', userId)
       .single();
     setProfile(data);
+    
+    // Fetch unread notifications count
+    fetchUnreadNotifications(userId);
+  };
+
+  const fetchUnreadNotifications = async (userId: string) => {
+    try {
+      const { count, error } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+      
+      console.log('Notifications count:', count, 'Error:', error);
+      
+      if (!error && count !== null) {
+        setUnreadNotifications(count);
+      } else if (error) {
+        console.warn('Error fetching notifications:', error.message);
+      }
+    } catch (err) {
+      console.warn('Could not fetch notifications count:', err);
+    }
   };
 
   const handleLogout = async () => {
@@ -94,9 +161,29 @@ const Navigation = () => {
             <LanguageSwitcher />
             
             {user ? (
-              <DropdownMenu>
+              <>
+                {/* Notification Bell - Always visible */}
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="rounded-full"
+                    onClick={() => navigate("/notifications")}
+                  >
+                    <Bell className={`h-5 w-5 ${unreadNotifications > 0 ? 'text-destructive' : ''}`} />
+                  </Button>
+                  {unreadNotifications > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-destructive rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
+                      <span className="text-[10px] font-bold text-white">
+                        {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                      </span>
+                    </span>
+                  )}
+                </div>
+
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
+                  <Button variant="ghost" size="icon" className="rounded-full relative">
                     <User className="h-5 w-5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -109,22 +196,40 @@ const Navigation = () => {
                   </div>
                   <DropdownMenuSeparator />
                   {profile?.user_type === 'client' && (
-                    <DropdownMenuItem 
-                      onClick={() => navigate("/dashboard")}
-                      className="cursor-pointer"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      {t('navigation.dashboard')}
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/dashboard")}
+                        className="cursor-pointer"
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        {t('navigation.dashboard')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/dashboard/profile")}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Mon profil
+                      </DropdownMenuItem>
+                    </>
                   )}
                   {profile?.user_type === 'professional' && (
-                    <DropdownMenuItem 
-                      onClick={() => navigate("/pro/dashboard")}
-                      className="cursor-pointer"
-                    >
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Dashboard Pro
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/pro/dashboard")}
+                        className="cursor-pointer"
+                      >
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Dashboard Pro
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/pro/profile")}
+                        className="cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Mon profil
+                      </DropdownMenuItem>
+                    </>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
@@ -134,20 +239,15 @@ const Navigation = () => {
                     <MessageSquare className="mr-2 h-4 w-4" />
                     {t('navigation.messages')}
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/contracts")}
-                    className="cursor-pointer"
-                  >
-                    <FileText className="mr-2 h-4 w-4" />
-                    {t('navigation.contracts')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => navigate("/notifications")}
-                    className="cursor-pointer"
-                  >
-                    <Bell className="mr-2 h-4 w-4" />
-                    {t('navigation.notifications')}
-                  </DropdownMenuItem>
+                  {profile?.user_type === 'professional' && (
+                    <DropdownMenuItem 
+                      onClick={() => navigate("/contracts")}
+                      className="cursor-pointer"
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      {t('navigation.contracts')}
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     onClick={handleLogout}
@@ -158,6 +258,7 @@ const Navigation = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </>
             ) : (
               <>
                 <Button 

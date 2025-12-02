@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { FileText, Search, Filter, Plus, Eye, Copy, Star } from "lucide-react";
+import { FileText, Search, Filter, Plus, Eye, Copy, Star, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { ContractTemplate, ContractCategory } from "@/types/contracts";
@@ -29,10 +29,30 @@ export const ContractTemplates = ({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ContractCategory | "all">("all");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchTemplates();
+    const initialize = async () => {
+      await checkUser();
+      await fetchTemplates();
+    };
+    initialize();
   }, []);
+
+  const checkUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        console.log('User ID chargé:', session.user.id);
+        return session.user.id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking user:', error);
+      return null;
+    }
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -54,7 +74,18 @@ export const ContractTemplates = ({
         throw error;
       }
 
-      setTemplates(data || []);
+      const templatesData = data || [];
+      setTemplates(templatesData);
+      
+      // Log pour déboguer
+      if (templatesData.length > 0) {
+        console.log('Templates chargés:', templatesData.map(t => ({
+          id: t.id,
+          name: t.name,
+          created_by: t.created_by,
+          is_custom: !!t.created_by
+        })));
+      }
     } catch (error) {
       console.error('Error fetching contract templates:', error);
       toast({
@@ -140,6 +171,153 @@ export const ContractTemplates = ({
         description: t('contracts.error_copying_template'),
       });
     }
+  };
+
+  const handleDeleteTemplate = async (template: ContractTemplate) => {
+    // Log pour déboguer
+    console.log('=== SUPPRESSION DE TEMPLATE ===');
+    console.log('Template:', {
+      id: template.id,
+      name: template.name,
+      created_by: template.created_by,
+    });
+    console.log('Utilisateur actuel:', currentUserId);
+
+    // Attendre que l'utilisateur soit chargé si nécessaire
+    let userId = currentUserId;
+    if (!userId) {
+      userId = await checkUser();
+      if (!userId) {
+        toast({
+          variant: "destructive",
+          title: t('common.error'),
+          description: 'Vous devez être connecté pour supprimer un contrat',
+        });
+        return;
+      }
+    }
+
+    // Demander confirmation
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce contrat personnalisé ?')) {
+      return;
+    }
+
+    try {
+      console.log('Appel de la fonction RPC delete_custom_template...');
+      
+      // Utiliser directement la fonction RPC qui gère toutes les vérifications
+      const { data, error } = await supabase
+        .rpc('delete_custom_template', { template_id: template.id });
+
+      console.log('Réponse RPC:', { data, error });
+
+      if (error) {
+        console.error('Erreur RPC:', error);
+        throw error;
+      }
+
+      // La fonction retourne un objet JSON avec success/error
+      if (data && typeof data === 'object') {
+        if (data.success === true) {
+          // Succès - retirer le template de la liste locale
+          setTemplates(prev => prev.filter(t => t.id !== template.id));
+          toast({
+            title: 'Contrat supprimé',
+            description: 'Le contrat personnalisé a été supprimé avec succès',
+          });
+          return;
+        } else if (data.error) {
+          // Erreur retournée par la fonction
+          console.error('Erreur de la fonction:', data);
+          toast({
+            variant: "destructive",
+            title: t('common.error'),
+            description: data.error,
+          });
+          return;
+        }
+      }
+
+      // Si on arrive ici avec data = true (ancien format), c'est aussi un succès
+      if (data === true) {
+        setTemplates(prev => prev.filter(t => t.id !== template.id));
+        toast({
+          title: 'Contrat supprimé',
+          description: 'Le contrat personnalisé a été supprimé avec succès',
+        });
+        return;
+      }
+
+      // Cas inattendu
+      console.warn('Réponse inattendue:', data);
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: 'Réponse inattendue du serveur',
+      });
+
+    } catch (error: any) {
+      console.error('Erreur lors de la suppression:', error);
+      
+      let errorMessage = 'Erreur lors de la suppression du contrat';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      // Si la fonction RPC n'existe pas, afficher un message clair
+      if (error?.code === '42883' || error?.message?.includes('function') || error?.message?.includes('does not exist')) {
+        errorMessage = 'La fonction de suppression n\'existe pas. Veuillez appliquer la migration 028_allow_users_delete_own_templates.sql dans Supabase.';
+      }
+      
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: errorMessage,
+      });
+    }
+  };
+
+  const isCustomTemplate = (template: ContractTemplate) => {
+    // Un template est personnalisé si :
+    // 1. created_by n'est pas null (nouveau système)
+    // 2. OU si c'est un template qui n'est pas dans la liste des templates de base
+    // Pour l'instant, on affiche le bouton pour tous les templates avec created_by non null
+    // ET pour les templates qui pourraient être des anciens templates personnalisés
+    // (on les identifie en vérifiant s'ils ne sont pas dans les templates de base connus)
+    
+    // Liste des noms de templates de base (ceux créés par les migrations)
+    const baseTemplateNames = [
+      'Contrat préliminaire',
+      'Contrat d\'entreprise à forfait',
+      'Contrat à prix coûtant majoré',
+      'Contrat de sous-traitance',
+      'Attestation de réception des travaux',
+      'Contrat de construction résidentielle',
+      'Contrat de rénovation',
+      'Formulaire de soumission'
+    ];
+
+    // Si created_by est défini, c'est un template personnalisé
+    if (template.created_by !== null) {
+      return true;
+    }
+
+    // Si created_by est NULL mais que le nom n'est pas dans la liste des templates de base,
+    // on considère que c'est peut-être un ancien template personnalisé
+    // On affiche le bouton seulement si l'utilisateur est connecté
+    if (!baseTemplateNames.includes(template.name) && currentUserId) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Fonction pour vérifier si l'utilisateur peut supprimer ce template
+  const canDeleteTemplate = (template: ContractTemplate) => {
+    if (!template.created_by) return false;
+    if (!currentUserId) return false;
+    return template.created_by === currentUserId;
   };
 
   if (loading) {
@@ -228,15 +406,43 @@ export const ContractTemplates = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTemplates.map((template) => (
-            <Card key={template.id} className="hover:shadow-lg transition-shadow">
+          {filteredTemplates.map((template) => {
+            const isCustom = isCustomTemplate(template);
+            // Log pour déboguer
+            if (isCustom) {
+              console.log('Template personnalisé détecté:', {
+                id: template.id,
+                name: template.name,
+                created_by: template.created_by,
+                currentUserId: currentUserId,
+                canDelete: canDeleteTemplate(template)
+              });
+            }
+            
+            return (
+            <Card key={template.id} className="hover:shadow-lg transition-shadow relative">
+              {/* Bouton de suppression pour les templates personnalisés */}
+              {isCustom && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 left-2 h-6 w-6 rounded-full bg-destructive/10 hover:bg-destructive/20 text-destructive z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteTemplate(template);
+                  }}
+                  title="Supprimer ce contrat personnalisé"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
                       {template.name}
-                      {(template as any).is_custom && (
+                      {isCustom && (
                         <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                       )}
                     </CardTitle>
@@ -251,7 +457,7 @@ export const ContractTemplates = ({
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Custom badge */}
-                {(template as any).is_custom && (
+                {isCustom && (
                   <Badge variant="outline" className="text-xs">
                     <Star className="h-3 w-3 mr-1 text-yellow-500" />
                     Modèle personnalisé
@@ -295,7 +501,8 @@ export const ContractTemplates = ({
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -74,18 +74,15 @@ export const ContractViewer = ({
     try {
       setLoading(true);
 
+      // First, try to get the contract with simple query
       const { data, error } = await supabase
         .from('contracts')
-        .select(`
-          *,
-          client:profiles!contracts_client_id_fkey(full_name),
-          professional:profiles!contracts_professional_id_fkey(full_name, company_name),
-          project:projects(title)
-        `)
+        .select('*')
         .eq('id', contractId)
         .single();
 
       if (error) {
+        console.error('Error fetching contract:', error);
         // If table doesn't exist yet, silently fail
         if (error.code === '42P01' || error.message.includes('does not exist')) {
           console.warn('Contracts table not yet created. Please apply migration 008_add_contracts_system.sql');
@@ -96,22 +93,58 @@ export const ContractViewer = ({
       }
 
       if (data) {
-        // Transform the data to match our interface
+        // Fetch related data separately to avoid foreign key issues
+        let clientName = null;
+        let professionalName = null;
+        let companyName = null;
+        let projectTitle = null;
+
+        // Get client name
+        if (data.client_id) {
+          const { data: clientData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', data.client_id)
+            .single();
+          clientName = clientData?.full_name;
+        }
+
+        // Get professional name
+        if (data.professional_id) {
+          const { data: proData } = await supabase
+            .from('profiles')
+            .select('full_name, company_name')
+            .eq('id', data.professional_id)
+            .single();
+          professionalName = proData?.full_name;
+          companyName = proData?.company_name;
+        }
+
+        // Get project title
+        if (data.project_id) {
+          const { data: projectData } = await supabase
+            .from('projects')
+            .select('title')
+            .eq('id', data.project_id)
+            .single();
+          projectTitle = projectData?.title;
+        }
+
         const transformedContract: Contract = {
           ...data,
-          client_name: data.client?.full_name,
-          professional_name: data.professional?.full_name,
-          company_name: data.professional?.company_name,
-          project_title: data.project?.title,
+          client_name: clientName,
+          professional_name: professionalName,
+          company_name: companyName,
+          project_title: projectTitle,
         };
         setContract(transformedContract);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching contract:', error);
       toast({
         variant: "destructive",
         title: t('common.error'),
-        description: t('contracts.error_loading_contract'),
+        description: error?.message || t('contracts.error_loading_contract'),
       });
     } finally {
       setLoading(false);
@@ -318,35 +351,287 @@ export const ContractViewer = ({
         </div>
       </div>
 
-      {/* Contract Content */}
+      {/* Contract Content - Display exactly like template preview */}
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-slate-50 border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Document du contrat
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Open in new window for printing - include signatures with dates
+                let printContent = contract.contract_content || '';
+                
+                // Helper to inject signature
+                const injectSig = (html: string, label: string, sigImage: string, signedDate: string): string => {
+                  const sigHtml = `
+                    <div style="text-align: center; margin: 5px 0;">
+                      <img src="${sigImage}" alt="${label}" style="max-height: 50px; max-width: 180px;" />
+                    </div>
+                  `;
+                  return html.replace(
+                    new RegExp(`<div class="signature-line"><span class="signature-label">${label}</span></div>`, 'gi'),
+                    `<div class="signature-line" style="border-top: none; min-height: 60px;">${sigHtml}<span class="signature-label">${label}</span></div>`
+                  );
+                };
+                
+                // Inject client signature if exists
+                if (contract.client_signed_at && contract.client_signature_data) {
+                  const clientSigData = contract.client_signature_data as SignatureData;
+                  const clientDate = formatDate(contract.client_signed_at);
+                  
+                  printContent = injectSig(printContent, 'Signature du client', clientSigData.signature_image, clientDate);
+                  
+                  // Update date field
+                  const clientBlockRegex = /(Signature du client[\s\S]*?<span class="field-label">Date :<\/span>\s*<span class="field-value">)[^<]*(<\/span>)/gi;
+                  printContent = printContent.replace(clientBlockRegex, `$1${clientDate}$2`);
+                }
+                
+                // Inject professional signature if exists
+                if (contract.professional_signed_at && contract.professional_signature_data) {
+                  const proSigData = contract.professional_signature_data as SignatureData;
+                  const proDate = formatDate(contract.professional_signed_at);
+                  
+                  // Handle various label variations
+                  ["Signature de l'entrepreneur", "Signature de l''entrepreneur", "Entrepreneur général"].forEach(label => {
+                    printContent = injectSig(printContent, label, proSigData.signature_image, proDate);
+                  });
+                  
+                  // Update date field
+                  const proBlockRegex = /((?:Signature de l'entrepreneur|Entrepreneur général)[\s\S]*?<span class="field-label">Date :<\/span>\s*<span class="field-value">)[^<]*(<\/span>)/gi;
+                  printContent = printContent.replace(proBlockRegex, `$1${proDate}$2`);
+                }
+                
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(printContent);
+                  printWindow.document.title = contract.title;
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Ouvrir / Imprimer
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {(() => {
+            let content = contract.contract_content ?? "";
+            const isFullHtmlTemplate = content.includes('<!DOCTYPE') || content.includes('<html') || content.includes('<style');
+            
+            // Helper function to inject signature with date into a signature block
+            const injectSignatureInBlock = (
+              html: string, 
+              signatureLabel: string, 
+              signatureImage: string, 
+              signedAt: string
+            ): string => {
+              // Pattern to find the signature block and its associated date field
+              const blockPattern = new RegExp(
+                `(<div class="signature-block">\\s*` +
+                `<div class="signature-line"><span class="signature-label">${signatureLabel}</span></div>` +
+                `[\\s\\S]*?)` +
+                `(<span class="field-label">Date :</span>\\s*<span class="field-value">)[^<]*(</span>)`,
+                'gi'
+              );
+              
+              // Replace signature line with image and date field with actual date
+              let result = html;
+              
+              // First, inject the signature image
+              const sigHtml = `
+                <div style="text-align: center; margin: 5px 0;">
+                  <img src="${signatureImage}" alt="${signatureLabel}" style="max-height: 50px; max-width: 180px;" />
+                </div>
+              `;
+              
+              result = result.replace(
+                new RegExp(`<div class="signature-line"><span class="signature-label">${signatureLabel}</span></div>`, 'gi'),
+                `<div class="signature-line" style="border-top: none; min-height: 60px;">${sigHtml}<span class="signature-label">${signatureLabel}</span></div>`
+              );
+              
+              return result;
+            };
+            
+            // Inject client signature if exists
+            if (contract.client_signed_at && contract.client_signature_data) {
+              const clientSigData = contract.client_signature_data as SignatureData;
+              const clientDate = formatDate(contract.client_signed_at);
+              
+              // Inject signature image
+              content = injectSignatureInBlock(
+                content,
+                'Signature du client',
+                clientSigData.signature_image,
+                contract.client_signed_at
+              );
+              
+              // Replace the date field in client's signature block
+              // Find the client signature block and update its date
+              const clientBlockRegex = /(Signature du client[\s\S]*?<span class="field-label">Date :<\/span>\s*<span class="field-value">)[^<]*(<\/span>)/gi;
+              content = content.replace(clientBlockRegex, `$1${clientDate}$2`);
+              
+              // Also handle alternative patterns
+              content = content.replace(/\[SIGNATURE CLIENT\]/gi, 
+                `<img src="${clientSigData.signature_image}" style="max-height: 50px;" />`
+              );
+            }
+            
+            // Inject professional signature if exists
+            if (contract.professional_signed_at && contract.professional_signature_data) {
+              const proSigData = contract.professional_signature_data as SignatureData;
+              const proDate = formatDate(contract.professional_signed_at);
+              
+              // Inject signature image for various label variations
+              const proLabels = ["Signature de l'entrepreneur", "Signature de l''entrepreneur", "Entrepreneur général"];
+              proLabels.forEach(label => {
+                content = injectSignatureInBlock(content, label, proSigData.signature_image, contract.professional_signed_at!);
+              });
+              
+              // Replace the date field in professional's signature block
+              const proBlockRegex = /((?:Signature de l'entrepreneur|Entrepreneur général)[\s\S]*?<span class="field-label">Date :<\/span>\s*<span class="field-value">)[^<]*(<\/span>)/gi;
+              content = content.replace(proBlockRegex, `$1${proDate}$2`);
+              
+              // Also handle alternative patterns
+              content = content.replace(/\[SIGNATURE ENTREPRENEUR\]/gi, 
+                `<img src="${proSigData.signature_image}" style="max-height: 50px;" />`
+              );
+              content = content.replace(/\[SIGNATURE PROFESSIONNEL\]/gi, 
+                `<img src="${proSigData.signature_image}" style="max-height: 50px;" />`
+              );
+            }
+            
+            if (isFullHtmlTemplate) {
+              // Full HTML template - render in iframe without sanitization for exact rendering
+              return (
+                <div className="bg-gray-200 p-6">
+                  <div className="bg-white shadow-xl mx-auto" style={{ maxWidth: '850px' }}>
+                    <iframe
+                      srcDoc={content}
+                      className="w-full border-0"
+                      style={{ height: '1100px' }}
+                      title="Contrat"
+                    />
+                  </div>
+                </div>
+              );
+            } else {
+              // Simple content - styled view
+              const sanitized = DOMPurify.sanitize(content, { USE_PROFILES: { html: true } });
+              return (
+                <ScrollArea className="h-[800px]">
+                  <div className="bg-gray-200 p-8 min-h-full">
+                    <div className="bg-white shadow-lg mx-auto max-w-4xl p-8">
+                      <div
+                        className="prose prose-slate max-w-none"
+                        dangerouslySetInnerHTML={{ __html: sanitized }}
+                      />
+                    </div>
+                  </div>
+                </ScrollArea>
+              );
+            }
+          })()}
+        </CardContent>
+      </Card>
+      
+      {/* Signature Status - Separate from document */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            {t('contracts.contract_content')}
+            <Pen className="h-5 w-5" />
+            Statut des signatures
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-96 w-full">
-            {(() => {
-              const sanitized = DOMPurify.sanitize(contract.contract_content ?? "", { USE_PROFILES: { html: true } });
-              return (
-                <div
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sanitized }}
-                />
-              );
-            })()}
-          </ScrollArea>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Client Signature Status */}
+            <div className="border rounded-lg p-6 bg-slate-50">
+              <h4 className="font-semibold mb-4 text-center">Signature du client</h4>
+              <div className="flex flex-col items-center">
+                {contract.client_signed_at && contract.client_signature_data ? (
+                  <>
+                    <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
+                      <img 
+                        src={(contract.client_signature_data as SignatureData).signature_image} 
+                        alt="Signature client"
+                        className="max-h-20 mx-auto object-contain"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 text-green-600 mb-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="font-medium">Signé</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{contract.client_name}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(contract.client_signed_at)}</p>
+                    <p className="text-xs font-mono text-muted-foreground/70 mt-1">
+                      Code: {(contract.client_signature_data as SignatureData).verification_code}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mb-3">
+                      <Clock className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-muted-foreground">En attente de signature</p>
+                    <p className="text-sm text-muted-foreground">{contract.client_name}</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Professional Signature Status */}
+            <div className="border rounded-lg p-6 bg-slate-50">
+              <h4 className="font-semibold mb-4 text-center">Signature de l'entrepreneur</h4>
+              <div className="flex flex-col items-center">
+                {contract.professional_signed_at && contract.professional_signature_data ? (
+                  <>
+                    <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
+                      <img 
+                        src={(contract.professional_signature_data as SignatureData).signature_image} 
+                        alt="Signature professionnel"
+                        className="max-h-20 mx-auto object-contain"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 text-green-600 mb-2">
+                      <CheckCircle2 className="h-5 w-5" />
+                      <span className="font-medium">Signé</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{contract.professional_name}</p>
+                    <p className="text-xs text-muted-foreground">{formatDate(contract.professional_signed_at)}</p>
+                    <p className="text-xs font-mono text-muted-foreground/70 mt-1">
+                      Code: {(contract.professional_signature_data as SignatureData).verification_code}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mb-3">
+                      <Clock className="h-8 w-8 text-slate-400" />
+                    </div>
+                    <p className="text-muted-foreground">En attente de signature</p>
+                    <p className="text-sm text-muted-foreground">{contract.professional_name}</p>
+                    {contract.company_name && (
+                      <p className="text-xs text-muted-foreground">{contract.company_name}</p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
+      {/* Milestones */}
       {milestones.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {t('contracts.milestones') || 'Jalons'}
+              {t('contracts.milestones') || 'Jalons de paiement'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -369,172 +654,36 @@ export const ContractViewer = ({
         </Card>
       )}
 
-      {/* Contract Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Parties */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              {t('contracts.parties')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.client')}</h4>
-              <p className="font-medium">{contract.client_name}</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.professional')}</h4>
-              <p className="font-medium">{contract.professional_name}</p>
-              <p className="text-sm text-muted-foreground">{contract.company_name}</p>
+      {/* Sign Button - Outside the PDF view */}
+      {showSignButton && canSign() && (
+        <Card className="border-2 border-primary/20 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold mb-2">
+                {currentUserId === contract.client_id ? 'Signez ce contrat' : 'Signez ce contrat en tant qu\'entrepreneur'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                En signant ce contrat, vous acceptez les termes et conditions ci-dessus.
+              </p>
+              <ESignature
+                onSignatureComplete={handleSignContract}
+                signerName={getSignerName()}
+                contractTitle={contract.title}
+                contractContent={contract.contract_content}
+                contract={contract}
+                currentUserId={currentUserId}
+                disabled={signing}
+                trigger={
+                  <Button size="lg" disabled={signing} className="px-8">
+                    <Pen className="h-5 w-5 mr-2" />
+                    {signing ? t('contracts.signing') : t('contracts.sign_contract')}
+                  </Button>
+                }
+              />
             </div>
           </CardContent>
         </Card>
-
-        {/* Financial Terms */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              {t('contracts.financial_terms')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.total_amount')}</h4>
-              <p className="text-2xl font-bold">{formatCurrency(contract.total_amount, contract.currency)}</p>
-            </div>
-            {contract.deposit_percentage > 0 && (
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.deposit')}</h4>
-                <p className="font-medium">
-                  {contract.deposit_percentage}% ({formatCurrency(contract.total_amount * contract.deposit_percentage / 100, contract.currency)})
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Timeline */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              {t('contracts.timeline')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.start_date')}</h4>
-              <p className="font-medium">{formatDate(contract.start_date)}</p>
-            </div>
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.end_date')}</h4>
-              <p className="font-medium">{formatDate(contract.end_date)}</p>
-            </div>
-            {contract.estimated_duration_days && (
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.estimated_duration')}</h4>
-                <p className="font-medium">{contract.estimated_duration_days} {t('contracts.days')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Legal */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              {t('contracts.legal')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.warranty')}</h4>
-              <p className="font-medium">{contract.warranty_period_months} {t('contracts.months')}</p>
-            </div>
-            {contract.special_conditions && (
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground">{t('contracts.special_conditions')}</h4>
-                <p className="text-sm">{contract.special_conditions}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Signatures */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Pen className="h-5 w-5" />
-            {t('contracts.signatures')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Client Signature */}
-            <div className="space-y-3">
-              <h4 className="font-medium">{t('contracts.client_signature')}</h4>
-              <div className="border rounded-lg p-4 min-h-24 flex items-center justify-center">
-                {contract.client_signed_at ? (
-                  <div className="text-center">
-                    <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-green-600">{t('contracts.signed')}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(contract.client_signed_at)}</p>
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    <Pen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">{t('contracts.not_signed')}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Professional Signature */}
-            <div className="space-y-3">
-              <h4 className="font-medium">{t('contracts.professional_signature')}</h4>
-              <div className="border rounded-lg p-4 min-h-24 flex items-center justify-center">
-                {contract.professional_signed_at ? (
-                  <div className="text-center">
-                    <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-green-600">{t('contracts.signed')}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(contract.professional_signed_at)}</p>
-                  </div>
-                ) : (
-                  <div className="text-center text-muted-foreground">
-                    <Pen className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">{t('contracts.not_signed')}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Sign Button */}
-          {showSignButton && canSign() && (
-            <div className="mt-6 pt-6 border-t">
-              <div className="flex items-center justify-center">
-                <ESignature
-                  onSignatureComplete={handleSignContract}
-                  signerName={getSignerName()}
-                  contractTitle={contract.title}
-                  disabled={signing}
-                  trigger={
-                    <Button size="lg" disabled={signing}>
-                      <Pen className="h-4 w-4 mr-2" />
-                      {signing ? t('contracts.signing') : t('contracts.sign_contract')}
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      )}
     </div>
   );
 };

@@ -126,6 +126,52 @@ const MapController = ({
   return null;
 };
 
+// Component to auto-center map on user's location at startup
+const AutoLocate = ({ 
+  onLocate,
+  onLoadingChange
+}: { 
+  onLocate: (lat: number, lng: number) => void;
+  onLoadingChange?: (loading: boolean) => void;
+}) => {
+  const map = useMap();
+  const [hasLocated, setHasLocated] = useState(false);
+
+  useEffect(() => {
+    if (hasLocated) return;
+
+    if ('geolocation' in navigator) {
+      onLoadingChange?.(true);
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Center map on user's position with animation
+          map.flyTo([latitude, longitude], 12, { duration: 1.5 });
+          onLocate(latitude, longitude);
+          setHasLocated(true);
+          onLoadingChange?.(false);
+        },
+        (error) => {
+          console.warn('Geolocation error:', error.message);
+          // Keep default Montreal center
+          setHasLocated(true);
+          onLoadingChange?.(false);
+        },
+        { 
+          enableHighAccuracy: true, 
+          timeout: 10000,
+          maximumAge: 60000 // Cache position for 1 minute
+        }
+      );
+    } else {
+      setHasLocated(true);
+    }
+  }, [map, onLocate, hasLocated, onLoadingChange]);
+
+  return null;
+};
+
 // Locate button component
 const LocateButton = ({ 
   onLocate 
@@ -189,44 +235,29 @@ export const InteractiveMap = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   
-  // Default center (Montreal)
-  const [center, setCenter] = useState<[number, number]>([45.5017, -73.5673]);
-  const [zoom, setZoom] = useState(10);
+  // Default center (Montreal) - will be updated by AutoLocate
+  const [center] = useState<[number, number]>([45.5017, -73.5673]);
+  const [zoom] = useState(10);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [radius, setRadius] = useState(defaultRadius);
-
-  // Get user location on mount
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation([latitude, longitude]);
-          setCenter([latitude, longitude]);
-          onLocationChange?.(latitude, longitude);
-        },
-        () => {
-          // Default to Montreal if geolocation fails
-          setCenter([45.5017, -73.5673]);
-          onLocationChange?.(45.5017, -73.5673);
-        }
-      );
-    }
-  }, []);
+  const [isLocating, setIsLocating] = useState(true);
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setUserLocation([lat, lng]);
-    setCenter([lat, lng]);
     onLocationChange?.(lat, lng);
   }, [onLocationChange]);
+
+  const handleLoadingChange = useCallback((loading: boolean) => {
+    setIsLocating(loading);
+  }, []);
 
   const handleRadiusChange = useCallback((value: number[]) => {
     setRadius(value[0]);
     onRadiusChange?.(value[0]);
   }, [onRadiusChange]);
 
-  const handleMoveEnd = useCallback((lat: number, lng: number) => {
-    setCenter([lat, lng]);
+  const handleMoveEnd = useCallback((_lat: number, _lng: number) => {
+    // Map moved - could be used for future features
   }, []);
 
   const formatBudget = (min: number | null, max: number | null) => {
@@ -268,6 +299,21 @@ export const InteractiveMap = ({
           </Badge>
         </div>
 
+        {/* Loading overlay */}
+        {isLocating && (
+          <div className="absolute inset-0 z-[1001] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <Locate className="h-8 w-8 text-primary animate-pulse" />
+                <div className="absolute inset-0 h-8 w-8 border-2 border-primary/30 rounded-full animate-ping" />
+              </div>
+              <span className="text-sm font-medium text-gray-600">
+                Localisation en cours...
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Map container */}
         <div style={{ height }}>
           <MapContainer
@@ -289,6 +335,12 @@ export const InteractiveMap = ({
             
             <MapController 
               onMoveEnd={handleMoveEnd}
+            />
+            
+            {/* Auto-center on user's location at startup */}
+            <AutoLocate 
+              onLocate={handleLocate} 
+              onLoadingChange={handleLoadingChange}
             />
             
             <LocateButton onLocate={handleLocate} />

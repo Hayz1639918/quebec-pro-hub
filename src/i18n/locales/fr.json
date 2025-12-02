@@ -748,6 +748,7 @@
     "quick_actions": {
       "title": "Actions rapides",
       "description": "Accédez rapidement aux fonctions essentielles",
+      "my_projects": "Projets en cours",
       "browse_projects": "Parcourir les projets",
       "messaging": "Messagerie",
       "my_contracts": "Mes contrats",
@@ -776,6 +777,29 @@
       "avg_rating": "Note moyenne",
       "unread_messages": "Messages non lus",
       "pending_contracts": "Contrats en attente"
+    }
+  },
+  "pro_my_projects": {
+    "title": "Mes projets en cours",
+    "subtitle": "Projets où votre soumission a été acceptée",
+    "back_to_dashboard": "Retour au dashboard",
+    "no_projects": "Aucun projet en cours",
+    "no_projects_description": "Vous n'avez pas encore de projets assignés. Parcourez les projets disponibles et soumettez des propositions.",
+    "browse_projects": "Parcourir les projets",
+    "progress": "Avancement",
+    "current_phase": "Phase actuelle",
+    "create_contract": "Créer le contrat",
+    "view_contract": "Voir le contrat",
+    "manage_progress": "Gérer l'avancement",
+    "send_report": "Envoyer un rapport",
+    "contact_client": "Contacter le client",
+    "status": {
+      "awaiting_contract": "En attente du contrat",
+      "contract_to_sign": "Contrat à signer",
+      "starts_on": "Début le",
+      "completed": "Terminé",
+      "in_progress": "En cours",
+      "ready_to_start": "Prêt à commencer"
     }
   },
   "notifications": {

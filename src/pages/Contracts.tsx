@@ -45,6 +45,7 @@ const Contracts = () => {
   const [stats, setStats] = useState<ContractStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userType, setUserType] = useState<'client' | 'professional' | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [isBuilding, setIsBuilding] = useState(false);
@@ -69,13 +70,95 @@ const Contracts = () => {
 
   useEffect(() => {
     const contractId = searchParams.get('contract');
-    if (contractId && contracts.length > 0) {
+    if (contractId) {
+      // First try to find in already loaded contracts
       const contract = contracts.find(c => c.id === contractId);
       if (contract) {
         setSelectedContract(contract);
+      } else if (userId) {
+        // If not found, fetch it directly
+        (async () => {
+          try {
+            // Simple query first
+            const { data, error } = await supabase
+              .from('contracts')
+              .select('*')
+              .eq('id', contractId)
+              .single();
+
+            if (error) {
+              console.error('Error fetching contract:', error);
+              toast({
+                variant: "destructive",
+                title: t('common.error'),
+                description: error.message || t('contracts.error_loading_contract'),
+              });
+              return;
+            }
+
+            if (data) {
+              // Fetch related data separately
+              let clientName = null;
+              let professionalName = null;
+              let companyName = null;
+              let projectTitle = null;
+
+              if (data.client_id) {
+                const { data: clientData } = await supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', data.client_id)
+                  .single();
+                clientName = clientData?.full_name;
+              }
+
+              if (data.professional_id) {
+                const { data: proData } = await supabase
+                  .from('profiles')
+                  .select('full_name, company_name')
+                  .eq('id', data.professional_id)
+                  .single();
+                professionalName = proData?.full_name;
+                companyName = proData?.company_name;
+              }
+
+              if (data.project_id) {
+                const { data: projectData } = await supabase
+                  .from('projects')
+                  .select('title')
+                  .eq('id', data.project_id)
+                  .single();
+                projectTitle = projectData?.title;
+              }
+
+              const transformedContract: Contract = {
+                ...data,
+                client_name: clientName,
+                professional_name: professionalName,
+                company_name: companyName,
+                project_title: projectTitle,
+              };
+              setSelectedContract(transformedContract);
+              // Also add to contracts list if not already there
+              setContracts(prev => {
+                if (!prev.find(c => c.id === contractId)) {
+                  return [...prev, transformedContract];
+                }
+                return prev;
+              });
+            }
+          } catch (error: any) {
+            console.error('Error fetching contract:', error);
+            toast({
+              variant: "destructive",
+              title: t('common.error'),
+              description: error?.message || t('contracts.error_loading_contract'),
+            });
+          }
+        })();
       }
     }
-  }, [searchParams, contracts]);
+  }, [searchParams, contracts, userId]);
 
   const checkUser = async () => {
     try {
@@ -87,6 +170,17 @@ const Contracts = () => {
       }
 
       setUserId(session.user.id);
+      
+      // Get user type
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profile?.user_type) {
+        setUserType(profile.user_type as 'client' | 'professional');
+      }
     } catch (error) {
       console.error('Error checking user:', error);
       navigate("/auth");
@@ -101,12 +195,7 @@ const Contracts = () => {
 
       let query = supabase
         .from('contracts')
-        .select(`
-          *,
-          client:profiles!contracts_client_id_fkey(full_name),
-          professional:profiles!contracts_professional_id_fkey(full_name, company_name),
-          project:projects(title)
-        `)
+        .select('*')
         .or(`client_id.eq.${userId},professional_id.eq.${userId}`);
 
       // Apply filters
@@ -134,14 +223,58 @@ const Contracts = () => {
         throw error;
       }
 
-      // Transform the data
-      const transformedContracts: Contract[] = (data || []).map(contract => ({
-        ...contract,
-        client_name: contract.client?.full_name,
-        professional_name: contract.professional?.full_name,
-        company_name: contract.professional?.company_name,
-        project_title: contract.project?.title,
-      }));
+      // Transform the data - fetch related info for each contract
+      const transformedContracts: Contract[] = await Promise.all(
+        (data || []).map(async (contract) => {
+          let clientName = null;
+          let professionalName = null;
+          let companyName = null;
+          let projectTitle = null;
+
+          // These are optional - don't fail if they can't be fetched
+          try {
+            if (contract.client_id) {
+              const { data: clientData } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', contract.client_id)
+                .single();
+              clientName = clientData?.full_name;
+            }
+          } catch {}
+
+          try {
+            if (contract.professional_id) {
+              const { data: proData } = await supabase
+                .from('profiles')
+                .select('full_name, company_name')
+                .eq('id', contract.professional_id)
+                .single();
+              professionalName = proData?.full_name;
+              companyName = proData?.company_name;
+            }
+          } catch {}
+
+          try {
+            if (contract.project_id) {
+              const { data: projectData } = await supabase
+                .from('projects')
+                .select('title')
+                .eq('id', contract.project_id)
+                .single();
+              projectTitle = projectData?.title;
+            }
+          } catch {}
+
+          return {
+            ...contract,
+            client_name: clientName,
+            professional_name: professionalName,
+            company_name: companyName,
+            project_title: projectTitle,
+          };
+        })
+      );
 
       setContracts(transformedContracts);
     } catch (error) {
@@ -361,7 +494,7 @@ const Contracts = () => {
             </div>
           )}
 
-      {isBuilding && selectedTemplate && userId ? (
+      {isBuilding && selectedTemplate && userId && userType === 'professional' ? (
         <ContractBuilder
           template={selectedTemplate}
           onCancel={handleCancelBuilder}
@@ -373,11 +506,17 @@ const Contracts = () => {
           <Button 
             variant="outline" 
             onClick={() => {
-              setSelectedContract(null);
-              setSearchParams({});
+              if (userType === 'client') {
+                // Clients go back to their dashboard contracts section
+                navigate('/dashboard?tab=contracts');
+              } else {
+                // Professionals stay on the contracts page
+                setSelectedContract(null);
+                setSearchParams({});
+              }
             }}
           >
-            ← {t('contracts.back_to_list')}
+            ← {userType === 'client' ? 'Retour à mes contrats' : t('contracts.back_to_list')}
           </Button>
           <ContractViewer
             contractId={selectedContract.id}
@@ -389,7 +528,9 @@ const Contracts = () => {
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="contracts">{t('contracts.my_contracts')}</TabsTrigger>
-            <TabsTrigger value="templates">{t('contracts.create_contract')}</TabsTrigger>
+            {userType === 'professional' && (
+              <TabsTrigger value="templates">{t('contracts.create_contract')}</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="contracts" className="space-y-6">
