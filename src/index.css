@@ -179,6 +179,21 @@ All colors MUST be HSL.
   .bg-primary-light { background-color: hsl(var(--primary-light)); }
 }
 
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ensure images don't overflow */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Leaflet Map Styles */
 @layer components {
   .leaflet-container {

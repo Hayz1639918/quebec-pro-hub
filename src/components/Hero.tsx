@@ -88,7 +88,7 @@ const Hero = () => {
           </div>
 
           {/* Right Image */}
-          <div className="relative h-[250px] sm:h-[350px] lg:h-[500px] xl:h-[600px] order-1 lg:order-2">
+          <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-[500px] xl:h-[600px] order-1 lg:order-2 w-full">
             <div className="absolute inset-0 bg-gradient-hero opacity-10 rounded-2xl sm:rounded-3xl blur-3xl" />
             <img
               src={heroImage}

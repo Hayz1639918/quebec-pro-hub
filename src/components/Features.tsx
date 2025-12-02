@@ -72,36 +72,36 @@ const Features = () => {
 
         {/* Image Showcase */}
         <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
-          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group aspect-[4/3] sm:aspect-[3/2]">
             <img
               src={contractorImage}
               alt="Professional contractor reviewing construction plans"
-              className="w-full h-[250px] sm:h-[300px] lg:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-4 sm:p-6 lg:p-8">
               <div className="text-background">
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 text-primary-foreground">
                   {t('features.for_contractors.title')}
                 </h3>
-                <p className="text-sm sm:text-base text-primary-foreground/90">
+                <p className="text-sm sm:text-base text-primary-foreground/90 line-clamp-2">
                   {t('features.for_contractors.description')}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group aspect-[4/3] sm:aspect-[3/2]">
             <img
               src={clientImage}
               alt="Satisfied client with contractor after successful project"
-              className="w-full h-[250px] sm:h-[300px] lg:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-4 sm:p-6 lg:p-8">
               <div className="text-background">
                 <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 text-primary-foreground">
                   {t('features.for_clients.title')}
                 </h3>
-                <p className="text-sm sm:text-base text-primary-foreground/90">
+                <p className="text-sm sm:text-base text-primary-foreground/90 line-clamp-2">
                   {t('features.for_clients.description')}
                 </p>
               </div>

@@ -838,55 +838,55 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.stats.active_projects')}</CardTitle>
-                <TrendingUp className="h-4 w-4 text-primary" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Projets actifs</CardTitle>
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.activeProjects}</div>
-                <p className="text-xs text-muted-foreground">
-                  {t('dashboard.stats.total_projects', { total: stats.totalProjects })}
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.activeProjects}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  sur {stats.totalProjects} total
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.stats.proposals_received')}</CardTitle>
-                <MessageSquare className="h-4 w-4 text-primary" />
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Propositions</CardTitle>
+                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.proposalsReceived}</div>
-                <p className="text-xs text-muted-foreground">
-                  {t('dashboard.stats.pending_review')}
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.proposalsReceived}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  à examiner
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.stats.favorite_pros')}</CardTitle>
-                <Heart className="h-4 w-4 text-primary" />
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Favoris</CardTitle>
+                <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.favoritesPros}</div>
-                <p className="text-xs text-muted-foreground">
-                  {t('dashboard.stats.in_shortlist')}
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">{stats.favoritesPros}</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  professionnels
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">{t('dashboard.stats.active_contracts')}</CardTitle>
-                <FileText className="h-4 w-4 text-primary" />
+            <Card className="overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Contrats</CardTitle>
+                <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">0</div>
-                <p className="text-xs text-muted-foreground">
-                  {t('dashboard.stats.in_progress')}
+              <CardContent className="p-3 sm:p-4 pt-0">
+                <div className="text-xl sm:text-2xl font-bold">0</div>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                  en cours
                 </p>
               </CardContent>
             </Card>
@@ -898,35 +898,35 @@ const Dashboard = () => {
             // Update URL without adding to history
             setSearchParams(value === 'overview' ? {} : { tab: value }, { replace: true });
           }} className="space-y-6">
-            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
-              <TabsList className="inline-flex w-max sm:w-full sm:grid sm:grid-cols-4 lg:grid-cols-7 min-w-full">
-                <TabsTrigger value="overview" className="flex-shrink-0">
-                  <LayoutDashboard className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('dashboard.tabs.overview')}</span>
+            <div className="overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
+              <TabsList className="inline-flex gap-1 w-max min-w-full h-auto p-1">
+                <TabsTrigger value="overview" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <LayoutDashboard className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Accueil</span>
                 </TabsTrigger>
-                <TabsTrigger value="projects" className="flex-shrink-0">
-                  <Briefcase className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('dashboard.tabs.projects')}</span>
+                <TabsTrigger value="projects" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <Briefcase className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Projets</span>
                 </TabsTrigger>
-                <TabsTrigger value="proposals" className="flex-shrink-0">
-                  <MessageSquare className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('dashboard.tabs.proposals')}</span>
+                <TabsTrigger value="proposals" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Offres</span>
                 </TabsTrigger>
-                <TabsTrigger value="contracts" className="flex-shrink-0">
-                  <FileText className="h-4 w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">{t('dashboard.tabs.contracts')}</span>
+                <TabsTrigger value="contracts" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <FileText className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Contrats</span>
                 </TabsTrigger>
-                <TabsTrigger value="invoices" className="flex-shrink-0 hidden lg:flex">
-                  <Receipt className="h-4 w-4 mr-2" />
-                  {t('dashboard.tabs.invoices')}
+                <TabsTrigger value="invoices" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <Receipt className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Factures</span>
                 </TabsTrigger>
-                <TabsTrigger value="activity" className="flex-shrink-0 hidden lg:flex">
-                  <Activity className="h-4 w-4 mr-2" />
-                  {t('dashboard.tabs.activity')}
+                <TabsTrigger value="activity" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <Activity className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Activité</span>
                 </TabsTrigger>
-                <TabsTrigger value="favorites" className="flex-shrink-0 hidden lg:flex">
-                  <Heart className="h-4 w-4 mr-2" />
-                  {t('dashboard.tabs.favorites')}
+                <TabsTrigger value="favorites" className="flex-shrink-0 px-3 py-2 gap-1.5">
+                  <Heart className="h-4 w-4" />
+                  <span className="text-xs sm:text-sm">Favoris</span>
                 </TabsTrigger>
               </TabsList>
             </div>
