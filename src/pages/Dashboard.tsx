@@ -825,20 +825,20 @@ const Dashboard = () => {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Navigation />
       
-      <div className="flex-1 pt-24 pb-12">
-        <div className="container mx-auto px-6 lg:px-8">
+      <div className="flex-1 pt-20 sm:pt-24 pb-8 sm:pb-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
               Bonjour, {profile?.full_name || 'Client'} 👋
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               {t('dashboard.subtitle')}
             </p>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">{t('dashboard.stats.active_projects')}</CardTitle>
@@ -898,39 +898,38 @@ const Dashboard = () => {
             // Update URL without adding to history
             setSearchParams(value === 'overview' ? {} : { tab: value }, { replace: true });
           }} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-7">
-              <TabsTrigger value="overview">
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('dashboard.tabs.overview')}</span>
-                <span className="sm:hidden">{t('dashboard.tabs.home')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="projects">
-                <Briefcase className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('dashboard.tabs.projects')}</span>
-                <span className="sm:hidden">{t('dashboard.tabs.projects')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="proposals">
-                <MessageSquare className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">{t('dashboard.tabs.proposals')}</span>
-                <span className="sm:hidden">{t('dashboard.tabs.offers')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="contracts" className="hidden lg:flex">
-                <FileText className="h-4 w-4 mr-2" />
-                {t('dashboard.tabs.contracts')}
-              </TabsTrigger>
-              <TabsTrigger value="invoices" className="hidden lg:flex">
-                <Receipt className="h-4 w-4 mr-2" />
-                {t('dashboard.tabs.invoices')}
-              </TabsTrigger>
-              <TabsTrigger value="activity" className="hidden lg:flex">
-                <Activity className="h-4 w-4 mr-2" />
-                {t('dashboard.tabs.activity')}
-              </TabsTrigger>
-              <TabsTrigger value="favorites" className="hidden lg:flex">
-                <Heart className="h-4 w-4 mr-2" />
-                {t('dashboard.tabs.favorites')}
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <TabsList className="inline-flex w-max sm:w-full sm:grid sm:grid-cols-4 lg:grid-cols-7 min-w-full">
+                <TabsTrigger value="overview" className="flex-shrink-0">
+                  <LayoutDashboard className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.tabs.overview')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="projects" className="flex-shrink-0">
+                  <Briefcase className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.tabs.projects')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="proposals" className="flex-shrink-0">
+                  <MessageSquare className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.tabs.proposals')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="contracts" className="flex-shrink-0">
+                  <FileText className="h-4 w-4 sm:mr-2" />
+                  <span className="hidden sm:inline">{t('dashboard.tabs.contracts')}</span>
+                </TabsTrigger>
+                <TabsTrigger value="invoices" className="flex-shrink-0 hidden lg:flex">
+                  <Receipt className="h-4 w-4 mr-2" />
+                  {t('dashboard.tabs.invoices')}
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="flex-shrink-0 hidden lg:flex">
+                  <Activity className="h-4 w-4 mr-2" />
+                  {t('dashboard.tabs.activity')}
+                </TabsTrigger>
+                <TabsTrigger value="favorites" className="flex-shrink-0 hidden lg:flex">
+                  <Heart className="h-4 w-4 mr-2" />
+                  {t('dashboard.tabs.favorites')}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Overview Tab */}
             <TabsContent value="overview" className="space-y-6">
