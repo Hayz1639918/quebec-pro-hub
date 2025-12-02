@@ -5,6 +5,41 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate environment variables
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const errorMessage = `
+    ⚠️ Configuration Supabase manquante!
+    
+    Les variables d'environnement suivantes sont requises:
+    - VITE_SUPABASE_URL
+    - VITE_SUPABASE_PUBLISHABLE_KEY
+    
+    👉 Sur Vercel: Settings → Environment Variables
+    👉 En local: créez un fichier .env.local
+  `;
+  console.error(errorMessage);
+  
+  // In production, show a user-friendly error
+  if (import.meta.env.PROD) {
+    document.body.innerHTML = `
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: system-ui, sans-serif; background: #f8fafc;">
+        <div style="text-align: center; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px;">
+          <h1 style="color: #ef4444; margin-bottom: 1rem;">⚠️ Erreur de Configuration</h1>
+          <p style="color: #64748b; margin-bottom: 1rem;">
+            L'application n'est pas correctement configurée.
+            <br/>Veuillez contacter l'administrateur.
+          </p>
+          <p style="color: #94a3b8; font-size: 0.875rem;">
+            Code: ENV_MISSING
+          </p>
+        </div>
+      </div>
+    `;
+  }
+  
+  throw new Error('Missing Supabase environment variables');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
