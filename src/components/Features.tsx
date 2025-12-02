@@ -38,31 +38,32 @@ const Features = () => {
       description: t('features.list.multilingual.description'),
     },
   ];
+
   return (
-    <section className="py-24 bg-gradient-subtle">
-      <div className="container mx-auto px-6 lg:px-8">
+    <section className="py-12 sm:py-16 lg:py-24 bg-gradient-subtle">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="mb-6">{t('features.title')}</h2>
-          <p className="text-xl text-muted-foreground">
+        <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-16">
+          <h2 className="mb-4 sm:mb-6">{t('features.title')}</h2>
+          <p className="text-base sm:text-lg lg:text-xl text-muted-foreground">
             {t('features.subtitle')}
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-card border border-border rounded-2xl p-8 shadow-soft hover:shadow-medium transition-all duration-300"
+              className="bg-card border border-border rounded-xl sm:rounded-2xl p-5 sm:p-6 lg:p-8 shadow-soft hover:shadow-medium transition-all duration-300"
             >
-              <div className="mb-6">
-                <div className="inline-flex p-4 rounded-xl bg-primary/10">
-                  <feature.icon className="h-7 w-7 text-primary" />
+              <div className="mb-4 sm:mb-6">
+                <div className="inline-flex p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/10">
+                  <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-primary" />
                 </div>
               </div>
-              <h3 className="mb-4 text-xl">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">
+              <h3 className="mb-2 sm:mb-4 text-lg sm:text-xl font-semibold">{feature.title}</h3>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                 {feature.description}
               </p>
             </div>
@@ -70,33 +71,37 @@ const Features = () => {
         </div>
 
         {/* Image Showcase */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="relative rounded-2xl overflow-hidden shadow-large group">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group">
             <img
               src={contractorImage}
               alt="Professional contractor reviewing construction plans"
-              className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-[250px] sm:h-[300px] lg:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-8">
+            <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-4 sm:p-6 lg:p-8">
               <div className="text-background">
-                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">{t('features.for_contractors.title')}</h3>
-                <p className="text-primary-foreground/90">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 text-primary-foreground">
+                  {t('features.for_contractors.title')}
+                </h3>
+                <p className="text-sm sm:text-base text-primary-foreground/90">
                   {t('features.for_contractors.description')}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="relative rounded-2xl overflow-hidden shadow-large group">
+          <div className="relative rounded-xl sm:rounded-2xl overflow-hidden shadow-large group">
             <img
               src={clientImage}
               alt="Satisfied client with contractor after successful project"
-              className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+              className="w-full h-[250px] sm:h-[300px] lg:h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-8">
+            <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent flex items-end p-4 sm:p-6 lg:p-8">
               <div className="text-background">
-                <h3 className="text-2xl font-bold mb-2 text-primary-foreground">{t('features.for_clients.title')}</h3>
-                <p className="text-primary-foreground/90">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 text-primary-foreground">
+                  {t('features.for_clients.title')}
+                </h3>
+                <p className="text-sm sm:text-base text-primary-foreground/90">
                   {t('features.for_clients.description')}
                 </p>
               </div>
