@@ -115,17 +115,29 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
   }
 
   html {
     @apply scroll-smooth;
     -webkit-tap-highlight-color: transparent;
+    /* Fix pour iOS Safari viewport */
+    height: 100%;
+    height: -webkit-fill-available;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow-x: hidden;
+    /* Support pour les nouvelles unités viewport */
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height - meilleur pour mobile */
+    /* Safe area pour les appareils avec notch (iPhone X+) */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -133,25 +145,27 @@ All colors MUST be HSL.
   }
 
   h1 {
-    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl;
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl;
   }
 
   h2 {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
+    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl;
   }
 
   h3 {
-    @apply text-xl sm:text-2xl md:text-3xl;
+    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
   }
 
   h4 {
-    @apply text-lg sm:text-xl md:text-2xl;
+    @apply text-base sm:text-lg md:text-xl lg:text-2xl;
   }
 
   /* Prevent horizontal scroll on mobile */
   #root {
     overflow-x: hidden;
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
@@ -186,6 +200,85 @@ All colors MUST be HSL.
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Thin scrollbar for mobile tabs */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 2px;
+}
+
+/* Modern viewport height utilities */
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.h-screen-safe {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Small viewport height - minimum when keyboard is open */
+.min-h-screen-svh {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
+/* Large viewport height - maximum without UI */
+.min-h-screen-lvh {
+  min-height: 100vh;
+  min-height: 100lvh;
+}
+
+/* Touch-friendly tap targets (minimum 44x44px recommended by Apple) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent text size adjustment on orientation change (iOS) */
+.text-size-adjust-none {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Momentum scrolling for iOS */
+.scroll-momentum {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area padding utilities */
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pl-safe {
+  padding-left: env(safe-area-inset-left);
+}
+.pr-safe {
+  padding-right: env(safe-area-inset-right);
+}
+.px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+.py-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Ensure images don't overflow */

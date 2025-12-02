@@ -9,25 +9,25 @@ const Hero = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="relative min-h-screen flex items-center pt-16 sm:pt-20 overflow-hidden">
+    <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex items-center pt-20 sm:pt-24 pb-8 overflow-hidden">
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 xl:gap-20 items-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-16">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-20 items-center">
           {/* Left Content */}
-          <div className="space-y-6 sm:space-y-8 animate-fade-in order-2 lg:order-1">
+          <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in order-2 lg:order-1">
             <div className="inline-block">
-              <span className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold">
+              <span className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold">
                 {t('hero.badge')}
               </span>
             </div>
             
-            <h1 className="leading-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">
+            <h1 className="leading-tight text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">
               {t('hero.title')}
             </h1>
             
-            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
+            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground leading-relaxed max-w-xl">
               {t('hero.subtitle')}
             </p>
 
@@ -69,31 +69,31 @@ const Hero = () => {
             </div>
 
             {/* Social Proof - Responsive */}
-            <div className="grid grid-cols-3 gap-4 sm:flex sm:items-center sm:gap-6 lg:gap-8 pt-4 sm:pt-6 border-t border-border">
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-6 lg:gap-8 pt-3 sm:pt-6 border-t border-border">
               <div className="text-center sm:text-left">
-                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">2,500+</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.professionals')}</div>
+                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">2,500+</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.professionals')}</div>
               </div>
-              <div className="hidden sm:block h-12 w-px bg-border" />
+              <div className="hidden sm:block h-10 lg:h-12 w-px bg-border" />
               <div className="text-center sm:text-left">
-                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">15,000+</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.projects')}</div>
+                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">15,000+</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.projects')}</div>
               </div>
-              <div className="hidden sm:block h-12 w-px bg-border" />
+              <div className="hidden sm:block h-10 lg:h-12 w-px bg-border" />
               <div className="text-center sm:text-left">
-                <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">4.8/5</div>
-                <div className="text-xs sm:text-sm text-muted-foreground">{t('hero.stats.satisfaction')}</div>
+                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">4.8/5</div>
+                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.satisfaction')}</div>
               </div>
             </div>
           </div>
 
           {/* Right Image */}
-          <div className="relative aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-[500px] xl:h-[600px] order-1 lg:order-2 w-full">
-            <div className="absolute inset-0 bg-gradient-hero opacity-10 rounded-2xl sm:rounded-3xl blur-3xl" />
+          <div className="relative aspect-[16/10] sm:aspect-[4/3] md:aspect-[16/10] lg:aspect-auto lg:h-[450px] xl:h-[550px] order-1 lg:order-2 w-full max-h-[35vh] sm:max-h-[40vh] lg:max-h-none">
+            <div className="absolute inset-0 bg-gradient-hero opacity-10 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-3xl" />
             <img
               src={heroImage}
               alt="Professional construction team collaborating on a project"
-              className="relative rounded-2xl sm:rounded-3xl shadow-large object-cover w-full h-full"
+              className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-large object-cover w-full h-full"
             />
           </div>
         </div>

@@ -323,28 +323,28 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4 py-8 sm:py-4">
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardHeader className="space-y-3 sm:space-y-4 text-center px-4 sm:px-6">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3 sm:p-4 py-6 sm:py-8 pt-safe pb-safe">
+      <Card className="w-full max-w-2xl mx-auto shadow-lg">
+        <CardHeader className="space-y-2 sm:space-y-3 md:space-y-4 text-center px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <div className="flex justify-center">
             <img 
               src={logo} 
               alt="BâtirNet Logo" 
-              className="h-12 w-12 sm:h-16 sm:w-16 rounded-lg object-cover"
+              className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 rounded-lg object-cover"
             />
           </div>
           <div>
-            <CardTitle className="text-xl sm:text-2xl">
+            <CardTitle className="text-lg sm:text-xl md:text-2xl">
               {isLogin ? t('auth.login.title') : t('auth.signup.title')}
             </CardTitle>
-            <CardDescription className="text-sm">
+            <CardDescription className="text-xs sm:text-sm">
               {isLogin 
                 ? t('auth.subtitle_login')
                 : t('auth.subtitle_signup')}
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 px-4 sm:px-6">
+        <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
           {!isLogin && (
           <Button
             variant="outline"

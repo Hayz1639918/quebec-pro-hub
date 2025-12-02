@@ -136,20 +136,22 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20">
-          {/* Logo */}
-          <div 
-            className="flex items-center gap-2 flex-shrink-0 cursor-pointer" 
-            onClick={() => navigateTo("/")}
-          >
-            <img 
-              src={logo} 
-              alt="BâtirNet" 
-              className="h-12 sm:h-16 lg:h-20 w-auto object-contain"
-            />
-          </div>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border supports-[backdrop-filter]:bg-background/80">
+      {/* Safe area top padding for notch devices */}
+      <div className="pt-safe">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+            {/* Logo */}
+            <div 
+              className="flex items-center gap-2 flex-shrink-0 cursor-pointer touch-target" 
+              onClick={() => navigateTo("/")}
+            >
+              <img 
+                src={logo} 
+                alt="BâtirNet" 
+                className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain"
+              />
+            </div>
 
           {/* Desktop Navigation Links */}
           <div className="hidden md:flex items-center gap-6 lg:gap-8">
@@ -266,19 +268,19 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden items-center gap-1.5 sm:gap-2">
             {user && (
               <div className="relative">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="rounded-full h-9 w-9"
+                  className="rounded-full h-10 w-10 touch-target"
                   onClick={() => navigate("/notifications")}
                 >
                   <Bell className={`h-5 w-5 ${unreadNotifications > 0 ? 'text-destructive' : ''}`} />
                 </Button>
                 {unreadNotifications > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-destructive rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
                     <span className="text-[9px] font-bold text-white">
                       {unreadNotifications > 99 ? '99+' : unreadNotifications}
                     </span>
@@ -289,55 +291,55 @@ const Navigation = () => {
             
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Button variant="ghost" size="icon" className="h-10 w-10 touch-target">
                   <Menu className="h-6 w-6" />
                   <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[350px] p-0">
+              <SheetContent side="right" className="w-[280px] sm:w-[320px] md:w-[350px] p-0 pt-safe">
                 <SheetHeader className="p-4 border-b">
                   <SheetTitle className="flex items-center gap-2">
                     <img src={logo} alt="BâtirNet" className="h-10 w-auto" />
                   </SheetTitle>
                 </SheetHeader>
                 
-                <div className="flex flex-col h-[calc(100%-65px)]">
+                <div className="flex flex-col h-[calc(100%-60px)] overflow-hidden">
                   {/* Main Navigation */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                  <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1.5 sm:space-y-2 scroll-momentum">
                     <button
                       onClick={() => navigateTo("/professionals")}
-                      className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                      className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                     >
-                      <Building2 className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{t('navigation.professionals')}</span>
+                      <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base">{t('navigation.professionals')}</span>
                     </button>
                     <button
                       onClick={() => navigateTo("/projects")}
-                      className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                      className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                     >
-                      <Briefcase className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{t('navigation.projects')}</span>
+                      <Briefcase className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="font-medium text-sm sm:text-base">{t('navigation.projects')}</span>
                     </button>
 
                     {user && (
                       <>
-                        <div className="h-px bg-border my-4" />
+                        <div className="h-px bg-border my-3 sm:my-4" />
                         
                         {profile?.user_type === 'client' && (
                           <>
                             <button
                               onClick={() => navigateTo("/dashboard")}
-                              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                             >
-                              <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
-                              <span>{t('navigation.dashboard')}</span>
+                              <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm sm:text-base">{t('navigation.dashboard')}</span>
                             </button>
                             <button
                               onClick={() => navigateTo("/dashboard/profile")}
-                              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                             >
-                              <User className="h-5 w-5 text-muted-foreground" />
-                              <span>Mon profil</span>
+                              <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm sm:text-base">Mon profil</span>
                             </button>
                           </>
                         )}
@@ -346,36 +348,36 @@ const Navigation = () => {
                           <>
                             <button
                               onClick={() => navigateTo("/pro/dashboard")}
-                              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                             >
-                              <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
-                              <span>Dashboard Pro</span>
+                              <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm sm:text-base">Dashboard Pro</span>
                             </button>
                             <button
                               onClick={() => navigateTo("/pro/profile")}
-                              className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                             >
-                              <User className="h-5 w-5 text-muted-foreground" />
-                              <span>Mon profil</span>
+                              <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                              <span className="text-sm sm:text-base">Mon profil</span>
                             </button>
                           </>
                         )}
                         
                         <button
                           onClick={() => navigateTo("/messages")}
-                          className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                          className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                         >
-                          <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                          <span>{t('navigation.messages')}</span>
+                          <MessageSquare className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                          <span className="text-sm sm:text-base">{t('navigation.messages')}</span>
                         </button>
                         
                         {profile?.user_type === 'professional' && (
                           <button
                             onClick={() => navigateTo("/contracts")}
-                            className="flex items-center gap-3 w-full p-3 rounded-lg hover:bg-muted transition-colors text-left"
+                            className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
                           >
-                            <FileText className="h-5 w-5 text-muted-foreground" />
-                            <span>{t('navigation.contracts')}</span>
+                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm sm:text-base">{t('navigation.contracts')}</span>
                           </button>
                         )}
                       </>
@@ -383,23 +385,23 @@ const Navigation = () => {
                   </div>
 
                   {/* Bottom Section */}
-                  <div className="border-t p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Langue</span>
+                  <div className="border-t p-3 sm:p-4 space-y-2.5 sm:space-y-3 pb-safe flex-shrink-0">
+                    <div className="flex items-center justify-between min-h-[44px]">
+                      <span className="text-xs sm:text-sm text-muted-foreground">Langue</span>
                       <LanguageSwitcher />
                     </div>
                     
                     {user ? (
                       <div className="space-y-2">
-                        <div className="p-3 bg-muted rounded-lg">
-                          <div className="font-medium text-sm">{profile?.full_name || user.email}</div>
-                          <div className="text-xs text-muted-foreground">
+                        <div className="p-2.5 sm:p-3 bg-muted rounded-lg">
+                          <div className="font-medium text-xs sm:text-sm truncate">{profile?.full_name || user.email}</div>
+                          <div className="text-[10px] sm:text-xs text-muted-foreground">
                             {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
                           </div>
                         </div>
                         <Button 
                           variant="outline" 
-                          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="w-full min-h-[44px] text-red-600 hover:text-red-700 hover:bg-red-50 active:bg-red-100 text-sm sm:text-base"
                           onClick={handleLogout}
                         >
                           <LogOut className="mr-2 h-4 w-4" />
@@ -409,14 +411,14 @@ const Navigation = () => {
                     ) : (
                       <div className="space-y-2">
                         <Button 
-                          className="w-full" 
+                          className="w-full min-h-[44px] text-sm sm:text-base" 
                           onClick={() => navigateTo("/auth?mode=signup")}
                         >
                           {t('navigation.signup')}
                         </Button>
                         <Button 
                           variant="outline" 
-                          className="w-full"
+                          className="w-full min-h-[44px] text-sm sm:text-base"
                           onClick={() => navigateTo("/auth?mode=login")}
                         >
                           {t('navigation.login')}
@@ -428,6 +430,7 @@ const Navigation = () => {
               </SheetContent>
             </Sheet>
           </div>
+        </div>
         </div>
       </div>
     </nav>

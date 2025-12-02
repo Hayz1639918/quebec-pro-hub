@@ -822,70 +822,70 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Navigation />
       
-      <div className="flex-1 pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-8 md:pb-12">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           {/* Header */}
-          <div className="mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">
+          <div className="mb-4 sm:mb-6 md:mb-8">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
               Bonjour, {profile?.full_name || 'Client'} 👋
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
               {t('dashboard.subtitle')}
             </p>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-4 sm:mb-6 md:mb-8">
             <Card className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Projets actifs</CardTitle>
-                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+              <CardHeader className="flex flex-row items-center justify-between p-2.5 sm:p-3 md:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate pr-1 sm:pr-2">Projets actifs</CardTitle>
+                <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-xl sm:text-2xl font-bold">{stats.activeProjects}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.activeProjects}</div>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   sur {stats.totalProjects} total
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Propositions</CardTitle>
-                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+              <CardHeader className="flex flex-row items-center justify-between p-2.5 sm:p-3 md:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate pr-1 sm:pr-2">Propositions</CardTitle>
+                <MessageSquare className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-xl sm:text-2xl font-bold">{stats.proposalsReceived}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.proposalsReceived}</div>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   à examiner
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Favoris</CardTitle>
-                <Heart className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+              <CardHeader className="flex flex-row items-center justify-between p-2.5 sm:p-3 md:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate pr-1 sm:pr-2">Favoris</CardTitle>
+                <Heart className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-xl sm:text-2xl font-bold">{stats.favoritesPros}</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{stats.favoritesPros}</div>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   professionnels
                 </p>
               </CardContent>
             </Card>
 
             <Card className="overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between p-3 sm:p-4 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium truncate pr-2">Contrats</CardTitle>
-                <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+              <CardHeader className="flex flex-row items-center justify-between p-2.5 sm:p-3 md:p-4 pb-1 sm:pb-2">
+                <CardTitle className="text-[11px] sm:text-xs md:text-sm font-medium truncate pr-1 sm:pr-2">Contrats</CardTitle>
+                <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                <div className="text-xl sm:text-2xl font-bold">0</div>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">0</div>
+                <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   en cours
                 </p>
               </CardContent>
@@ -897,38 +897,50 @@ const Dashboard = () => {
             setActiveTab(value);
             // Update URL without adding to history
             setSearchParams(value === 'overview' ? {} : { tab: value }, { replace: true });
-          }} className="space-y-6">
-            <div className="overflow-x-auto -mx-4 px-4 pb-2 scrollbar-hide">
-              <TabsList className="inline-flex gap-1 w-max min-w-full h-auto p-1">
-                <TabsTrigger value="overview" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Accueil</span>
-                </TabsTrigger>
-                <TabsTrigger value="projects" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <Briefcase className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Projets</span>
-                </TabsTrigger>
-                <TabsTrigger value="proposals" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <MessageSquare className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Offres</span>
-                </TabsTrigger>
-                <TabsTrigger value="contracts" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <FileText className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Contrats</span>
-                </TabsTrigger>
-                <TabsTrigger value="invoices" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <Receipt className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Factures</span>
-                </TabsTrigger>
-                <TabsTrigger value="activity" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <Activity className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Activité</span>
-                </TabsTrigger>
-                <TabsTrigger value="favorites" className="flex-shrink-0 px-3 py-2 gap-1.5">
-                  <Heart className="h-4 w-4" />
-                  <span className="text-xs sm:text-sm">Favoris</span>
-                </TabsTrigger>
-              </TabsList>
+          }} className="space-y-4 sm:space-y-6">
+            {/* Mobile-friendly scrollable tabs container */}
+            <div className="relative -mx-4 sm:mx-0">
+              <div 
+                className="overflow-x-auto px-4 sm:px-0 pb-2 scroll-momentum scrollbar-thin"
+                style={{ 
+                  WebkitOverflowScrolling: 'touch',
+                  scrollbarWidth: 'thin'
+                }}
+              >
+                <TabsList className="inline-flex w-max min-w-full sm:w-full sm:min-w-0 h-auto p-1 sm:p-1.5 gap-0.5 sm:gap-1">
+                  <TabsTrigger value="overview" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <LayoutDashboard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Accueil</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="projects" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <Briefcase className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Projets</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="proposals" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Offres</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="contracts" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Contrats</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="invoices" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Factures</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="activity" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Activité</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="favorites" className="flex-shrink-0 min-w-fit px-2.5 sm:px-3 py-2 sm:py-2.5 gap-1 sm:gap-1.5 touch-target">
+                    <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <span className="text-[11px] sm:text-xs md:text-sm whitespace-nowrap">Favoris</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              {/* Fade gradient indicators for scroll */}
+              <div className="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-background to-transparent pointer-events-none sm:hidden" />
+              <div className="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-background to-transparent pointer-events-none sm:hidden" />
             </div>
 
             {/* Overview Tab */}

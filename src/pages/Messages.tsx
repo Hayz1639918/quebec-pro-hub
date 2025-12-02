@@ -117,24 +117,24 @@ const Messages = () => {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen pt-20 sm:pt-24 pb-4 sm:pb-12">
-        <div className="container mx-auto px-4 sm:p-6 max-w-7xl">
+      <div className="min-h-screen min-h-[100dvh] pt-16 sm:pt-20 md:pt-24 pb-2 sm:pb-4 md:pb-12">
+        <div className="container mx-auto px-2 sm:px-4 md:p-6 max-w-7xl">
           {/* Header - Hide on mobile when showing chat */}
-          <div className={`mb-4 sm:mb-6 ${showChat ? 'hidden lg:block' : ''}`}>
-            <h1 className="text-2xl sm:text-3xl font-bold">{t('messaging.title')}</h1>
+          <div className={`mb-3 sm:mb-4 md:mb-6 ${showChat ? 'hidden lg:block' : ''}`}>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">{t('messaging.title')}</h1>
           </div>
 
           {/* Mobile back button when in chat view */}
           {showChat && (
-            <div className="lg:hidden mb-4">
-              <Button variant="ghost" size="sm" onClick={handleBackToList} className="gap-2">
+            <div className="lg:hidden mb-2 sm:mb-4">
+              <Button variant="ghost" size="sm" onClick={handleBackToList} className="gap-1.5 sm:gap-2 min-h-[44px] touch-target text-sm">
                 <ArrowLeft className="h-4 w-4" />
-                Retour aux conversations
+                <span>Retour</span>
               </Button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 h-[calc(100vh-180px)] sm:h-[calc(100vh-200px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6 h-[calc(100dvh-130px)] sm:h-[calc(100dvh-160px)] md:h-[calc(100vh-200px)]">
             {/* Conversations List - Hide on mobile when chat is shown */}
             <Card className={`col-span-1 overflow-hidden ${showChat ? 'hidden lg:block' : ''}`}>
               <MessagesList

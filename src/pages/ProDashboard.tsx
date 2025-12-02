@@ -333,69 +333,69 @@ const ProDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col">
       <Navigation />
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12 flex-1">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Dashboard Professionnel</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">Dashboard Professionnel</h1>
+          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
             {t('pro_dashboard.subtitle')}
           </p>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:p-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.active_projects')}</p>
-                  <p className="text-3xl font-bold">{stats.activeProjects}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">{t('pro_dashboard.stats.active_projects')}</p>
+                  <p className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.activeProjects}</p>
                 </div>
-                <Briefcase className="h-8 w-8 text-primary" />
+                <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-primary flex-shrink-0 ml-2" />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:p-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.acceptance_rate')}</p>
-                  <p className="text-3xl font-bold">{stats.acceptanceRate}%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">{t('pro_dashboard.stats.acceptance_rate')}</p>
+                  <p className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.acceptanceRate}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-success" />
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-success flex-shrink-0 ml-2" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-1 sm:mt-2 truncate">
                 {stats.proposalsAccepted}/{stats.proposalsSent} propositions
               </p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:p-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.avg_rating')}</p>
-                  <p className="text-3xl font-bold">{stats.averageRating.toFixed(1)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">{t('pro_dashboard.stats.avg_rating')}</p>
+                  <p className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.averageRating.toFixed(1)}</p>
                 </div>
-                <Star className="h-8 w-8 text-warning" />
+                <Star className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-warning flex-shrink-0 ml-2" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">{stats.totalReviews} avis</p>
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-1 sm:mt-2">{stats.totalReviews} avis</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-3 sm:p-4 md:pt-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('pro_dashboard.stats.unread_messages')}</p>
-                  <p className="text-3xl font-bold">{stats.unreadMessages}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">{t('pro_dashboard.stats.unread_messages')}</p>
+                  <p className="text-lg sm:text-2xl md:text-3xl font-bold">{stats.unreadMessages}</p>
                 </div>
-                <MessageSquare className="h-8 w-8 text-primary" />
+                <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-primary flex-shrink-0 ml-2" />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground mt-1 sm:mt-2 truncate">
                 {stats.pendingContracts} contrats en attente
               </p>
             </CardContent>
@@ -462,83 +462,83 @@ const ProDashboard = () => {
         )}
 
         {/* Quick Actions */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>{t('pro_dashboard.quick_actions.title')}</CardTitle>
-            <CardDescription>{t('pro_dashboard.quick_actions.description')}</CardDescription>
+        <Card className="mb-4 sm:mb-6 md:mb-8">
+          <CardHeader className="p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-base sm:text-lg md:text-xl">{t('pro_dashboard.quick_actions.title')}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">{t('pro_dashboard.quick_actions.description')}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-3 md:mb-4">
               <Button
                 variant="default"
-                className="h-auto py-4 flex-col gap-2 bg-primary hover:bg-primary/90"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 bg-primary hover:bg-primary/90 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate('/pro/my-projects')}
               >
-                <Hammer className="h-6 w-6" />
-                <span>{t('pro_dashboard.quick_actions.my_projects')}</span>
+                <Hammer className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.my_projects')}</span>
                 {assignedProjects.length > 0 && (
-                  <Badge variant="secondary" className="bg-white text-primary">
+                  <Badge variant="secondary" className="bg-white text-primary text-[10px] sm:text-xs">
                     {assignedProjects.length}
                   </Badge>
                 )}
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2 border-primary text-primary hover:bg-primary/5"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 border-primary text-primary hover:bg-primary/5 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate(`/professional/${userId}`)}
               >
-                <User className="h-6 w-6" />
-                <span>Visualiser mon profil</span>
+                <User className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">Visualiser mon profil</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
                 onClick={() => navigate('/projects')}
               >
-                <Eye className="h-6 w-6" />
-                <span>{t('pro_dashboard.quick_actions.browse_projects')}</span>
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.browse_projects')}</span>
               </Button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate('/messages')}
               >
-                <MessageSquare className="h-6 w-6" />
-                <span>{t('pro_dashboard.quick_actions.messaging')}</span>
+                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.messaging')}</span>
                 {stats.unreadMessages > 0 && (
-                  <Badge variant="destructive" className="text-xs">
+                  <Badge variant="destructive" className="text-[10px] sm:text-xs">
                     {stats.unreadMessages}
                   </Badge>
                 )}
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate('/contracts')}
               >
-                <FileText className="h-6 w-6" />
-                <span>{t('pro_dashboard.quick_actions.my_contracts')}</span>
+                <FileText className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.my_contracts')}</span>
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex-col gap-2"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
                 onClick={() => navigate('/pro/portfolio')}
               >
-                <Briefcase className="h-6 w-6" />
-                <span>Mon portfolio</span>
+                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">Mon portfolio</span>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           {/* Recent Projects */}
           <Card>
-            <CardHeader>
-              <CardTitle>{t('pro_dashboard.new_projects.title')}</CardTitle>
-              <CardDescription>{t('pro_dashboard.new_projects.description')}</CardDescription>
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-base sm:text-lg md:text-xl">{t('pro_dashboard.new_projects.title')}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">{t('pro_dashboard.new_projects.description')}</CardDescription>
             </CardHeader>
             <CardContent>
               {recentProjects.length === 0 ? (
@@ -656,38 +656,38 @@ const ProDashboard = () => {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/subscription')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-semibold">Améliorer mon abonnement</p>
-                  <p className="text-xs text-muted-foreground">Boostez votre visibilité</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
+          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/subscription')}>
+            <CardContent className="p-3 sm:p-4 md:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm sm:text-base truncate">Améliorer mon abonnement</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Boostez votre visibilité</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/reviews')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Star className="h-8 w-8 text-warning" />
-                <div>
-                  <p className="font-semibold">Mes évaluations</p>
-                  <p className="text-xs text-muted-foreground">Gérer ma réputation</p>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/reviews')}>
+            <CardContent className="p-3 sm:p-4 md:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Star className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-warning flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm sm:text-base truncate">Mes évaluations</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer ma réputation</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/subcontractors')}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Users className="h-8 w-8 text-primary" />
-                <div>
-                  <p className="font-semibold">Mes sous-traitants</p>
-                  <p className="text-xs text-muted-foreground">Gérer mon équipe</p>
+          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/subcontractors')}>
+            <CardContent className="p-3 sm:p-4 md:pt-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm sm:text-base truncate">Mes sous-traitants</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer mon équipe</p>
                 </div>
               </div>
             </CardContent>
