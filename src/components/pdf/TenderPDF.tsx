@@ -335,29 +335,6 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
           </View>
         </View>
 
-        {/* Description de l'immeuble / type de travaux */}
-        <View style={styles.subsectionHeader}>
-          <Text style={styles.subsectionHeaderText}>Description des travaux</Text>
-        </View>
-        <View style={styles.sectionContent}>
-          <View style={styles.checkboxRow}>
-            <View style={project.category === 'construction' ? styles.checkboxChecked : styles.checkbox} />
-            <Text style={styles.checkboxLabel}>Construction neuve</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={project.category === 'renovation' ? styles.checkboxChecked : styles.checkbox} />
-            <Text style={styles.checkboxLabel}>Rénovation</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={project.category === 'agrandissement' ? styles.checkboxChecked : styles.checkbox} />
-            <Text style={styles.checkboxLabel}>Agrandissement</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={project.category === 'autre' ? styles.checkboxChecked : styles.checkbox} />
-            <Text style={styles.checkboxLabel}>Autre : _______________</Text>
-          </View>
-        </View>
-
         {/* SECTION: BUDGET ET ÉCHÉANCIER */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionHeaderText}>BUDGET ET ÉCHÉANCIER</Text>

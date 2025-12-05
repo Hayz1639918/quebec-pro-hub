@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -31,6 +33,40 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { geocodePostalCode } from "@/lib/geolocation";
 
+// Types de travaux par catégorie
+const PROJECT_TYPES_BY_CATEGORY: Record<string, string[]> = {
+  "Rénovation résidentielle": ["Rénovation complète", "Rénovation partielle", "Mise aux normes", "Modernisation", "Autre"],
+  "Construction neuve": ["Maison unifamiliale", "Duplex/Triplex", "Condo", "Commercial", "Industriel", "Autre"],
+  "Toiture": ["Remplacement complet", "Réparation", "Inspection", "Entretien", "Autre"],
+  "Plomberie": ["Installation neuve", "Réparation", "Remplacement", "Débouchage", "Inspection", "Autre"],
+  "Électricité": ["Installation neuve", "Mise aux normes", "Réparation", "Ajout de prises/circuits", "Panneau électrique", "Autre"],
+  "Menuiserie": ["Armoires", "Portes/Fenêtres", "Escaliers", "Terrasse/Patio", "Finition intérieure", "Autre"],
+  "Maçonnerie": ["Construction", "Réparation", "Joints", "Cheminée", "Mur de soutènement", "Autre"],
+  "Peinture": ["Intérieur", "Extérieur", "Résidentiel", "Commercial", "Autre"],
+  "Isolation": ["Murs", "Toiture/Grenier", "Sous-sol", "Insonorisation", "Autre"],
+  "Aménagement paysager": ["Conception", "Plantation", "Pavé uni", "Clôture", "Irrigation", "Autre"],
+  "Cuisine et salle de bain": ["Rénovation complète", "Rénovation partielle", "Comptoirs", "Armoires", "Plomberie", "Autre"],
+  "Extension et agrandissement": ["Agrandissement latéral", "Ajout d'étage", "Sous-sol", "Garage", "Véranda/Solarium", "Autre"],
+};
+
+// Documents requis par défaut
+const DEFAULT_REQUIRED_DOCUMENTS = [
+  { id: "submission_form", label: "Formulaire de soumission dûment complété et signé", checked: true },
+  { id: "license_copy", label: "Copie de la licence RBQ valide", checked: true },
+  { id: "insurance_cert", label: "Certificats d'assurance en vigueur", checked: true },
+  { id: "detailed_quote", label: "Devis détaillé et échéancier proposé", checked: true },
+  { id: "references", label: "Minimum trois (3) références de projets similaires", checked: false },
+  { id: "subcontractors_list", label: "Liste des sous-traitants (si applicable)", checked: false },
+];
+
+// Critères d'évaluation par défaut
+const DEFAULT_EVALUATION_CRITERIA = [
+  { id: "price", label: "Prix proposé", weight: 40 },
+  { id: "experience", label: "Expérience et références", weight: 30 },
+  { id: "methodology", label: "Méthodologie et échéancier", weight: 20 },
+  { id: "guarantees", label: "Garanties et assurances", weight: 10 },
+];
+
 const NewProject = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -49,15 +85,6 @@ const NewProject = () => {
     t('professionals.filters.services.landscaping'),
     t('projects.filters.kitchen_bathroom'),
     t('projects.filters.extension'),
-  ];
-
-  const PROJECT_TYPES = [
-    "Construction neuve",
-    "Rénovation",
-    "Agrandissement",
-    "Réparation",
-    "Entretien",
-    "Autre",
   ];
 
   const REGIONS = [
@@ -105,6 +132,16 @@ const NewProject = () => {
   const [technicalSpecs, setTechnicalSpecs] = useState<string[]>([]);
   const [newSpec, setNewSpec] = useState("");
   
+  // Documents requis
+  const [requiredDocuments, setRequiredDocuments] = useState(DEFAULT_REQUIRED_DOCUMENTS);
+  
+  // Critères d'évaluation
+  const [evaluationCriteria, setEvaluationCriteria] = useState(DEFAULT_EVALUATION_CRITERIA);
+  
+  // Exigences d'assurance
+  const [insuranceLiability, setInsuranceLiability] = useState("");
+  const [insuranceProfessional, setInsuranceProfessional] = useState("");
+  
   // Fichiers
   const [files, setFiles] = useState<File[]>([]);
   
@@ -113,9 +150,17 @@ const NewProject = () => {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
 
+  // Types disponibles basés sur la catégorie
+  const availableProjectTypes = category ? (PROJECT_TYPES_BY_CATEGORY[category] || ["Autre"]) : [];
+
   useEffect(() => {
     checkUser();
   }, []);
+
+  // Reset project type when category changes
+  useEffect(() => {
+    setProjectType("");
+  }, [category]);
 
   // Auto-geocode when postal code changes
   useEffect(() => {
@@ -233,6 +278,18 @@ const NewProject = () => {
     setTechnicalSpecs(prev => prev.filter((_, i) => i !== index));
   };
 
+  const toggleRequiredDocument = (docId: string) => {
+    setRequiredDocuments(prev => 
+      prev.map(doc => doc.id === docId ? { ...doc, checked: !doc.checked } : doc)
+    );
+  };
+
+  const updateCriteriaWeight = (criteriaId: string, newWeight: number) => {
+    setEvaluationCriteria(prev => 
+      prev.map(c => c.id === criteriaId ? { ...c, weight: newWeight } : c)
+    );
+  };
+
   const uploadProjectImages = async (projectId: string): Promise<string[]> => {
     const uploadedUrls: string[] = [];
 
@@ -293,6 +350,17 @@ const NewProject = () => {
     setLoading(true);
 
     try {
+      // Préparer les critères d'évaluation
+      const evaluationCriteriaObj: Record<string, number> = {};
+      evaluationCriteria.forEach(c => {
+        evaluationCriteriaObj[c.label] = c.weight;
+      });
+
+      // Préparer les exigences d'assurance
+      const insuranceRequirements: Record<string, number> = {};
+      if (insuranceLiability) insuranceRequirements.liability = parseFloat(insuranceLiability);
+      if (insuranceProfessional) insuranceRequirements.professional = parseFloat(insuranceProfessional);
+
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
@@ -318,6 +386,10 @@ const NewProject = () => {
           work_description_detailed: workDescriptionDetailed || null,
           // Spécifications techniques
           technical_specifications: technicalSpecs.length > 0 ? technicalSpecs : null,
+          // Critères d'évaluation
+          evaluation_criteria: Object.keys(evaluationCriteriaObj).length > 0 ? evaluationCriteriaObj : null,
+          // Exigences d'assurance
+          insurance_requirements: Object.keys(insuranceRequirements).length > 0 ? insuranceRequirements : null,
           status: 'open',
         })
         .select()
@@ -397,6 +469,9 @@ const NewProject = () => {
     </div>
   );
 
+  // Calculer le total des critères
+  const totalCriteriaWeight = evaluationCriteria.reduce((sum, c) => sum + c.weight, 0);
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Navigation />
@@ -451,12 +526,16 @@ const NewProject = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="projectType">Type de travaux</Label>
-                    <Select value={projectType} onValueChange={setProjectType}>
+                    <Select 
+                      value={projectType} 
+                      onValueChange={setProjectType}
+                      disabled={!category}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez le type" />
+                        <SelectValue placeholder={category ? "Sélectionnez le type" : "Choisissez d'abord une catégorie"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {PROJECT_TYPES.map((type) => (
+                        {availableProjectTypes.map((type) => (
                           <SelectItem key={type} value={type}>
                             {type}
                           </SelectItem>
@@ -611,7 +690,7 @@ const NewProject = () => {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <DatePickerField
-                    label="Date limite de soumission *"
+                    label="Date limite de soumission"
                     value={submissionDeadline}
                     onChange={setSubmissionDeadline}
                     placeholder="Date limite pour les offres"
@@ -633,7 +712,99 @@ const NewProject = () => {
               </CardContent>
             </Card>
 
-            {/* SECTION 5: Détails avancés (Accordion) */}
+            {/* SECTION 5: Critères d'évaluation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>⚖️ Critères d'évaluation</CardTitle>
+                <CardDescription>
+                  Définissez l'importance de chaque critère pour évaluer les soumissions (total: {totalCriteriaWeight}%)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {evaluationCriteria.map((criteria) => (
+                  <div key={criteria.id} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>{criteria.label}</Label>
+                      <span className="text-sm font-medium text-primary">{criteria.weight}%</span>
+                    </div>
+                    <Slider
+                      value={[criteria.weight]}
+                      onValueChange={(value) => updateCriteriaWeight(criteria.id, value[0])}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+                {totalCriteriaWeight !== 100 && (
+                  <p className="text-sm text-amber-600">
+                    ⚠️ Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* SECTION 6: Documents requis */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📄 Documents requis</CardTitle>
+                <CardDescription>
+                  Sélectionnez les documents que les soumissionnaires doivent fournir
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {requiredDocuments.map((doc) => (
+                  <div key={doc.id} className="flex items-center space-x-3">
+                    <Checkbox 
+                      id={doc.id}
+                      checked={doc.checked}
+                      onCheckedChange={() => toggleRequiredDocument(doc.id)}
+                    />
+                    <Label htmlFor={doc.id} className="font-normal cursor-pointer">
+                      {doc.label}
+                    </Label>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* SECTION 7: Exigences d'assurance */}
+            <Card>
+              <CardHeader>
+                <CardTitle>🛡️ Exigences d'assurance</CardTitle>
+                <CardDescription>
+                  Définissez les montants minimums d'assurance requis (optionnel)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="insuranceLiability">Responsabilité civile ($)</Label>
+                    <Input
+                      id="insuranceLiability"
+                      type="number"
+                      placeholder="Ex: 2000000"
+                      value={insuranceLiability}
+                      onChange={(e) => setInsuranceLiability(e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="insuranceProfessional">Responsabilité professionnelle ($)</Label>
+                    <Input
+                      id="insuranceProfessional"
+                      type="number"
+                      placeholder="Ex: 1000000"
+                      value={insuranceProfessional}
+                      onChange={(e) => setInsuranceProfessional(e.target.value)}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* SECTION 8: Détails avancés (Accordion) */}
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="advanced" className="border rounded-lg">
                 <AccordionTrigger className="px-6 hover:no-underline">
@@ -702,7 +873,7 @@ const NewProject = () => {
               </AccordionItem>
             </Accordion>
 
-            {/* SECTION 6: Fichiers */}
+            {/* SECTION 9: Fichiers */}
             <Card>
               <CardHeader>
                 <CardTitle>📎 Documents et photos</CardTitle>
