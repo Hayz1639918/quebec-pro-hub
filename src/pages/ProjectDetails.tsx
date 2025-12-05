@@ -851,10 +851,10 @@ const ProjectDetails = () => {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => navigate('/messages')}
+                    onClick={() => navigate('/dashboard?tab=proposals')}
                   >
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Voir les propositions
+                    <FileText className="mr-2 h-4 w-4" />
+                    Voir les offres
                   </Button>
                   <Button 
                     variant="outline" 
