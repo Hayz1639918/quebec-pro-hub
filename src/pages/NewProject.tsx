@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -16,10 +17,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
-import {Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X, MapPin } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon, Upload, X, MapPin, Plus, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { geocodePostalCode } from "@/lib/geolocation";
@@ -44,6 +51,15 @@ const NewProject = () => {
     t('projects.filters.extension'),
   ];
 
+  const PROJECT_TYPES = [
+    "Construction neuve",
+    "Rénovation",
+    "Agrandissement",
+    "Réparation",
+    "Entretien",
+    "Autre",
+  ];
+
   const REGIONS = [
     t('professionals.filters.regions.montreal'),
     t('professionals.filters.regions.quebec'),
@@ -56,19 +72,40 @@ const NewProject = () => {
     t('professionals.filters.regions.terrebonne'),
     t('professionals.filters.regions.saint_jean'),
   ];
+
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   
-  // Form fields
+  // Informations de base
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [projectType, setProjectType] = useState("");
+  
+  // Budget
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
+  
+  // Localisation
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
   const [postalCode, setPostalCode] = useState("");
-  const [deadline, setDeadline] = useState<Date>();
+  
+  // Dates
+  const [projectStartDate, setProjectStartDate] = useState<Date>();
+  const [projectEndDate, setProjectEndDate] = useState<Date>();
+  const [submissionDeadline, setSubmissionDeadline] = useState<Date>();
+  const [siteVisitDate, setSiteVisitDate] = useState<Date>();
+  const [questionsDeadline, setQuestionsDeadline] = useState<Date>();
+  
+  // Description détaillée
+  const [workDescriptionDetailed, setWorkDescriptionDetailed] = useState("");
+  
+  // Spécifications techniques
+  const [technicalSpecs, setTechnicalSpecs] = useState<string[]>([]);
+  const [newSpec, setNewSpec] = useState("");
+  
+  // Fichiers
   const [files, setFiles] = useState<File[]>([]);
   
   // Geolocation
@@ -83,7 +120,7 @@ const NewProject = () => {
   // Auto-geocode when postal code changes
   useEffect(() => {
     const geocodeWithDelay = async () => {
-      if (postalCode.length >= 6) { // Canadian postal code without space
+      if (postalCode.length >= 6) {
         setGeocoding(true);
         try {
           const coords = await geocodePostalCode(postalCode);
@@ -111,7 +148,6 @@ const NewProject = () => {
       }
     };
 
-    // Debounce geocoding (wait 500ms after user stops typing)
     const timer = setTimeout(() => {
       geocodeWithDelay();
     }, 500);
@@ -132,7 +168,6 @@ const NewProject = () => {
       return;
     }
 
-    // Check if user is a client
     const { data: profile } = await supabase
       .from('profiles')
       .select('user_type')
@@ -155,10 +190,9 @@ const NewProject = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     
-    // Validate file types and sizes
     const validFiles = selectedFiles.filter(file => {
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       
       if (!validTypes.includes(file.type)) {
         toast({
@@ -181,11 +215,22 @@ const NewProject = () => {
       return true;
     });
 
-    setFiles(prev => [...prev, ...validFiles].slice(0, 5)); // Max 5 files
+    setFiles(prev => [...prev, ...validFiles].slice(0, 5));
   };
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addTechnicalSpec = () => {
+    if (newSpec.trim()) {
+      setTechnicalSpecs(prev => [...prev, newSpec.trim()]);
+      setNewSpec("");
+    }
+  };
+
+  const removeTechnicalSpec = (index: number) => {
+    setTechnicalSpecs(prev => prev.filter((_, i) => i !== index));
   };
 
   const uploadProjectImages = async (projectId: string): Promise<string[]> => {
@@ -227,7 +272,6 @@ const NewProject = () => {
       return;
     }
 
-    // Validation
     if (!title || !description || !category) {
       toast({
         variant: "destructive",
@@ -249,7 +293,6 @@ const NewProject = () => {
     setLoading(true);
 
     try {
-      // Create project
       const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert({
@@ -257,26 +300,34 @@ const NewProject = () => {
           title,
           description,
           category,
+          project_type: projectType || null,
           budget_min: budgetMin ? parseFloat(budgetMin) : null,
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
           city: city || null,
           region: region || null,
           postal_code: postalCode || null,
-          deadline: deadline ? format(deadline, 'yyyy-MM-dd') : null,
-          status: 'open',
           latitude: latitude,
           longitude: longitude,
+          // Dates
+          project_start_date: projectStartDate ? format(projectStartDate, 'yyyy-MM-dd') : null,
+          project_end_date: projectEndDate ? format(projectEndDate, 'yyyy-MM-dd') : null,
+          submission_deadline: submissionDeadline ? submissionDeadline.toISOString() : null,
+          site_visit_date: siteVisitDate ? siteVisitDate.toISOString() : null,
+          questions_deadline: questionsDeadline ? questionsDeadline.toISOString() : null,
+          // Description détaillée
+          work_description_detailed: workDescriptionDetailed || null,
+          // Spécifications techniques
+          technical_specifications: technicalSpecs.length > 0 ? technicalSpecs : null,
+          status: 'open',
         })
         .select()
         .single();
 
       if (projectError) throw projectError;
 
-      // Upload images if any
       if (files.length > 0 && project) {
         const imageUrls = await uploadProjectImages(project.id);
         
-        // Save image references
         for (let i = 0; i < imageUrls.length; i++) {
           await supabase
             .from('project_images')
@@ -307,12 +358,51 @@ const NewProject = () => {
     }
   };
 
+  // Helper component for date picker
+  const DatePickerField = ({ 
+    label, 
+    value, 
+    onChange, 
+    placeholder = "Sélectionnez une date",
+    minDate
+  }: { 
+    label: string; 
+    value: Date | undefined; 
+    onChange: (date: Date | undefined) => void;
+    placeholder?: string;
+    minDate?: Date;
+  }) => (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className="w-full justify-start text-left font-normal"
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {value ? format(value, "PPP", { locale: fr }) : placeholder}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0">
+          <Calendar
+            mode="single"
+            selected={value}
+            onSelect={onChange}
+            initialFocus
+            disabled={(date) => minDate ? date < minDate : date < new Date()}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
       <Navigation />
       
       <div className="flex-1 pt-24 pb-12">
-        <div className="container mx-auto px-6 lg:px-8 max-w-3xl">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">{t('new_project.title')}</h1>
             <p className="text-muted-foreground">
@@ -320,12 +410,13 @@ const NewProject = () => {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* SECTION 1: Informations de base */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('new_project.form.project_info')}</CardTitle>
+                <CardTitle>📋 Informations de base</CardTitle>
                 <CardDescription>
-                  {t('new_project.form.required_fields_note')}
+                  Décrivez votre projet de manière générale
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -341,21 +432,38 @@ const NewProject = () => {
                   />
                 </div>
 
-                {/* Category */}
-                <div className="space-y-2">
-                  <Label htmlFor="category">{t('new_project.form.category')} *</Label>
-                  <Select value={category} onValueChange={setCategory} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t('new_project.form.category_placeholder')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Category & Type */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">{t('new_project.form.category')} *</Label>
+                    <Select value={category} onValueChange={setCategory} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t('new_project.form.category_placeholder')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="projectType">Type de travaux</Label>
+                    <Select value={projectType} onValueChange={setProjectType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez le type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROJECT_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -366,15 +474,25 @@ const NewProject = () => {
                     placeholder={t('new_project.form.description_placeholder')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={5}
+                    rows={4}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
                     {t('new_project.form.description_help')}
                   </p>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Budget */}
+            {/* SECTION 2: Budget */}
+            <Card>
+              <CardHeader>
+                <CardTitle>💰 Budget</CardTitle>
+                <CardDescription>
+                  Indiquez votre fourchette budgétaire
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="budgetMin">{t('new_project.form.budget_min')}</Label>
@@ -399,8 +517,18 @@ const NewProject = () => {
                     />
                   </div>
                 </div>
+              </CardContent>
+            </Card>
 
-                {/* Location */}
+            {/* SECTION 3: Localisation */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📍 Localisation</CardTitle>
+                <CardDescription>
+                  Où se situe le projet ?
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">{t('new_project.form.city')}</Label>
@@ -450,91 +578,187 @@ const NewProject = () => {
                     onChange={(e) => setPostalCode(e.target.value.toUpperCase())}
                     maxLength={7}
                   />
-                  {latitude && longitude && (
-                    <p className="text-xs text-muted-foreground">
-                      📍 Coordonnées: {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°W
-                    </p>
-                  )}
-                </div>
-
-                {/* Deadline */}
-                <div className="space-y-2">
-                  <Label>{t('new_project.form.deadline')}</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {deadline ? format(deadline, "PPP", { locale: fr }) : t('new_project.form.select_date')}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={deadline}
-                        onSelect={setDeadline}
-                        initialFocus
-                        disabled={(date) => date < new Date()}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* File Upload */}
-                <div className="space-y-2">
-                  <Label>{t('new_project.form.files')}</Label>
-                  <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                    <Input
-                      type="file"
-                      multiple
-                      accept="image/*,.pdf"
-                      onChange={handleFileChange}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <Label
-                      htmlFor="file-upload"
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      <Upload className="h-8 w-8 text-muted-foreground mb-2" />
-                      <span className="text-sm font-medium">
-                        {t('new_project.form.click_to_upload')}
-                      </span>
-                      <span className="text-xs text-muted-foreground mt-1">
-                        {t('new_project.form.file_requirements')}
-                      </span>
-                    </Label>
-                  </div>
-
-                  {/* File List */}
-                  {files.length > 0 && (
-                    <div className="space-y-2 mt-4">
-                      {files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between p-2 bg-muted rounded"
-                        >
-                          <span className="text-sm truncate flex-1">{file.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeFile(index)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
 
+            {/* SECTION 4: Dates importantes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📅 Dates importantes</CardTitle>
+                <CardDescription>
+                  Définissez l'échéancier de votre projet
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <DatePickerField
+                    label="Date de début souhaitée"
+                    value={projectStartDate}
+                    onChange={setProjectStartDate}
+                    placeholder="Quand voulez-vous commencer ?"
+                  />
+                  <DatePickerField
+                    label="Date de fin souhaitée"
+                    value={projectEndDate}
+                    onChange={setProjectEndDate}
+                    placeholder="Quand voulez-vous finir ?"
+                    minDate={projectStartDate}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <DatePickerField
+                    label="Date limite de soumission *"
+                    value={submissionDeadline}
+                    onChange={setSubmissionDeadline}
+                    placeholder="Date limite pour les offres"
+                  />
+                  <DatePickerField
+                    label="Date limite pour questions"
+                    value={questionsDeadline}
+                    onChange={setQuestionsDeadline}
+                    placeholder="(Optionnel)"
+                  />
+                </div>
+
+                <DatePickerField
+                  label="Date de visite de chantier"
+                  value={siteVisitDate}
+                  onChange={setSiteVisitDate}
+                  placeholder="(Optionnel) Visite du lieu"
+                />
+              </CardContent>
+            </Card>
+
+            {/* SECTION 5: Détails avancés (Accordion) */}
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="advanced" className="border rounded-lg">
+                <AccordionTrigger className="px-6 hover:no-underline">
+                  <div className="flex items-center gap-2">
+                    <span>⚙️</span>
+                    <span className="font-semibold">Options avancées</span>
+                    <span className="text-sm text-muted-foreground font-normal">(optionnel)</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6">
+                  <div className="space-y-6 pt-4">
+                    {/* Description détaillée */}
+                    <div className="space-y-2">
+                      <Label htmlFor="workDescriptionDetailed">Description détaillée des travaux</Label>
+                      <Textarea
+                        id="workDescriptionDetailed"
+                        placeholder="Décrivez en détail les travaux à réaliser, les matériaux souhaités, les contraintes particulières..."
+                        value={workDescriptionDetailed}
+                        onChange={(e) => setWorkDescriptionDetailed(e.target.value)}
+                        rows={6}
+                      />
+                    </div>
+
+                    {/* Spécifications techniques */}
+                    <div className="space-y-3">
+                      <Label>Spécifications techniques</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Ex: Isolation R-40, Fenêtres Energy Star..."
+                          value={newSpec}
+                          onChange={(e) => setNewSpec(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addTechnicalSpec();
+                            }
+                          }}
+                        />
+                        <Button type="button" variant="outline" onClick={addTechnicalSpec}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {technicalSpecs.length > 0 && (
+                        <div className="space-y-2 mt-3">
+                          {technicalSpecs.map((spec, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center justify-between p-2 bg-muted rounded"
+                            >
+                              <span className="text-sm">• {spec}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeTechnicalSpec(index)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
+            {/* SECTION 6: Fichiers */}
+            <Card>
+              <CardHeader>
+                <CardTitle>📎 Documents et photos</CardTitle>
+                <CardDescription>
+                  Ajoutez des photos ou documents pour mieux illustrer votre projet
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                  <Input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <Label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex flex-col items-center"
+                  >
+                    <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                    <span className="text-sm font-medium">
+                      {t('new_project.form.click_to_upload')}
+                    </span>
+                    <span className="text-xs text-muted-foreground mt-1">
+                      {t('new_project.form.file_requirements')}
+                    </span>
+                  </Label>
+                </div>
+
+                {files.length > 0 && (
+                  <div className="space-y-2 mt-4">
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-muted rounded"
+                      >
+                        <span className="text-sm truncate flex-1">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Actions */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-4">
               <Button
                 type="button"
                 variant="outline"
@@ -558,4 +782,3 @@ const NewProject = () => {
 };
 
 export default NewProject;
-
