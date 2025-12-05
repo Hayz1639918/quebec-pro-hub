@@ -247,6 +247,7 @@ const Dashboard = () => {
           project:project_id(title)
         `)
         .in('project_id', projectIds)
+        .eq('status', 'pending')  // Afficher uniquement les offres en attente
         .order('created_at', { ascending: false });
 
       if (proposalsError) throw proposalsError;
@@ -518,7 +519,7 @@ const Dashboard = () => {
         `)
         .eq('client_id', userId)
         .is('client_signed_at', null)
-        .in('status', ['draft', 'pending', 'active'])
+        .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures'])
         .order('created_at', { ascending: false });
 
       if (error) {

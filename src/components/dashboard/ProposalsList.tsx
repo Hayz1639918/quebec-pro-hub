@@ -107,62 +107,92 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     if (!selectedProposal) return;
 
     setProcessing(true);
+    console.log("🔄 Action en cours:", selectedProposal.action, "pour proposition:", selectedProposal.id);
+    
     try {
-      const newStatus = selectedProposal.action === "accept" ? "accepted" : "rejected";
       const proposal = proposals.find(p => p.id === selectedProposal.id);
+      console.log("📋 Proposition trouvée:", proposal);
       
-      const { error } = await supabase
-        .from("proposals")
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", selectedProposal.id);
-
-      if (error) throw error;
-
-      // La notification sera créée automatiquement par le trigger SQL
-      // Mais on peut aussi créer une notification ici pour être sûr
-      if (proposal) {
-        const notificationType = selectedProposal.action === "accept" ? "proposal_accepted" : "proposal_rejected";
-        const notificationTitle = selectedProposal.action === "accept" 
-          ? "Proposition acceptée ! 🎉"
-          : "Proposition non retenue";
-        const notificationMessage = selectedProposal.action === "accept"
-          ? `Votre proposition pour le projet a été acceptée !`
-          : `Votre proposition pour le projet n'a pas été retenue.`;
-
-        await supabase.from("notifications").insert({
-          user_id: proposal.professional_id,
-          type: notificationType,
-          title: notificationTitle,
-          message: notificationMessage,
-          related_project_id: proposal.project_id,
-          action_url: selectedProposal.action === "accept" ? "/pro/dashboard" : "/projects",
-          metadata: {
-            proposal_id: proposal.id,
-            project_id: proposal.project_id,
-          },
+      if (selectedProposal.action === "reject") {
+        // REFUSER: Utiliser la fonction SQL sécurisée
+        console.log("🗑️ Refus de la proposition via fonction SQL...");
+        const { error } = await supabase.rpc("reject_proposal", {
+          proposal_uuid: selectedProposal.id
         });
 
-        // Si accepté, assigner le professionnel au projet
-        if (selectedProposal.action === "accept") {
-          await supabase
-            .from("projects")
-            .update({ 
-              assigned_professional_id: proposal.professional_id,
-              status: "in_progress"
-            })
-            .eq("id", proposal.project_id);
+        console.log("🗑️ Résultat refus:", error ? "ERREUR" : "OK", error);
+        if (error) throw error;
+
+        // Notifier le professionnel (optionnel - ne bloque pas si erreur)
+        if (proposal) {
+          try {
+            await supabase.from("notifications").insert({
+              user_id: proposal.professional_id,
+              type: "proposal_rejected",
+              title: "Proposition non retenue",
+              message: `Votre proposition pour le projet n'a pas été retenue.`,
+              related_project_id: proposal.project_id,
+              action_url: "/projects",
+              metadata: {
+                proposal_id: proposal.id,
+                project_id: proposal.project_id,
+              },
+            });
+          } catch (notifError) {
+            console.warn("Notification non envoyée:", notifError);
+          }
         }
+
+        toast.success("Proposition refusée et supprimée");
+        console.log("🗑️ Refus terminé avec succès!");
+      } else {
+        // ACCEPTER: Utiliser la fonction SQL sécurisée
+        console.log("✅ Acceptation de la proposition via fonction SQL...");
+        const { error } = await supabase.rpc("accept_proposal", {
+          proposal_uuid: selectedProposal.id
+        });
+
+        console.log("✅ Résultat acceptation:", error ? "ERREUR" : "OK", error);
+        if (error) throw error;
+
+        // Notifier le professionnel (optionnel - ne bloque pas si erreur)
+        if (proposal) {
+          try {
+            await supabase.from("notifications").insert({
+              user_id: proposal.professional_id,
+              type: "proposal_accepted",
+              title: "Proposition acceptée ! 🎉",
+              message: `Votre proposition pour le projet a été acceptée ! Un contrat vous sera envoyé.`,
+              related_project_id: proposal.project_id,
+              action_url: "/pro/dashboard",
+              metadata: {
+                proposal_id: proposal.id,
+                project_id: proposal.project_id,
+              },
+            });
+          } catch (notifError) {
+            console.warn("Notification non envoyée:", notifError);
+          }
+        }
+
+        toast.success("Proposition acceptée ! Le projet passe en cours.");
+        console.log("🎉 Acceptation terminée avec succès!");
       }
 
-      toast.success(
-        selectedProposal.action === "accept"
-          ? "Proposition acceptée avec succès !"
-          : "Proposition refusée"
-      );
-
+      // Rafraîchir les données via le callback
       if (onStatusUpdate) {
         onStatusUpdate();
       }
+      
+      // Forcer un rafraîchissement après un court délai
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+      
+      // Forcer un rafraîchissement après un court délai pour s'assurer que tout est à jour
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     } catch (error: any) {
       console.error("Error updating proposal:", error);
       toast.error("Erreur lors de la mise à jour de la proposition");

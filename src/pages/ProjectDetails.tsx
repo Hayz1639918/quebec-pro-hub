@@ -65,6 +65,16 @@ interface ProjectContract {
   company_name: string | null;
 }
 
+interface AcceptedProposal {
+  id: string;
+  message: string;
+  estimated_budget: number | null;
+  estimated_duration_days: number | null;
+  created_at: string;
+  professional_name: string;
+  company_name: string | null;
+}
+
 interface ProjectReport {
   id: string;
   title: string;
@@ -107,6 +117,7 @@ const ProjectDetails = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [projectContract, setProjectContract] = useState<ProjectContract | null>(null);
+  const [acceptedProposal, setAcceptedProposal] = useState<AcceptedProposal | null>(null);
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   
   // Formulaire de proposition (ancien - à garder pour compatibilité)
@@ -130,6 +141,33 @@ const ProjectDetails = () => {
     if (!project?.id) return;
 
     try {
+      // Fetch accepted proposal (soumission acceptée)
+      const { data: proposalData } = await supabase
+        .from('proposals')
+        .select(`
+          id,
+          message,
+          estimated_budget,
+          estimated_duration_days,
+          created_at,
+          profiles:professional_id (full_name, company_name)
+        `)
+        .eq('project_id', project.id)
+        .eq('status', 'accepted')
+        .maybeSingle();
+
+      if (proposalData) {
+        setAcceptedProposal({
+          id: proposalData.id,
+          message: proposalData.message,
+          estimated_budget: proposalData.estimated_budget,
+          estimated_duration_days: proposalData.estimated_duration_days,
+          created_at: proposalData.created_at,
+          professional_name: (proposalData.profiles as any)?.full_name || 'Entrepreneur',
+          company_name: (proposalData.profiles as any)?.company_name || null,
+        });
+      }
+
       // Fetch contract if exists
       if (project.contract_id) {
         const { data: contractData } = await supabase
@@ -669,12 +707,61 @@ const ProjectDetails = () => {
           </div>
 
           {/* Section Documents du projet - pour le client propriétaire */}
-          {isProjectOwner && (projectContract || projectReports.length > 0) && (
+          {isProjectOwner && (acceptedProposal || projectContract || projectReports.length > 0) && (
             <div className="lg:col-span-2 space-y-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Documents du projet
               </h2>
+
+              {/* Soumission acceptée (si pas encore de contrat) */}
+              {acceptedProposal && !projectContract && (
+                <Card className="border-green-300 bg-green-50/30">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <FileText className="h-5 w-5" />
+                          Soumission acceptée
+                        </CardTitle>
+                        <CardDescription>
+                          Par {acceptedProposal.company_name || acceptedProposal.professional_name}
+                        </CardDescription>
+                      </div>
+                      <Badge className="bg-green-600 text-white">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Acceptée
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        {acceptedProposal.estimated_budget && (
+                          <p>Budget proposé: <span className="font-medium text-foreground">{acceptedProposal.estimated_budget.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
+                        )}
+                        {acceptedProposal.estimated_duration_days && (
+                          <p>Délai: <span className="font-medium text-foreground">{acceptedProposal.estimated_duration_days} jours</span></p>
+                        )}
+                        <p>Acceptée le {format(new Date(acceptedProposal.created_at), 'dd MMM yyyy', { locale: fr })}</p>
+                      </div>
+                      <Button 
+                        onClick={() => navigate(`/proposal/${acceptedProposal.id}`)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Voir la soumission
+                      </Button>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <Clock className="h-4 w-4 inline mr-1" />
+                        <strong>En attente du contrat</strong> - L'entrepreneur doit maintenant vous envoyer un contrat à signer.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
               
               {/* Contrat */}
               {projectContract && (

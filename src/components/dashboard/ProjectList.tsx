@@ -152,8 +152,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
               {projects.map((project) => {
                 const hasSignedContract = project.contract_signed === true;
                 const hasContract = !!project.contract_id;
-                const hasPendingContract = hasContract && !hasSignedContract;
                 const isInProgress = project.status === 'in_progress';
+                const hasAssignedProfessional = !!project.assigned_professional_id;
+                // Afficher "Signature en attente" si le projet a un pro assigné mais pas de contrat signé
+                const hasPendingSignature = (hasAssignedProfessional || hasContract) && !hasSignedContract;
                 
                 return (
                 <TableRow 
@@ -171,10 +173,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                             Contrat signé
                           </Badge>
                         )}
-                        {hasPendingContract && (
+                        {hasPendingSignature && (
                           <Badge variant="outline" className="text-warning border-warning text-xs">
                             <Clock className="h-3 w-3 mr-1" />
-                            En attente signature
+                            Signature en attente
                           </Badge>
                         )}
                       </div>
@@ -299,13 +301,15 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
           {projects.map((project) => {
             const hasSignedContract = project.contract_signed === true;
             const hasContract = !!project.contract_id;
-            const hasPendingContract = hasContract && !hasSignedContract;
             const isInProgress = project.status === 'in_progress';
+            const hasAssignedProfessional = !!project.assigned_professional_id;
+            // Afficher "Signature en attente" si le projet a un pro assigné mais pas de contrat signé
+            const hasPendingSignature = (hasAssignedProfessional || hasContract) && !hasSignedContract;
             
             return (
             <Card 
               key={project.id} 
-              className={`cursor-pointer hover:shadow-md transition-shadow ${hasSignedContract ? 'border-success/50 bg-success-light' : ''}`}
+              className={`cursor-pointer hover:shadow-md transition-shadow ${hasSignedContract ? 'border-success/50 bg-success-light' : hasPendingSignature ? 'border-warning/50 bg-warning-light' : ''}`}
               onClick={() => navigate(`/project/${project.id}`)}
             >
               <CardHeader>
@@ -317,6 +321,12 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                         <Badge className="bg-success text-white text-xs">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Signé
+                        </Badge>
+                      )}
+                      {hasPendingSignature && (
+                        <Badge variant="outline" className="text-warning border-warning text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Signature en attente
                         </Badge>
                       )}
                     </div>
