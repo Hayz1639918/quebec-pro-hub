@@ -12,6 +12,7 @@ const Professionals = lazy(() => import("./pages/Professionals"));
 const Projects = lazy(() => import("./pages/Projects"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NewProject = lazy(() => import("./pages/NewProject"));
+const EditProject = lazy(() => import("./pages/EditProject"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Contracts = lazy(() => import("./pages/Contracts"));
 const Notifications = lazy(() => import("./pages/Notifications"));
@@ -85,6 +86,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/profile" element={<ClientProfile />} />
             <Route path="/dashboard/new-project" element={<NewProject />} />
+            <Route path="/edit-project/:id" element={<EditProject />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/contracts" element={<Contracts />} />
             <Route path="/notifications" element={<Notifications />} />

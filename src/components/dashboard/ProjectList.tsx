@@ -264,7 +264,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                           Voir l'appel d'offres (PDF)
                         </DropdownMenuItem>
                         {onEdit && (
-                          <DropdownMenuItem onClick={() => onEdit(project.id)}>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(project.id);
+                          }}>
                             <Pencil className="mr-2 h-4 w-4" />
                             {t('dashboard.project_list.edit')}
                           </DropdownMenuItem>
@@ -344,7 +347,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                         Voir l'appel d'offres (PDF)
                       </DropdownMenuItem>
                       {onEdit && (
-                        <DropdownMenuItem onClick={() => onEdit(project.id)}>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(project.id);
+                        }}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Modifier
                         </DropdownMenuItem>

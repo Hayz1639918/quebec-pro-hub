@@ -767,11 +767,7 @@ const Dashboard = () => {
   };
 
   const handleEditProject = (projectId: string) => {
-    // Navigate to edit page (to be implemented)
-    toast({
-      title: t('common.coming_soon'),
-      description: t('dashboard.projects.edit_coming_soon'),
-    });
+    navigate(`/edit-project/${projectId}`);
   };
 
   const handleViewProject = (projectId: string) => {
