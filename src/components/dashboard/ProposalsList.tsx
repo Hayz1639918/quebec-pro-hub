@@ -146,11 +146,19 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         if (selectedProposal.action === "accept") {
           await supabase
             .from("projects")
-            .update({ 
+            .update({
               assigned_professional_id: proposal.professional_id,
               status: "in_progress"
             })
             .eq("id", proposal.project_id);
+
+          // Supprimer toutes les autres offres du même projet (marquer comme "withdrawn")
+          await supabase
+            .from("proposals")
+            .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+            .eq("project_id", proposal.project_id)
+            .neq("id", selectedProposal.id)
+            .eq("status", "pending");
         }
       }
 
@@ -181,11 +189,26 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     }).format(amount);
   };
 
+  // Filtrer les offres pour n'afficher que les offres actives (pending) par défaut
+  const activeProposals = proposals.filter(p => p.status === 'pending');
+
   if (proposals.length === 0) {
     return (
       <div className="text-center py-12">
         <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <p className="text-muted-foreground">Aucune proposition reçue pour le moment</p>
+      </div>
+    );
+  }
+
+  if (activeProposals.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+        <p className="text-muted-foreground">Aucune proposition en attente</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Toutes vos propositions ont été traitées
+        </p>
       </div>
     );
   }
@@ -208,7 +231,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proposals.map((proposal) => {
+              {activeProposals.map((proposal) => {
                 const StatusIcon = STATUS_ICONS[proposal.status];
                 return (
                   <TableRow key={proposal.id}>
@@ -297,7 +320,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
 
         {/* Mobile View - Cards */}
         <div className="md:hidden space-y-4">
-          {proposals.map((proposal) => {
+          {activeProposals.map((proposal) => {
             const StatusIcon = STATUS_ICONS[proposal.status];
             return (
               <Card key={proposal.id}>

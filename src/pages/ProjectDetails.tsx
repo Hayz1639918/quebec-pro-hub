@@ -108,7 +108,8 @@ const ProjectDetails = () => {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [projectContract, setProjectContract] = useState<ProjectContract | null>(null);
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
-  
+  const [acceptedProposal, setAcceptedProposal] = useState<any | null>(null);
+
   // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
   const [proposalBudget, setProposalBudget] = useState('');
@@ -176,6 +177,35 @@ const ProjectDetails = () => {
       } catch (e) {
         // Table might not exist
         console.warn('Could not fetch project reports');
+      }
+
+      // Fetch accepted proposal
+      try {
+        const { data: proposalData } = await supabase
+          .from('proposals')
+          .select(`
+            id,
+            message,
+            estimated_budget,
+            estimated_duration_days,
+            status,
+            created_at,
+            proposal_number,
+            profiles:professional_id (
+              full_name,
+              company_name,
+              email
+            )
+          `)
+          .eq('project_id', project.id)
+          .eq('status', 'accepted')
+          .maybeSingle();
+
+        if (proposalData) {
+          setAcceptedProposal(proposalData);
+        }
+      } catch (e) {
+        console.warn('Could not fetch accepted proposal:', e);
       }
     } catch (error) {
       console.warn('Error fetching project documents:', error);
@@ -669,13 +699,84 @@ const ProjectDetails = () => {
           </div>
 
           {/* Section Documents du projet - pour le client propriétaire */}
-          {isProjectOwner && (projectContract || projectReports.length > 0) && (
+          {isProjectOwner && (acceptedProposal || projectContract || projectReports.length > 0) && (
             <div className="lg:col-span-2 space-y-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <FileText className="h-5 w-5" />
                 Documents du projet
               </h2>
-              
+
+              {/* Offre acceptée */}
+              {acceptedProposal && (
+                <Card className="border-green-300 bg-green-50/50">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                          Offre acceptée
+                        </CardTitle>
+                        <CardDescription>
+                          Par {acceptedProposal.profiles?.company_name || acceptedProposal.profiles?.full_name}
+                        </CardDescription>
+                      </div>
+                      <Badge className="bg-green-600 text-white">
+                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                        Acceptée
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Budget proposé</p>
+                        <p className="font-semibold text-lg">
+                          {acceptedProposal.estimated_budget
+                            ? acceptedProposal.estimated_budget.toLocaleString('fr-CA', {
+                                style: 'currency',
+                                currency: 'CAD',
+                              })
+                            : 'Non spécifié'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Délai estimé</p>
+                        <p className="font-semibold text-lg">
+                          {acceptedProposal.estimated_duration_days
+                            ? `${acceptedProposal.estimated_duration_days} jours`
+                            : 'Non spécifié'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {acceptedProposal.message && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">Message du professionnel</p>
+                        <div className="bg-white rounded-lg p-3 border">
+                          <p className="text-sm whitespace-pre-wrap">{acceptedProposal.message}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        {acceptedProposal.proposal_number && (
+                          <p>Numéro: {acceptedProposal.proposal_number}</p>
+                        )}
+                        <p>Acceptée le {format(new Date(acceptedProposal.created_at), 'dd MMM yyyy', { locale: fr })}</p>
+                      </div>
+                      <Button
+                        onClick={() => navigate(`/proposal/${acceptedProposal.id}?showPDF=true`)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Voir le PDF
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Contrat */}
               {projectContract && (
                 <Card className={projectContract.client_signed_at && projectContract.professional_signed_at ? 'border-green-300 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'}>
