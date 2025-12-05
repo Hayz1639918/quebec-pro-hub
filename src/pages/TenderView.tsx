@@ -34,14 +34,21 @@ const TenderView = () => {
   const [project, setProject] = useState<any>(null);
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [showPDFViewer, setShowPDFViewer] = useState(false);
   
-  // Vérifier si on doit afficher le PDF automatiquement
+  // Initialiser showPDFViewer à true si le paramètre est présent dans l'URL
   const shouldShowPDF = searchParams.get('showPDF') === 'true';
+  const [showPDFViewer, setShowPDFViewer] = useState(shouldShowPDF);
 
   useEffect(() => {
     fetchTenderDetails();
   }, [id]);
+  
+  // Effet séparé pour gérer l'affichage du PDF quand les données sont prêtes
+  useEffect(() => {
+    if (shouldShowPDF && project && client && !loading) {
+      setShowPDFViewer(true);
+    }
+  }, [shouldShowPDF, project, client, loading]);
 
   const fetchTenderDetails = async () => {
     try {
@@ -73,11 +80,6 @@ const TenderView = () => {
           email: client_email,
           phone: client_phone,
         });
-        
-        // Afficher le PDF automatiquement si demandé (après chargement des données)
-        if (shouldShowPDF) {
-          setShowPDFViewer(true);
-        }
       }
     } catch (error: any) {
       console.error('Error fetching tender:', error);
