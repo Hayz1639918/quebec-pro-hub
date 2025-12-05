@@ -132,6 +132,52 @@ const TenderView = () => {
     );
   }
 
+  // Mode PDF uniquement - affiche seulement le PDF viewer
+  if (shouldShowPDF) {
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Navigation />
+        <div className="container mx-auto px-4 py-6 pt-24">
+          {/* Header compact */}
+          <div className="flex items-center justify-between mb-4 bg-white p-4 rounded-lg shadow-sm">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={() => navigate(-1)}
+                className="gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour
+              </Button>
+              <div>
+                <h1 className="font-semibold">{project.title}</h1>
+                <p className="text-sm text-muted-foreground">Appel d'offres PDF</p>
+              </div>
+            </div>
+            <PDFDownloadLink
+              document={<TenderPDF project={project} client={client} />}
+              fileName={`Appel_Offres_${project.tender_number || project.id}.pdf`}
+            >
+              {({ loading: pdfLoading }) => (
+                <Button className="gap-2" disabled={pdfLoading}>
+                  <Download className="h-4 w-4" />
+                  {pdfLoading ? 'Génération...' : 'Télécharger'}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          </div>
+          
+          {/* PDF Viewer plein écran */}
+          <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ height: 'calc(100vh - 180px)' }}>
+            <PDFViewer width="100%" height="100%" key={`pdf-only-${project.id}`}>
+              <TenderPDF project={project} client={client} />
+            </PDFViewer>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
