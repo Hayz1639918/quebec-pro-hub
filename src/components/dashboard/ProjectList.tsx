@@ -256,7 +256,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                             {t('dashboard.project_list.view_details')}
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/tender/${project.id}?showPDF=true`);
+                        }}>
                           <FileText className="mr-2 h-4 w-4" />
                           Voir l'appel d'offres (PDF)
                         </DropdownMenuItem>
@@ -333,7 +336,10 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                           Voir les détails
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}>
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/tender/${project.id}?showPDF=true`);
+                      }}>
                         <FileText className="mr-2 h-4 w-4" />
                         Voir l'appel d'offres (PDF)
                       </DropdownMenuItem>
