@@ -21,175 +21,231 @@ Font.register({
   ]
 });
 
-// Styles professionnels et épurés
+// Styles RBQ / APCHQ - Style officiel gouvernemental
 const styles = StyleSheet.create({
   page: {
     fontFamily: 'Roboto',
-    fontSize: 10,
-    paddingTop: 40,
-    paddingBottom: 60,
-    paddingHorizontal: 40,
-    lineHeight: 1.5,
+    fontSize: 9,
+    paddingTop: 25,
+    paddingBottom: 50,
+    paddingHorizontal: 30,
+    lineHeight: 1.4,
     backgroundColor: '#ffffff',
   },
-  // En-tête
-  header: {
-    marginBottom: 30,
-    borderBottom: '2 solid #2563eb',
-    paddingBottom: 20,
+  // Instructions en haut
+  instructionBox: {
+    backgroundColor: '#f5f5f5',
+    border: '1 solid #cccccc',
+    padding: 8,
+    marginBottom: 15,
+    fontSize: 8,
   },
-  logo: {
-    fontSize: 24,
-    fontWeight: 700,
-    color: '#2563eb',
-    marginBottom: 5,
+  instructionText: {
+    fontSize: 8,
+    color: '#333333',
   },
-  headerSubtitle: {
-    fontSize: 10,
-    color: '#6b7280',
+  // Ligne de champs
+  fieldRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+    alignItems: 'flex-end',
   },
-  // Titre principal
-  mainTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    textAlign: 'center',
-    marginBottom: 5,
-    color: '#1f2937',
+  fieldLabel: {
+    fontSize: 9,
+    fontWeight: 400,
+    marginRight: 3,
   },
-  subtitle: {
-    fontSize: 11,
-    textAlign: 'center',
-    marginBottom: 25,
-    color: '#6b7280',
+  fieldValue: {
+    flex: 1,
+    borderBottom: '1 solid #333333',
+    fontSize: 9,
+    paddingBottom: 2,
+    minHeight: 12,
   },
-  // Sections
+  fieldValueSmall: {
+    width: 100,
+    borderBottom: '1 solid #333333',
+    fontSize: 9,
+    paddingBottom: 2,
+    marginRight: 15,
+  },
+  // En-têtes de section style RBQ (gris foncé avec texte blanc)
   sectionHeader: {
-    backgroundColor: '#2563eb',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginTop: 20,
-    marginBottom: 12,
-    borderRadius: 4,
+    backgroundColor: '#4a4a4a',
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    marginTop: 12,
+    marginBottom: 8,
   },
   sectionHeaderText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 700,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  // Sous-sections
+  subsectionHeader: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    marginBottom: 6,
+  },
+  subsectionHeaderText: {
+    fontSize: 9,
+    fontWeight: 700,
+    color: '#333333',
+  },
+  // Contenu de section
   sectionContent: {
     paddingHorizontal: 5,
     marginBottom: 10,
   },
-  // Champs
-  fieldRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-start',
-  },
-  fieldLabel: {
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#374151',
-    width: 140,
-  },
-  fieldValue: {
-    flex: 1,
-    fontSize: 10,
-    color: '#1f2937',
-  },
-  // Description
-  descriptionBox: {
-    backgroundColor: '#f9fafb',
-    border: '1 solid #e5e7eb',
-    borderRadius: 4,
-    padding: 12,
+  // Tableaux
+  table: {
+    width: '100%',
     marginTop: 8,
-  },
-  descriptionText: {
-    fontSize: 10,
-    color: '#374151',
-    lineHeight: 1.6,
-  },
-  // Budget
-  budgetBox: {
-    backgroundColor: '#ecfdf5',
-    border: '1 solid #a7f3d0',
-    borderRadius: 4,
-    padding: 12,
-    marginTop: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  budgetItem: {
-    alignItems: 'center',
-  },
-  budgetLabel: {
-    fontSize: 9,
-    color: '#6b7280',
-    marginBottom: 2,
-  },
-  budgetValue: {
-    fontSize: 14,
-    fontWeight: 700,
-    color: '#059669',
-  },
-  // Info box
-  infoBox: {
-    backgroundColor: '#eff6ff',
-    border: '1 solid #bfdbfe',
-    borderRadius: 4,
-    padding: 12,
-    marginTop: 15,
-  },
-  infoTitle: {
-    fontSize: 10,
-    fontWeight: 700,
-    color: '#1e40af',
     marginBottom: 8,
+    border: '1 solid #cccccc',
   },
-  infoText: {
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '1 solid #cccccc',
+  },
+  tableRowLast: {
+    flexDirection: 'row',
+  },
+  tableHeaderRow: {
+    flexDirection: 'row',
+    backgroundColor: '#e8e8e8',
+    borderBottom: '1 solid #999999',
+  },
+  tableCell: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    borderRight: '1 solid #cccccc',
+  },
+  tableCellLast: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+  },
+  tableCellHeader: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    fontWeight: 700,
+    borderRight: '1 solid #cccccc',
+  },
+  tableCellHeaderLast: {
+    flex: 1,
+    padding: 5,
+    fontSize: 8,
+    fontWeight: 700,
+  },
+  // Cases à cocher
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    marginLeft: 10,
+  },
+  checkbox: {
+    width: 10,
+    height: 10,
+    border: '1 solid #333333',
+    marginRight: 6,
+    backgroundColor: '#ffffff',
+  },
+  checkboxChecked: {
+    width: 10,
+    height: 10,
+    border: '1 solid #333333',
+    marginRight: 6,
+    backgroundColor: '#333333',
+  },
+  checkboxLabel: {
     fontSize: 9,
-    color: '#3b82f6',
+  },
+  // Texte normal
+  paragraph: {
+    fontSize: 9,
+    marginBottom: 6,
+    textAlign: 'justify',
+  },
+  boldText: {
+    fontWeight: 700,
+  },
+  // Liste
+  listItem: {
+    flexDirection: 'row',
+    marginBottom: 3,
+    paddingLeft: 10,
+  },
+  listBullet: {
+    width: 10,
+    fontSize: 9,
+  },
+  listText: {
+    flex: 1,
+    fontSize: 9,
+  },
+  // Zone de texte libre
+  textArea: {
+    border: '1 solid #333333',
+    minHeight: 60,
+    padding: 5,
+    marginTop: 4,
+    marginBottom: 8,
   },
   // Pied de page
   footer: {
     position: 'absolute',
-    bottom: 25,
-    left: 40,
-    right: 40,
-    borderTop: '1 solid #e5e7eb',
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    bottom: 20,
+    left: 30,
+    right: 30,
+    borderTop: '1 solid #cccccc',
+    paddingTop: 8,
   },
   footerText: {
-    fontSize: 8,
-    color: '#9ca3af',
+    fontSize: 7,
+    color: '#666666',
+    textAlign: 'center',
   },
   pageNumber: {
+    position: 'absolute',
+    bottom: 20,
+    right: 30,
     fontSize: 8,
-    color: '#9ca3af',
+    color: '#666666',
   },
-  // Date encadrée
-  dateHighlight: {
-    backgroundColor: '#fef3c7',
-    border: '1 solid #fcd34d',
-    borderRadius: 4,
-    padding: 10,
-    marginTop: 8,
-    alignItems: 'center',
-  },
-  dateLabel: {
-    fontSize: 9,
-    color: '#92400e',
-    marginBottom: 2,
-  },
-  dateValue: {
-    fontSize: 12,
+  // Titre principal
+  mainTitle: {
+    fontSize: 14,
     fontWeight: 700,
-    color: '#b45309',
+    textAlign: 'center',
+    marginBottom: 3,
+    textTransform: 'uppercase',
+  },
+  subtitle: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginBottom: 15,
+    color: '#555555',
+  },
+  // Encadré important
+  importantBox: {
+    border: '2 solid #333333',
+    padding: 10,
+    marginVertical: 10,
+    backgroundColor: '#fffde7',
+  },
+  importantTitle: {
+    fontWeight: 700,
+    fontSize: 10,
+    marginBottom: 5,
   },
 });
 
@@ -200,143 +256,413 @@ interface TenderPDFProps {
 
 export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
   const formatDate = (date: string | null) => {
-    if (!date) return 'Non spécifiée';
-    try {
-      return format(new Date(date), 'dd MMMM yyyy', { locale: fr });
-    } catch {
-      return 'Non spécifiée';
-    }
+    if (!date) return '______________________';
+    return format(new Date(date), 'dd MMMM yyyy', { locale: fr });
   };
 
   const formatCurrency = (amount: number | null) => {
-    if (!amount) return 'À discuter';
+    if (!amount) return '____________';
     return new Intl.NumberFormat('fr-CA', {
       style: 'currency',
       currency: 'CAD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
     }).format(amount);
-  };
-
-  const getLocation = () => {
-    const parts = [];
-    if (project.city) parts.push(project.city);
-    if (project.region) parts.push(project.region);
-    if (project.postal_code) parts.push(project.postal_code);
-    return parts.length > 0 ? parts.join(', ') : 'Non spécifiée';
   };
 
   return (
     <Document>
+      {/* PAGE 1 */}
       <Page size="A4" style={styles.page}>
-        {/* En-tête */}
-        <View style={styles.header}>
-          <Text style={styles.logo}>BâtirNet</Text>
-          <Text style={styles.headerSubtitle}>Plateforme de mise en relation professionnelle</Text>
-        </View>
-
         {/* Titre */}
         <Text style={styles.mainTitle}>APPEL D'OFFRES</Text>
-        <Text style={styles.subtitle}>Document de présentation du projet</Text>
+        <Text style={styles.subtitle}>Document de soumission</Text>
 
-        {/* SECTION: INFORMATIONS DU CLIENT */}
+        {/* Instructions */}
+        <View style={styles.instructionBox}>
+          <Text style={styles.instructionText}>
+            Inscrire les informations pertinentes sur cette page et elles seront automatiquement affichées dans le formulaire. 
+            Les soumissionnaires doivent prendre connaissance de l'ensemble des documents avant de soumettre leur offre.
+          </Text>
+        </View>
+
+        {/* Champs d'en-tête */}
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>N° de dossier :</Text>
+          <Text style={styles.fieldValueSmall}>{project.tender_number || ''}</Text>
+          <Text style={styles.fieldLabel}>Date de publication :</Text>
+          <Text style={styles.fieldValueSmall}>{formatDate(project.created_at)}</Text>
+        </View>
+
+        <View style={styles.fieldRow}>
+          <Text style={styles.fieldLabel}>Date limite de soumission :</Text>
+          <Text style={styles.fieldValue}>{formatDate(project.submission_deadline)}</Text>
+        </View>
+
+        {/* SECTION: INFORMATIONS DU DONNEUR D'OUVRAGE */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText}>Donneur d'ouvrage</Text>
+          <Text style={styles.sectionHeaderText}>INFORMATIONS DU DONNEUR D'OUVRAGE</Text>
         </View>
         <View style={styles.sectionContent}>
           <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Nom / Entreprise :</Text>
-            <Text style={styles.fieldValue}>{client?.company_name || client?.full_name || 'Non spécifié'}</Text>
+            <Text style={styles.fieldLabel}>Nom / Raison sociale :</Text>
+            <Text style={styles.fieldValue}>{client?.company_name || client?.full_name || ''}</Text>
           </View>
-          {client?.email && (
-            <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>Courriel :</Text>
-              <Text style={styles.fieldValue}>{client.email}</Text>
-            </View>
-          )}
-          {client?.phone && (
-            <View style={styles.fieldRow}>
-              <Text style={styles.fieldLabel}>Téléphone :</Text>
-              <Text style={styles.fieldValue}>{client.phone}</Text>
-            </View>
-          )}
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Courriel :</Text>
+            <Text style={styles.fieldValueSmall}>{client?.email || ''}</Text>
+            <Text style={styles.fieldLabel}>Téléphone :</Text>
+            <Text style={styles.fieldValue}>{client?.phone || ''}</Text>
+          </View>
         </View>
 
-        {/* SECTION: DÉTAILS DU PROJET */}
+        {/* SECTION: INFORMATIONS DU PROJET */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText}>Détails du projet</Text>
+          <Text style={styles.sectionHeaderText}>INFORMATIONS DU PROJET</Text>
         </View>
         <View style={styles.sectionContent}>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Titre du projet :</Text>
-            <Text style={styles.fieldValue}>{project.title || 'Sans titre'}</Text>
+            <Text style={styles.fieldValue}>{project.title || ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Lieu des travaux :</Text>
+            <Text style={styles.fieldValue}>{project.city ? `${project.city}, ${project.region}` : ''}</Text>
           </View>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>Catégorie :</Text>
-            <Text style={styles.fieldValue}>{project.category || 'Non spécifiée'}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Localisation :</Text>
-            <Text style={styles.fieldValue}>{getLocation()}</Text>
-          </View>
-          <View style={styles.fieldRow}>
-            <Text style={styles.fieldLabel}>Date de publication :</Text>
-            <Text style={styles.fieldValue}>{formatDate(project.created_at)}</Text>
+            <Text style={styles.fieldValueSmall}>{project.category || ''}</Text>
+            <Text style={styles.fieldLabel}>Type :</Text>
+            <Text style={styles.fieldValue}>{project.project_type || ''}</Text>
           </View>
         </View>
 
-        {/* Date limite */}
-        {project.deadline && (
-          <View style={styles.dateHighlight}>
-            <Text style={styles.dateLabel}>DATE LIMITE SOUHAITÉE</Text>
-            <Text style={styles.dateValue}>{formatDate(project.deadline)}</Text>
+        {/* Description de l'immeuble / type de travaux */}
+        <View style={styles.subsectionHeader}>
+          <Text style={styles.subsectionHeaderText}>Description des travaux</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'construction' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Construction neuve</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'renovation' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Rénovation</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'agrandissement' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Agrandissement</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={project.category === 'autre' ? styles.checkboxChecked : styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Autre : _______________</Text>
+          </View>
+        </View>
+
+        {/* SECTION: BUDGET ET ÉCHÉANCIER */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>BUDGET ET ÉCHÉANCIER</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Budget estimatif :</Text>
+            <Text style={styles.fieldValueSmall}>{formatCurrency(project.budget_min)}</Text>
+            <Text style={styles.fieldLabel}>à</Text>
+            <Text style={styles.fieldValue}>{formatCurrency(project.budget_max)}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Date de début prévue :</Text>
+            <Text style={styles.fieldValueSmall}>{formatDate(project.project_start_date)}</Text>
+            <Text style={styles.fieldLabel}>Date de fin prévue :</Text>
+            <Text style={styles.fieldValue}>{formatDate(project.project_end_date)}</Text>
+          </View>
+        </View>
+
+        {/* SECTION: DATES IMPORTANTES */}
+        <View style={styles.importantBox}>
+          <Text style={styles.importantTitle}>DATES IMPORTANTES</Text>
+          {project.site_visit_date && (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Visite de chantier :</Text>
+              <Text style={styles.fieldValue}>{formatDate(project.site_visit_date)}</Text>
+            </View>
+          )}
+          {project.questions_deadline && (
+            <View style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>Date limite pour questions :</Text>
+              <Text style={styles.fieldValue}>{formatDate(project.questions_deadline)}</Text>
+            </View>
+          )}
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Date limite de soumission :</Text>
+            <Text style={styles.fieldValue}>{formatDate(project.submission_deadline)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            BâtirNet - Plateforme de mise en relation professionnelle
+          </Text>
+        </View>
+        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+          `Page ${pageNumber} / ${totalPages}`
+        )} fixed />
+      </Page>
+
+      {/* PAGE 2: Description détaillée */}
+      <Page size="A4" style={styles.page}>
+        
+        {/* DESCRIPTION DÉTAILLÉE DES TRAVAUX */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>DESCRIPTION DÉTAILLÉE DES TRAVAUX</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <Text style={styles.paragraph}>{project.description}</Text>
+          {project.work_description_detailed && (
+            <>
+              <View style={styles.subsectionHeader}>
+                <Text style={styles.subsectionHeaderText}>Spécifications supplémentaires</Text>
+              </View>
+              <Text style={styles.paragraph}>{project.work_description_detailed}</Text>
+            </>
+          )}
+        </View>
+
+        {/* SPÉCIFICATIONS TECHNIQUES */}
+        {project.technical_specifications && Array.isArray(project.technical_specifications) && project.technical_specifications.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>SPÉCIFICATIONS TECHNIQUES</Text>
+            </View>
+            <View style={styles.sectionContent}>
+              {project.technical_specifications.map((spec: any, index: number) => (
+                <View key={index} style={styles.listItem}>
+                  <Text style={styles.listBullet}>•</Text>
+                  <Text style={styles.listText}>
+                    {typeof spec === 'string' ? spec : spec.description || spec.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* JALONS DU PROJET */}
+        {project.milestones && Array.isArray(project.milestones) && project.milestones.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>JALONS DU PROJET</Text>
+            </View>
+            <View style={styles.table}>
+              <View style={styles.tableHeaderRow}>
+                <Text style={styles.tableCellHeader}>Jalon</Text>
+                <Text style={styles.tableCellHeader}>Date prévue</Text>
+                <Text style={styles.tableCellHeaderLast}>Livrables</Text>
+              </View>
+              {project.milestones.map((milestone: any, index: number) => (
+                <View key={index} style={index === project.milestones.length - 1 ? styles.tableRowLast : styles.tableRow}>
+                  <Text style={styles.tableCell}>{milestone.name || milestone.title}</Text>
+                  <Text style={styles.tableCell}>
+                    {milestone.date ? formatDate(milestone.date) : 'À déterminer'}
+                  </Text>
+                  <Text style={styles.tableCellLast}>
+                    {milestone.deliverables || 'N/A'}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* EXIGENCES D'ASSURANCE ET LICENCE */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>EXIGENCES D'ASSURANCE ET LICENCE</Text>
+        </View>
+        <View style={styles.sectionContent}>
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Assurances requises</Text>
+          </View>
+          {project.insurance_requirements && Object.keys(project.insurance_requirements).length > 0 ? (
+            <>
+              {project.insurance_requirements.liability && (
+                <View style={styles.listItem}>
+                  <Text style={styles.listBullet}>•</Text>
+                  <Text style={styles.listText}>
+                    Responsabilité civile générale : {formatCurrency(project.insurance_requirements.liability)}
+                  </Text>
+                </View>
+              )}
+              {project.insurance_requirements.professional && (
+                <View style={styles.listItem}>
+                  <Text style={styles.listBullet}>•</Text>
+                  <Text style={styles.listText}>
+                    Responsabilité professionnelle : {formatCurrency(project.insurance_requirements.professional)}
+                  </Text>
+                </View>
+              )}
+            </>
+          ) : (
+            <Text style={styles.paragraph}>
+              Les soumissionnaires doivent détenir les assurances requises conformément aux lois en vigueur.
+            </Text>
+          )}
+
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Licences requises</Text>
+          </View>
+          <Text style={styles.paragraph}>
+            Le soumissionnaire doit détenir une licence valide et en règle pour la catégorie de travaux demandée.
+          </Text>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            BâtirNet - Plateforme de mise en relation professionnelle
+          </Text>
+        </View>
+        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+          `Page ${pageNumber} / ${totalPages}`
+        )} fixed />
+      </Page>
+
+      {/* PAGE 3: Critères et modalités */}
+      <Page size="A4" style={styles.page}>
+        
+        {/* CRITÈRES D'ÉVALUATION */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>CRITÈRES D'ÉVALUATION</Text>
+        </View>
+        {project.evaluation_criteria && Object.keys(project.evaluation_criteria).length > 0 ? (
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCellHeader, { flex: 3 }]}>Critère</Text>
+              <Text style={styles.tableCellHeaderLast}>Pondération</Text>
+            </View>
+            {Object.entries(project.evaluation_criteria).map(([key, value]: [string, any], index: number) => (
+              <View key={key} style={index === Object.entries(project.evaluation_criteria).length - 1 ? styles.tableRowLast : styles.tableRow}>
+                <Text style={[styles.tableCell, { flex: 3 }]}>{key}</Text>
+                <Text style={styles.tableCellLast}>{value}%</Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.table}>
+            <View style={styles.tableHeaderRow}>
+              <Text style={[styles.tableCellHeader, { flex: 3 }]}>Critère</Text>
+              <Text style={styles.tableCellHeaderLast}>Pondération</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Prix proposé</Text>
+              <Text style={styles.tableCellLast}>40%</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Expérience et références</Text>
+              <Text style={styles.tableCellLast}>30%</Text>
+            </View>
+            <View style={styles.tableRow}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Méthodologie et échéancier</Text>
+              <Text style={styles.tableCellLast}>20%</Text>
+            </View>
+            <View style={styles.tableRowLast}>
+              <Text style={[styles.tableCell, { flex: 3 }]}>Garanties et assurances</Text>
+              <Text style={styles.tableCellLast}>10%</Text>
+            </View>
           </View>
         )}
 
-        {/* SECTION: BUDGET */}
+        {/* MODALITÉS DE SOUMISSION */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText}>Budget estimatif</Text>
+          <Text style={styles.sectionHeaderText}>MODALITÉS DE SOUMISSION</Text>
         </View>
-        <View style={styles.budgetBox}>
-          <View style={styles.budgetItem}>
-            <Text style={styles.budgetLabel}>MINIMUM</Text>
-            <Text style={styles.budgetValue}>{formatCurrency(project.budget_min)}</Text>
+        <View style={styles.sectionContent}>
+          <View style={styles.subsectionHeader}>
+            <Text style={styles.subsectionHeaderText}>Documents requis</Text>
           </View>
-          <View style={styles.budgetItem}>
-            <Text style={styles.budgetLabel}>MAXIMUM</Text>
-            <Text style={styles.budgetValue}>{formatCurrency(project.budget_max)}</Text>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Formulaire de soumission dûment complété et signé</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Copie de la licence valide</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Certificats d'assurance en vigueur</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Devis détaillé et échéancier proposé</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Minimum trois (3) références de projets similaires</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox} />
+            <Text style={styles.checkboxLabel}>Liste des sous-traitants (si applicable)</Text>
           </View>
         </View>
 
-        {/* SECTION: DESCRIPTION */}
+        {/* CONDITIONS GÉNÉRALES */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionHeaderText}>Description des travaux</Text>
+          <Text style={styles.sectionHeaderText}>CONDITIONS GÉNÉRALES</Text>
         </View>
-        <View style={styles.descriptionBox}>
-          <Text style={styles.descriptionText}>
-            {project.description || 'Aucune description fournie.'}
-          </Text>
+        <View style={styles.sectionContent}>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>1.</Text>
+            <Text style={styles.listText}>
+              Le donneur d'ouvrage se réserve le droit d'accepter ou de refuser toute soumission sans obligation de justifier sa décision.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>2.</Text>
+            <Text style={styles.listText}>
+              La soumission la plus basse ne sera pas nécessairement retenue.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>3.</Text>
+            <Text style={styles.listText}>
+              Les soumissions devront demeurer valides pour une période minimale de quatre-vingt-dix (90) jours.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>4.</Text>
+            <Text style={styles.listText}>
+              Les travaux devront être effectués conformément aux normes et codes en vigueur.
+            </Text>
+          </View>
+          <View style={styles.listItem}>
+            <Text style={styles.listBullet}>5.</Text>
+            <Text style={styles.listText}>
+              L'entrepreneur retenu devra fournir une garantie de {project.warranty_period_months || 12} mois sur les travaux.
+            </Text>
+          </View>
         </View>
 
-        {/* Note d'information */}
-        <View style={styles.infoBox}>
-          <Text style={styles.infoTitle}>📋 Comment soumettre votre offre ?</Text>
-          <Text style={styles.infoText}>
-            Pour soumettre votre proposition, connectez-vous sur BâtirNet et accédez à ce projet 
-            depuis la marketplace. Vous pourrez y envoyer votre devis détaillé et contacter 
-            directement le client via la messagerie intégrée.
-          </Text>
+        {/* PERSONNE-RESSOURCE */}
+        <View style={styles.importantBox}>
+          <Text style={styles.importantTitle}>PERSONNE-RESSOURCE</Text>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Nom :</Text>
+            <Text style={styles.fieldValue}>{client?.full_name || client?.company_name || ''}</Text>
+          </View>
+          <View style={styles.fieldRow}>
+            <Text style={styles.fieldLabel}>Courriel :</Text>
+            <Text style={styles.fieldValueSmall}>{client?.email || ''}</Text>
+            <Text style={styles.fieldLabel}>Tél. :</Text>
+            <Text style={styles.fieldValue}>{client?.phone || ''}</Text>
+          </View>
         </View>
 
-        {/* Pied de page */}
-        <View style={styles.footer} fixed>
+        <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Document généré sur BâtirNet - {formatDate(new Date().toISOString())}
+            BâtirNet - Plateforme de mise en relation professionnelle
           </Text>
-          <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
-            `Page ${pageNumber} / ${totalPages}`
-          )} />
         </View>
+        <Text style={styles.pageNumber} render={({ pageNumber, totalPages }) => (
+          `Page ${pageNumber} / ${totalPages}`
+        )} fixed />
       </Page>
     </Document>
   );
