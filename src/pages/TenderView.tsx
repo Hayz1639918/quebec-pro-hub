@@ -34,19 +34,25 @@ const TenderView = () => {
   const [project, setProject] = useState<any>(null);
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showPDFViewer, setShowPDFViewer] = useState(false);
+  const [pdfReady, setPdfReady] = useState(false);
   
-  // Initialiser showPDFViewer à true si le paramètre est présent dans l'URL
+  // Vérifier si on doit afficher le PDF automatiquement
   const shouldShowPDF = searchParams.get('showPDF') === 'true';
-  const [showPDFViewer, setShowPDFViewer] = useState(shouldShowPDF);
 
   useEffect(() => {
     fetchTenderDetails();
   }, [id]);
   
-  // Effet séparé pour gérer l'affichage du PDF quand les données sont prêtes
+  // Effet pour gérer l'affichage du PDF quand les données sont prêtes
   useEffect(() => {
     if (shouldShowPDF && project && client && !loading) {
-      setShowPDFViewer(true);
+      // Petit délai pour s'assurer que le DOM est prêt
+      const timer = setTimeout(() => {
+        setShowPDFViewer(true);
+        setPdfReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [shouldShowPDF, project, client, loading]);
 
@@ -167,11 +173,15 @@ const TenderView = () => {
         </div>
 
         {/* Prévisualisation PDF */}
-        {showPDFViewer && (
+        {showPDFViewer && project && client && (
           <Card className="mb-6">
             <CardContent className="p-0">
               <div style={{ height: '800px', width: '100%' }}>
-                <PDFViewer width="100%" height="100%">
+                <PDFViewer 
+                  key={`pdf-${project.id}-${pdfReady}`}
+                  width="100%" 
+                  height="100%"
+                >
                   <TenderPDF project={project} client={client} />
                 </PDFViewer>
               </div>
