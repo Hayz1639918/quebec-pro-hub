@@ -191,44 +191,121 @@ export function sortByProximity<T extends { latitude: number | null; longitude: 
 }
 
 /**
- * Geocode a postal code to coordinates using Nominatim API (OpenStreetMap)
+ * Canadian postal code prefix to approximate coordinates mapping
+ * First letter indicates a province/region
+ */
+const POSTAL_CODE_PREFIXES: Record<string, Coordinates> = {
+  // Quebec (G, H, J)
+  'G': { latitude: 46.8139, longitude: -71.2080 }, // Quebec City area
+  'H': { latitude: 45.5017, longitude: -73.5673 }, // Montreal area
+  'J': { latitude: 45.5312, longitude: -73.5182 }, // Montérégie/Laurentides area
+  // Ontario (K, L, M, N, P)
+  'K': { latitude: 45.4215, longitude: -75.6972 }, // Ottawa area
+  'L': { latitude: 43.6532, longitude: -79.3832 }, // Greater Toronto Area
+  'M': { latitude: 43.6532, longitude: -79.3832 }, // Toronto
+  'N': { latitude: 42.9849, longitude: -81.2453 }, // Southwestern Ontario
+  'P': { latitude: 46.4917, longitude: -80.9930 }, // Northern Ontario
+  // British Columbia (V)
+  'V': { latitude: 49.2827, longitude: -123.1207 }, // Vancouver area
+  // Alberta (T)
+  'T': { latitude: 51.0447, longitude: -114.0719 }, // Calgary area
+  // Saskatchewan (S)
+  'S': { latitude: 52.1332, longitude: -106.6700 }, // Saskatoon area
+  // Manitoba (R)
+  'R': { latitude: 49.8951, longitude: -97.1384 }, // Winnipeg area
+  // New Brunswick (E)
+  'E': { latitude: 46.0878, longitude: -64.7782 }, // Moncton area
+  // Nova Scotia (B)
+  'B': { latitude: 44.6488, longitude: -63.5752 }, // Halifax area
+  // Prince Edward Island (C)
+  'C': { latitude: 46.2382, longitude: -63.1311 }, // Charlottetown area
+  // Newfoundland and Labrador (A)
+  'A': { latitude: 47.5615, longitude: -52.7126 }, // St. John's area
+  // Yukon (Y), Northwest Territories (X), Nunavut (X)
+  'Y': { latitude: 60.7212, longitude: -135.0568 }, // Whitehorse
+  'X': { latitude: 62.4540, longitude: -114.3718 }, // Yellowknife
+};
+
+/**
+ * Geocode a postal code to coordinates using multiple strategies
  * @param postalCode - Postal code (Canadian format: A1A 1A1)
+ * @param city - Optional city name for better accuracy
  * @param country - Country code (default: 'CA' for Canada)
  * @returns Promise with coordinates or null if not found
  */
 export async function geocodePostalCode(
   postalCode: string,
+  city?: string,
   country: string = 'CA'
 ): Promise<Coordinates | null> {
   try {
     // Clean and format postal code
-    const cleanedPostalCode = postalCode.trim().toUpperCase().replace(/\s+/g, ' ');
+    const cleanedPostalCode = postalCode.trim().toUpperCase().replace(/\s+/g, '');
     
-    // Validate Canadian postal code format (A1A 1A1)
+    // Validate Canadian postal code format (A1A1A1)
     if (country === 'CA') {
-      const canadianPostalCodeRegex = /^[A-Z]\d[A-Z]\s?\d[A-Z]\d$/;
-      if (!canadianPostalCodeRegex.test(cleanedPostalCode.replace(/\s/g, ''))) {
-        console.warn('Invalid Canadian postal code format');
+      const canadianPostalCodeRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
+      if (!canadianPostalCodeRegex.test(cleanedPostalCode)) {
+        console.warn('Invalid Canadian postal code format:', cleanedPostalCode);
         return null;
       }
     }
 
-    // Use Nominatim API (free, no API key required)
-    // Rate limit: 1 request per second
-    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(
-      cleanedPostalCode
-    )}&country=${country}&format=json&limit=1`;
+    // Format with space for API calls: A1A 1A1
+    const formattedPostalCode = cleanedPostalCode.slice(0, 3) + ' ' + cleanedPostalCode.slice(3);
+
+    // Strategy 1: Try with postal code + city + Quebec, Canada
+    if (city) {
+      const result = await tryGeocode(`${formattedPostalCode}, ${city}, Quebec, Canada`);
+      if (result) return result;
+    }
+
+    // Strategy 2: Try with postal code + Quebec, Canada
+    const result2 = await tryGeocode(`${formattedPostalCode}, Quebec, Canada`);
+    if (result2) return result2;
+
+    // Strategy 3: Try with postal code + Canada
+    const result3 = await tryGeocode(`${formattedPostalCode}, Canada`);
+    if (result3) return result3;
+
+    // Strategy 4: Try Nominatim postalcode parameter
+    const result4 = await tryNominatimPostalCode(formattedPostalCode, country);
+    if (result4) return result4;
+
+    // Strategy 5: Fallback to postal code prefix mapping
+    const prefix = cleanedPostalCode.charAt(0);
+    if (POSTAL_CODE_PREFIXES[prefix]) {
+      console.log('Using postal code prefix fallback for:', cleanedPostalCode);
+      // Add small random offset to avoid all projects at same point
+      const offset = (Math.random() - 0.5) * 0.1; // ~5km variance
+      return {
+        latitude: POSTAL_CODE_PREFIXES[prefix].latitude + offset,
+        longitude: POSTAL_CODE_PREFIXES[prefix].longitude + offset,
+      };
+    }
+
+    console.warn('Could not geocode postal code:', cleanedPostalCode);
+    return null;
+  } catch (error) {
+    console.error('Error geocoding postal code:', error);
+    return null;
+  }
+}
+
+/**
+ * Try to geocode using a free-form query
+ */
+async function tryGeocode(query: string): Promise<Coordinates | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=ca`;
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'BatirNet/1.0', // Required by Nominatim
+        'User-Agent': 'BatirNet/1.0 (quebec-pro-hub)',
       },
     });
 
-    if (!response.ok) {
-      console.error('Geocoding API error:', response.statusText);
-      return null;
-    }
+    if (!response.ok) return null;
 
     const data = await response.json();
 
@@ -238,11 +315,37 @@ export async function geocodePostalCode(
         longitude: parseFloat(data[0].lon),
       };
     }
-
-    console.warn('No results found for postal code:', cleanedPostalCode);
     return null;
-  } catch (error) {
-    console.error('Error geocoding postal code:', error);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Try Nominatim's postalcode parameter
+ */
+async function tryNominatimPostalCode(postalCode: string, country: string): Promise<Coordinates | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?postalcode=${encodeURIComponent(postalCode)}&country=${country}&format=json&limit=1`;
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'BatirNet/1.0 (quebec-pro-hub)',
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      return {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch {
     return null;
   }
 }

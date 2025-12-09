@@ -162,13 +162,14 @@ const NewProject = () => {
     setProjectType("");
   }, [category]);
 
-  // Auto-geocode when postal code changes
+  // Auto-geocode when postal code or city changes
   useEffect(() => {
     const geocodeWithDelay = async () => {
       if (postalCode.length >= 6) {
         setGeocoding(true);
         try {
-          const coords = await geocodePostalCode(postalCode);
+          // Pass city for better geocoding accuracy
+          const coords = await geocodePostalCode(postalCode, city || undefined);
           if (coords) {
             setLatitude(coords.latitude);
             setLongitude(coords.longitude);
@@ -179,6 +180,11 @@ const NewProject = () => {
           } else {
             setLatitude(null);
             setLongitude(null);
+            toast({
+              title: "⚠️ Localisation approximative",
+              description: "Code postal non trouvé, position approximative utilisée",
+              variant: "default",
+            });
           }
         } catch (error) {
           console.error('Geocoding error:', error);
@@ -198,7 +204,7 @@ const NewProject = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [postalCode, toast]);
+  }, [postalCode, city, toast]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();

@@ -156,13 +156,14 @@ const EditProject = () => {
     checkUserAndLoadProject();
   }, [id]);
 
-  // Auto-geocode when postal code changes
+  // Auto-geocode when postal code or city changes
   useEffect(() => {
     const geocodeWithDelay = async () => {
       if (postalCode.length >= 6) {
         setGeocoding(true);
         try {
-          const coords = await geocodePostalCode(postalCode);
+          // Pass city for better geocoding accuracy
+          const coords = await geocodePostalCode(postalCode, city || undefined);
           if (coords) {
             setLatitude(coords.latitude);
             setLongitude(coords.longitude);
@@ -188,7 +189,7 @@ const EditProject = () => {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [postalCode]);
+  }, [postalCode, city]);
 
   const checkUserAndLoadProject = async () => {
     const { data: { session } } = await supabase.auth.getSession();
