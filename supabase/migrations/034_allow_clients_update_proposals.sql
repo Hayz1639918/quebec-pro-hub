@@ -31,9 +31,9 @@ BEGIN
   SET status = 'accepted', updated_at = NOW() 
   WHERE id = proposal_uuid;
   
-  -- 2. CRITIQUE: Retirer toutes les autres propositions du même projet
+  -- 2. CRITIQUE: Rejeter toutes les autres propositions du même projet
   UPDATE proposals 
-  SET status = 'withdrawn', updated_at = NOW() 
+  SET status = 'rejected', updated_at = NOW() 
   WHERE project_id = v_proposal.project_id 
     AND id != proposal_uuid 
     AND status = 'pending';

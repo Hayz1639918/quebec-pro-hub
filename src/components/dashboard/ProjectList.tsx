@@ -46,6 +46,8 @@ import {
   CheckCircle2,
   PlayCircle,
   Clock,
+  FileCheck,
+  User,
 } from "lucide-react";
 
 interface Project {
@@ -154,23 +156,38 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                 const hasContract = !!project.contract_id;
                 const isInProgress = project.status === 'in_progress';
                 const hasAssignedProfessional = !!project.assigned_professional_id;
-                // Afficher "Signature en attente" si le projet a un pro assigné mais pas de contrat signé
-                const hasPendingSignature = (hasAssignedProfessional || hasContract) && !hasSignedContract;
+                
+                // États distincts:
+                // 1. Offre acceptée mais pas de contrat = "En attente du contrat"
+                const awaitingContract = hasAssignedProfessional && !hasContract;
+                // 2. Contrat créé mais pas signé = "Signature en attente"  
+                const hasPendingSignature = hasContract && !hasSignedContract;
+                // 3. Contrat signé = "Contrat signé" (hasSignedContract)
                 
                 return (
                 <TableRow 
                   key={project.id} 
-                  className={`cursor-pointer hover:bg-muted/50 ${hasSignedContract ? 'bg-success-light' : ''}`}
+                  className={`cursor-pointer hover:bg-muted/50 ${
+                    hasSignedContract ? 'bg-success-light' : 
+                    awaitingContract ? 'bg-blue-50' : 
+                    hasPendingSignature ? 'bg-warning-light' : ''
+                  }`}
                   onClick={() => navigate(`/project/${project.id}`)}
                 >
                   <TableCell>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium">{project.title}</span>
                         {hasSignedContract && (
                           <Badge className="bg-success text-white text-xs">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             Contrat signé
+                          </Badge>
+                        )}
+                        {awaitingContract && (
+                          <Badge className="bg-blue-500 text-white text-xs">
+                            <FileCheck className="h-3 w-3 mr-1" />
+                            En attente du contrat
                           </Badge>
                         )}
                         {hasPendingSignature && (
@@ -303,13 +320,19 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
             const hasContract = !!project.contract_id;
             const isInProgress = project.status === 'in_progress';
             const hasAssignedProfessional = !!project.assigned_professional_id;
-            // Afficher "Signature en attente" si le projet a un pro assigné mais pas de contrat signé
-            const hasPendingSignature = (hasAssignedProfessional || hasContract) && !hasSignedContract;
+            
+            // États distincts:
+            const awaitingContract = hasAssignedProfessional && !hasContract;
+            const hasPendingSignature = hasContract && !hasSignedContract;
             
             return (
             <Card 
               key={project.id} 
-              className={`cursor-pointer hover:shadow-md transition-shadow ${hasSignedContract ? 'border-success/50 bg-success-light' : hasPendingSignature ? 'border-warning/50 bg-warning-light' : ''}`}
+              className={`cursor-pointer hover:shadow-md transition-shadow ${
+                hasSignedContract ? 'border-success/50 bg-success-light' : 
+                awaitingContract ? 'border-blue-500/50 bg-blue-50' : 
+                hasPendingSignature ? 'border-warning/50 bg-warning-light' : ''
+              }`}
               onClick={() => navigate(`/project/${project.id}`)}
             >
               <CardHeader>
@@ -321,6 +344,12 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                         <Badge className="bg-success text-white text-xs">
                           <CheckCircle2 className="h-3 w-3 mr-1" />
                           Signé
+                        </Badge>
+                      )}
+                      {awaitingContract && (
+                        <Badge className="bg-blue-500 text-white text-xs">
+                          <FileCheck className="h-3 w-3 mr-1" />
+                          En attente contrat
                         </Badge>
                       )}
                       {hasPendingSignature && (

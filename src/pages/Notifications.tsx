@@ -40,10 +40,21 @@ const Notifications = () => {
     // Map notification types to translation keys
     const typeMap: Record<string, string> = {
       'message': 'notifications.types.new_message',
+      'new_message': 'notifications.types.new_message',
       'proposal': 'notifications.types.new_proposal',
+      'new_proposal': 'notifications.types.new_proposal',
+      'proposal_accepted': 'notifications.types.proposal_accepted',
+      'proposal_rejected': 'notifications.types.proposal_rejected',
       'contract': 'notifications.types.contract_signed',
+      'contract_signed': 'notifications.types.contract_signed',
+      'contract_created': 'notifications.types.contract_created',
       'payment': 'notifications.types.payment_received',
+      'payment_received': 'notifications.types.payment_received',
       'review': 'notifications.types.review_posted',
+      'review_received': 'notifications.types.review_received',
+      'milestone_completed': 'notifications.types.milestone_completed',
+      'project_update': 'notifications.types.project_update',
+      'system': 'notifications.types.system_announcement',
     };
     
     // If we have a translation key for this type, use it
@@ -53,6 +64,36 @@ const Notifications = () => {
     
     // Otherwise, fall back to the stored title
     return notification.title;
+  };
+
+  // Function to translate notification messages
+  const getTranslatedMessage = (notification: Notification): string => {
+    const metadata = notification.metadata;
+    
+    // Try to build a translated message based on type
+    switch (notification.type) {
+      case 'proposal':
+      case 'new_proposal':
+        if (metadata?.project_id) {
+          return t('notifications.messages.new_proposal_for_project');
+        }
+        break;
+      case 'proposal_accepted':
+        return t('notifications.messages.proposal_accepted');
+      case 'proposal_rejected':
+        return t('notifications.messages.proposal_rejected');
+      case 'message':
+      case 'new_message':
+        return t('notifications.messages.new_message_received');
+      case 'contract':
+      case 'contract_signed':
+        return t('notifications.messages.contract_signed');
+      case 'contract_created':
+        return t('notifications.messages.contract_created');
+    }
+    
+    // Fall back to stored message
+    return notification.message;
   };
 
   useEffect(() => {
@@ -311,7 +352,7 @@ const Notifications = () => {
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {notification.message}
+                        {getTranslatedMessage(notification)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(notification.created_at), 'PPp', {

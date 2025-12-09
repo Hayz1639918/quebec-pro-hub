@@ -960,24 +960,6 @@ const Dashboard = () => {
                       <Plus className="mr-2 h-5 w-5" />
                       {t('dashboard.quick_actions.new_project')}
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start" 
-                      size="lg"
-                      onClick={() => navigate("/professionals")}
-                    >
-                      <Star className="mr-2 h-5 w-5" />
-                      {t('dashboard.quick_actions.find_pro')}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start" 
-                      size="lg"
-                      onClick={() => navigate("/projects")}
-                    >
-                      <Briefcase className="mr-2 h-5 w-5" />
-                      {t('dashboard.quick_actions.explore_projects')}
-                    </Button>
                   </CardContent>
                 </Card>
 
@@ -1069,80 +1051,7 @@ const Dashboard = () => {
                 </Card>
               )}
 
-              {/* Active Projects with Progress */}
-              {activeProjects.length > 0 && (
-                <Card className="border-success/30 bg-success-light">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Hammer className="h-5 w-5 text-success" />
-                      Projets en cours
-                    </CardTitle>
-                    <CardDescription>
-                      Suivez l'avancement de vos projets avec les entrepreneurs assignés
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {activeProjects.slice(0, 3).map((project) => (
-                        <div key={project.id} className="border rounded-lg p-4 bg-white">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex-1">
-                              <h4 className="font-semibold mb-1">{project.title}</h4>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Badge variant="outline">{project.category}</Badge>
-                                <span>• {project.professional_name}</span>
-                              </div>
-                            </div>
-                            {project.unread_reports > 0 && (
-                              <Badge variant="destructive" className="ml-2">
-                                {project.unread_reports} nouveau{project.unread_reports > 1 ? 'x' : ''} rapport{project.unread_reports > 1 ? 's' : ''}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {/* Progress bar */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between text-sm mb-1">
-                              <span className="text-muted-foreground">Avancement</span>
-                              <span className="font-semibold">{project.progress_percentage}%</span>
-                            </div>
-                            <Progress value={project.progress_percentage} className="h-2" />
-                            {project.current_phase && (
-                              <p className="text-xs text-muted-foreground mt-1">Phase: {project.current_phase}</p>
-                            )}
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            {project.contract_id && !project.contract_signed && (
-                              <Button
-                                size="sm"
-                                className="bg-warning hover:bg-warning/90"
-                                onClick={() => navigate(`/contracts?contract=${project.contract_id}`)}
-                              >
-                                <FileText className="h-4 w-4 mr-1" />
-                                Signer le contrat
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => navigate(`/messages?user=${project.professional_id}`)}
-                            >
-                              <MessageSquare className="h-4 w-4 mr-1" />
-                              Contacter
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                      {activeProjects.length > 3 && (
-                        <Button variant="link" className="w-full" onClick={() => {/* TODO: tab switch */}}>
-                          Voir tous les projets en cours ({activeProjects.length})
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Active Projects section removed - redundant with Projects tab */}
 
               {/* Recent Reports */}
               {projectReports.length > 0 && (

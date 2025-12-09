@@ -85,7 +85,7 @@ interface Professional {
 }
 
 const Professionals = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   
   const SERVICES = [
@@ -162,6 +162,16 @@ const Professionals = () => {
     checkUser();
   }, []);
 
+  // Reset filters when language changes to ensure translated values match
+  useEffect(() => {
+    setSelectedService(SERVICES[0]);
+    setSelectedRegion(REGIONS[0]);
+    setSelectedBudget(BUDGET_RANGES[0]);
+    setSelectedAvailability(AVAILABILITY_OPTIONS[0]);
+    setSelectedResponseTime(RESPONSE_TIME_OPTIONS[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id || null);
@@ -208,11 +218,13 @@ const Professionals = () => {
 
   const fetchProfessionals = async () => {
     try {
+      // Afficher tous les professionnels (vérifiés et non vérifiés)
+      // Un badge indiquera leur statut de vérification RBQ
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_type', 'professional')
-        .eq('is_rbq_verified', true)
+        .order('is_rbq_verified', { ascending: false }) // Vérifiés en premier
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -237,39 +249,40 @@ const Professionals = () => {
       );
     }
 
-    // Service filter
-    if (selectedService !== "Tous les services") {
+    // Service filter - use SERVICES[0] which is the translated "All Services" option
+    if (selectedService !== SERVICES[0]) {
       filtered = filtered.filter((pro) =>
         pro.services_offered?.toLowerCase().includes(selectedService.toLowerCase())
       );
     }
 
-    // Region filter
-    if (selectedRegion !== "Toutes les régions") {
+    // Region filter - use REGIONS[0] which is the translated "All Regions" option
+    if (selectedRegion !== REGIONS[0]) {
       filtered = filtered.filter((pro) =>
         pro.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
         pro.region?.toLowerCase().includes(selectedRegion.toLowerCase())
       );
     }
 
-    // Budget filter (hourly rate)
-    if (selectedBudget !== "Tous les budgets") {
+    // Budget filter (hourly rate) - use index-based comparison for i18n support
+    if (selectedBudget !== BUDGET_RANGES[0]) {
       filtered = filtered.filter((pro) => {
         if (!pro.hourly_rate_min && !pro.hourly_rate_max) return false;
         
         const minRate = pro.hourly_rate_min || 0;
         const maxRate = pro.hourly_rate_max || 9999;
+        const budgetIndex = BUDGET_RANGES.indexOf(selectedBudget);
         
-        switch (selectedBudget) {
-          case "Moins de 50 $/h":
+        switch (budgetIndex) {
+          case 1: // Under 50$/h
             return minRate < 50;
-          case "50 - 75 $/h":
+          case 2: // 50-75$/h
             return (minRate >= 50 && minRate <= 75) || (maxRate >= 50 && maxRate <= 75);
-          case "75 - 100 $/h":
+          case 3: // 75-100$/h
             return (minRate >= 75 && minRate <= 100) || (maxRate >= 75 && maxRate <= 100);
-          case "100 - 150 $/h":
+          case 4: // 100-150$/h
             return (minRate >= 100 && minRate <= 150) || (maxRate >= 100 && maxRate <= 150);
-          case "150 $/h et plus":
+          case 5: // 150$/h and more
             return maxRate >= 150;
           default:
             return true;
@@ -277,24 +290,25 @@ const Professionals = () => {
       });
     }
 
-    // Availability filter
-    if (selectedAvailability !== "Toutes disponibilités") {
+    // Availability filter - use index-based comparison for i18n support
+    if (selectedAvailability !== AVAILABILITY_OPTIONS[0]) {
       filtered = filtered.filter((pro) => {
         const today = new Date();
         const availableFrom = pro.available_from ? new Date(pro.available_from) : null;
+        const availabilityIndex = AVAILABILITY_OPTIONS.indexOf(selectedAvailability);
         
-        switch (selectedAvailability) {
-          case "Disponible immédiatement":
+        switch (availabilityIndex) {
+          case 1: // Available now
             return pro.availability_status === 'available' && (!availableFrom || availableFrom <= today);
-          case "Disponible dans 2 semaines": {
+          case 2: { // Available within 2 weeks
             const twoWeeksFromNow = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
             return pro.availability_status !== 'unavailable' && (!availableFrom || availableFrom <= twoWeeksFromNow);
           }
-          case "Disponible dans 1 mois": {
+          case 3: { // Available within 1 month
             const oneMonthFromNow = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
             return pro.availability_status !== 'unavailable' && (!availableFrom || availableFrom <= oneMonthFromNow);
           }
-          case "Occupé actuellement":
+          case 4: // Currently busy
             return pro.availability_status === 'busy';
           default:
             return true;
@@ -302,17 +316,18 @@ const Professionals = () => {
       });
     }
 
-    // Response time filter
-    if (selectedResponseTime !== "Tous les temps de réponse") {
+    // Response time filter - use index-based comparison for i18n support
+    if (selectedResponseTime !== RESPONSE_TIME_OPTIONS[0]) {
       filtered = filtered.filter((pro) => {
         const responseTime = pro.response_time_hours || 999;
+        const responseIndex = RESPONSE_TIME_OPTIONS.indexOf(selectedResponseTime);
         
-        switch (selectedResponseTime) {
-          case "Moins de 6 heures":
+        switch (responseIndex) {
+          case 1: // Under 6 hours
             return responseTime <= 6;
-          case "Moins de 24 heures":
+          case 2: // Under 24 hours
             return responseTime <= 24;
-          case "Moins de 48 heures":
+          case 3: // Under 48 hours
             return responseTime <= 48;
           default:
             return true;
@@ -351,11 +366,17 @@ const Professionals = () => {
     setFilteredProfessionals(filtered);
   };
 
+  const translateService = (service: string): string => {
+    const normalizedService = service.toLowerCase().trim();
+    const serviceMap = t('professionals.filters.service_map', { returnObjects: true }) as Record<string, string>;
+    return serviceMap[normalizedService] || service;
+  };
+
   const getServiceBadges = (services: string | null) => {
     if (!services) return [];
     return services
       .split(',')
-      .map((s) => s.trim())
+      .map((s) => translateService(s.trim()))
       .filter(Boolean)
       .slice(0, 3);
   };
@@ -712,13 +733,18 @@ const Professionals = () => {
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2">
+                            <CardTitle className="flex items-center gap-2 flex-wrap">
                               <Building2 className="h-5 w-5 text-primary" />
                               {pro.company_name}
-                              {pro.is_rbq_verified && (
-                                <Badge variant="default" className="ml-2">
+                              {pro.is_rbq_verified ? (
+                                <Badge variant="default" className="ml-2 bg-green-600">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   {t('professionals.card.verified')}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="ml-2 text-orange-600 border-orange-300">
+                                  <Clock className="h-3 w-3 mr-1" />
+                                  {t('professionals.card.pending_verification')}
                                 </Badge>
                               )}
                             </CardTitle>
@@ -784,10 +810,10 @@ const Professionals = () => {
                             <DollarSign className="h-4 w-4 text-green-600" />
                             <span className="font-medium">
                               {pro.hourly_rate_min && pro.hourly_rate_max
-                                ? `${pro.hourly_rate_min} - ${pro.hourly_rate_max} $/h`
+                                ? `${pro.hourly_rate_min} - ${pro.hourly_rate_max} ${t('professionals.card.hourly_rate')}`
                                 : pro.hourly_rate_min
-                                ? `À partir de ${pro.hourly_rate_min} $/h`
-                                : `Jusqu'à ${pro.hourly_rate_max} $/h`}
+                                ? `${t('projects.card.from')} ${pro.hourly_rate_min} ${t('professionals.card.hourly_rate')}`
+                                : `${t('projects.card.up_to')} ${pro.hourly_rate_max} ${t('professionals.card.hourly_rate')}`}
                             </span>
                           </div>
                         )}
@@ -804,14 +830,14 @@ const Professionals = () => {
                                 : 'text-red-600'
                             }>
                               {pro.availability_status === 'available' 
-                                ? 'Disponible' 
+                                ? t('professionals.card.available')
                                 : pro.availability_status === 'busy'
-                                ? 'Occupé'
-                                : 'Non disponible'}
+                                ? t('professionals.card.busy')
+                                : t('professionals.card.unavailable')}
                             </span>
                             {pro.available_from && new Date(pro.available_from) > new Date() && (
                               <span className="text-muted-foreground text-xs">
-                                (dès le {new Date(pro.available_from).toLocaleDateString('fr-CA')})
+                                ({t('professionals.card.available_from')} {new Date(pro.available_from).toLocaleDateString(i18n.language === 'fr' ? 'fr-CA' : 'en-CA')})
                               </span>
                             )}
                           </div>
@@ -822,7 +848,7 @@ const Professionals = () => {
                           <div className="flex items-center gap-2 text-sm">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              Répond en ~{pro.response_time_hours}h
+                              {t('professionals.card.response_time', { hours: pro.response_time_hours })}
                             </span>
                           </div>
                         )}
@@ -832,7 +858,7 @@ const Professionals = () => {
                         {/* Services */}
                         {pro.services_offered && (
                           <div>
-                            <p className="text-sm font-medium mb-2">Services offerts:</p>
+                            <p className="text-sm font-medium mb-2">{t('professionals.card.services_offered')}</p>
                             <div className="flex flex-wrap gap-2">
                               {getServiceBadges(pro.services_offered).map((service, index) => (
                                 <Badge key={index} variant="secondary">
@@ -841,7 +867,7 @@ const Professionals = () => {
                               ))}
                               {pro.services_offered.split(',').length > 3 && (
                                 <Badge variant="outline">
-                                  +{pro.services_offered.split(',').length - 3} autres
+                                  +{pro.services_offered.split(',').length - 3} {t('professionals.card.others')}
                                 </Badge>
                               )}
                             </div>
@@ -878,9 +904,7 @@ const Professionals = () => {
                         <div className="flex gap-2">
                           <Button 
                             className="flex-1" 
-                            onClick={() => {
-                              alert(t('professionals.card.profile_in_dev'));
-                            }}
+                            onClick={() => navigate(`/professional/${pro.id}`)}
                           >
                             {t('professionals.card.view_profile')}
                           </Button>

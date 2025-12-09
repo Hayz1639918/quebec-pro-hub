@@ -76,33 +76,7 @@ BEGIN
     );
   END IF;
 
-  -- Notify when proposal is withdrawn (autres offres retirées)
-  IF NEW.status = 'withdrawn' AND (OLD.status IS NULL OR OLD.status <> 'withdrawn') THEN
-    SELECT p.title INTO project_title
-    FROM projects p WHERE p.id = NEW.project_id;
-
-    INSERT INTO notifications (
-      user_id,
-      type,
-      title,
-      message,
-      related_project_id,
-      action_url,
-      metadata
-    ) VALUES (
-      NEW.professional_id,
-      'proposal_withdrawn',
-      'Projet attribué à un autre professionnel',
-      'Le projet "' || project_title || '" a été attribué à un autre professionnel.',
-      NEW.project_id,
-      '/projects',
-      jsonb_build_object(
-        'project_id', NEW.project_id,
-        'proposal_id', NEW.id,
-        'project_title', project_title
-      )
-    );
-  END IF;
+  -- Note: 'withdrawn' status removed - rejection notifications are handled by accept_proposal function
 
   RETURN NEW;
 END;

@@ -53,17 +53,6 @@ interface RecentActivity {
   status?: string;
 }
 
-interface Project {
-  id: string;
-  title: string;
-  category: string;
-  budget_min: number | null;
-  budget_max: number | null;
-  city: string | null;
-  created_at: string;
-  proposal_count: number;
-}
-
 interface AssignedProject {
   id: string;
   title: string;
@@ -107,7 +96,6 @@ const ProDashboard = () => {
     unreadMessages: 0,
     pendingContracts: 0,
   });
-  const [recentProjects, setRecentProjects] = useState<Project[]>([]);
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
@@ -250,16 +238,6 @@ const ProDashboard = () => {
         pendingContracts: pendingContracts || 0,
       });
 
-      // Fetch recent projects
-      const { data: projectsData } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('status', 'open')
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      setRecentProjects(projectsData || []);
-
       // Fetch assigned projects (where this professional was accepted)
       // Note: This requires migration 031_project_workflow_notifications.sql to be applied
       try {
@@ -311,13 +289,6 @@ const ProDashboard = () => {
     } catch (e) {
       console.error('Error fetching dashboard data:', e);
     }
-  };
-
-  const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return 'À discuter';
-    if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
-    if (min) return `À partir de ${min.toLocaleString()} $`;
-    return `Jusqu'à ${max!.toLocaleString()} $`;
   };
 
   if (loading) {
@@ -470,14 +441,14 @@ const ProDashboard = () => {
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-3 md:mb-4">
               <Button
-                variant="default"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 bg-primary hover:bg-primary/90 text-[11px] sm:text-xs md:text-sm"
+                variant="outline"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 border-primary text-primary hover:bg-primary/5 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate('/pro/my-projects')}
               >
                 <Hammer className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.my_projects')}</span>
                 {assignedProjects.length > 0 && (
-                  <Badge variant="secondary" className="bg-white text-primary text-[10px] sm:text-xs">
+                  <Badge variant="default" className="text-[10px] sm:text-xs">
                     {assignedProjects.length}
                   </Badge>
                 )}
@@ -534,53 +505,6 @@ const ProDashboard = () => {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-          {/* Recent Projects */}
-          <Card>
-            <CardHeader className="p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-base sm:text-lg md:text-xl">{t('pro_dashboard.new_projects.title')}</CardTitle>
-              <CardDescription className="text-xs sm:text-sm">{t('pro_dashboard.new_projects.description')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {recentProjects.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Briefcase className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                  <p className="text-sm">{t('pro_dashboard.new_projects.no_projects')}</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentProjects.map((project) => (
-                    <div key={project.id} className="border rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-1">{project.title}</h4>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                            <Badge variant="outline">{project.category}</Badge>
-                            {project.city && <span>• {project.city}</span>}
-                          </div>
-                          <p className="text-sm font-semibold text-primary">
-                            {formatBudget(project.budget_min, project.budget_max)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-3">
-                        <span className="text-xs text-muted-foreground">
-                          {t('pro_dashboard.new_projects.published')} {format(new Date(project.created_at), 'PPP', { locale: fr })}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => navigate(`/projects?selected=${project.id}`)}
-                        >
-                          {t('pro_dashboard.new_projects.view_details')}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Performance Overview */}
           <Card>
             <CardHeader>

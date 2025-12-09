@@ -10,3 +10,5 @@ COMMENT ON COLUMN profiles.address IS 'Street address for contracts and official
 -- Create index for address searches
 CREATE INDEX IF NOT EXISTS idx_profiles_address ON profiles(address) WHERE address IS NOT NULL;
 
+
+

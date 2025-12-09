@@ -149,6 +149,14 @@ const Projects = () => {
     })();
   }, []);
 
+  // Reset filters when language changes to ensure translated values match
+  useEffect(() => {
+    setSelectedCategory(CATEGORIES[0]);
+    setSelectedRegion(REGIONS[0]);
+    setSelectedBudget(BUDGETS[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
   useEffect(() => {
     filterAndSortProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -184,39 +192,40 @@ const Projects = () => {
       );
     }
 
-    // Category filter
-    if (selectedCategory !== "Toutes les catégories") {
+    // Category filter - use CATEGORIES[0] which is the translated "All Categories" option
+    if (selectedCategory !== CATEGORIES[0]) {
       filtered = filtered.filter((project) =>
         project.category?.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
 
-    // Region filter
-    if (selectedRegion !== "Toutes les régions") {
+    // Region filter - use REGIONS[0] which is the translated "All Regions" option
+    if (selectedRegion !== REGIONS[0]) {
       filtered = filtered.filter((project) =>
         project.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
         project.region?.toLowerCase().includes(selectedRegion.toLowerCase())
       );
     }
 
-    // Budget filter
-    if (selectedBudget !== "Tous les budgets") {
+    // Budget filter - use BUDGETS[0] and index-based comparison for i18n support
+    if (selectedBudget !== BUDGETS[0]) {
       filtered = filtered.filter((project) => {
         const min = project.budget_min || 0;
         const max = project.budget_max || Infinity;
+        const budgetIndex = BUDGETS.indexOf(selectedBudget);
         
-        switch (selectedBudget) {
-          case "Moins de 5 000 $":
+        switch (budgetIndex) {
+          case 1: // Under 5k
             return max < 5000;
-          case "5 000 $ - 10 000 $":
+          case 2: // 5k-10k
             return min >= 5000 && max <= 10000;
-          case "10 000 $ - 25 000 $":
+          case 3: // 10k-25k
             return min >= 10000 && max <= 25000;
-          case "25 000 $ - 50 000 $":
+          case 4: // 25k-50k
             return min >= 25000 && max <= 50000;
-          case "50 000 $ - 100 000 $":
+          case 5: // 50k-100k
             return min >= 50000 && max <= 100000;
-          case "Plus de 100 000 $":
+          case 6: // Over 100k
             return min > 100000;
           default:
             return true;

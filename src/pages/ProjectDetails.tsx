@@ -26,7 +26,11 @@ import {
   FileText,
   CheckCircle2,
   ClipboardList,
-  ExternalLink
+  ExternalLink,
+  Paperclip,
+  Image as ImageIcon,
+  FileDown,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -92,6 +96,15 @@ interface Profile {
   company_name?: string;
 }
 
+interface ProjectImage {
+  id: string;
+  project_id: string;
+  image_url: string;
+  caption: string | null;
+  display_order: number;
+  created_at: string;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-500',
   in_progress: 'bg-blue-500',
@@ -119,6 +132,8 @@ const ProjectDetails = () => {
   const [projectContract, setProjectContract] = useState<ProjectContract | null>(null);
   const [acceptedProposal, setAcceptedProposal] = useState<AcceptedProposal | null>(null);
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
+  const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
@@ -128,8 +143,14 @@ const ProjectDetails = () => {
   useEffect(() => {
     fetchProjectDetails();
     fetchCurrentUser();
-    incrementViewCount();
   }, [id]);
+
+  // Incrémenter le compteur de vues une fois que le projet et l'utilisateur sont chargés
+  useEffect(() => {
+    if (project && currentUser && currentUser.id !== project.client_id) {
+      incrementViewCount();
+    }
+  }, [project?.id, currentUser?.id]);
 
   useEffect(() => {
     if (project?.id) {
@@ -255,6 +276,17 @@ const ProjectDetails = () => {
 
       if (clientError) throw clientError;
       setClient(clientData);
+
+      // Récupérer les pièces jointes du projet
+      const { data: imagesData } = await supabase
+        .from('project_images')
+        .select('*')
+        .eq('project_id', id)
+        .order('display_order', { ascending: true });
+
+      if (imagesData) {
+        setProjectImages(imagesData);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement du projet:', error);
       toast.error(t('project_details.error_loading'));
@@ -264,13 +296,31 @@ const ProjectDetails = () => {
   };
 
   const incrementViewCount = async () => {
-    if (!id) return;
+    if (!id || !project) return;
+    
+    // Vérifier si cette vue a déjà été comptée dans cette session
+    const viewedKey = `project_viewed_${id}`;
+    if (sessionStorage.getItem(viewedKey)) {
+      return; // Déjà vu dans cette session
+    }
     
     try {
-      await supabase
-        .from('projects')
-        .update({ views_count: (project?.views_count || 0) + 1 })
-        .eq('id', id);
+      // Utiliser une requête RPC ou une mise à jour atomique
+      const { error } = await supabase.rpc('increment_project_views', { project_uuid: id });
+      
+      if (error) {
+        // Fallback si la fonction RPC n'existe pas
+        await supabase
+          .from('projects')
+          .update({ views_count: project.views_count + 1 })
+          .eq('id', id);
+      }
+      
+      // Marquer comme vu dans cette session
+      sessionStorage.setItem(viewedKey, 'true');
+      
+      // Mettre à jour l'état local
+      setProject(prev => prev ? { ...prev, views_count: prev.views_count + 1 } : null);
     } catch (error) {
       console.error('Erreur lors de l\'incrémentation des vues:', error);
     }
@@ -634,6 +684,72 @@ const ProjectDetails = () => {
                     </span>
                   </div>
                 </div>
+
+                {/* Section Pièces jointes */}
+                {projectImages.length > 0 && (
+                  <>
+                    <Separator />
+                    <div>
+                      <h3 className="font-semibold mb-3 flex items-center gap-2">
+                        <Paperclip className="h-4 w-4" />
+                        Pièces jointes ({projectImages.length})
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {projectImages.map((image) => {
+                          const isPDF = image.image_url.toLowerCase().includes('.pdf');
+                          const fileName = image.image_url.split('/').pop() || 'fichier';
+                          
+                          return (
+                            <div 
+                              key={image.id}
+                              className="relative group border rounded-lg overflow-hidden bg-gray-50 hover:border-primary transition-colors"
+                            >
+                              {isPDF ? (
+                                // Affichage pour PDF
+                                <div className="aspect-square flex flex-col items-center justify-center p-4">
+                                  <FileText className="h-12 w-12 text-red-500 mb-2" />
+                                  <span className="text-xs text-center text-muted-foreground truncate w-full px-2">
+                                    {fileName}
+                                  </span>
+                                </div>
+                              ) : (
+                                // Affichage pour images
+                                <div className="aspect-square">
+                                  <img 
+                                    src={image.image_url} 
+                                    alt={image.caption || `Image ${image.display_order + 1}`}
+                                    className="w-full h-full object-cover cursor-pointer"
+                                    onClick={() => setPreviewImage(image.image_url)}
+                                  />
+                                </div>
+                              )}
+                              
+                              {/* Overlay avec actions */}
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                {!isPDF && (
+                                  <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => setPreviewImage(image.image_url)}
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  onClick={() => window.open(image.image_url, '_blank')}
+                                >
+                                  {isPDF ? <ExternalLink className="h-4 w-4" /> : <FileDown className="h-4 w-4" />}
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
 
@@ -714,8 +830,8 @@ const ProjectDetails = () => {
                 Documents du projet
               </h2>
 
-              {/* Soumission acceptée (si pas encore de contrat) */}
-              {acceptedProposal && !projectContract && (
+              {/* Soumission acceptée */}
+              {acceptedProposal && (
                 <Card className="border-green-300 bg-green-50/30">
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -735,7 +851,7 @@ const ProjectDetails = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between">
+                    <div className="space-y-4">
                       <div className="text-sm text-muted-foreground">
                         {acceptedProposal.estimated_budget && (
                           <p>Budget proposé: <span className="font-medium text-foreground">{acceptedProposal.estimated_budget.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
@@ -745,19 +861,34 @@ const ProjectDetails = () => {
                         )}
                         <p>Acceptée le {format(new Date(acceptedProposal.created_at), 'dd MMM yyyy', { locale: fr })}</p>
                       </div>
-                      <Button 
-                        onClick={() => navigate(`/proposal/${acceptedProposal.id}`)}
-                        className="bg-green-600 hover:bg-green-700"
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Voir la soumission
-                      </Button>
-                    </div>
-                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                      <p className="text-sm text-blue-800">
-                        <Clock className="h-4 w-4 inline mr-1" />
-                        <strong>En attente du contrat</strong> - L'entrepreneur doit maintenant vous envoyer un contrat à signer.
-                      </p>
+                      
+                      {/* Boutons pour voir la soumission */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          onClick={() => navigate(`/proposal/${acceptedProposal.id}`)}
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Voir les détails
+                        </Button>
+                        <Button 
+                          onClick={() => navigate(`/proposal/${acceptedProposal.id}?showPDF=true`)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          Voir le PDF
+                        </Button>
+                      </div>
+                      
+                      {/* Message d'attente du contrat (si pas encore de contrat) */}
+                      {!projectContract && (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-800">
+                            <Clock className="h-4 w-4 inline mr-1" />
+                            <strong>En attente du contrat</strong> - L'entrepreneur doit maintenant vous envoyer un contrat à signer.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -946,7 +1077,7 @@ const ProjectDetails = () => {
                   <Button 
                     variant="outline" 
                     className="w-full"
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => navigate(`/edit-project/${project.id}`)}
                   >
                     Modifier le projet
                   </Button>
@@ -958,6 +1089,58 @@ const ProjectDetails = () => {
       </main>
 
       <Footer />
+
+      {/* Modal de prévisualisation d'image */}
+      {previewImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-4xl max-h-[90vh]">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -top-12 right-0 text-white hover:bg-white/20"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <img 
+              src={previewImage} 
+              alt="Prévisualisation"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <div className="absolute -bottom-12 left-0 right-0 flex justify-center gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(previewImage, '_blank');
+                }}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ouvrir dans un nouvel onglet
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const link = document.createElement('a');
+                  link.href = previewImage;
+                  link.download = previewImage.split('/').pop() || 'image';
+                  link.click();
+                }}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Télécharger
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

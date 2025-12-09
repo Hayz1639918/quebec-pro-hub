@@ -174,9 +174,11 @@ const AutoLocate = ({
 
 // Locate button component
 const LocateButton = ({ 
-  onLocate 
+  onLocate,
+  t
 }: { 
-  onLocate: (lat: number, lng: number) => void 
+  onLocate: (lat: number, lng: number) => void;
+  t: (key: string) => string;
 }) => {
   const map = useMap();
   const [loading, setLoading] = useState(false);
@@ -218,7 +220,7 @@ const LocateButton = ({
       disabled={loading}
     >
       <Locate className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-      {loading ? 'Localisation...' : 'Ma position'}
+      {loading ? t('common.loading') : t('professionals.map.my_location')}
     </Button>
   );
 };
@@ -261,10 +263,10 @@ export const InteractiveMap = ({
   }, []);
 
   const formatBudget = (min: number | null, max: number | null) => {
-    if (!min && !max) return 'À discuter';
+    if (!min && !max) return t('projects.card.to_discuss');
     if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
-    if (min) return `À partir de ${min.toLocaleString()} $`;
-    return `Jusqu'à ${max!.toLocaleString()} $`;
+    if (min) return `${t('projects.card.from')} ${min.toLocaleString()} $`;
+    return `${t('projects.card.up_to')} ${max!.toLocaleString()} $`;
   };
 
   const items = mode === 'projects' ? projects : professionals;
@@ -276,7 +278,7 @@ export const InteractiveMap = ({
         <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[200px]">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Rayon: {radius} km</span>
+            <span className="text-sm font-medium">{t('professionals.map.radius')}: {radius} {t('professionals.map.km')}</span>
           </div>
           <Slider
             value={[radius]}
@@ -292,9 +294,9 @@ export const InteractiveMap = ({
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
           <Badge variant="secondary" className="shadow-lg">
             {mode === 'projects' ? (
-              <><Briefcase className="h-3 w-3 mr-1" /> {items.length} projet{items.length > 1 ? 's' : ''}</>
+              <><Briefcase className="h-3 w-3 mr-1" /> {t('projects.map.projects_count', { count: items.length })}</>
             ) : (
-              <><User className="h-3 w-3 mr-1" /> {items.length} professionnel{items.length > 1 ? 's' : ''}</>
+              <><User className="h-3 w-3 mr-1" /> {t('professionals.map.professionals_count', { count: items.length })}</>
             )}
           </Badge>
         </div>
@@ -308,7 +310,7 @@ export const InteractiveMap = ({
                 <div className="absolute inset-0 h-8 w-8 border-2 border-primary/30 rounded-full animate-ping" />
               </div>
               <span className="text-sm font-medium text-gray-600">
-                Localisation en cours...
+                {t('common.loading')}
               </span>
             </div>
           </div>
@@ -343,7 +345,7 @@ export const InteractiveMap = ({
               onLoadingChange={handleLoadingChange}
             />
             
-            <LocateButton onLocate={handleLocate} />
+            <LocateButton onLocate={handleLocate} t={t} />
 
             {/* User location marker and radius circle */}
             {userLocation && (
@@ -351,7 +353,7 @@ export const InteractiveMap = ({
                 <Marker position={userLocation} icon={userLocationIcon}>
                   <Popup>
                     <div className="text-center">
-                      <strong>📍 Votre position</strong>
+                      <strong>📍 {t('professionals.map.my_location')}</strong>
                     </div>
                   </Popup>
                 </Marker>
@@ -402,7 +404,7 @@ export const InteractiveMap = ({
                       onClick={() => navigate(`/project/${project.id}`)}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Voir le projet
+                      {t('projects.card.view_details')}
                     </Button>
                   </div>
                 </Popup>
@@ -423,7 +425,7 @@ export const InteractiveMap = ({
                     </h3>
                     {pro.is_rbq_verified && (
                       <Badge variant="default" className="mb-2 text-xs bg-green-600">
-                        ✓ RBQ Vérifié
+                        ✓ {t('professionals.card.verified')}
                       </Badge>
                     )}
                     <div className="space-y-1 text-xs text-gray-600">
@@ -433,14 +435,14 @@ export const InteractiveMap = ({
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="h-3 w-3 text-yellow-500" />
-                        {pro.average_rating.toFixed(1)} ({pro.total_reviews} avis)
+                        {pro.average_rating.toFixed(1)} ({pro.total_reviews} {t('professionals.card.reviews')})
                       </div>
                       {pro.years_experience && (
-                        <div>{pro.years_experience} ans d'expérience</div>
+                        <div>{pro.years_experience} {t('professionals.card.years_exp')}</div>
                       )}
                       {pro.distance_km && (
                         <div className="text-primary font-medium">
-                          📍 {pro.distance_km.toFixed(1)} km
+                          📍 {pro.distance_km.toFixed(1)} {t('professionals.map.km')}
                         </div>
                       )}
                     </div>
@@ -450,7 +452,7 @@ export const InteractiveMap = ({
                       onClick={() => navigate(`/professional/${pro.id}`)}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Voir le profil
+                      {t('professionals.card.view_profile')}
                     </Button>
                   </div>
                 </Popup>
