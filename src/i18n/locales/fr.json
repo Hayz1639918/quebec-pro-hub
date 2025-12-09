@@ -720,7 +720,9 @@
       "km": "km",
       "no_location": "Localisation non disponible",
       "professionals_count": "{{count}} professionnel(s) dans ce secteur",
-      "my_location": "Ma position"
+      "my_location": "Ma position",
+      "click_to_move": "Cliquez sur la carte pour déplacer",
+      "drag_to_move": "Glissez le marqueur pour repositionner"
     },
     "geolocation": {
       "disabled": "Localisation désactivée",

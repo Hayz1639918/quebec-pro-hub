@@ -718,7 +718,9 @@
       "km": "km",
       "no_location": "Location not available",
       "professionals_count": "{{count}} professional(s) in this area",
-      "my_location": "My Location"
+      "my_location": "My Location",
+      "click_to_move": "Click on map to move origin",
+      "drag_to_move": "Drag marker to reposition"
     },
     "geolocation": {
       "disabled": "Location Disabled",

@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
-import { Icon, LatLngBounds } from 'leaflet';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, useMapEvents } from 'react-leaflet';
+import { Icon, DragEndEvent } from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,8 @@ import {
   User, 
   Star,
   DollarSign,
-  Eye
+  Eye,
+  MousePointerClick
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import 'leaflet/dist/leaflet.css';
@@ -48,16 +49,7 @@ const professionalIcon = new Icon({
   className: 'professional-marker'
 });
 
-const userLocationIcon = new Icon({
-  iconUrl: markerIcon,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl: markerShadow,
-  iconSize: [30, 49],
-  iconAnchor: [15, 49],
-  popupAnchor: [1, -40],
-  shadowSize: [41, 41],
-  className: 'user-location-marker'
-});
+// User location icon is created dynamically with useMemo in the component
 
 // Types
 export interface MapProject {
@@ -172,6 +164,24 @@ const AutoLocate = ({
   return null;
 };
 
+// Component to handle map click events for setting new origin
+const MapClickHandler = ({
+  onLocationSet,
+  enabled
+}: {
+  onLocationSet: (lat: number, lng: number) => void;
+  enabled: boolean;
+}) => {
+  useMapEvents({
+    click: (e) => {
+      if (enabled) {
+        onLocationSet(e.latlng.lat, e.latlng.lng);
+      }
+    },
+  });
+  return null;
+};
+
 // Locate button component
 const LocateButton = ({ 
   onLocate,
@@ -243,6 +253,7 @@ export const InteractiveMap = ({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [radius, setRadius] = useState(defaultRadius);
   const [isLocating, setIsLocating] = useState(true);
+  const [clickToMoveEnabled] = useState(true);
 
   const handleLocate = useCallback((lat: number, lng: number) => {
     setUserLocation([lat, lng]);
@@ -262,6 +273,26 @@ export const InteractiveMap = ({
     // Map moved - could be used for future features
   }, []);
 
+  // Handle marker drag end
+  const handleMarkerDragEnd = useCallback((e: DragEndEvent) => {
+    const marker = e.target;
+    const position = marker.getLatLng();
+    setUserLocation([position.lat, position.lng]);
+    onLocationChange?.(position.lat, position.lng);
+  }, [onLocationChange]);
+
+  // Memoize user location icon with draggable cursor style
+  const draggableUserIcon = useMemo(() => new Icon({
+    iconUrl: markerIcon,
+    iconRetinaUrl: markerIcon2x,
+    shadowUrl: markerShadow,
+    iconSize: [30, 49],
+    iconAnchor: [15, 49],
+    popupAnchor: [1, -40],
+    shadowSize: [41, 41],
+    className: 'user-location-marker cursor-move'
+  }), []);
+
   const formatBudget = (min: number | null, max: number | null) => {
     if (!min && !max) return t('projects.card.to_discuss');
     if (min && max) return `${min.toLocaleString()} $ - ${max.toLocaleString()} $`;
@@ -275,7 +306,7 @@ export const InteractiveMap = ({
     <Card className="relative overflow-hidden">
       <CardContent className="p-0">
         {/* Radius slider */}
-        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[200px]">
+        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[220px]">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">{t('professionals.map.radius')}: {radius} {t('professionals.map.km')}</span>
@@ -288,6 +319,13 @@ export const InteractiveMap = ({
             step={5}
             className="w-full"
           />
+          {/* Click hint */}
+          <div className="mt-2 pt-2 border-t border-gray-200">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <MousePointerClick className="h-3.5 w-3.5 text-primary" />
+              <span>{t('professionals.map.click_to_move')}</span>
+            </div>
+          </div>
         </div>
 
         {/* Items count badge */}
@@ -346,14 +384,30 @@ export const InteractiveMap = ({
             />
             
             <LocateButton onLocate={handleLocate} t={t} />
+            
+            {/* Click handler for setting new origin */}
+            <MapClickHandler 
+              onLocationSet={handleLocate}
+              enabled={clickToMoveEnabled}
+            />
 
             {/* User location marker and radius circle */}
             {userLocation && (
               <>
-                <Marker position={userLocation} icon={userLocationIcon}>
+                <Marker 
+                  position={userLocation} 
+                  icon={draggableUserIcon}
+                  draggable={true}
+                  eventHandlers={{
+                    dragend: handleMarkerDragEnd,
+                  }}
+                >
                   <Popup>
                     <div className="text-center">
                       <strong>📍 {t('professionals.map.my_location')}</strong>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {t('professionals.map.drag_to_move')}
+                      </p>
                     </div>
                   </Popup>
                 </Marker>
