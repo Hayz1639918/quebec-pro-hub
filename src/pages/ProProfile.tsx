@@ -126,6 +126,9 @@ const ProProfile = () => {
       return;
     }
     setProfile(data);
+    // Load existing coordinates from database
+    if (data.latitude) setLatitude(data.latitude);
+    if (data.longitude) setLongitude(data.longitude);
   };
 
   const fetchPortfolio = async (uid: string) => {

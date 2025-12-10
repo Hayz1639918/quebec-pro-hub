@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Chrome, User, Building2, Phone, FileText, Upload, CheckCircle2 } from "lucide-react";
+import { Mail, Lock, Chrome, User, Building2, Phone, FileText, Upload, CheckCircle2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { geocodePostalCode } from "@/lib/geolocation";
 import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
@@ -39,6 +41,27 @@ const Auth = () => {
   const [rbqNumber, setRbqNumber] = useState("");
   const [servicesOffered, setServicesOffered] = useState("");
   const [insuranceInfo, setInsuranceInfo] = useState("");
+  
+  // Location fields for professionals
+  const [city, setCity] = useState("");
+  const [region, setRegion] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
+
+  const REGIONS = [
+    "Montréal",
+    "Québec",
+    "Laval",
+    "Gatineau",
+    "Longueuil",
+    "Sherbrooke",
+    "Saguenay",
+    "Trois-Rivières",
+    "Terrebonne",
+    "Saint-Jean-sur-Richelieu",
+  ];
 
   useEffect(() => {
     // Check if user is already logged in
@@ -79,6 +102,41 @@ const Auth = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Auto-geocode when postal code changes (for professionals)
+  useEffect(() => {
+    if (userType !== "professional" || !postalCode || postalCode.length < 6) {
+      setLatitude(null);
+      setLongitude(null);
+      return;
+    }
+
+    const geocodeWithDelay = async () => {
+      setGeocoding(true);
+      try {
+        const coords = await geocodePostalCode(postalCode, city || undefined);
+        if (coords) {
+          setLatitude(coords.latitude);
+          setLongitude(coords.longitude);
+        } else {
+          setLatitude(null);
+          setLongitude(null);
+        }
+      } catch (error) {
+        console.error('Geocoding error:', error);
+        setLatitude(null);
+        setLongitude(null);
+      } finally {
+        setGeocoding(false);
+      }
+    };
+
+    const timer = setTimeout(() => {
+      geocodeWithDelay();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [postalCode, city, userType]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -162,6 +220,16 @@ const Auth = () => {
           setLoading(false);
           return;
         }
+        // Validate location fields for map visibility
+        if (!city || !region || !postalCode) {
+          toast({
+            variant: "destructive",
+            title: "Localisation requise",
+            description: "Veuillez renseigner votre ville, région et code postal pour apparaître sur la carte",
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       // Create user account
@@ -195,9 +263,14 @@ const Auth = () => {
         user_type: string;
         company_name: string | null;
         rbq_number: string | null;
+        rbq_certification_url: string | null;
         services_offered: string | null;
         insurance_info: string | null;
-        is_rbq_verified: boolean;
+        city: string | null;
+        region: string | null;
+        postal_code: string | null;
+        latitude: number | null;
+        longitude: number | null;
       } = {
         id: authData.user.id,
         email,
@@ -209,6 +282,11 @@ const Auth = () => {
         rbq_certification_url: userType === "professional" ? rbqCertificationUrl : null,
         services_offered: userType === "professional" ? (servicesOffered || null) : null,
         insurance_info: userType === "professional" ? (insuranceInfo || null) : null,
+        city: userType === "professional" ? (city || null) : null,
+        region: userType === "professional" ? (region || null) : null,
+        postal_code: userType === "professional" ? (postalCode || null) : null,
+        latitude: userType === "professional" ? latitude : null,
+        longitude: userType === "professional" ? longitude : null,
       };
 
       const { error: profileError } = await supabase
@@ -585,6 +663,73 @@ const Auth = () => {
                       onChange={(e) => setInsuranceInfo(e.target.value)}
                       rows={2}
                     />
+                  </div>
+
+                  {/* Location fields for map visibility */}
+                  <Separator className="my-4" />
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      Localisation (pour apparaître sur la carte)
+                    </h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">Ville {t('auth.signup.required')}</Label>
+                      <Input
+                        id="city"
+                        type="text"
+                        placeholder="Ex: Montréal"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        required={userType === "professional"}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="region">Région {t('auth.signup.required')}</Label>
+                      <Select value={region} onValueChange={setRegion}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionnez une région" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {REGIONS.map((reg) => (
+                            <SelectItem key={reg} value={reg}>
+                              {reg}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="postalCode" className="flex items-center gap-2">
+                      Code postal {t('auth.signup.required')}
+                      {geocoding && (
+                        <span className="text-xs text-muted-foreground">
+                          🔄 Géolocalisation en cours...
+                        </span>
+                      )}
+                      {!geocoding && latitude && longitude && (
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          Position détectée ✓
+                        </span>
+                      )}
+                    </Label>
+                    <Input
+                      id="postalCode"
+                      type="text"
+                      placeholder="Ex: H2X 1Y4"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value.toUpperCase())}
+                      maxLength={7}
+                      required={userType === "professional"}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      📍 Votre code postal permet aux clients de vous trouver sur la carte
+                    </p>
                   </div>
                 </TabsContent>
 
