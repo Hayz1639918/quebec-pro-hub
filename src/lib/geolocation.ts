@@ -2,6 +2,22 @@
  * Geolocation utilities for calculating distances and sorting by proximity
  */
 
+// Import postal codes database
+import postalCodesData from '@/data/quebec-postal-codes.json';
+
+// Type for postal codes database
+interface PostalCodesDatabase {
+  metadata: {
+    source: string;
+    lastUpdate: string;
+    coverage: string;
+    accuracy: string;
+  };
+  postalCodes: Record<string, { lat: number; lng: number; name: string }>;
+}
+
+const POSTAL_CODES_DB = postalCodesData as PostalCodesDatabase;
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -251,40 +267,68 @@ export async function geocodePostalCode(
       }
     }
 
-    // Format with space for API calls: A1A 1A1
-    const formattedPostalCode = cleanedPostalCode.slice(0, 3) + ' ' + cleanedPostalCode.slice(3);
+    // Extract FSA (Forward Sortation Area) - first 3 characters
+    const fsa = cleanedPostalCode.slice(0, 3);
 
-    // Strategy 1: Try with postal code + city + Quebec, Canada
-    if (city) {
-      const result = await tryGeocode(`${formattedPostalCode}, ${city}, Quebec, Canada`);
-      if (result) return result;
+    // Strategy 1: LOCAL DATABASE (fastest, no API call)
+    // Check our local postal codes database first
+    const localEntry = POSTAL_CODES_DB.postalCodes[fsa];
+    if (localEntry) {
+      console.log('✅ Found in local database:', fsa, '-', localEntry.name);
+      // Add small random offset to avoid all projects at same point (~100m variance)
+      const offset = (Math.random() - 0.5) * 0.002;
+      return {
+        latitude: localEntry.lat + offset,
+        longitude: localEntry.lng + offset,
+      };
     }
 
-    // Strategy 2: Try with postal code + Quebec, Canada
+    // Format with space for API calls: A1A 1A1
+    const formattedPostalCode = fsa + ' ' + cleanedPostalCode.slice(3);
+
+    // Strategy 2: Try Nominatim with postal code + city + Quebec, Canada
+    if (city) {
+      const result = await tryGeocode(`${formattedPostalCode}, ${city}, Quebec, Canada`);
+      if (result) {
+        console.log('✅ Found via Nominatim (with city):', formattedPostalCode);
+        return result;
+      }
+    }
+
+    // Strategy 3: Try with postal code + Quebec, Canada
     const result2 = await tryGeocode(`${formattedPostalCode}, Quebec, Canada`);
-    if (result2) return result2;
+    if (result2) {
+      console.log('✅ Found via Nominatim (Quebec):', formattedPostalCode);
+      return result2;
+    }
 
-    // Strategy 3: Try with postal code + Canada
+    // Strategy 4: Try with postal code + Canada
     const result3 = await tryGeocode(`${formattedPostalCode}, Canada`);
-    if (result3) return result3;
+    if (result3) {
+      console.log('✅ Found via Nominatim (Canada):', formattedPostalCode);
+      return result3;
+    }
 
-    // Strategy 4: Try Nominatim postalcode parameter
+    // Strategy 5: Try Nominatim postalcode parameter
     const result4 = await tryNominatimPostalCode(formattedPostalCode, country);
-    if (result4) return result4;
+    if (result4) {
+      console.log('✅ Found via Nominatim postalcode param:', formattedPostalCode);
+      return result4;
+    }
 
-    // Strategy 5: Fallback to postal code prefix mapping
+    // Strategy 6: Fallback to province prefix (1 character)
     const prefix = cleanedPostalCode.charAt(0);
     if (POSTAL_CODE_PREFIXES[prefix]) {
-      console.log('Using postal code prefix fallback for:', cleanedPostalCode);
-      // Add small random offset to avoid all projects at same point
-      const offset = (Math.random() - 0.5) * 0.1; // ~5km variance
+      console.log('⚠️ Using province prefix fallback for:', cleanedPostalCode);
+      // Add larger random offset for province-level (~5km variance)
+      const offset = (Math.random() - 0.5) * 0.1;
       return {
         latitude: POSTAL_CODE_PREFIXES[prefix].latitude + offset,
         longitude: POSTAL_CODE_PREFIXES[prefix].longitude + offset,
       };
     }
 
-    console.warn('Could not geocode postal code:', cleanedPostalCode);
+    console.warn('❌ Could not geocode postal code:', cleanedPostalCode);
     return null;
   } catch (error) {
     console.error('Error geocoding postal code:', error);
