@@ -3,8 +3,11 @@
 -- Show all professionals with RBQ number, even without certification
 -- =====================================================
 
--- Drop and recreate the view to include professionals without certification URL
-CREATE OR REPLACE VIEW admin_pending_verifications AS
+-- Drop the existing view first (required to change column structure)
+DROP VIEW IF EXISTS admin_pending_verifications;
+
+-- Recreate the view with new structure
+CREATE VIEW admin_pending_verifications AS
 SELECT 
   p.id,
   p.email,
