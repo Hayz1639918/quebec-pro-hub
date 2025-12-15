@@ -1,154 +1,23 @@
 /**
  * WorldMapBackground - World map with network connections background
- * Displays a professional world map with network overlay effect
+ * 
+ * To use a custom image:
+ * 1. Save your image to src/assets/world-map-bg.png
+ * 2. Import it: import worldMapBg from "@/assets/world-map-bg.png"
+ * 3. Use it in backgroundImage: `url(${worldMapBg})`
  */
 
 const WorldMapBackground = () => {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
-      {/* CSS-based world map network effect */}
+      {/* World Map Background using inline SVG data */}
       <div 
         className="absolute inset-0"
         style={{
-          background: `
-            radial-gradient(ellipse 120% 80% at 50% 20%, rgba(147, 197, 253, 0.4) 0%, transparent 50%),
-            radial-gradient(ellipse 80% 60% at 30% 30%, rgba(96, 165, 250, 0.25) 0%, transparent 40%),
-            radial-gradient(ellipse 60% 50% at 70% 25%, rgba(59, 130, 246, 0.2) 0%, transparent 35%),
-            radial-gradient(ellipse 40% 30% at 20% 40%, rgba(147, 197, 253, 0.15) 0%, transparent 30%),
-            radial-gradient(ellipse 50% 40% at 80% 35%, rgba(96, 165, 250, 0.15) 0%, transparent 35%),
-            linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(255, 255, 255, 1) 100%)
-          `,
-        }}
-      />
-      
-      {/* SVG World Map Silhouette */}
-      <svg
-        className="absolute top-0 left-1/2 -translate-x-1/2 w-[140%] max-w-none h-auto opacity-[0.12]"
-        viewBox="0 0 1200 600"
-        style={{ maxHeight: '80vh' }}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <linearGradient id="continentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#60a5fa" />
-          </linearGradient>
-        </defs>
-        
-        <g fill="url(#continentGrad)">
-          {/* North America */}
-          <path d="M120,70 C150,50 200,40 260,45 C320,50 370,70 400,100 C430,130 440,170 420,210 C400,250 360,280 310,300 C260,320 200,320 150,300 C100,280 70,240 60,190 C50,140 70,90 120,70 Z"/>
-          <path d="M80,60 C110,40 150,35 180,50 C210,65 220,95 200,120 C180,145 140,155 105,140 C70,125 55,90 80,60 Z"/>
-          <path d="M170,300 C200,285 245,290 280,310 C315,330 335,365 330,405 C325,445 295,475 255,485 C215,495 170,480 145,445 C120,410 125,355 170,300 Z"/>
-          
-          {/* South America */}
-          <path d="M260,480 C300,455 350,465 385,500 C420,535 435,590 425,650 C415,710 380,760 330,790 C280,820 220,825 175,795 C130,765 110,710 120,650 C130,590 180,520 260,480 Z"/>
-          
-          {/* Greenland */}
-          <path d="M380,25 C420,15 475,20 510,45 C545,70 555,105 530,135 C505,165 455,175 410,160 C365,145 340,110 345,70 C350,40 380,25 380,25 Z"/>
-          
-          {/* Europe */}
-          <path d="M520,75 C555,55 605,50 650,65 C695,80 730,110 740,150 C750,190 735,230 700,255 C665,280 615,290 570,275 C525,260 495,225 490,180 C485,135 500,95 520,75 Z"/>
-          <path d="M480,95 C505,80 545,85 565,105 C585,125 575,155 545,170 C515,185 480,175 465,150 C450,125 460,105 480,95 Z"/>
-          
-          {/* UK */}
-          <path d="M485,70 C500,60 525,65 540,80 C555,95 550,120 530,135 C510,150 485,145 470,125 C455,105 465,80 485,70 Z"/>
-          
-          {/* Africa */}
-          <path d="M530,270 C585,245 655,255 710,295 C765,335 800,400 805,475 C810,550 780,630 725,685 C670,740 595,765 530,745 C465,725 420,670 410,595 C400,520 450,400 530,270 Z"/>
-          
-          {/* Madagascar */}
-          <path d="M710,540 C735,520 770,535 790,565 C810,595 805,640 780,665 C755,690 720,690 695,665 C670,640 675,585 710,540 Z"/>
-          
-          {/* Middle East */}
-          <path d="M690,240 C735,220 795,235 830,275 C865,315 875,370 850,410 C825,450 775,470 725,455 C675,440 640,400 640,350 C640,300 660,255 690,240 Z"/>
-          
-          {/* Russia */}
-          <path d="M710,40 C800,20 920,30 1010,65 C1100,100 1160,155 1170,220 C1180,285 1140,345 1070,380 C1000,415 910,425 830,405 C750,385 690,340 670,280 C650,220 670,140 710,80 C735,55 710,40 710,40 Z"/>
-          
-          {/* India */}
-          <path d="M810,310 C855,290 910,305 945,345 C980,385 995,445 975,495 C955,545 910,580 860,580 C810,580 765,545 745,495 C725,445 750,375 810,310 Z"/>
-          
-          {/* Southeast Asia */}
-          <path d="M910,400 C945,385 995,400 1025,440 C1055,480 1060,535 1035,575 C1010,615 960,635 910,620 C860,605 830,560 840,510 C850,460 875,415 910,400 Z"/>
-          
-          {/* China */}
-          <path d="M930,200 C985,175 1060,185 1115,225 C1170,265 1200,330 1190,395 C1180,460 1135,510 1075,530 C1015,550 950,535 905,490 C860,445 845,380 870,320 C895,260 930,200 930,200 Z"/>
-          
-          {/* Japan */}
-          <path d="M1090,190 C1115,170 1150,180 1175,205 C1200,230 1205,270 1185,300 C1165,330 1130,345 1100,330 C1070,315 1055,280 1065,245 C1075,210 1090,190 1090,190 Z"/>
-          
-          {/* Indonesia */}
-          <path d="M960,500 C1010,480 1075,495 1120,535 C1165,575 1180,635 1155,680 C1130,725 1075,750 1020,735 C965,720 925,680 925,625 C925,570 940,520 960,500 Z"/>
-          
-          {/* Australia */}
-          <path d="M990,580 C1050,555 1130,570 1185,615 C1240,660 1265,730 1245,795 C1225,860 1170,905 1105,915 C1040,925 975,900 935,850 C895,800 890,730 925,665 C960,600 990,580 990,580 Z"/>
-          
-          {/* New Zealand */}
-          <path d="M1150,720 C1170,705 1200,720 1215,745 C1230,770 1220,805 1195,825 C1170,845 1140,840 1120,815 C1100,790 1115,750 1150,720 Z"/>
-        </g>
-      </svg>
-      
-      {/* Animated connection dots */}
-      <svg
-        className="absolute top-0 left-0 w-full h-full"
-        viewBox="0 0 1200 600"
-        preserveAspectRatio="xMidYMin slice"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <defs>
-          <filter id="dotGlow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        
-        {/* Connection lines */}
-        <g stroke="#3b82f6" strokeWidth="0.8" fill="none" opacity="0.15">
-          <path d="M250,130 Q400,60 540,100" />
-          <path d="M650,130 Q800,80 1000,180" />
-          <path d="M540,130 Q600,100 700,120" />
-          <path d="M280,320 Q300,420 320,550" />
-          <path d="M580,250 Q600,350 620,450" />
-          <path d="M850,350 Q950,420 1050,550" />
-          <path d="M750,280 Q850,320 950,400" />
-        </g>
-        
-        {/* Glowing dots */}
-        <g filter="url(#dotGlow)" opacity="0.4">
-          {[
-            { x: 200, y: 120 }, { x: 160, y: 90 }, { x: 280, y: 150 },
-            { x: 540, y: 100 }, { x: 590, y: 120 }, { x: 650, y: 110 },
-            { x: 620, y: 380 }, { x: 320, y: 550 }, { x: 780, y: 280 },
-            { x: 870, y: 360 }, { x: 1000, y: 220 }, { x: 1100, y: 240 },
-            { x: 1080, y: 620 }, { x: 1000, y: 480 },
-          ].map((dot, i) => (
-            <circle key={i} cx={dot.x} cy={dot.y} r="4" fill="#3b82f6">
-              <animate
-                attributeName="opacity"
-                values="0.3;1;0.3"
-                dur={`${2 + (i % 5) * 0.5}s`}
-                repeatCount="indefinite"
-              />
-              <animate
-                attributeName="r"
-                values="3;5;3"
-                dur={`${2 + (i % 5) * 0.5}s`}
-                repeatCount="indefinite"
-              />
-            </circle>
-          ))}
-        </g>
-      </svg>
-      
-      {/* Bottom fade to white */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 h-40"
-        style={{
-          background: 'linear-gradient(to top, white 0%, transparent 100%)',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1400 700'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23dbeafe'/%3E%3Cstop offset='60%25' stop-color='%23eff6ff'/%3E%3Cstop offset='100%25' stop-color='%23ffffff'/%3E%3C/linearGradient%3E%3ClinearGradient id='land' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2393c5fd'/%3E%3Cstop offset='100%25' stop-color='%23bfdbfe'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23bg)' width='1400' height='700'/%3E%3Cg fill='url(%23land)' opacity='0.6'%3E%3Cpath d='M140 80c30-20 80-30 140-25s110 25 140 55 40 70 20 110-60 70-110 90-110 5-150-15-60-55-70-100 0-95 30-115z'/%3E%3Cpath d='M100 70c25-15 55-20 75-10s25 35 10 55-45 30-75 20-35-30-30-50 10-25 20-15z'/%3E%3Cpath d='M190 320c25-15 65-10 95 10s45 55 40 95-35 70-75 80-85-5-105-45-15-75 25-120 5-25 20-20z'/%3E%3Cpath d='M280 500c35-25 85-15 115 20s40 90 30 140-45 95-95 115-100-5-130-55-35-100-15-155 60-80 95-65z'/%3E%3Cpath d='M400 45c35-10 85-5 115 20s40 50 20 80-65 45-105 35-60-35-55-70 5-50 25-65z'/%3E%3Cpath d='M540 85c30-20 75-25 115-10s70 50 75 90-25 75-65 95-90 10-125-10-50-55-45-95 15-55 45-70z'/%3E%3Cpath d='M505 105c20-12 50-8 65 12s10 45-15 58-55 5-65-20 0-40 15-50z'/%3E%3Cpath d='M505 80c12-8 35-5 47 10s7 35-12 45-42 3-50-17 3-30 15-38z'/%3E%3Cpath d='M550 280c50-25 115-15 160 25s65 100 60 165-55 120-110 145-120 10-160-40-50-115-30-180 45-100 80-115z'/%3E%3Cpath d='M730 560c20-20 55-10 70 20s10 60-15 80-55 5-70-25-5-55 15-75z'/%3E%3Cpath d='M710 250c40-20 95-5 125 35s40 95 15 135-75 60-120 45-65-55-60-105 15-90 40-110z'/%3E%3Cpath d='M730 50c80-20 190-10 270 25s130 90 140 155-20 125-90 160-160 50-240 30-130-65-150-130-5-120 30-175 70-65 40-65z'/%3E%3Cpath d='M830 320c30-20 85-5 115 35s40 100 15 145-75 70-120 60-65-55-60-110 20-110 50-130z'/%3E%3Cpath d='M930 410c30-15 75-5 100 30s30 85 5 120-70 50-110 35-55-55-45-100 20-70 50-85z'/%3E%3Cpath d='M950 210c50-25 120-15 165 25s65 100 50 160-60 105-115 120-115-10-150-65-40-105-15-165 35-60 65-75z'/%3E%3Cpath d='M1110 200c20-20 55-10 75 15s25 60 5 90-55 40-80 25-30-45-20-80 10-40 20-50z'/%3E%3Cpath d='M980 510c45-20 105-5 145 35s55 100 30 150-75 75-130 65-80-55-75-115 5-115 30-135z'/%3E%3Cpath d='M1010 590c55-25 130-10 175 35s60 115 40 175-70 110-130 120-120-15-155-70-40-110-15-175 50-70 85-85z'/%3E%3Cpath d='M1170 730c12-12 35-7 47 12s10 45-12 57-42 5-52-20 5-38 17-49z'/%3E%3C/g%3E%3Cg stroke='%2393c5fd' stroke-width='1' fill='none' opacity='0.3'%3E%3Cpath d='M270 140Q420 70 570 110'/%3E%3Cpath d='M670 140Q850 90 1050 200'/%3E%3Cpath d='M570 140Q640 110 730 130'/%3E%3Cpath d='M300 340Q320 450 350 570'/%3E%3Cpath d='M610 270Q630 380 660 490'/%3E%3Cpath d='M900 380Q1010 460 1110 600'/%3E%3C/g%3E%3Cg fill='%233b82f6' opacity='0.5'%3E%3Ccircle cx='220' cy='130' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='180' cy='100' r='4'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.5s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='570' cy='110' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='3s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='620' cy='130' r='4'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.2s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='680' cy='120' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.8s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='1080' cy='230' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='3.2s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='660' cy='420' r='4'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.6s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='350' cy='580' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.4s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='810' cy='300' r='4'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='3.5s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='910' cy='390' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.7s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='1050' cy='250' r='4'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='3.1s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='1130' cy='260' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='2.9s' repeatCount='indefinite'/%3E%3C/circle%3E%3Ccircle cx='1120' cy='660' r='5'%3E%3Canimate attributeName='opacity' values='0.3;0.8;0.3' dur='3.3s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'top center',
+          backgroundRepeat: 'no-repeat',
         }}
       />
     </div>
