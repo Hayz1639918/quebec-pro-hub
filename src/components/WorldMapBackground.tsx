@@ -44,19 +44,11 @@ const WorldMapBackground = () => {
 
   return (
     <div className="w-full h-full overflow-hidden pointer-events-none">
-      {/* Background gradient */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(180deg, rgba(219, 234, 254, 0.6) 0%, rgba(239, 246, 255, 0.4) 40%, rgba(255, 255, 255, 0.9) 100%)',
-        }}
-      />
-      
-      {/* World Map with connections */}
-      <div className="absolute inset-0">
+      {/* World Map with connections - clean white background */}
+      <div className="absolute inset-0 bg-white">
         <WorldMap 
           dots={connectionDots}
-          lineColor="#3b82f6"
+          lineColor="#0ea5e9"
         />
       </div>
     </div>
