@@ -1103,6 +1103,95 @@
     }
     
   },
+  "admin": {
+    "title": "Admin Panel",
+    "description": "RBQ verification management",
+    "access_denied": "Access Denied",
+    "access_denied_description": "You don't have the necessary permissions to access this page.",
+    "back_home": "Back to Home",
+    "refresh": "Refresh",
+    "verifying_access": "Verifying access rights...",
+    "tabs": {
+      "pending": "Pending Verifications",
+      "logs": "Audit Log"
+    },
+    "stats": {
+      "clients": "Clients",
+      "professionals": "Professionals",
+      "verified": "verified",
+      "pending": "Pending",
+      "verifications": "verifications",
+      "projects": "Projects",
+      "open": "open"
+    },
+    "pending": {
+      "title": "Pending Verifications",
+      "search_placeholder": "Search by company, name or RBQ...",
+      "no_pending": "No pending verifications",
+      "all_processed": "All requests have been processed.",
+      "company": "Company",
+      "rbq_number": "RBQ Number",
+      "location": "Location",
+      "registration_date": "Registration Date",
+      "actions": "Actions",
+      "not_specified": "Not specified",
+      "examine": "Examine"
+    },
+    "logs": {
+      "title": "Administrative actions log",
+      "description": "History of the last 50 actions",
+      "no_logs": "No actions recorded.",
+      "date": "Date",
+      "admin": "Admin",
+      "action": "Action",
+      "details": "Details",
+      "verify": "Verification",
+      "reject": "Rejection"
+    },
+    "examine": {
+      "title": "Request Examination",
+      "description": "Verify the professional's information before validating",
+      "company": "Company",
+      "responsible": "Representative",
+      "email": "Email",
+      "phone": "Phone",
+      "not_provided": "Not provided",
+      "rbq_info": "RBQ Information",
+      "rbq_number": "RBQ Number",
+      "certification": "Certification",
+      "view_document": "View Document",
+      "external_verification": "External Verification",
+      "verify_rbq_site": "Verify on RBQ website →",
+      "location": "Location",
+      "registration_date": "Registration Date",
+      "services_offered": "Services Offered",
+      "insurance": "Insurance",
+      "verification_notes": "Verification Notes (optional)",
+      "notes_placeholder": "Internal notes about this verification...",
+      "reject_btn": "Reject",
+      "validate_btn": "Validate License"
+    },
+    "reject": {
+      "title": "Reject Request",
+      "description": "Reject the request from",
+      "reason_label": "Rejection Reason *",
+      "reason_placeholder": "Explain why the request is rejected (minimum 10 characters)...",
+      "reason_hint": "This reason will be communicated to the professional.",
+      "cancel": "Cancel",
+      "confirm": "Confirm Rejection",
+      "reason_required": "Reason required",
+      "reason_min_length": "Please provide a reason of at least 10 characters."
+    },
+    "messages": {
+      "verified": "✓ RBQ License Verified",
+      "verified_description": "{{company}} can now receive projects.",
+      "rejected": "RBQ License Rejected",
+      "rejected_description": "The request from {{company}} has been rejected.",
+      "error": "Error",
+      "verification_error": "Error during verification",
+      "rejection_error": "Error during rejection"
+    }
+  },
   "footer": {
     "tagline": "The trusted Canadian platform to connect clients and construction contractors.",
     "made_with_love": "Made with ❤️ in Canada 🇨🇦",

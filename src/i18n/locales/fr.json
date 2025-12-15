@@ -1103,6 +1103,95 @@
       "signed_description": "Le contrat a été signé par {{signer}}",
       "canvas_signature": "Signature Canvas"
     }},
+  "admin": {
+    "title": "Panneau d'administration",
+    "description": "Gestion des vérifications RBQ",
+    "access_denied": "Accès refusé",
+    "access_denied_description": "Vous n'avez pas les permissions nécessaires pour accéder à cette page.",
+    "back_home": "Retour à l'accueil",
+    "refresh": "Actualiser",
+    "verifying_access": "Vérification des droits d'accès...",
+    "tabs": {
+      "pending": "Vérifications en attente",
+      "logs": "Journal d'audit"
+    },
+    "stats": {
+      "clients": "Clients",
+      "professionals": "Professionnels",
+      "verified": "vérifiés",
+      "pending": "En attente",
+      "verifications": "vérifications",
+      "projects": "Projets",
+      "open": "ouverts"
+    },
+    "pending": {
+      "title": "Vérifications en attente",
+      "search_placeholder": "Rechercher par entreprise, nom ou RBQ...",
+      "no_pending": "Aucune vérification en attente",
+      "all_processed": "Toutes les demandes ont été traitées.",
+      "company": "Entreprise",
+      "rbq_number": "Numéro RBQ",
+      "location": "Localisation",
+      "registration_date": "Date inscription",
+      "actions": "Actions",
+      "not_specified": "Non spécifiée",
+      "examine": "Examiner"
+    },
+    "logs": {
+      "title": "Journal des actions administratives",
+      "description": "Historique des 50 dernières actions",
+      "no_logs": "Aucune action enregistrée.",
+      "date": "Date",
+      "admin": "Admin",
+      "action": "Action",
+      "details": "Détails",
+      "verify": "Vérification",
+      "reject": "Refus"
+    },
+    "examine": {
+      "title": "Examen de la demande",
+      "description": "Vérifiez les informations du professionnel avant de valider",
+      "company": "Entreprise",
+      "responsible": "Responsable",
+      "email": "Email",
+      "phone": "Téléphone",
+      "not_provided": "Non fourni",
+      "rbq_info": "Informations RBQ",
+      "rbq_number": "Numéro RBQ",
+      "certification": "Certification",
+      "view_document": "Voir le document",
+      "external_verification": "Vérification externe",
+      "verify_rbq_site": "Vérifier sur le site de la RBQ →",
+      "location": "Localisation",
+      "registration_date": "Date d'inscription",
+      "services_offered": "Services offerts",
+      "insurance": "Assurance",
+      "verification_notes": "Notes de vérification (optionnel)",
+      "notes_placeholder": "Notes internes sur cette vérification...",
+      "reject_btn": "Refuser",
+      "validate_btn": "Valider la licence"
+    },
+    "reject": {
+      "title": "Refuser la demande",
+      "description": "Refuser la demande de",
+      "reason_label": "Raison du refus *",
+      "reason_placeholder": "Expliquez pourquoi la demande est refusée (minimum 10 caractères)...",
+      "reason_hint": "Cette raison sera communiquée au professionnel.",
+      "cancel": "Annuler",
+      "confirm": "Confirmer le refus",
+      "reason_required": "Raison requise",
+      "reason_min_length": "Veuillez fournir une raison d'au moins 10 caractères."
+    },
+    "messages": {
+      "verified": "✓ Licence RBQ vérifiée",
+      "verified_description": "{{company}} peut maintenant recevoir des projets.",
+      "rejected": "Licence RBQ refusée",
+      "rejected_description": "La demande de {{company}} a été refusée.",
+      "error": "Erreur",
+      "verification_error": "Erreur lors de la vérification",
+      "rejection_error": "Erreur lors du refus"
+    }
+  },
   "footer": {
     "tagline": "La plateforme canadienne de confiance pour connecter clients et entrepreneurs du bâtiment.",
     "made_with_love": "Fait avec ❤️ au Canada 🇨🇦",

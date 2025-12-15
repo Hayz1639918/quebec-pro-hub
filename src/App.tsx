@@ -39,6 +39,7 @@ const ProjectProgress = lazy(() => import("./pages/ProjectProgress"));
 const ProjectReport = lazy(() => import("./pages/ProjectReport"));
 const ProMyProjects = lazy(() => import("./pages/ProMyProjects"));
 const ClientProfile = lazy(() => import("./pages/ClientProfile"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => (
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
