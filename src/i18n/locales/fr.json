@@ -185,6 +185,14 @@
       "google": "Continuer avec Google",
       "required": "*"
     },
+    "complete_profile": {
+      "title": "Complétez votre profil",
+      "subtitle": "Quelques informations sont nécessaires pour finaliser votre inscription",
+      "professional_info": "Informations professionnelles requises pour les entrepreneurs",
+      "location_title": "Localisation (pour apparaître sur la carte)",
+      "button": "Finaliser mon inscription",
+      "button_loading": "Enregistrement..."
+    },
     "messages": {
       "success": "Inscription réussie ! 🎉",
       "success_client": "Votre compte a été créé avec succès !",

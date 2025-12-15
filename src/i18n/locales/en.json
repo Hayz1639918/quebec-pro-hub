@@ -185,6 +185,14 @@
       "google": "Continue with Google",
       "required": "*"
     },
+    "complete_profile": {
+      "title": "Complete Your Profile",
+      "subtitle": "A few details are needed to finalize your registration",
+      "professional_info": "Professional information required for contractors",
+      "location_title": "Location (to appear on the map)",
+      "button": "Complete Registration",
+      "button_loading": "Saving..."
+    },
     "messages": {
       "success": "Registration successful! 🎉",
       "success_client": "Your account has been created successfully!",

@@ -385,7 +385,14 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          // Redirect to complete-profile page after Google auth
+          // This ensures users fill in required information manually
+          redirectTo: `${window.location.origin}/complete-profile`,
+          queryParams: {
+            // Only request email scope from Google
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
       
