@@ -71,12 +71,14 @@ interface PendingVerification {
   phone: string | null;
   company_name: string;
   rbq_number: string;
-  rbq_certification_url: string;
+  rbq_certification_url: string | null;
   services_offered: string | null;
   insurance_info: string | null;
   city: string | null;
   region: string | null;
+  postal_code: string | null;
   created_at: string;
+  missing_certification: boolean;
 }
 
 interface DashboardStats {
@@ -515,9 +517,17 @@ const AdminDashboard = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <code className="bg-muted px-2 py-1 rounded text-sm">
-                            {pro.rbq_number}
-                          </code>
+                          <div className="flex items-center gap-2">
+                            <code className="bg-muted px-2 py-1 rounded text-sm">
+                              {pro.rbq_number}
+                            </code>
+                            {pro.missing_certification && (
+                              <Badge variant="outline" className="text-orange-600 border-orange-300">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Sans doc
+                              </Badge>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {pro.city && pro.region ? (
@@ -663,16 +673,38 @@ const AdminDashboard = () => {
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Certification</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(selectedProfessional.rbq_certification_url, '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Voir le document
-                    </Button>
+                    {selectedProfessional.rbq_certification_url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(selectedProfessional.rbq_certification_url!, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Voir le document
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-2 text-orange-600">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-sm">Document non téléchargé</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                
+                {selectedProfessional.missing_certification && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-orange-900">Certification manquante</p>
+                        <p className="text-sm text-orange-700">
+                          Ce professionnel n'a pas encore téléchargé sa certification RBQ. 
+                          Vous ne pouvez pas valider sa licence sans ce document.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* External RBQ verification link */}
                 <div className="bg-muted/50 rounded-lg p-4">
@@ -750,8 +782,9 @@ const AdminDashboard = () => {
             </Button>
             <Button
               onClick={() => selectedProfessional && handleVerifyRBQ(selectedProfessional)}
-              disabled={actionLoading !== null}
+              disabled={actionLoading !== null || selectedProfessional?.missing_certification}
               className="bg-green-600 hover:bg-green-700"
+              title={selectedProfessional?.missing_certification ? "Certification requise pour valider" : undefined}
             >
               {actionLoading === selectedProfessional?.id ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
