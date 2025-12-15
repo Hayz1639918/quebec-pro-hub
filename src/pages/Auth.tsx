@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, Chrome, User, Building2, Phone, FileText, Upload, CheckCircle2, MapPin } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, FileText, Upload, CheckCircle2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { geocodePostalCode } from "@/lib/geolocation";
 import logo from "/logo-batirnet.png";
@@ -380,33 +380,6 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          // Redirect to complete-profile page after Google auth
-          // This ensures users fill in required information manually
-          redirectTo: `${window.location.origin}/complete-profile`,
-          queryParams: {
-            // Only request email scope from Google
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      });
-      
-      if (error) throw error;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t('auth.messages.google_error');
-      toast({
-        variant: "destructive",
-        title: t('auth.messages.error'),
-        description: errorMessage,
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3 sm:p-4 py-6 sm:py-8 pt-safe pb-safe">
       <Card className="w-full max-w-2xl mx-auto shadow-lg">
@@ -430,27 +403,6 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
-          {!isLogin && (
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={handleGoogleAuth}
-            type="button"
-          >
-            <Chrome className="mr-2 h-5 w-5" />
-            {t('auth.signup.google')}
-          </Button>
-          )}
-
-          {!isLogin && (
-          <div className="relative">
-            <Separator />
-            <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-              {t('auth.or')}
-            </span>
-          </div>
-          )}
-
           {isLogin ? (
             // Login Form
             <form onSubmit={handleLogin} className="space-y-4">
