@@ -8,8 +8,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { 
   Locate, 
-  ZoomIn, 
-  ZoomOut, 
   MapPin, 
   Briefcase, 
   User, 
@@ -19,6 +17,7 @@ import {
   MousePointerClick
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { calculateDistance } from '@/lib/geolocation';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
@@ -300,7 +299,40 @@ export const InteractiveMap = ({
     return `${t('projects.card.up_to')} ${max!.toLocaleString()} $`;
   };
 
-  const items = mode === 'projects' ? projects : professionals;
+  // Calculate projects within the radius
+  const projectsInRadius = useMemo(() => {
+    if (!userLocation) return projects;
+    
+    return projects.filter((project) => {
+      if (!project.latitude || !project.longitude) return false;
+      const distance = calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        project.latitude,
+        project.longitude
+      );
+      return distance <= radius;
+    });
+  }, [projects, userLocation, radius]);
+
+  // Calculate professionals within the radius
+  const professionalsInRadius = useMemo(() => {
+    if (!userLocation) return professionals;
+    
+    return professionals.filter((pro) => {
+      if (!pro.latitude || !pro.longitude) return false;
+      const distance = calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        pro.latitude,
+        pro.longitude
+      );
+      return distance <= radius;
+    });
+  }, [professionals, userLocation, radius]);
+
+  // Count of items in radius for display
+  const itemsInRadiusCount = mode === 'projects' ? projectsInRadius.length : professionalsInRadius.length;
 
   return (
     <Card className="relative overflow-hidden">
@@ -328,13 +360,13 @@ export const InteractiveMap = ({
           </div>
         </div>
 
-        {/* Items count badge */}
+        {/* Items count badge - shows only items within radius */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
           <Badge variant="secondary" className="shadow-lg">
             {mode === 'projects' ? (
-              <><Briefcase className="h-3 w-3 mr-1" /> {t('projects.map.projects_count', { count: items.length })}</>
+              <><Briefcase className="h-3 w-3 mr-1" /> {t('projects.map.projects_count', { count: itemsInRadiusCount })}</>
             ) : (
-              <><User className="h-3 w-3 mr-1" /> {t('professionals.map.professionals_count', { count: items.length })}</>
+              <><User className="h-3 w-3 mr-1" /> {t('professionals.map.professionals_count', { count: itemsInRadiusCount })}</>
             )}
           </Badge>
         </div>
@@ -424,94 +456,108 @@ export const InteractiveMap = ({
               </>
             )}
 
-            {/* Project markers */}
-            {mode === 'projects' && projects.map((project) => (
-              <Marker
-                key={project.id}
-                position={[project.latitude, project.longitude]}
-                icon={projectIcon}
-              >
-                <Popup>
-                  <div className="min-w-[200px]">
-                    <h3 className="font-bold text-sm mb-1">{project.title}</h3>
-                    <Badge variant="outline" className="mb-2 text-xs">
-                      {project.category}
-                    </Badge>
-                    <div className="space-y-1 text-xs text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {project.city}, {project.region}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {formatBudget(project.budget_min, project.budget_max)}
-                      </div>
-                      {project.distance_km && (
-                        <div className="text-primary font-medium">
-                          📍 {project.distance_km.toFixed(1)} km
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => navigate(`/project/${project.id}`)}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      {t('projects.card.view_details')}
-                    </Button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-            {/* Professional markers */}
-            {mode === 'professionals' && professionals.map((pro) => (
-              <Marker
-                key={pro.id}
-                position={[pro.latitude, pro.longitude]}
-                icon={professionalIcon}
-              >
-                <Popup>
-                  <div className="min-w-[200px]">
-                    <h3 className="font-bold text-sm mb-1">
-                      {pro.company_name || pro.full_name}
-                    </h3>
-                    {pro.is_rbq_verified && (
-                      <Badge variant="default" className="mb-2 text-xs bg-green-600">
-                        ✓ {t('professionals.card.verified')}
+            {/* Project markers - only show those within radius */}
+            {mode === 'projects' && projectsInRadius.map((project) => {
+              // Calculate distance for display
+              const distance = userLocation 
+                ? calculateDistance(userLocation[0], userLocation[1], project.latitude, project.longitude)
+                : project.distance_km;
+              
+              return (
+                <Marker
+                  key={project.id}
+                  position={[project.latitude, project.longitude]}
+                  icon={projectIcon}
+                >
+                  <Popup>
+                    <div className="min-w-[200px]">
+                      <h3 className="font-bold text-sm mb-1">{project.title}</h3>
+                      <Badge variant="outline" className="mb-2 text-xs">
+                        {project.category}
                       </Badge>
-                    )}
-                    <div className="space-y-1 text-xs text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {pro.city}, {pro.region}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-yellow-500" />
-                        {pro.average_rating.toFixed(1)} ({pro.total_reviews} {t('professionals.card.reviews')})
-                      </div>
-                      {pro.years_experience && (
-                        <div>{pro.years_experience} {t('professionals.card.years_exp')}</div>
-                      )}
-                      {pro.distance_km && (
-                        <div className="text-primary font-medium">
-                          📍 {pro.distance_km.toFixed(1)} {t('professionals.map.km')}
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {project.city}, {project.region}
                         </div>
-                      )}
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="h-3 w-3" />
+                          {formatBudget(project.budget_min, project.budget_max)}
+                        </div>
+                        {distance !== undefined && (
+                          <div className="text-primary font-medium">
+                            📍 {distance.toFixed(1)} km
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => navigate(`/project/${project.id}`)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        {t('projects.card.view_details')}
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      className="w-full mt-2"
-                      onClick={() => navigate(`/professional/${pro.id}`)}
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      {t('professionals.card.view_profile')}
-                    </Button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+                  </Popup>
+                </Marker>
+              );
+            })}
+
+            {/* Professional markers - only show those within radius */}
+            {mode === 'professionals' && professionalsInRadius.map((pro) => {
+              // Calculate distance for display
+              const distance = userLocation 
+                ? calculateDistance(userLocation[0], userLocation[1], pro.latitude, pro.longitude)
+                : pro.distance_km;
+              
+              return (
+                <Marker
+                  key={pro.id}
+                  position={[pro.latitude, pro.longitude]}
+                  icon={professionalIcon}
+                >
+                  <Popup>
+                    <div className="min-w-[200px]">
+                      <h3 className="font-bold text-sm mb-1">
+                        {pro.company_name || pro.full_name}
+                      </h3>
+                      {pro.is_rbq_verified && (
+                        <Badge variant="default" className="mb-2 text-xs bg-green-600">
+                          ✓ {t('professionals.card.verified')}
+                        </Badge>
+                      )}
+                      <div className="space-y-1 text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {pro.city}, {pro.region}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          {pro.average_rating.toFixed(1)} ({pro.total_reviews} {t('professionals.card.reviews')})
+                        </div>
+                        {pro.years_experience && (
+                          <div>{pro.years_experience} {t('professionals.card.years_exp')}</div>
+                        )}
+                        {distance !== undefined && (
+                          <div className="text-primary font-medium">
+                            📍 {distance.toFixed(1)} {t('professionals.map.km')}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full mt-2"
+                        onClick={() => navigate(`/professional/${pro.id}`)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        {t('professionals.card.view_profile')}
+                      </Button>
+                    </div>
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
       </CardContent>

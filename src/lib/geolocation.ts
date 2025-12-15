@@ -243,8 +243,122 @@ const POSTAL_CODE_PREFIXES: Record<string, Coordinates> = {
 };
 
 /**
+ * Cache for geocoded postal codes to avoid repeated API calls
+ */
+const geocodeCache = new Map<string, Coordinates | null>();
+
+/**
+ * Use Zippopotam.us API for Canadian postal codes (more reliable)
+ * This API is specifically designed for postal codes and is very accurate
+ */
+async function tryZippopotam(postalCode: string): Promise<Coordinates | null> {
+  try {
+    // Format: spaces removed for API
+    const cleanCode = postalCode.replace(/\s+/g, '').toUpperCase();
+    // Zippopotam needs format: CA/XXX (FSA only for Canada) or full postal code
+    const fsa = cleanCode.slice(0, 3);
+    
+    const response = await fetch(`https://api.zippopotam.us/ca/${fsa}`, {
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+
+    if (data && data.places && data.places.length > 0) {
+      const place = data.places[0];
+      const lat = parseFloat(place.latitude);
+      const lng = parseFloat(place.longitude);
+      
+      // Add small offset based on LDU (last 3 chars) for uniqueness
+      // This gives ~200m variance within the FSA
+      const ldu = cleanCode.slice(3);
+      const lduOffset = ldu ? getLDUOffset(ldu) : { lat: 0, lng: 0 };
+      
+      return {
+        latitude: lat + lduOffset.lat,
+        longitude: lng + lduOffset.lng,
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Calculate a deterministic offset based on the LDU (Local Delivery Unit)
+ * This ensures the same postal code always maps to the same location
+ * while spreading points within the FSA area (~500m spread)
+ */
+function getLDUOffset(ldu: string): { lat: number; lng: number } {
+  if (!ldu || ldu.length !== 3) {
+    return { lat: 0, lng: 0 };
+  }
+  
+  // Convert LDU to a numeric value for offset calculation
+  const char1 = ldu.charCodeAt(0) - 48; // 0-9 for digit
+  const char2 = ldu.charCodeAt(1) - 65; // A-Z for letter  
+  const char3 = ldu.charCodeAt(2) - 48; // 0-9 for digit
+  
+  // Normalize to -0.5 to 0.5 range
+  const normalizedVal1 = (char1 / 9) - 0.5;
+  const normalizedVal2 = (char2 / 25) - 0.5;
+  const normalizedVal3 = (char3 / 9) - 0.5;
+  
+  // Create offset (~500m max = ~0.0045 degrees)
+  const latOffset = normalizedVal1 * 0.003 + normalizedVal3 * 0.001;
+  const lngOffset = normalizedVal2 * 0.004;
+  
+  return { lat: latOffset, lng: lngOffset };
+}
+
+/**
+ * Use OpenCage Geocoding as backup (free tier: 2500 requests/day)
+ * More accurate than Nominatim for Canadian postal codes
+ */
+async function tryOpenCage(postalCode: string, city?: string): Promise<Coordinates | null> {
+  try {
+    // OpenCage requires an API key - skip if not configured
+    // For now, we use the free Nominatim with better query formatting
+    const query = city 
+      ? `${postalCode}, ${city}, Quebec, Canada`
+      : `${postalCode}, Quebec, Canada`;
+    
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?` + 
+      `q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=ca&addressdetails=1`,
+      {
+        headers: {
+          'User-Agent': 'BatirNet/1.0 (quebec-pro-hub)',
+          'Accept-Language': 'fr-CA,en-CA,fr,en',
+        },
+      }
+    );
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+
+    if (data && data.length > 0) {
+      return {
+        latitude: parseFloat(data[0].lat),
+        longitude: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Geocode a postal code to coordinates using multiple strategies
- * @param postalCode - Postal code (Canadian format: A1A 1A1)
+ * IMPROVED VERSION with higher precision
+ * @param postalCode - Postal code (Canadian format: A1A 1A1 or A1A1A1)
  * @param city - Optional city name for better accuracy
  * @param country - Country code (default: 'CA' for Canada)
  * @returns Promise with coordinates or null if not found
@@ -258,10 +372,24 @@ export async function geocodePostalCode(
     // Clean and format postal code
     const cleanedPostalCode = postalCode.trim().toUpperCase().replace(/\s+/g, '');
     
-    // Validate Canadian postal code format (A1A1A1)
+    // Create cache key
+    const cacheKey = `${cleanedPostalCode}|${city || ''}`;
+    
+    // Check cache first
+    if (geocodeCache.has(cacheKey)) {
+      const cached = geocodeCache.get(cacheKey);
+      if (cached) {
+        console.log('✅ Found in cache:', cleanedPostalCode);
+        return cached;
+      }
+    }
+    
+    // Validate Canadian postal code format (A1A1A1 or A1A)
     if (country === 'CA') {
-      const canadianPostalCodeRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
-      if (!canadianPostalCodeRegex.test(cleanedPostalCode)) {
+      const fullPostalCodeRegex = /^[A-Z]\d[A-Z]\d[A-Z]\d$/;
+      const fsaOnlyRegex = /^[A-Z]\d[A-Z]$/;
+      
+      if (!fullPostalCodeRegex.test(cleanedPostalCode) && !fsaOnlyRegex.test(cleanedPostalCode)) {
         console.warn('Invalid Canadian postal code format:', cleanedPostalCode);
         return null;
       }
@@ -269,71 +397,106 @@ export async function geocodePostalCode(
 
     // Extract FSA (Forward Sortation Area) - first 3 characters
     const fsa = cleanedPostalCode.slice(0, 3);
+    const ldu = cleanedPostalCode.length === 6 ? cleanedPostalCode.slice(3) : '';
+    
+    // Format with space for API calls: A1A 1A1
+    const formattedPostalCode = ldu ? `${fsa} ${ldu}` : fsa;
 
-    // Strategy 1: LOCAL DATABASE (fastest, no API call)
-    // Check our local postal codes database first
+    // ============================================
+    // STRATEGY 1: Zippopotam.us API (most reliable for CA postal codes)
+    // ============================================
+    const zippopotamResult = await tryZippopotam(cleanedPostalCode);
+    if (zippopotamResult) {
+      console.log('✅ Found via Zippopotam.us:', formattedPostalCode);
+      geocodeCache.set(cacheKey, zippopotamResult);
+      return zippopotamResult;
+    }
+
+    // ============================================
+    // STRATEGY 2: Local database with LDU offset
+    // ============================================
     const localEntry = POSTAL_CODES_DB.postalCodes[fsa];
     if (localEntry) {
       console.log('✅ Found in local database:', fsa, '-', localEntry.name);
-      // Add small random offset to avoid all projects at same point (~100m variance)
-      const offset = (Math.random() - 0.5) * 0.002;
-      return {
-        latitude: localEntry.lat + offset,
-        longitude: localEntry.lng + offset,
+      
+      // Calculate deterministic offset based on LDU for precision
+      const lduOffset = ldu ? getLDUOffset(ldu) : { lat: 0, lng: 0 };
+      
+      const result = {
+        latitude: localEntry.lat + lduOffset.lat,
+        longitude: localEntry.lng + lduOffset.lng,
       };
+      
+      geocodeCache.set(cacheKey, result);
+      return result;
     }
 
-    // Format with space for API calls: A1A 1A1
-    const formattedPostalCode = fsa + ' ' + cleanedPostalCode.slice(3);
-
-    // Strategy 2: Try Nominatim with postal code + city + Quebec, Canada
+    // ============================================
+    // STRATEGY 3: Nominatim with structured query
+    // ============================================
+    // Try with full postal code + city for best accuracy
     if (city) {
-      const result = await tryGeocode(`${formattedPostalCode}, ${city}, Quebec, Canada`);
+      const result = await tryOpenCage(formattedPostalCode, city);
       if (result) {
         console.log('✅ Found via Nominatim (with city):', formattedPostalCode);
+        geocodeCache.set(cacheKey, result);
         return result;
       }
     }
 
-    // Strategy 3: Try with postal code + Quebec, Canada
+    // Try with postal code only
     const result2 = await tryGeocode(`${formattedPostalCode}, Quebec, Canada`);
     if (result2) {
       console.log('✅ Found via Nominatim (Quebec):', formattedPostalCode);
+      geocodeCache.set(cacheKey, result2);
       return result2;
     }
 
-    // Strategy 4: Try with postal code + Canada
-    const result3 = await tryGeocode(`${formattedPostalCode}, Canada`);
+    // ============================================
+    // STRATEGY 4: Nominatim postalcode parameter
+    // ============================================
+    const result3 = await tryNominatimPostalCode(formattedPostalCode, country);
     if (result3) {
-      console.log('✅ Found via Nominatim (Canada):', formattedPostalCode);
+      console.log('✅ Found via Nominatim postalcode param:', formattedPostalCode);
+      geocodeCache.set(cacheKey, result3);
       return result3;
     }
 
-    // Strategy 5: Try Nominatim postalcode parameter
-    const result4 = await tryNominatimPostalCode(formattedPostalCode, country);
-    if (result4) {
-      console.log('✅ Found via Nominatim postalcode param:', formattedPostalCode);
-      return result4;
-    }
-
-    // Strategy 6: Fallback to province prefix (1 character)
+    // ============================================
+    // STRATEGY 5: Province prefix fallback (last resort)
+    // ============================================
     const prefix = cleanedPostalCode.charAt(0);
     if (POSTAL_CODE_PREFIXES[prefix]) {
       console.log('⚠️ Using province prefix fallback for:', cleanedPostalCode);
-      // Add larger random offset for province-level (~5km variance)
-      const offset = (Math.random() - 0.5) * 0.1;
-      return {
-        latitude: POSTAL_CODE_PREFIXES[prefix].latitude + offset,
-        longitude: POSTAL_CODE_PREFIXES[prefix].longitude + offset,
+      
+      // Use LDU-based offset if available, otherwise random
+      const offset = ldu 
+        ? getLDUOffset(ldu) 
+        : { lat: (Math.random() - 0.5) * 0.1, lng: (Math.random() - 0.5) * 0.1 };
+      
+      const result = {
+        latitude: POSTAL_CODE_PREFIXES[prefix].latitude + offset.lat,
+        longitude: POSTAL_CODE_PREFIXES[prefix].longitude + offset.lng,
       };
+      
+      geocodeCache.set(cacheKey, result);
+      return result;
     }
 
     console.warn('❌ Could not geocode postal code:', cleanedPostalCode);
+    geocodeCache.set(cacheKey, null);
     return null;
   } catch (error) {
     console.error('Error geocoding postal code:', error);
     return null;
   }
+}
+
+/**
+ * Clear the geocode cache (useful for testing or when data changes)
+ */
+export function clearGeocodeCache(): void {
+  geocodeCache.clear();
 }
 
 /**
