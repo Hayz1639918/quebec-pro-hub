@@ -87,7 +87,7 @@ interface DashboardStats {
   total_projects: number;
   open_projects: number;
   total_contracts: number;
-  active_contracts: number;
+  signed_contracts: number;
 }
 
 interface AuditLog {

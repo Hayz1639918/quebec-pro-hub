@@ -392,7 +392,7 @@ SELECT
   (SELECT COUNT(*) FROM projects) as total_projects,
   (SELECT COUNT(*) FROM projects WHERE status = 'open') as open_projects,
   (SELECT COUNT(*) FROM contracts) as total_contracts,
-  (SELECT COUNT(*) FROM contracts WHERE status = 'active') as active_contracts;
+  (SELECT COUNT(*) FROM contracts WHERE status = 'signed') as signed_contracts;
 
 -- =====================================================
 -- 7. ADD NOTIFICATION TYPE FOR RBQ
