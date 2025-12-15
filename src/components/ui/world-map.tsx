@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, useEffect, useState } from "react";
 import { motion } from "motion/react";
 
@@ -54,7 +52,7 @@ export default function WorldMap({ dots = [], lineColor = "#3b82f6" }: WorldMapP
   return (
     <div
       ref={containerRef}
-      className="w-full aspect-[2/1] relative overflow-hidden"
+      className="w-full h-full relative overflow-hidden"
     >
       {/* World Map SVG */}
       <svg

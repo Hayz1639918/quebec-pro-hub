@@ -43,30 +43,22 @@ const WorldMapBackground = () => {
   ];
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none -z-10">
+    <div className="w-full h-full overflow-hidden pointer-events-none">
       {/* Background gradient */}
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(180deg, rgba(239, 246, 255, 0.95) 0%, rgba(255, 255, 255, 0.98) 60%, rgba(255, 255, 255, 1) 100%)',
+          background: 'linear-gradient(180deg, rgba(219, 234, 254, 0.6) 0%, rgba(239, 246, 255, 0.4) 40%, rgba(255, 255, 255, 0.9) 100%)',
         }}
       />
       
       {/* World Map with connections */}
-      <div className="absolute inset-0 opacity-60">
+      <div className="absolute inset-0">
         <WorldMap 
           dots={connectionDots}
           lineColor="#3b82f6"
         />
       </div>
-      
-      {/* Bottom fade to white */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 h-32"
-        style={{
-          background: 'linear-gradient(to top, white 0%, transparent 100%)',
-        }}
-      />
     </div>
   );
 };
