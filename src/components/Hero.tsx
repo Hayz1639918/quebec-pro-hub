@@ -3,6 +3,7 @@ import { Search, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-construction.jpg";
+import WorldMapBackground from "./WorldMapBackground";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -10,6 +11,9 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex items-center pt-20 sm:pt-24 pb-8 overflow-hidden">
+      {/* World Map Background */}
+      <WorldMapBackground />
+      
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
