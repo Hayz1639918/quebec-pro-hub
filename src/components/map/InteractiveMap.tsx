@@ -247,7 +247,7 @@ const LocateButton = ({
     <Button
       size="sm"
       variant="secondary"
-      className="absolute top-4 right-4 z-[1000] shadow-lg"
+      className="absolute top-4 right-4 z-20 shadow-lg"
       onClick={handleLocate}
       disabled={loading}
     >
@@ -358,10 +358,10 @@ export const InteractiveMap = ({
   const itemsInRadiusCount = mode === 'projects' ? projectsInRadius.length : professionalsInRadius.length;
 
   return (
-    <Card className="relative overflow-hidden">
-      <CardContent className="p-0">
+    <Card className="relative overflow-hidden isolate">
+      <CardContent className="p-0 relative">
         {/* Radius slider */}
-        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[220px]">
+        <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[220px]">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">{t('professionals.map.radius')}: {radius} {t('professionals.map.km')}</span>
@@ -384,7 +384,7 @@ export const InteractiveMap = ({
         </div>
 
         {/* Items count badge - shows items within radius and total */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
           <Badge variant="secondary" className="shadow-lg">
             {mode === 'projects' ? (
               <>
@@ -408,7 +408,7 @@ export const InteractiveMap = ({
 
         {/* Loading overlay */}
         {isLocating && (
-          <div className="absolute inset-0 z-[1001] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="absolute inset-0 z-30 bg-white/80 backdrop-blur-sm flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
                 <Locate className="h-8 w-8 text-primary animate-pulse" />
