@@ -496,7 +496,8 @@
       "radius": "Rayon",
       "km": "km",
       "no_location": "Localisation non disponible",
-      "projects_count": "{{count}} projet(s) dans ce secteur"
+      "projects_count": "{{count}} projet(s) dans ce secteur",
+      "in_area": "dans la zone"
     }
   },
   "proposals": {
@@ -720,6 +721,7 @@
       "km": "km",
       "no_location": "Localisation non disponible",
       "professionals_count": "{{count}} professionnel(s) dans ce secteur",
+      "in_area": "dans la zone",
       "my_location": "Ma position",
       "click_to_move": "Cliquez sur la carte pour déplacer",
       "drag_to_move": "Glissez le marqueur pour repositionner"

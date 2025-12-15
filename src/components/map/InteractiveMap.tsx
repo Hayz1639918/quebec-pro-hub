@@ -25,7 +25,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Custom marker icons
+// Custom marker icons - IN RADIUS (normal)
 const projectIcon = new Icon({
   iconUrl: markerIcon,
   iconRetinaUrl: markerIcon2x,
@@ -46,6 +46,29 @@ const professionalIcon = new Icon({
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
   className: 'professional-marker'
+});
+
+// Custom marker icons - OUT OF RADIUS (faded/smaller)
+const projectIconFaded = new Icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [18, 30],
+  iconAnchor: [9, 30],
+  popupAnchor: [1, -25],
+  shadowSize: [30, 30],
+  className: 'project-marker-faded'
+});
+
+const professionalIconFaded = new Icon({
+  iconUrl: markerIcon,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl: markerShadow,
+  iconSize: [18, 30],
+  iconAnchor: [9, 30],
+  popupAnchor: [1, -25],
+  shadowSize: [30, 30],
+  className: 'professional-marker-faded'
 });
 
 // User location icon is created dynamically with useMemo in the component
@@ -360,13 +383,25 @@ export const InteractiveMap = ({
           </div>
         </div>
 
-        {/* Items count badge - shows only items within radius */}
+        {/* Items count badge - shows items within radius and total */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
           <Badge variant="secondary" className="shadow-lg">
             {mode === 'projects' ? (
-              <><Briefcase className="h-3 w-3 mr-1" /> {t('projects.map.projects_count', { count: itemsInRadiusCount })}</>
+              <>
+                <Briefcase className="h-3 w-3 mr-1" />
+                <span className="font-semibold">{itemsInRadiusCount}</span>
+                <span className="text-muted-foreground mx-1">/</span>
+                <span className="text-muted-foreground">{projects.length}</span>
+                <span className="ml-1 text-xs">{t('projects.map.in_area')}</span>
+              </>
             ) : (
-              <><User className="h-3 w-3 mr-1" /> {t('professionals.map.professionals_count', { count: itemsInRadiusCount })}</>
+              <>
+                <User className="h-3 w-3 mr-1" />
+                <span className="font-semibold">{itemsInRadiusCount}</span>
+                <span className="text-muted-foreground mx-1">/</span>
+                <span className="text-muted-foreground">{professionals.length}</span>
+                <span className="ml-1 text-xs">{t('professionals.map.in_area')}</span>
+              </>
             )}
           </Badge>
         </div>
@@ -456,22 +491,36 @@ export const InteractiveMap = ({
               </>
             )}
 
-            {/* Project markers - only show those within radius */}
-            {mode === 'projects' && projectsInRadius.map((project) => {
+            {/* Project markers - show ALL projects, with different icons for in/out of radius */}
+            {mode === 'projects' && projects.map((project) => {
+              if (!project.latitude || !project.longitude) return null;
+              
               // Calculate distance for display
               const distance = userLocation 
                 ? calculateDistance(userLocation[0], userLocation[1], project.latitude, project.longitude)
                 : project.distance_km;
               
+              // Check if project is within radius
+              const isInRadius = !userLocation || (distance !== undefined && distance <= radius);
+              
               return (
                 <Marker
                   key={project.id}
                   position={[project.latitude, project.longitude]}
-                  icon={projectIcon}
+                  icon={isInRadius ? projectIcon : projectIconFaded}
+                  opacity={isInRadius ? 1 : 0.5}
+                  zIndexOffset={isInRadius ? 1000 : 0}
                 >
                   <Popup>
                     <div className="min-w-[200px]">
-                      <h3 className="font-bold text-sm mb-1">{project.title}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-sm">{project.title}</h3>
+                        {!isInRadius && (
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 text-muted-foreground">
+                            Hors zone
+                          </Badge>
+                        )}
+                      </div>
                       <Badge variant="outline" className="mb-2 text-xs">
                         {project.category}
                       </Badge>
@@ -485,7 +534,7 @@ export const InteractiveMap = ({
                           {formatBudget(project.budget_min, project.budget_max)}
                         </div>
                         {distance !== undefined && (
-                          <div className="text-primary font-medium">
+                          <div className={`font-medium ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
                             📍 {distance.toFixed(1)} km
                           </div>
                         )}
@@ -504,24 +553,38 @@ export const InteractiveMap = ({
               );
             })}
 
-            {/* Professional markers - only show those within radius */}
-            {mode === 'professionals' && professionalsInRadius.map((pro) => {
+            {/* Professional markers - show ALL professionals, with different icons for in/out of radius */}
+            {mode === 'professionals' && professionals.map((pro) => {
+              if (!pro.latitude || !pro.longitude) return null;
+              
               // Calculate distance for display
               const distance = userLocation 
                 ? calculateDistance(userLocation[0], userLocation[1], pro.latitude, pro.longitude)
                 : pro.distance_km;
               
+              // Check if professional is within radius
+              const isInRadius = !userLocation || (distance !== undefined && distance <= radius);
+              
               return (
                 <Marker
                   key={pro.id}
                   position={[pro.latitude, pro.longitude]}
-                  icon={professionalIcon}
+                  icon={isInRadius ? professionalIcon : professionalIconFaded}
+                  opacity={isInRadius ? 1 : 0.5}
+                  zIndexOffset={isInRadius ? 1000 : 0}
                 >
                   <Popup>
                     <div className="min-w-[200px]">
-                      <h3 className="font-bold text-sm mb-1">
-                        {pro.company_name || pro.full_name}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold text-sm">
+                          {pro.company_name || pro.full_name}
+                        </h3>
+                        {!isInRadius && (
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 text-muted-foreground">
+                            Hors zone
+                          </Badge>
+                        )}
+                      </div>
                       {pro.is_rbq_verified && (
                         <Badge variant="default" className="mb-2 text-xs bg-green-600">
                           ✓ {t('professionals.card.verified')}
@@ -540,7 +603,7 @@ export const InteractiveMap = ({
                           <div>{pro.years_experience} {t('professionals.card.years_exp')}</div>
                         )}
                         {distance !== undefined && (
-                          <div className="text-primary font-medium">
+                          <div className={`font-medium ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
                             📍 {distance.toFixed(1)} {t('professionals.map.km')}
                           </div>
                         )}

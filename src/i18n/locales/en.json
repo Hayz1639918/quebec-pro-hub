@@ -496,7 +496,8 @@
       "radius": "Radius",
       "km": "km",
       "no_location": "Location not available",
-      "projects_count": "{{count}} project(s) in this area"
+      "projects_count": "{{count}} project(s) in this area",
+      "in_area": "in area"
     }
   },
   "proposals": {
@@ -718,6 +719,7 @@
       "km": "km",
       "no_location": "Location not available",
       "professionals_count": "{{count}} professional(s) in this area",
+      "in_area": "in area",
       "my_location": "My Location",
       "click_to_move": "Click on map to move origin",
       "drag_to_move": "Drag marker to reposition"

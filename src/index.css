@@ -307,14 +307,50 @@ img {
     @apply m-3;
   }
 
+  /* Marqueurs dans le rayon - couleurs vives */
   .project-marker {
     filter: hue-rotate(200deg) saturate(1.2);
     cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .project-marker:hover {
+    transform: scale(1.1);
   }
 
   .professional-marker {
     filter: hue-rotate(100deg) saturate(1.2);
     cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .professional-marker:hover {
+    transform: scale(1.1);
+  }
+
+  /* Marqueurs hors du rayon - atténués */
+  .project-marker-faded {
+    filter: hue-rotate(200deg) saturate(0.3) brightness(0.8);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+  }
+
+  .project-marker-faded:hover {
+    opacity: 0.8;
+    filter: hue-rotate(200deg) saturate(0.6) brightness(0.9);
+  }
+
+  .professional-marker-faded {
+    filter: hue-rotate(100deg) saturate(0.3) brightness(0.8);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+  }
+
+  .professional-marker-faded:hover {
+    opacity: 0.8;
+    filter: hue-rotate(100deg) saturate(0.6) brightness(0.9);
   }
 
   .user-location-marker {
