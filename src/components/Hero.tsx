@@ -3,7 +3,6 @@ import { Search, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-construction.jpg";
-import WorldMapBackground from "./WorldMapBackground";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -11,10 +10,8 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex items-center pt-20 sm:pt-24 pb-8 overflow-hidden">
-      {/* World Map Background - Full screen behind everything */}
-      <div className="absolute inset-0 -z-20">
-        <WorldMapBackground />
-      </div>
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-subtle -z-10" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-16">
         <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-20 items-center">
