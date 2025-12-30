@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, useMapEvents } from 'react-leaflet';
-import { Icon, DragEndEvent } from 'leaflet';
+import { Icon, DragEndEvent, Map as LeafletMap } from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -204,25 +204,29 @@ const MapClickHandler = ({
   return null;
 };
 
-// Locate button component
-const LocateButton = ({ 
+// Locate button component - now accepts map ref instead of using useMap()
+const LocateButtonExternal = ({ 
+  mapRef,
   onLocate,
   t
 }: { 
+  mapRef: React.RefObject<LeafletMap | null>;
   onLocate: (lat: number, lng: number) => void;
   t: (key: string) => string;
 }) => {
-  const map = useMap();
   const [loading, setLoading] = useState(false);
 
   const handleLocate = () => {
     setLoading(true);
+    const map = mapRef.current;
     
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          map.flyTo([latitude, longitude], 12, { duration: 1.5 });
+          if (map) {
+            map.flyTo([latitude, longitude], 12, { duration: 1.5 });
+          }
           onLocate(latitude, longitude);
           setLoading(false);
         },
@@ -230,7 +234,9 @@ const LocateButton = ({
           console.error('Geolocation error:', error);
           setLoading(false);
           // Default to Montreal if geolocation fails
-          map.flyTo([45.5017, -73.5673], 10, { duration: 1.5 });
+          if (map) {
+            map.flyTo([45.5017, -73.5673], 10, { duration: 1.5 });
+          }
           onLocate(45.5017, -73.5673);
         },
         { enableHighAccuracy: true, timeout: 10000 }
@@ -238,7 +244,9 @@ const LocateButton = ({
     } else {
       setLoading(false);
       // Default to Montreal
-      map.flyTo([45.5017, -73.5673], 10, { duration: 1.5 });
+      if (map) {
+        map.flyTo([45.5017, -73.5673], 10, { duration: 1.5 });
+      }
       onLocate(45.5017, -73.5673);
     }
   };
@@ -247,7 +255,7 @@ const LocateButton = ({
     <Button
       size="sm"
       variant="secondary"
-      className="absolute top-4 right-4 z-20 shadow-lg"
+      className="shadow-lg"
       onClick={handleLocate}
       disabled={loading}
     >
@@ -268,6 +276,9 @@ export const InteractiveMap = ({
 }: InteractiveMapProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // Map reference for external controls
+  const mapRef = useRef<LeafletMap | null>(null);
   
   // Default center (Montreal) - will be updated by AutoLocate
   const [center] = useState<[number, number]>([45.5017, -73.5673]);
@@ -358,10 +369,10 @@ export const InteractiveMap = ({
   const itemsInRadiusCount = mode === 'projects' ? projectsInRadius.length : professionalsInRadius.length;
 
   return (
-    <Card className="relative overflow-hidden isolate">
+    <Card className="relative overflow-hidden">
       <CardContent className="p-0 relative">
         {/* Radius slider */}
-        <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[220px]">
+        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur rounded-lg p-3 shadow-lg max-w-[220px]">
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">{t('professionals.map.radius')}: {radius} {t('professionals.map.km')}</span>
@@ -384,7 +395,7 @@ export const InteractiveMap = ({
         </div>
 
         {/* Items count badge - shows items within radius and total */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
           <Badge variant="secondary" className="shadow-lg">
             {mode === 'projects' ? (
               <>
@@ -406,9 +417,14 @@ export const InteractiveMap = ({
           </Badge>
         </div>
 
+        {/* Locate button - positioned outside MapContainer for proper z-index */}
+        <div className="absolute top-4 right-4 z-[1000]">
+          <LocateButtonExternal mapRef={mapRef} onLocate={handleLocate} t={t} />
+        </div>
+
         {/* Loading overlay */}
         {isLocating && (
-          <div className="absolute inset-0 z-30 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="absolute inset-0 z-[1001] bg-white/80 backdrop-blur-sm flex items-center justify-center">
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
                 <Locate className="h-8 w-8 text-primary animate-pulse" />
@@ -434,6 +450,7 @@ export const InteractiveMap = ({
             touchZoom={true}
             boxZoom={true}
             keyboard={true}
+            ref={mapRef}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -449,8 +466,6 @@ export const InteractiveMap = ({
               onLocate={handleLocate} 
               onLoadingChange={handleLoadingChange}
             />
-            
-            <LocateButton onLocate={handleLocate} t={t} />
             
             {/* Click handler for setting new origin */}
             <MapClickHandler 

@@ -218,13 +218,48 @@ const Professionals = () => {
 
   const fetchProfessionals = async () => {
     try {
-      // Afficher tous les professionnels (vérifiés et non vérifiés)
-      // Un badge indiquera leur statut de vérification RBQ
+      // Afficher uniquement les professionnels vérifiés RBQ
+      // Les informations sensibles (rbq_certification_url) ne sont pas récupérées
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          id,
+          full_name,
+          email,
+          phone,
+          company_name,
+          rbq_number,
+          services_offered,
+          insurance_info,
+          is_rbq_verified,
+          city,
+          region,
+          bio,
+          years_experience,
+          average_rating,
+          total_reviews,
+          total_projects,
+          profile_picture_url,
+          created_at,
+          hourly_rate_min,
+          hourly_rate_max,
+          daily_rate_min,
+          daily_rate_max,
+          availability_status,
+          available_from,
+          response_time_hours,
+          accepts_small_projects,
+          minimum_project_budget,
+          travel_distance_km,
+          latitude,
+          longitude,
+          last_active_at,
+          activity_score,
+          total_proposals_sent,
+          proposals_last_30_days
+        `)
         .eq('user_type', 'professional')
-        .order('is_rbq_verified', { ascending: false }) // Vérifiés en premier
+        .eq('is_rbq_verified', true) // Seulement les professionnels vérifiés
         .order('created_at', { ascending: false });
 
       if (error) throw error;

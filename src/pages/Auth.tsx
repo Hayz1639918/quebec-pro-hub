@@ -168,28 +168,45 @@ const Auth = () => {
     if (!rbqFile) return null;
 
     try {
-      const fileExt = rbqFile.name.split('.').pop();
-      const fileName = `${userId}-rbq-${Date.now()}.${fileExt}`;
-      const filePath = `rbq-certifications/${fileName}`;
+      const fileExt = rbqFile.name.split('.').pop()?.toLowerCase();
+      const fileName = `rbq-${Date.now()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading file:', {
+        fileName,
+        filePath,
+        fileType: rbqFile.type,
+        fileSize: rbqFile.size,
+        userId
+      });
+
+      const { data, error: uploadError } = await supabase.storage
         .from('certifications')
-        .upload(filePath, rbqFile);
+        .upload(filePath, rbqFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error details:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('certifications')
         .getPublicUrl(filePath);
 
+      console.log('Public URL:', publicUrl);
       return publicUrl;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading RBQ certification:', error);
       toast({
         variant: "destructive",
-        title: t('auth.messages.upload_error'),
-        description: t('auth.messages.upload_error_description'),
+        title: "Erreur d'upload",
+        description: error?.message || error?.error_description || "Erreur inconnue lors de l'upload",
       });
       return null;
     }

@@ -81,6 +81,21 @@ interface PendingVerification {
   missing_certification: boolean;
 }
 
+interface RejectedProfessional {
+  id: string;
+  email: string;
+  full_name: string;
+  phone: string | null;
+  company_name: string;
+  rbq_number: string;
+  rbq_certification_url: string | null;
+  city: string | null;
+  region: string | null;
+  rbq_rejection_reason: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface DashboardStats {
   total_clients: number;
   total_professionals: number;
@@ -117,6 +132,7 @@ const AdminDashboard = () => {
   // Data state
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [pendingVerifications, setPendingVerifications] = useState<PendingVerification[]>([]);
+  const [rejectedProfessionals, setRejectedProfessionals] = useState<RejectedProfessional[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -185,6 +201,21 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Fetch rejected professionals
+  const fetchRejectedProfessionals = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_rejected_professionals')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      setRejectedProfessionals(data || []);
+    } catch (error) {
+      console.error('Error fetching rejected professionals:', error);
+    }
+  }, []);
+
   // Fetch audit logs
   const fetchAuditLogs = useCallback(async () => {
     try {
@@ -220,6 +251,7 @@ const AdminDashboard = () => {
         await Promise.all([
           fetchStats(),
           fetchPendingVerifications(),
+          fetchRejectedProfessionals(),
           fetchAuditLogs()
         ]);
       }
@@ -228,7 +260,7 @@ const AdminDashboard = () => {
     };
 
     init();
-  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchAuditLogs]);
+  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchRejectedProfessionals, fetchAuditLogs]);
 
   // Handle RBQ verification
   const handleVerifyRBQ = async (professional: PendingVerification) => {
@@ -292,12 +324,70 @@ const AdminDashboard = () => {
       });
 
       // Refresh data
-      await Promise.all([fetchStats(), fetchPendingVerifications(), fetchAuditLogs()]);
+      await Promise.all([fetchStats(), fetchPendingVerifications(), fetchRejectedProfessionals(), fetchAuditLogs()]);
       setRejectDialogOpen(false);
       setRejectReason("");
       setSelectedProfessional(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Erreur lors du refus";
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: message,
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle delete rejected account (allows user to re-register)
+  const handleDeleteRejectedAccount = async (professional: RejectedProfessional) => {
+    setActionLoading(professional.id);
+    
+    try {
+      const { data, error } = await supabase.rpc('admin_delete_rejected_account', {
+        p_professional_id: professional.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Compte supprimé",
+        description: `${professional.email} peut maintenant se réinscrire.`,
+      });
+
+      await Promise.all([fetchStats(), fetchRejectedProfessionals(), fetchAuditLogs()]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur lors de la suppression";
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: message,
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // Handle allow resubmission (keeps account, clears rejection)
+  const handleAllowResubmission = async (professional: RejectedProfessional) => {
+    setActionLoading(professional.id);
+    
+    try {
+      const { data, error } = await supabase.rpc('admin_allow_resubmission', {
+        p_professional_id: professional.id
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Nouvelle chance accordée",
+        description: `${professional.company_name} peut resoumettre sa demande.`,
+      });
+
+      await Promise.all([fetchStats(), fetchPendingVerifications(), fetchRejectedProfessionals(), fetchAuditLogs()]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur lors de l'opération";
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -375,6 +465,7 @@ const AdminDashboard = () => {
             onClick={() => {
               fetchStats();
               fetchPendingVerifications();
+              fetchRejectedProfessionals();
               fetchAuditLogs();
             }}
           >
@@ -460,6 +551,15 @@ const AdminDashboard = () => {
               {stats && stats.pending_verifications > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {stats.pending_verifications}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="rejected" className="flex items-center gap-2">
+              <ShieldX className="h-4 w-4" />
+              Refusés
+              {rejectedProfessionals.length > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {rejectedProfessionals.length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -551,6 +651,97 @@ const AdminDashboard = () => {
                             >
                               <Eye className="h-4 w-4 mr-1" />
                               Examiner
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Rejected Professionals Tab */}
+          <TabsContent value="rejected" className="space-y-4">
+            {rejectedProfessionals.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <ShieldCheck className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                  <h3 className="text-lg font-medium">Aucun compte refusé</h3>
+                  <p className="text-muted-foreground">
+                    Il n'y a pas de demandes refusées en ce moment.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <ShieldX className="h-5 w-5 text-destructive" />
+                    Comptes refusés
+                  </CardTitle>
+                  <CardDescription>
+                    Vous pouvez supprimer un compte pour permettre une réinscription, ou autoriser une nouvelle soumission.
+                  </CardDescription>
+                </CardHeader>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Entreprise</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Raison du refus</TableHead>
+                      <TableHead>Date refus</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rejectedProfessionals.map((pro) => (
+                      <TableRow key={pro.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{pro.company_name}</p>
+                            <p className="text-sm text-muted-foreground">{pro.full_name}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{pro.email}</TableCell>
+                        <TableCell>
+                          <p className="text-sm text-muted-foreground max-w-[200px] truncate" title={pro.rbq_rejection_reason}>
+                            {pro.rbq_rejection_reason}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(pro.updated_at), "d MMM yyyy", { locale: fr })}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleAllowResubmission(pro)}
+                              disabled={actionLoading === pro.id}
+                              title="Permet au professionnel de resoumettre sa demande"
+                            >
+                              {actionLoading === pro.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4 mr-1" />
+                              )}
+                              Autoriser
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeleteRejectedAccount(pro)}
+                              disabled={actionLoading === pro.id}
+                              title="Supprime le compte pour permettre une réinscription"
+                            >
+                              {actionLoading === pro.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <XCircle className="h-4 w-4 mr-1" />
+                              )}
+                              Supprimer
                             </Button>
                           </div>
                         </TableCell>

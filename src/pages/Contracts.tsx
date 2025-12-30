@@ -21,7 +21,8 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Upload
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ import { fr, enUS } from "date-fns/locale";
 import { ContractTemplates } from "@/components/contracts/ContractTemplates";
 import { ContractViewer } from "@/components/contracts/ContractViewer";
 import { ContractBuilder } from "@/components/contracts/ContractBuilder";
+import { UploadContract } from "@/components/contracts/UploadContract";
 import type { ContractTemplate } from "@/types/contracts";
 import Navigation from "@/components/Navigation";
 
@@ -49,6 +51,7 @@ const Contracts = () => {
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<ContractTemplate | null>(null);
   const [isBuilding, setIsBuilding] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [currentTab, setCurrentTab] = useState<string>("contracts");
   
   // Filters
@@ -487,14 +490,28 @@ const Contracts = () => {
       <Navigation />
       <div className="min-h-screen pt-24 pb-12">
         <div className="container mx-auto p-6 max-w-7xl">
-          {!isBuilding && !selectedContract && (
+          {!isBuilding && !isUploading && !selectedContract && (
             <div className="mb-6">
               <h1 className="text-3xl font-bold">{t('contracts.title')}</h1>
               <p className="text-muted-foreground mt-1">{t('contracts.subtitle')}</p>
             </div>
           )}
 
-      {isBuilding && selectedTemplate && userId && userType === 'professional' ? (
+      {isUploading && userId && userType ? (
+        <UploadContract
+          userId={userId}
+          userType={userType}
+          onContractUploaded={() => {
+            setIsUploading(false);
+            fetchContracts();
+            toast({
+              title: "Contrat ajouté",
+              description: "Votre contrat a été uploadé avec succès",
+            });
+          }}
+          onCancel={() => setIsUploading(false)}
+        />
+      ) : isBuilding && selectedTemplate && userId && userType === 'professional' ? (
         <ContractBuilder
           template={selectedTemplate}
           onCancel={handleCancelBuilder}
@@ -526,12 +543,22 @@ const Contracts = () => {
         </div>
       ) : (
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="contracts">{t('contracts.my_contracts')}</TabsTrigger>
-            {userType === 'professional' && (
-              <TabsTrigger value="templates">{t('contracts.create_contract')}</TabsTrigger>
-            )}
-          </TabsList>
+          <div className="flex items-center justify-between">
+            <TabsList>
+              <TabsTrigger value="contracts">{t('contracts.my_contracts')}</TabsTrigger>
+              {userType === 'professional' && (
+                <TabsTrigger value="templates">{t('contracts.create_contract')}</TabsTrigger>
+              )}
+            </TabsList>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsUploading(true)}
+              className="ml-4"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Uploader un contrat existant
+            </Button>
+          </div>
 
           <TabsContent value="contracts" className="space-y-6">
             {/* Stats Cards */}
