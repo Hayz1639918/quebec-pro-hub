@@ -55,12 +55,17 @@ const ProMyProjects = () => {
       // Ensure professional
       const { data: prof } = await supabase
         .from('profiles')
-        .select('user_type')
+        .select('user_type, is_rbq_verified')
         .eq('id', session.user.id)
         .single();
 
       if (prof?.user_type !== 'professional') {
         navigate('/');
+        return;
+      }
+
+      if (!prof?.is_rbq_verified) {
+        navigate('/pending-verification');
         return;
       }
 

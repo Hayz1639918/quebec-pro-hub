@@ -75,9 +75,25 @@ const CompleteProfile = () => {
         return;
       }
 
-      if (profile.user_type === 'client' || profile.profile_completed) {
-        // Client or already completed, redirect to appropriate dashboard
-        navigate(profile.user_type === 'client' ? "/dashboard" : "/");
+      if (profile.user_type === 'client') {
+        // Clients don't need to complete profile
+        navigate("/dashboard");
+        return;
+      }
+
+      if (profile.profile_completed) {
+        // Professional has completed profile, check RBQ verification status
+        const { data: verificationCheck } = await supabase
+          .from('profiles')
+          .select('is_rbq_verified')
+          .eq('id', session.user.id)
+          .single();
+
+        if (verificationCheck?.is_rbq_verified) {
+          navigate("/pro/dashboard");
+        } else {
+          navigate("/pending-verification");
+        }
         return;
       }
 

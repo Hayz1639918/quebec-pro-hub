@@ -121,11 +121,11 @@ const ProDashboard = () => {
         return;
       }
 
-      // Commenté temporairement pour permettre l'accès au dashboard
-      // if (!prof?.is_rbq_verified) {
-      //   navigate('/pro/profile');
-      //   return;
-      // }
+      // Redirect to pending verification if RBQ not verified
+      if (!prof?.is_rbq_verified) {
+        navigate('/pending-verification');
+        return;
+      }
 
       await fetchDashboardData(session.user.id);
       await fetchPendingContractsList(session.user.id);

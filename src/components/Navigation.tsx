@@ -24,7 +24,7 @@ import logo from "/logo-batirnet.png";
 const Navigation = () => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string; email?: string} | null>(null);
-  const [profile, setProfile] = useState<{user_type: string; full_name: string} | null>(null);
+  const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean} | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -222,22 +222,38 @@ const Navigation = () => {
                     )}
                     {profile?.user_type === 'professional' && (
                       <>
-                        <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          Dashboard Pro
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/pro/profile")} className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          Mon profil
-                        </DropdownMenuItem>
+                        {!profile.profile_completed ? (
+                          <DropdownMenuItem onClick={() => navigate("/complete-profile")} className="cursor-pointer">
+                            <User className="mr-2 h-4 w-4" />
+                            Compléter mon profil
+                          </DropdownMenuItem>
+                        ) : !profile.is_rbq_verified ? (
+                          <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer">
+                            <Clock className="mr-2 h-4 w-4" />
+                            Vérification en attente
+                          </DropdownMenuItem>
+                        ) : (
+                          <>
+                            <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer">
+                              <LayoutDashboard className="mr-2 h-4 w-4" />
+                              Dashboard Pro
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate("/pro/profile")} className="cursor-pointer">
+                              <User className="mr-2 h-4 w-4" />
+                              Mon profil
+                            </DropdownMenuItem>
+                          </>
+                        )}
                       </>
                     )}
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer">
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      {t('navigation.messages')}
-                    </DropdownMenuItem>
-                    {profile?.user_type === 'professional' && (
+                    {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                      <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        {t('navigation.messages')}
+                      </DropdownMenuItem>
+                    )}
+                    {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
                       <DropdownMenuItem onClick={() => navigate("/contracts")} className="cursor-pointer">
                         <FileText className="mr-2 h-4 w-4" />
                         {t('navigation.contracts')}
@@ -346,32 +362,54 @@ const Navigation = () => {
                         
                         {profile?.user_type === 'professional' && (
                           <>
-                            <button
-                              onClick={() => navigateTo("/pro/dashboard")}
-                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                            >
-                              <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-sm sm:text-base">Dashboard Pro</span>
-                            </button>
-                            <button
-                              onClick={() => navigateTo("/pro/profile")}
-                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                            >
-                              <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-sm sm:text-base">Mon profil</span>
-                            </button>
+                            {!profile.profile_completed ? (
+                              <button
+                                onClick={() => navigateTo("/complete-profile")}
+                                className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
+                              >
+                                <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                <span className="text-sm sm:text-base">Compléter mon profil</span>
+                              </button>
+                            ) : !profile.is_rbq_verified ? (
+                              <button
+                                onClick={() => navigateTo("/pending-verification")}
+                                className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
+                              >
+                                <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                <span className="text-sm sm:text-base">Vérification en attente</span>
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => navigateTo("/pro/dashboard")}
+                                  className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
+                                >
+                                  <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                  <span className="text-sm sm:text-base">Dashboard Pro</span>
+                                </button>
+                                <button
+                                  onClick={() => navigateTo("/pro/profile")}
+                                  className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
+                                >
+                                  <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                  <span className="text-sm sm:text-base">Mon profil</span>
+                                </button>
+                              </>
+                            )}
                           </>
                         )}
-                        
-                        <button
-                          onClick={() => navigateTo("/messages")}
-                          className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                        >
-                          <MessageSquare className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                          <span className="text-sm sm:text-base">{t('navigation.messages')}</span>
-                        </button>
-                        
-                        {profile?.user_type === 'professional' && (
+
+                        {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                          <button
+                            onClick={() => navigateTo("/messages")}
+                            className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
+                          >
+                            <MessageSquare className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm sm:text-base">{t('navigation.messages')}</span>
+                          </button>
+                        )}
+
+                        {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
                           <button
                             onClick={() => navigateTo("/contracts")}
                             className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
