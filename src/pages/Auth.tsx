@@ -113,12 +113,13 @@ const Auth = () => {
 
       // Create user account - the database trigger will create the base profile
       // Professional details (RBQ, location) will be added after email confirmation
+      // Professionals are redirected to home page and can click "Compléter mon profil" in menu
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: userType === "professional" 
-            ? `${window.location.origin}/complete-profile`
+          emailRedirectTo: userType === "professional"
+            ? `${window.location.origin}/`
             : `${window.location.origin}/dashboard`,
           data: {
             full_name: fullName,

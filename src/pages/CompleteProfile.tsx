@@ -59,7 +59,6 @@ const CompleteProfile = () => {
 
       if (!session) {
         // No session, redirect to auth
-        setRedirecting(true);
         navigate("/auth");
         return;
       }
@@ -73,21 +72,18 @@ const CompleteProfile = () => {
 
       if (!profile) {
         // Profile doesn't exist yet (shouldn't happen with trigger)
-        setRedirecting(true);
         navigate("/auth");
         return;
       }
 
       if (profile.user_type === 'client') {
-        // Clients don't need to complete profile
-        setRedirecting(true);
+        // Clients don't need to complete profile - redirect to dashboard
         navigate("/dashboard");
         return;
       }
 
       if (profile.profile_completed) {
-        // Professional has completed profile, check RBQ verification status
-        setRedirecting(true);
+        // Professional has completed profile - redirect to pending verification or dashboard
         const { data: verificationCheck } = await supabase
           .from('profiles')
           .select('is_rbq_verified')
@@ -102,7 +98,7 @@ const CompleteProfile = () => {
         return;
       }
 
-      // User needs to complete profile - show the form
+      // Professional needs to complete profile - show the form
       setUserId(session.user.id);
       setCheckingAuth(false);
     };
