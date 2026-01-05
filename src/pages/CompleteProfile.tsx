@@ -21,6 +21,7 @@ const CompleteProfile = () => {
   
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [rbqFile, setRbqFile] = useState<File | null>(null);
   
@@ -55,9 +56,10 @@ const CompleteProfile = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session) {
         // No session, redirect to auth
+        setRedirecting(true);
         navigate("/auth");
         return;
       }
@@ -71,18 +73,21 @@ const CompleteProfile = () => {
 
       if (!profile) {
         // Profile doesn't exist yet (shouldn't happen with trigger)
+        setRedirecting(true);
         navigate("/auth");
         return;
       }
 
       if (profile.user_type === 'client') {
         // Clients don't need to complete profile
+        setRedirecting(true);
         navigate("/dashboard");
         return;
       }
 
       if (profile.profile_completed) {
         // Professional has completed profile, check RBQ verification status
+        setRedirecting(true);
         const { data: verificationCheck } = await supabase
           .from('profiles')
           .select('is_rbq_verified')
@@ -97,6 +102,7 @@ const CompleteProfile = () => {
         return;
       }
 
+      // User needs to complete profile - show the form
       setUserId(session.user.id);
       setCheckingAuth(false);
     };
@@ -106,6 +112,7 @@ const CompleteProfile = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
+        setRedirecting(true);
         navigate("/auth");
       }
     });
@@ -224,6 +231,7 @@ const CompleteProfile = () => {
         title: "Erreur",
         description: "Session expirée. Veuillez vous reconnecter.",
       });
+      setRedirecting(true);
       navigate("/auth");
       return;
     }
@@ -293,6 +301,7 @@ const CompleteProfile = () => {
       });
 
       // Redirect to pending verification page
+      setRedirecting(true);
       setTimeout(() => {
         navigate("/pending-verification");
       }, 1500);
@@ -309,7 +318,7 @@ const CompleteProfile = () => {
     }
   };
 
-  if (checkingAuth) {
+  if (checkingAuth || redirecting) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
