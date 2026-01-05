@@ -29,6 +29,28 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
 
+  // Helper function to redirect based on profile status
+  const redirectBasedOnProfile = (profile: {
+    user_type: string;
+    profile_completed: boolean;
+    is_rbq_verified: boolean;
+  }) => {
+    if (profile.user_type === 'client') {
+      navigate("/dashboard");
+    } else if (profile.user_type === 'professional') {
+      if (!profile.profile_completed) {
+        // Professional hasn't completed their profile yet
+        navigate("/complete-profile");
+      } else if (!profile.is_rbq_verified) {
+        // Professional completed profile but waiting for RBQ validation
+        navigate("/pending-verification");
+      } else {
+        // Professional is fully verified
+        navigate("/pro/dashboard");
+      }
+    }
+  };
+
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -36,21 +58,17 @@ const Auth = () => {
         // Fetch user profile to determine where to redirect
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, profile_completed')
+          .select('user_type, profile_completed, is_rbq_verified')
           .eq('id', session.user.id)
           .single();
         
         if (!profile) return;
         
-        const userProfile = profile as { user_type: UserType; profile_completed: boolean };
-        
-        if (userProfile.user_type === 'professional' && !userProfile.profile_completed) {
-          navigate("/complete-profile");
-        } else if (userProfile.user_type === 'client') {
-          navigate("/dashboard");
-        } else {
-          navigate("/");
-        }
+        redirectBasedOnProfile(profile as {
+          user_type: string;
+          profile_completed: boolean;
+          is_rbq_verified: boolean;
+        });
       }
     });
 
@@ -60,21 +78,17 @@ const Auth = () => {
         // Fetch user profile to determine where to redirect
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, profile_completed')
+          .select('user_type, profile_completed, is_rbq_verified')
           .eq('id', session.user.id)
           .single();
         
         if (!profile) return;
         
-        const userProfile = profile as { user_type: UserType; profile_completed: boolean };
-        
-        if (userProfile.user_type === 'professional' && !userProfile.profile_completed) {
-          navigate("/complete-profile");
-        } else if (userProfile.user_type === 'client') {
-          navigate("/dashboard");
-        } else {
-          navigate("/");
-        }
+        redirectBasedOnProfile(profile as {
+          user_type: string;
+          profile_completed: boolean;
+          is_rbq_verified: boolean;
+        });
       }
     });
 

@@ -272,13 +272,13 @@ const CompleteProfile = () => {
       }
 
       toast({
-        title: "Profil complété ! 🎉",
-        description: "Votre profil professionnel est maintenant actif. Nous vérifierons votre certification RBQ sous peu.",
+        title: "Profil soumis ! 📋",
+        description: "Votre profil est en attente de validation. Notre équipe vérifiera votre certification RBQ.",
       });
 
-      // Redirect to home
+      // Redirect to pending verification page
       setTimeout(() => {
-        navigate("/");
+        navigate("/pending-verification");
       }, 1500);
 
     } catch (error) {

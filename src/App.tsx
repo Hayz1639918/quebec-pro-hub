@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
+const PendingVerification = lazy(() => import("./pages/PendingVerification"));
 const Professionals = lazy(() => import("./pages/Professionals"));
 const Projects = lazy(() => import("./pages/Projects"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
+            <Route path="/pending-verification" element={<PendingVerification />} />
             <Route path="/professionals" element={<Professionals />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/project/:id" element={<ProjectDetails />} />
