@@ -39,8 +39,9 @@ const Auth = () => {
       navigate("/dashboard");
     } else if (profile.user_type === 'professional') {
       if (!profile.profile_completed) {
-        // Professional hasn't completed their profile yet
-        navigate("/complete-profile");
+        // Professional hasn't completed their profile yet - redirect to home
+        // They can click "Compléter mon profil" in menu when ready
+        navigate("/");
       } else if (!profile.is_rbq_verified) {
         // Professional completed profile but waiting for RBQ validation
         navigate("/pending-verification");
