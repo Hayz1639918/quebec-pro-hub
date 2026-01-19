@@ -67,3 +67,4 @@ CREATE POLICY "Admins can update any profile"
 -- If you need more granular control over what users can see,
 -- consider creating a VIEW that exposes only public fields.
 
+
