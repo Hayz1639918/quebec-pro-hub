@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -56,55 +57,57 @@ const PageLoader = () => (
 );
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
-            <Route path="/pending-verification" element={<PendingVerification />} />
-            <Route path="/professionals" element={<Professionals />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/project/:id" element={<ProjectDetails />} />
-            <Route path="/tender/:id" element={<TenderView />} />
-            <Route path="/proposal/:id" element={<ProposalView />} />
-            <Route path="/professional/:id" element={<ProfessionalProfile />} />
-            <Route path="/pro/dashboard" element={<ProDashboard />} />
-            <Route path="/pro/profile" element={<ProProfile />} />
-            <Route path="/pro/subscription" element={<ProSubscription />} />
-            <Route path="/pro/kpis" element={<ProKpis />} />
-            <Route path="/pro/subcontractors" element={<Subcontractors />} />
-            <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
-            <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
-            <Route path="/proposals/review" element={<ReviewContractProposals />} />
-            <Route path="/pro/reviews" element={<ProReviews />} />
-            <Route path="/pro/contracts" element={<ProContracts />} />
-            <Route path="/pro/portfolio" element={<ProPortfolio />} />
-            <Route path="/pro/calendar" element={<ProCalendar />} />
-            <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
-            <Route path="/pro/project/:id/report" element={<ProjectReport />} />
-            <Route path="/pro/my-projects" element={<ProMyProjects />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/profile" element={<ClientProfile />} />
-            <Route path="/dashboard/new-project" element={<NewProject />} />
-            <Route path="/edit-project/:id" element={<EditProject />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/contracts" element={<Contracts />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/complete-profile" element={<CompleteProfile />} />
+              <Route path="/pending-verification" element={<PendingVerification />} />
+              <Route path="/professionals" element={<Professionals />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/project/:id" element={<ProjectDetails />} />
+              <Route path="/tender/:id" element={<TenderView />} />
+              <Route path="/proposal/:id" element={<ProposalView />} />
+              <Route path="/professional/:id" element={<ProfessionalProfile />} />
+              <Route path="/pro/dashboard" element={<ProDashboard />} />
+              <Route path="/pro/profile" element={<ProProfile />} />
+              <Route path="/pro/subscription" element={<ProSubscription />} />
+              <Route path="/pro/kpis" element={<ProKpis />} />
+              <Route path="/pro/subcontractors" element={<Subcontractors />} />
+              <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
+              <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
+              <Route path="/proposals/review" element={<ReviewContractProposals />} />
+              <Route path="/pro/reviews" element={<ProReviews />} />
+              <Route path="/pro/contracts" element={<ProContracts />} />
+              <Route path="/pro/portfolio" element={<ProPortfolio />} />
+              <Route path="/pro/calendar" element={<ProCalendar />} />
+              <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
+              <Route path="/pro/project/:id/report" element={<ProjectReport />} />
+              <Route path="/pro/my-projects" element={<ProMyProjects />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/profile" element={<ClientProfile />} />
+              <Route path="/dashboard/new-project" element={<NewProject />} />
+              <Route path="/edit-project/:id" element={<EditProject />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/contracts" element={<Contracts />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

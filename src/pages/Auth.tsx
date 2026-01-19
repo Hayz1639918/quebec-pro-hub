@@ -197,11 +197,16 @@ const Auth = () => {
       // Fetch user profile to determine where to redirect
       const { data: profile } = await supabase
         .from('profiles')
-        .select('user_type, full_name')
+        .select('user_type, full_name, profile_completed, is_rbq_verified')
         .eq('id', authData.user.id)
         .single();
       
-      const userProfile = profile as { user_type: UserType; full_name: string } | null;
+      const userProfile = profile as { 
+        user_type: UserType; 
+        full_name: string;
+        profile_completed: boolean;
+        is_rbq_verified: boolean;
+      } | null;
       
       toast({
         title: t('auth.messages.login_success'),
@@ -210,10 +215,26 @@ const Auth = () => {
           : t('auth.messages.welcome_default'),
       });
       
-      // Redirect based on user type
+      // Redirect based on user type and profile status
       setTimeout(() => {
-        if (userProfile && userProfile.user_type === 'client') {
+        if (!userProfile) {
+          navigate("/");
+          return;
+        }
+        
+        if (userProfile.user_type === 'client') {
           navigate("/dashboard");
+        } else if (userProfile.user_type === 'professional') {
+          if (!userProfile.profile_completed) {
+            // Professional hasn't completed their profile yet
+            navigate("/complete-profile");
+          } else if (!userProfile.is_rbq_verified) {
+            // Professional completed profile but waiting for RBQ validation
+            navigate("/pending-verification");
+          } else {
+            // Professional is fully verified
+            navigate("/pro/dashboard");
+          }
         } else {
           navigate("/");
         }
