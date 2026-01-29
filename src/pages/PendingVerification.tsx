@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, FileText, Shield, Loader2, LogOut } from "lucide-react";
-import logo from "/logo-batirnet.png";
+import { Clock, CheckCircle2, FileText, Shield, Loader2, LogOut, RefreshCw } from "lucide-react";
 
 const PendingVerification = () => {
   const { t } = useTranslation();
@@ -115,99 +116,126 @@ const PendingVerification = () => {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-background to-yellow-50 p-4">
-      <Card className="w-full max-w-lg mx-auto shadow-lg border-orange-200">
-        <CardHeader className="text-center space-y-4 pb-2">
-          <div className="flex justify-center">
-            <img 
-              src={logo} 
-              alt="BâtirNet Logo" 
-              className="h-14 w-14 rounded-lg object-cover"
-            />
-          </div>
-          <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-            <Clock className="h-8 w-8 text-orange-600 animate-pulse" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl text-orange-900">
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Navigation />
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-12 flex-1">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="mx-auto w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+              <Clock className="h-10 w-10 text-orange-600 animate-pulse" />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Vérification en cours
-            </CardTitle>
-            <CardDescription className="text-orange-700 mt-2">
+            </h1>
+            <p className="text-muted-foreground">
               Votre certification RBQ est en attente de validation par notre équipe
-            </CardDescription>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-6 pt-4">
-          {/* Profile Info */}
-          <div className="bg-white border border-orange-100 rounded-lg p-4 space-y-2">
-            <p className="font-medium text-gray-900">{profile?.full_name}</p>
-            <p className="text-sm text-gray-600">{profile?.company_name}</p>
-            <p className="text-xs text-gray-500 flex items-center gap-1">
-              <FileText className="h-3 w-3" />
-              RBQ: {profile?.rbq_number}
             </p>
           </div>
 
-          {/* Status Steps */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-green-600">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm">Compte créé</span>
-            </div>
-            <div className="flex items-center gap-3 text-green-600">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm">Email confirmé</span>
-            </div>
-            <div className="flex items-center gap-3 text-green-600">
-              <CheckCircle2 className="h-5 w-5" />
-              <span className="text-sm">Profil complété</span>
-            </div>
-            <div className="flex items-center gap-3 text-orange-600">
-              <Clock className="h-5 w-5 animate-pulse" />
-              <span className="text-sm font-medium">Validation RBQ en cours...</span>
-            </div>
-            <div className="flex items-center gap-3 text-gray-400">
-              <Shield className="h-5 w-5" />
-              <span className="text-sm">Accès à la plateforme</span>
-            </div>
-          </div>
+          {/* Main Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Informations soumises
+              </CardTitle>
+              <CardDescription>
+                Vos informations professionnelles en cours de vérification
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Profile Info */}
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <p className="font-semibold text-foreground">{profile?.full_name}</p>
+                <p className="text-sm text-muted-foreground">{profile?.company_name}</p>
+                <p className="text-sm text-muted-foreground flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  RBQ: {profile?.rbq_number}
+                </p>
+              </div>
+
+              {/* Status Steps */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-sm text-muted-foreground">Progression</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    </div>
+                    <span className="text-sm font-medium">Compte créé</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    </div>
+                    <span className="text-sm font-medium">Email confirmé</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    </div>
+                    <span className="text-sm font-medium">Profil complété</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                      <Clock className="h-5 w-5 text-orange-600 animate-pulse" />
+                    </div>
+                    <span className="text-sm font-medium text-orange-600">Validation RBQ en cours...</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">Accès à la plateforme</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Info Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h4 className="font-medium text-blue-900 mb-1">💡 Délai estimé</h4>
             <p className="text-sm text-blue-800">
-              <strong>Délai estimé :</strong> Notre équipe vérifie généralement les certifications RBQ 
-              sous 24 à 48 heures ouvrables. Vous recevrez un email dès que votre compte sera activé.
+              Notre équipe vérifie généralement les certifications RBQ sous 24 à 48 heures ouvrables. 
+              Vous recevrez un email dès que votre compte sera activé.
             </p>
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button 
               onClick={handleRefresh}
-              variant="outline"
-              className="w-full"
+              variant="default"
+              className="flex-1"
             >
-              🔄 Vérifier mon statut
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Vérifier mon statut
             </Button>
             <Button 
               onClick={handleLogout}
-              variant="ghost"
-              className="w-full text-gray-500"
+              variant="outline"
+              className="flex-1"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Se déconnecter
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 };
