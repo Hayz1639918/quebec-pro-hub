@@ -15,3 +15,4 @@ CREATE INDEX IF NOT EXISTS idx_profiles_address ON profiles(address) WHERE addre
 
 
 
+

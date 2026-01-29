@@ -13,7 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, X, Building2, Briefcase } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, X, Building2, Briefcase, Clock } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";

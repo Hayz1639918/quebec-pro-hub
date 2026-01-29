@@ -156,12 +156,9 @@ export const UploadContract = ({
         throw new Error("Erreur lors de l'upload du fichier");
       }
 
-      // Get signed URL (private bucket)
-      const { data: urlData } = await supabase.storage
-        .from('contracts')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
-
-      const fileUrl = urlData?.signedUrl || filePath;
+      // Store the file path (NOT a signed URL - signed URLs expire!)
+      // The signed URL should be generated on-demand when viewing the contract
+      const fileUrl = filePath;
 
       // Create contract record
       const contractData: Record<string, any> = {
@@ -400,5 +397,6 @@ export const UploadContract = ({
 };
 
 export default UploadContract;
+
 
 

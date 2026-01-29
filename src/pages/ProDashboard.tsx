@@ -15,19 +15,10 @@ import {
   FileText,
   TrendingUp,
   Users,
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Plus,
+  CheckCircle2,
   Eye,
-  Edit,
   User,
-  ClipboardList,
   Hammer,
-  Send,
-  PlayCircle,
-  PauseCircle,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
@@ -42,15 +33,6 @@ interface DashboardStats {
   totalReviews: number;
   unreadMessages: number;
   pendingContracts: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'proposal' | 'message' | 'review' | 'contract';
-  title: string;
-  description: string;
-  date: string;
-  status?: string;
 }
 
 interface AssignedProject {
@@ -97,7 +79,6 @@ const ProDashboard = () => {
     pendingContracts: 0,
   });
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
 
   useEffect(() => {

@@ -93,3 +93,4 @@ COMMENT ON COLUMN contracts.uploaded_filename IS 'Original filename of the uploa
 COMMENT ON COLUMN contracts.uploaded_at IS 'Timestamp when the contract file was uploaded';
 
 
+
