@@ -97,6 +97,13 @@ const Projects = () => {
     t('professionals.filters.regions.trois_rivieres'),
     t('professionals.filters.regions.terrebonne'),
     t('professionals.filters.regions.saint_jean'),
+    "Autre",
+  ];
+
+  const KNOWN_REGIONS_LOWER = [
+    'montréal', 'montreal', 'québec', 'quebec', 'laval', 'gatineau',
+    'longueuil', 'sherbrooke', 'saguenay', 'trois-rivières', 'trois-rivieres',
+    'terrebonne', 'saint-jean-sur-richelieu', 'saint-jean',
   ];
 
   const BUDGETS = [
@@ -201,10 +208,18 @@ const Projects = () => {
 
     // Region filter - use REGIONS[0] which is the translated "All Regions" option
     if (selectedRegion !== REGIONS[0]) {
-      filtered = filtered.filter((project) =>
-        project.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
-        project.region?.toLowerCase().includes(selectedRegion.toLowerCase())
-      );
+      if (selectedRegion === "Autre") {
+        filtered = filtered.filter((project) => {
+          const r = project.region?.toLowerCase() || "";
+          const c = project.city?.toLowerCase() || "";
+          return !KNOWN_REGIONS_LOWER.some(kr => r.includes(kr) || c.includes(kr));
+        });
+      } else {
+        filtered = filtered.filter((project) =>
+          project.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
+          project.region?.toLowerCase().includes(selectedRegion.toLowerCase())
+        );
+      }
     }
 
     // Budget filter - use BUDGETS[0] and index-based comparison for i18n support

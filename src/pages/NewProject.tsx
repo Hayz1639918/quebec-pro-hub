@@ -98,6 +98,7 @@ const NewProject = () => {
     t('professionals.filters.regions.trois_rivieres'),
     t('professionals.filters.regions.terrebonne'),
     t('professionals.filters.regions.saint_jean'),
+    "Autre",
   ];
 
   const [loading, setLoading] = useState(false);
@@ -116,6 +117,7 @@ const NewProject = () => {
   // Localisation
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
+  const [customRegion, setCustomRegion] = useState("");
   const [postalCode, setPostalCode] = useState("");
   
   // Dates
@@ -378,7 +380,7 @@ const NewProject = () => {
           budget_min: budgetMin ? parseFloat(budgetMin) : null,
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
           city: city || null,
-          region: region || null,
+          region: region === "Autre" ? (customRegion.trim() || null) : (region || null),
           postal_code: postalCode || null,
           latitude: latitude,
           longitude: longitude,
@@ -638,6 +640,14 @@ const NewProject = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {region === "Autre" && (
+                      <Input
+                        placeholder="Précisez la région..."
+                        value={customRegion}
+                        onChange={e => setCustomRegion(e.target.value)}
+                        className="mt-2"
+                      />
+                    )}
                   </div>
                 </div>
 

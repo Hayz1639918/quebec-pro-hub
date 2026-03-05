@@ -114,6 +114,14 @@ const Professionals = () => {
     t('professionals.filters.regions.trois_rivieres'),
     t('professionals.filters.regions.terrebonne'),
     t('professionals.filters.regions.saint_jean'),
+    "Autre",
+  ];
+
+  // Known region names for "Autre" filter (non-listed regions)
+  const KNOWN_REGIONS_LOWER = [
+    'montréal', 'montreal', 'québec', 'quebec', 'laval', 'gatineau',
+    'longueuil', 'sherbrooke', 'saguenay', 'trois-rivières', 'trois-rivieres',
+    'terrebonne', 'saint-jean-sur-richelieu', 'saint-jean',
   ];
 
   const BUDGET_RANGES = [
@@ -293,10 +301,19 @@ const Professionals = () => {
 
     // Region filter - use REGIONS[0] which is the translated "All Regions" option
     if (selectedRegion !== REGIONS[0]) {
-      filtered = filtered.filter((pro) =>
-        pro.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
-        pro.region?.toLowerCase().includes(selectedRegion.toLowerCase())
-      );
+      if (selectedRegion === "Autre") {
+        // Show professionals from regions not in the predefined list
+        filtered = filtered.filter((pro) => {
+          const proRegion = pro.region?.toLowerCase() || "";
+          const proCity = pro.city?.toLowerCase() || "";
+          return !KNOWN_REGIONS_LOWER.some(r => proRegion.includes(r) || proCity.includes(r));
+        });
+      } else {
+        filtered = filtered.filter((pro) =>
+          pro.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
+          pro.region?.toLowerCase().includes(selectedRegion.toLowerCase())
+        );
+      }
     }
 
     // Budget filter (hourly rate) - use index-based comparison for i18n support

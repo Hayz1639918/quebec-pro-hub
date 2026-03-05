@@ -8,7 +8,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2 } from "lucide-react";
+import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle } from "lucide-react";
+
+// Password validation helpers
+const PASSWORD_RULES = {
+  minLength: 8,
+  hasUppercase: /[A-Z]/,
+  hasNumber: /[0-9]/,
+  hasSpecial: /[^A-Za-z0-9]/,
+};
+function getPasswordStrength(pw: string) {
+  return {
+    minLength: pw.length >= PASSWORD_RULES.minLength,
+    hasUppercase: PASSWORD_RULES.hasUppercase.test(pw),
+    hasNumber: PASSWORD_RULES.hasNumber.test(pw),
+    hasSpecial: PASSWORD_RULES.hasSpecial.test(pw),
+  };
+}
+function isPasswordValid(pw: string) {
+  const s = getPasswordStrength(pw);
+  return s.minLength && s.hasUppercase && s.hasNumber && s.hasSpecial;
+}
 
 type ClientProfileFields = {
   full_name?: string | null;
@@ -29,6 +49,14 @@ const ClientProfile = () => {
   const [saving, setSaving] = useState(false);
   const [profile, setProfile] = useState<ClientProfileFields>({});
   const [saved, setSaved] = useState(false);
+
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPw, setSavingPw] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -77,6 +105,46 @@ const ClientProfile = () => {
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de sauvegarder le profil.' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const changePassword = async () => {
+    if (!profile.email) return;
+    if (!currentPassword) {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer votre mot de passe actuel.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Les nouveaux mots de passe ne correspondent pas.' });
+      return;
+    }
+    if (!isPasswordValid(newPassword)) {
+      toast({ variant: 'destructive', title: 'Mot de passe trop faible', description: 'Le mot de passe doit contenir 8+ caractères, une majuscule, un chiffre et un caractère spécial.' });
+      return;
+    }
+    setSavingPw(true);
+    try {
+      // Re-authenticate with current password first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: profile.email as string,
+        password: currentPassword,
+      });
+      if (signInError) {
+        toast({ variant: 'destructive', title: 'Mot de passe actuel incorrect', description: 'Veuillez vérifier votre mot de passe actuel.' });
+        return;
+      }
+      // Update to new password
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: 'Mot de passe modifié', description: 'Votre mot de passe a été mis à jour avec succès.' });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (e) {
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de changer le mot de passe.' });
+    } finally {
+      setSavingPw(false);
     }
   };
 
@@ -252,11 +320,119 @@ const ClientProfile = () => {
             </CardContent>
           </Card>
 
+          {/* Security card */}
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Shield className="h-5 w-5 text-primary" />
+                Sécurité du compte
+              </CardTitle>
+              <CardDescription>Modifiez votre mot de passe de connexion</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Current password */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  Mot de passe actuel
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showCurrentPw ? "text" : "password"}
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPw(!showCurrentPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showCurrentPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New password */}
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  Nouveau mot de passe
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showNewPw ? "text" : "password"}
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                    placeholder="Min. 8 car., majuscule, chiffre, spécial"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPw(!showNewPw)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showNewPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {/* Strength indicator */}
+                {newPassword.length > 0 && (
+                  <ul className="space-y-1 mt-1">
+                    {[
+                      { key: 'minLength', label: '8 caractères minimum' },
+                      { key: 'hasUppercase', label: 'Une lettre majuscule' },
+                      { key: 'hasNumber', label: 'Un chiffre' },
+                      { key: 'hasSpecial', label: 'Un caractère spécial (!@#$...)' },
+                    ].map(({ key, label: ruleLabel }) => {
+                      const ok = getPasswordStrength(newPassword)[key as keyof ReturnType<typeof getPasswordStrength>];
+                      return (
+                        <li key={key} className={`flex items-center gap-1.5 text-xs ${ok ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {ok ? <CheckCircle2 className="h-3 w-3 flex-shrink-0" /> : <XCircle className="h-3 w-3 flex-shrink-0" />}
+                          {ruleLabel}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              {/* Confirm new password */}
+              <div className="space-y-2">
+                <Label>Confirmer le nouveau mot de passe</Label>
+                <Input
+                  type={showNewPw ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Répétez le nouveau mot de passe"
+                />
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">Les mots de passe ne correspondent pas.</p>
+                )}
+              </div>
+
+              <div className="flex justify-end pt-2 border-t">
+                <Button
+                  onClick={changePassword}
+                  disabled={savingPw || !currentPassword || !newPassword || !confirmPassword}
+                  variant="outline"
+                  className="min-w-40"
+                >
+                  {savingPw ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Modification...</>
+                  ) : (
+                    'Changer le mot de passe'
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Info box */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <h4 className="font-medium text-blue-900 mb-1">💡 Pourquoi remplir ces informations ?</h4>
             <p className="text-sm text-blue-800">
-              Vos informations seront automatiquement insérées dans les contrats que vous recevrez des entrepreneurs. 
+              Vos informations seront automatiquement insérées dans les contrats que vous recevrez des entrepreneurs.
               Plus votre profil est complet, moins vous aurez de champs à remplir lors de la signature.
             </p>
           </div>

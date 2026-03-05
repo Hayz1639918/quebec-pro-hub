@@ -33,6 +33,7 @@ const CompleteProfile = () => {
   // Location fields
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
+  const [customRegion, setCustomRegion] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -49,6 +50,7 @@ const CompleteProfile = () => {
     "Trois-Rivières",
     "Terrebonne",
     "Saint-Jean-sur-Richelieu",
+    "Autre",
   ];
 
   // Check if user is authenticated and needs to complete profile
@@ -272,7 +274,7 @@ const CompleteProfile = () => {
           services_offered: servicesOffered || null,
           insurance_info: insuranceInfo || null,
           city: city,
-          region: region,
+          region: region === "Autre" ? (customRegion.trim() || region) : region,
           postal_code: postalCode,
           latitude: latitude,
           longitude: longitude,
@@ -468,6 +470,14 @@ const CompleteProfile = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {region === "Autre" && (
+                    <Input
+                      placeholder="Précisez la région..."
+                      value={customRegion}
+                      onChange={e => setCustomRegion(e.target.value)}
+                      className="mt-2"
+                    />
+                  )}
                 </div>
               </div>
               
