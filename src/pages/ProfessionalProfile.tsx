@@ -461,7 +461,6 @@ const ProfessionalProfile = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
             {/* Avis clients (US-040) */}
             <Card>
