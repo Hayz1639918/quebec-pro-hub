@@ -424,7 +424,7 @@ const ProposeContract = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navigation />
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Créer un contrat</h1>
           <p className="text-muted-foreground mt-1">Remplissez tous les champs pour générer votre contrat professionnel</p>
@@ -956,7 +956,7 @@ const ProposeContract = () => {
                           <iframe
                             srcDoc={content}
                             className="w-full border-0"
-                            style={{ height: '1100px' }}
+                            style={{ height: 'min(1100px, 85vh)' }}
                             title="Prévisualisation du contrat"
                           />
                         </div>
@@ -965,7 +965,7 @@ const ProposeContract = () => {
                   } else {
                     // Simple content
                     return (
-                      <ScrollArea className="h-[700px]">
+                      <ScrollArea className="h-[min(700px,75vh)]">
                         <div className="bg-gray-100 p-4">
                           <div className="bg-white shadow-lg mx-auto max-w-4xl p-8">
                             <div 

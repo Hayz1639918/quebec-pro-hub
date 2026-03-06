@@ -276,7 +276,7 @@ const ProDashboard = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-6 lg:px-8 py-12 flex-1">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
           <div>Chargement...</div>
         </main>
         <Footer />

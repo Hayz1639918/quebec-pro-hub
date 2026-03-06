@@ -222,7 +222,7 @@ const TenderView = () => {
         {showPDFViewer && project && client && (
           <Card className="mb-6">
             <CardContent className="p-0">
-              <div style={{ height: '800px', width: '100%' }}>
+              <div style={{ height: 'min(800px, 80vh)', width: '100%' }}>
                 <PDFViewer 
                   key={`pdf-${project.id}-${pdfReady}`}
                   width="100%" 

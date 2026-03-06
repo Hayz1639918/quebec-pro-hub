@@ -9,9 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, FileText, Upload, CheckCircle2, MapPin, Loader2 } from "lucide-react";
+import { Building2, FileText, Upload, CheckCircle2, MapPin, Loader2, X, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { geocodePostalCode } from "@/lib/geolocation";
+
+const PREDEFINED_SERVICES = [
+  "Rénovation résidentielle", "Construction neuve", "Toiture", "Plomberie",
+  "Électricité", "Menuiserie", "Maçonnerie", "Peinture", "Isolation",
+  "Aménagement paysager", "Cuisine et salle de bain", "Extension et agrandissement",
+  "Autre",
+];
 import logo from "/logo-batirnet.png";
 
 const CompleteProfile = () => {
@@ -27,7 +35,8 @@ const CompleteProfile = () => {
   // Professional-specific fields
   const [companyName, setCompanyName] = useState("");
   const [rbqNumber, setRbqNumber] = useState("");
-  const [servicesOffered, setServicesOffered] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [customServiceInput, setCustomServiceInput] = useState("");
   const [insuranceInfo, setInsuranceInfo] = useState("");
   
   // Location fields
@@ -271,7 +280,7 @@ const CompleteProfile = () => {
           company_name: companyName,
           rbq_number: rbqNumber,
           rbq_certification_url: rbqCertificationUrl,
-          services_offered: servicesOffered || null,
+          services_offered: selectedServices.length > 0 ? selectedServices.join(', ') : null,
           insurance_info: insuranceInfo || null,
           city: city,
           region: region === "Autre" ? (customRegion.trim() || region) : region,
@@ -413,15 +422,52 @@ const CompleteProfile = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="services">{t('auth.signup.services_offered')}</Label>
-                <Textarea
-                  id="services"
-                  placeholder={t('auth.signup.services_placeholder')}
-                  value={servicesOffered}
-                  onChange={(e) => setServicesOffered(e.target.value)}
-                  rows={3}
-                />
+              <div className="space-y-3">
+                <Label>{t('auth.signup.services_offered')}</Label>
+                {/* Selected service tags */}
+                {selectedServices.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedServices.map((s) => (
+                      <Badge key={s} variant="secondary" className="flex items-center gap-1 pr-1">
+                        {s}
+                        <button type="button" onClick={() => setSelectedServices(prev => prev.filter(x => x !== s))} className="ml-1 rounded-full hover:bg-muted p-0.5">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                {/* Predefined service chips */}
+                <div className="flex flex-wrap gap-2">
+                  {PREDEFINED_SERVICES.filter(s => s !== "Autre" && !selectedServices.includes(s)).map((s) => (
+                    <button key={s} type="button" onClick={() => setSelectedServices(prev => [...prev, s])}
+                      className="text-xs px-2 py-1 rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:border-primary hover:text-primary transition-colors">
+                      + {s}
+                    </button>
+                  ))}
+                </div>
+                {/* Custom service input */}
+                <div className="flex gap-2">
+                  <Input
+                    placeholder='Autre service (ex: "Démolition", "Nettoyage"...)'
+                    value={customServiceInput}
+                    onChange={e => setCustomServiceInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = customServiceInput.trim();
+                        if (val && !selectedServices.includes(val)) { setSelectedServices(prev => [...prev, val]); setCustomServiceInput(""); }
+                      }
+                    }}
+                    className="text-sm"
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={() => {
+                    const val = customServiceInput.trim();
+                    if (val && !selectedServices.includes(val)) { setSelectedServices(prev => [...prev, val]); setCustomServiceInput(""); }
+                  }}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -513,7 +513,7 @@ export const ContractViewer = ({
                     <iframe
                       srcDoc={content}
                       className="w-full border-0"
-                      style={{ height: '1100px' }}
+                      style={{ height: 'min(1100px, 85vh)' }}
                       title="Contrat"
                     />
                   </div>
@@ -523,7 +523,7 @@ export const ContractViewer = ({
               // Simple content - styled view
               const sanitized = DOMPurify.sanitize(content, { USE_PROFILES: { html: true } });
               return (
-                <ScrollArea className="h-[800px]">
+                <ScrollArea className="h-[min(800px,80vh)]">
                   <div className="bg-gray-200 p-8 min-h-full">
                     <div className="bg-white shadow-lg mx-auto max-w-4xl p-8">
                       <div

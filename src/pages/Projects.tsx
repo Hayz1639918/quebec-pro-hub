@@ -83,6 +83,7 @@ const Projects = () => {
     t('professionals.filters.services.landscaping'),
     t('projects.filters.kitchen_bathroom'),
     t('projects.filters.extension'),
+    "Autre",
   ];
 
   const REGIONS = [
@@ -98,6 +99,13 @@ const Projects = () => {
     t('professionals.filters.regions.terrebonne'),
     t('professionals.filters.regions.saint_jean'),
     "Autre",
+  ];
+
+  const KNOWN_CATEGORIES_LOWER = [
+    'rénovation résidentielle', 'renovation', 'construction neuve', 'construction',
+    'toiture', 'plomberie', 'électricité', 'electricite', 'menuiserie',
+    'maçonnerie', 'maconnerie', 'peinture', 'isolation', 'aménagement paysager',
+    'amenagement', 'cuisine', 'salle de bain', 'extension', 'agrandissement',
   ];
 
   const KNOWN_REGIONS_LOWER = [
@@ -199,11 +207,18 @@ const Projects = () => {
       );
     }
 
-    // Category filter - use CATEGORIES[0] which is the translated "All Categories" option
+    // Category filter
     if (selectedCategory !== CATEGORIES[0]) {
-      filtered = filtered.filter((project) =>
-        project.category?.toLowerCase() === selectedCategory.toLowerCase()
-      );
+      if (selectedCategory === "Autre") {
+        filtered = filtered.filter((project) => {
+          const cat = project.category?.toLowerCase() || "";
+          return cat && !KNOWN_CATEGORIES_LOWER.some(k => cat.includes(k));
+        });
+      } else {
+        filtered = filtered.filter((project) =>
+          project.category?.toLowerCase() === selectedCategory.toLowerCase()
+        );
+      }
     }
 
     // Region filter - use REGIONS[0] which is the translated "All Regions" option
@@ -327,13 +342,13 @@ const Projects = () => {
       <Navigation />
       
       {/* Hero Section */}
-      <section className="pt-32 pb-12 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="container mx-auto px-6 lg:px-8">
+      <section className="pt-24 sm:pt-32 pb-8 sm:pb-12 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-4xl lg:text-5xl font-bold">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold">
               {t('projects.hero.title')}
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-base sm:text-xl text-muted-foreground">
               {t('projects.hero.subtitle')}
             </p>
             
@@ -376,7 +391,7 @@ const Projects = () => {
 
       {/* Interactive Map Section */}
       <section className="py-6 bg-background">
-        <div className="container mx-auto px-6 lg:px-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
@@ -434,12 +449,12 @@ const Projects = () => {
       </section>
 
       {/* Main Content */}
-      <section className="flex-1 py-12">
-        <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-8">
+      <section className="flex-1 py-8 sm:py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Filters Sidebar */}
-            <aside className="lg:w-80 flex-shrink-0">
-              <Card className="sticky top-24">
+            <aside className="lg:w-72 xl:w-80 flex-shrink-0">
+              <Card className="lg:sticky lg:top-24 max-h-[80vh] lg:max-h-none overflow-y-auto lg:overflow-visible">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">

@@ -205,7 +205,7 @@ const ProContracts = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
           <div>Chargement...</div>
         </main>
         <Footer />
@@ -220,7 +220,7 @@ const ProContracts = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Gestion des contrats</h1>
           <p className="text-muted-foreground">

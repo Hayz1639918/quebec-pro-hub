@@ -48,6 +48,7 @@ const PROJECT_TYPES_BY_CATEGORY: Record<string, string[]> = {
   "Aménagement paysager": ["Conception", "Plantation", "Pavé uni", "Clôture", "Irrigation", "Autre"],
   "Cuisine et salle de bain": ["Rénovation complète", "Rénovation partielle", "Comptoirs", "Armoires", "Plomberie", "Autre"],
   "Extension et agrandissement": ["Agrandissement latéral", "Ajout d'étage", "Sous-sol", "Garage", "Véranda/Solarium", "Autre"],
+  "Autre": ["Travaux spécialisés", "Services multiples", "Autre"],
 };
 
 // Documents requis par défaut
@@ -86,6 +87,7 @@ const NewProject = () => {
     t('professionals.filters.services.landscaping'),
     t('projects.filters.kitchen_bathroom'),
     t('projects.filters.extension'),
+    "Autre",
   ];
 
   const REGIONS = [
@@ -109,6 +111,7 @@ const NewProject = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [projectType, setProjectType] = useState("");
   
   // Budget
@@ -390,7 +393,7 @@ const NewProject = () => {
           client_id: userId,
           title,
           description,
-          category,
+          category: category === "Autre" ? (customCategory.trim() || "Autre") : category,
           project_type: projectType || null,
           budget_min: budgetMin ? parseFloat(budgetMin) : null,
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
@@ -572,6 +575,19 @@ const NewProject = () => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Custom category when "Autre" is selected */}
+                {category === "Autre" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="customCategory">Précisez la catégorie *</Label>
+                    <Input
+                      id="customCategory"
+                      placeholder="Ex: Nettoyage industriel, Déménagement, Sécurité..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {/* Description */}
                 <div className="space-y-2">

@@ -47,6 +47,7 @@ const PROJECT_TYPES_BY_CATEGORY: Record<string, string[]> = {
   "Aménagement paysager": ["Conception", "Plantation", "Pavé uni", "Clôture", "Irrigation", "Autre"],
   "Cuisine et salle de bain": ["Rénovation complète", "Rénovation partielle", "Comptoirs", "Armoires", "Plomberie", "Autre"],
   "Extension et agrandissement": ["Agrandissement latéral", "Ajout d'étage", "Sous-sol", "Garage", "Véranda/Solarium", "Autre"],
+  "Autre": ["Travaux spécialisés", "Services multiples", "Autre"],
 };
 
 // Documents requis par défaut
@@ -86,6 +87,7 @@ const EditProject = () => {
     t('professionals.filters.services.landscaping'),
     t('projects.filters.kitchen_bathroom'),
     t('projects.filters.extension'),
+    "Autre",
   ];
 
   const REGIONS = [
@@ -110,6 +112,7 @@ const EditProject = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
+  const [customCategory, setCustomCategory] = useState("");
   const [projectType, setProjectType] = useState("");
   
   // Budget
@@ -239,7 +242,14 @@ const EditProject = () => {
     // Populate form with existing data
     setTitle(project.title || "");
     setDescription(project.description || "");
-    setCategory(project.category || "");
+    const knownCats = CATEGORIES.slice(0, -1); // exclude "Autre"
+    const cat = project.category || "";
+    if (cat && !knownCats.includes(cat)) {
+      setCategory("Autre");
+      setCustomCategory(cat);
+    } else {
+      setCategory(cat);
+    }
     setProjectType(project.project_type || "");
     setBudgetMin(project.budget_min?.toString() || "");
     setBudgetMax(project.budget_max?.toString() || "");
@@ -364,7 +374,7 @@ const EditProject = () => {
         .update({
           title,
           description,
-          category,
+          category: category === "Autre" ? (customCategory.trim() || "Autre") : category,
           project_type: projectType || null,
           budget_min: budgetMin ? parseFloat(budgetMin) : null,
           budget_max: budgetMax ? parseFloat(budgetMax) : null,
@@ -547,6 +557,19 @@ const EditProject = () => {
                     </Select>
                   </div>
                 </div>
+
+                {/* Custom category when "Autre" is selected */}
+                {category === "Autre" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="customCategory">Précisez la catégorie *</Label>
+                    <Input
+                      id="customCategory"
+                      placeholder="Ex: Nettoyage industriel, Déménagement, Sécurité..."
+                      value={customCategory}
+                      onChange={(e) => setCustomCategory(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {/* Description */}
                 <div className="space-y-2">

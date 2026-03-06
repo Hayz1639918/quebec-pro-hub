@@ -310,7 +310,7 @@ const ProPortfolio = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Navigation />
-        <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
           <div>Chargement...</div>
         </main>
         <Footer />
@@ -321,7 +321,7 @@ const ProPortfolio = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>

@@ -168,7 +168,7 @@ const ClientProfile = () => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <Navigation />
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
         <div className="max-w-2xl mx-auto">
           <div className="mb-6">
             <h1 className="text-2xl font-bold">Mon profil</h1>

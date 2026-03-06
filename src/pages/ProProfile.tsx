@@ -136,7 +136,7 @@ const ProProfile = () => {
           full_name: profile.full_name || null,
           phone: profile.phone || null,
           address: profile.address || null,
-          services_offered: profile.services_offered || null,
+          services_offered: selectedServices.length > 0 ? selectedServices.join(', ') : null,
           city: profile.city || null,
           region: profile.region || null,
           postal_code: profile.postal_code || null,
