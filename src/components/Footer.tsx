@@ -28,9 +28,9 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative border-t border-border overflow-hidden">
-      {/* Subtle amber glow top-left */}
-      <div className="absolute top-0 left-0 w-[500px] h-[300px] bg-primary/3 blur-[100px] pointer-events-none" />
+    <footer className="relative border-t border-border bg-secondary/30 overflow-hidden">
+      {/* Lueur bleue subtile */}
+      <div className="absolute top-0 right-0 w-[400px] h-[250px] bg-primary/5 blur-[90px] pointer-events-none" />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-16 mb-12 sm:mb-16">

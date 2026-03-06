@@ -7,107 +7,106 @@ All colors MUST be HSL.
 */
 
 /* ============================================================
-   ARDOISE & AMBRE — Thème BâtirNet
-   Inspiration : ardoise québécoise, feu de forge, sirop d'érable
+   BLEU BATIRNET — Thème officiel blanc & bleu #0066CC
    Fonts : Fraunces (affichage) · Lora (corps) · Syne (UI)
    ============================================================ */
 
 @layer base {
   :root {
-    /* ─── Surfaces ─── */
-    --background: 26 18% 6%;           /* #0f0c09 — charbon chaud profond */
-    --foreground: 38 35% 88%;          /* #eddfcc — parchemin chaud */
+    /* ─── Surfaces — fond blanc froid, très légèrement bleuté ─── */
+    --background: 214 45% 97%;         /* #f2f6fd — blanc bleuté */
+    --foreground: 214 60% 11%;         /* #0d1c34 — marine profond */
 
-    --card: 26 16% 9%;                 /* #171310 — bois foncé */
-    --card-foreground: 38 35% 88%;
+    --card: 0 0% 100%;                 /* blanc pur */
+    --card-foreground: 214 60% 11%;
 
-    --popover: 26 16% 8%;
-    --popover-foreground: 38 35% 88%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 60% 11%;
 
-    /* ─── Ambre — couleur primaire ─── */
-    --primary: 30 74% 52%;             /* #e07d22 — ambre forge */
-    --primary-foreground: 26 18% 6%;   /* texte foncé sur ambre */
-    --primary-hover: 30 74% 44%;
-    --primary-light: 30 74% 14%;       /* teinte ambre sombre */
+    /* ─── #0066CC — bleu logo exact ─── */
+    --primary: 210 100% 40%;           /* #0066cc */
+    --primary-foreground: 0 0% 100%;   /* blanc */
+    --primary-hover: 210 100% 33%;     /* #0052a8 — plus intense */
+    --primary-light: 210 100% 95%;     /* #e6f2ff — très pâle */
 
     /* ─── Surfaces secondaires ─── */
-    --secondary: 26 14% 13%;
-    --secondary-foreground: 38 28% 80%;
+    --secondary: 214 40% 95%;
+    --secondary-foreground: 214 60% 11%;
 
-    --muted: 26 12% 11%;
-    --muted-foreground: 33 12% 52%;    /* bois vieilli */
+    --muted: 214 35% 93%;
+    --muted-foreground: 214 22% 45%;   /* gris-bleu moyen */
 
-    --accent: 30 74% 52%;
-    --accent-foreground: 26 18% 6%;
-    --accent-hover: 30 74% 60%;
+    --accent: 210 100% 40%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 210 100% 33%;
 
     /* ─── Fonctionnel ─── */
-    --destructive: 4 68% 52%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 4 72% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 28 16% 17%;
-    --input: 28 14% 14%;
-    --ring: 30 74% 52%;
+    --border: 214 30% 87%;
+    --input: 214 25% 90%;
+    --ring: 210 100% 40%;
 
-    --radius: 0.375rem;                /* coins plus nets */
+    --radius: 0.375rem;
 
     /* ─── Sémantique ─── */
-    --success: 148 52% 36%;
+    --success: 145 55% 36%;
     --success-foreground: 0 0% 100%;
-    --success-light: 148 52% 11%;
+    --success-light: 145 55% 94%;
 
-    --warning: 38 88% 50%;
-    --warning-foreground: 26 18% 6%;
-    --warning-light: 38 88% 12%;
+    --warning: 38 90% 48%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 90% 94%;
 
-    --info: 205 68% 52%;
+    --info: 210 100% 40%;
     --info-foreground: 0 0% 100%;
-    --info-light: 205 68% 13%;
+    --info-light: 210 100% 95%;
 
     /* ─── Effets ─── */
-    --gradient-hero: linear-gradient(145deg, hsl(30 74% 52% / 0.18) 0%, hsl(26 18% 6% / 0) 60%);
-    --gradient-subtle: linear-gradient(180deg, hsl(26 18% 6%), hsl(26 16% 9%));
+    --gradient-hero: linear-gradient(145deg, hsl(210 100% 40% / 0.07) 0%, hsl(214 45% 97% / 0) 60%);
+    --gradient-subtle: linear-gradient(180deg, hsl(214 45% 97%), hsl(214 35% 93%));
 
-    --shadow-soft:   0 2px 10px -2px hsl(30 74% 20% / 0.35);
-    --shadow-medium: 0 8px 28px -4px hsl(30 74% 20% / 0.45);
-    --shadow-large:  0 20px 60px -8px hsl(30 74% 20% / 0.55);
+    --shadow-soft:   0 2px 8px -2px hsl(210 100% 40% / 0.10);
+    --shadow-medium: 0 8px 24px -4px hsl(210 100% 40% / 0.14);
+    --shadow-large:  0 20px 56px -8px hsl(210 100% 40% / 0.18);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* ── Dark class mirrors root (already dark-first) ── */
+  /* ── Mode sombre — marine BâtirNet ── */
   .dark {
-    --background: 26 20% 5%;
-    --foreground: 38 35% 90%;
-    --card: 26 18% 8%;
-    --card-foreground: 38 35% 90%;
-    --popover: 26 18% 7%;
-    --popover-foreground: 38 35% 90%;
-    --primary: 30 76% 56%;
-    --primary-foreground: 26 20% 5%;
-    --primary-hover: 30 76% 62%;
-    --primary-light: 30 76% 13%;
-    --secondary: 26 14% 11%;
-    --secondary-foreground: 38 28% 82%;
-    --muted: 26 12% 10%;
-    --muted-foreground: 33 12% 55%;
-    --accent: 30 76% 56%;
-    --accent-foreground: 26 20% 5%;
-    --accent-hover: 30 76% 62%;
+    --background: 214 55% 8%;          /* #0b1524 — marine très foncé */
+    --foreground: 214 30% 93%;
+    --card: 214 50% 11%;
+    --card-foreground: 214 30% 93%;
+    --popover: 214 50% 10%;
+    --popover-foreground: 214 30% 93%;
+    --primary: 210 100% 55%;           /* bleu plus lumineux sur fond sombre */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 100% 63%;
+    --primary-light: 210 100% 16%;
+    --secondary: 214 40% 14%;
+    --secondary-foreground: 214 30% 90%;
+    --muted: 214 35% 13%;
+    --muted-foreground: 214 20% 58%;
+    --accent: 210 100% 55%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 210 100% 63%;
     --destructive: 4 68% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 28 16% 15%;
-    --input: 28 14% 13%;
-    --ring: 30 76% 56%;
-    --success: 148 52% 40%;
+    --border: 214 30% 20%;
+    --input: 214 30% 18%;
+    --ring: 210 100% 55%;
+    --success: 145 55% 42%;
     --success-foreground: 0 0% 100%;
-    --success-light: 148 52% 10%;
-    --warning: 38 88% 54%;
-    --warning-foreground: 26 20% 5%;
-    --warning-light: 38 88% 11%;
-    --info: 205 68% 54%;
+    --success-light: 145 55% 12%;
+    --warning: 38 90% 54%;
+    --warning-foreground: 214 55% 8%;
+    --warning-light: 38 90% 12%;
+    --info: 210 100% 55%;
     --info-foreground: 0 0% 100%;
-    --info-light: 205 68% 12%;
+    --info-light: 210 100% 14%;
   }
 }
 
@@ -184,13 +183,13 @@ All colors MUST be HSL.
   }
 }
 
-/* ── Grain texture overlay — subtil, évoque la pierre ── */
+/* ── Grain texture overlay — très subtil sur fond clair ── */
 #root::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
-  opacity: 0.028;
+  opacity: 0.018;
   pointer-events: none;
   z-index: 9998;
 }

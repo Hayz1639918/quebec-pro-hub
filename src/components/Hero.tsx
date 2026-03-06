@@ -11,18 +11,18 @@ const Hero = () => {
   return (
     <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex items-center pt-20 sm:pt-24 pb-8 overflow-hidden">
 
-      {/* ── Arrière-plan : lueurs ambre + lignes diagonales ── */}
+      {/* ── Arrière-plan : lueurs bleues + grille légère ── */}
       <div className="absolute inset-0 -z-10 pointer-events-none">
         <div className="absolute inset-0 bg-background" />
-        {/* Lueur ambre coin inférieur droit */}
-        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/6 blur-[140px]" />
-        {/* Lueur ambre secondaire haut gauche */}
-        <div className="absolute top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-primary/4 blur-[100px]" />
-        {/* Ligne verticale décorative droite */}
-        <div className="absolute top-0 right-[40%] w-px h-full bg-gradient-to-b from-transparent via-primary/12 to-transparent" />
+        {/* Lueur bleue coin supérieur droit */}
+        <div className="absolute -top-20 -right-20 w-[600px] h-[500px] rounded-full bg-primary/6 blur-[120px]" />
+        {/* Lueur bleue bas gauche */}
+        <div className="absolute bottom-0 -left-20 w-[350px] h-[350px] rounded-full bg-primary/4 blur-[90px]" />
+        {/* Ligne verticale décorative */}
+        <div className="absolute top-0 right-[40%] w-px h-full bg-gradient-to-b from-transparent via-primary/10 to-transparent" />
         {/* Grille très subtile */}
         <div
-          className="absolute inset-0 opacity-[0.025]"
+          className="absolute inset-0 opacity-[0.04]"
           style={{
             backgroundImage:
               'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
@@ -140,10 +140,10 @@ const Hero = () => {
                 className="w-full h-[300px] sm:h-[380px] md:h-[440px] lg:h-[520px] object-cover"
               />
               {/* Vignette basse */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/30 via-transparent to-transparent" />
               {/* Badge flottant en bas gauche */}
               <div className="absolute bottom-5 left-5 right-5">
-                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg bg-card/90 backdrop-blur-sm border border-border">
+                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg bg-white/90 backdrop-blur-sm border border-border/60 shadow-medium">
                   <div className="w-2 h-2 rounded-full bg-success flex-shrink-0 animate-pulse" />
                   <span className="font-ui text-xs sm:text-sm font-semibold text-foreground">
                     Entrepreneurs disponibles dès maintenant

@@ -13,8 +13,8 @@ const HowItWorks = () => {
 
   return (
     <section id="how-it-works" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
-      {/* Subtle grain band */}
-      <div className="absolute inset-0 bg-muted/20 -skew-y-1 origin-top-left pointer-events-none" />
+      {/* Bande de fond secondaire subtile */}
+      <div className="absolute inset-0 bg-secondary/40 -skew-y-1 origin-top-left pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
 
