@@ -6,10 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, MessageSquare, FileText, CheckCircle, X, Trash2 } from "lucide-react";
+import { Bell, MessageSquare, FileText, CheckCircle, X, Trash2, Settings2 } from "lucide-react";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import Navigation from "@/components/Navigation";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 interface Notification {
   id: string;
@@ -34,6 +37,35 @@ const Notifications = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Notification preferences (US-042)
+  type NotifPrefs = {
+    email_messages: boolean;
+    email_proposals: boolean;
+    email_contracts: boolean;
+    email_payments: boolean;
+    email_reviews: boolean;
+    push_messages: boolean;
+    push_proposals: boolean;
+    push_contracts: boolean;
+    push_milestones: boolean;
+    push_system: boolean;
+  };
+  const DEFAULT_PREFS: NotifPrefs = {
+    email_messages: true,
+    email_proposals: true,
+    email_contracts: true,
+    email_payments: true,
+    email_reviews: true,
+    push_messages: true,
+    push_proposals: true,
+    push_contracts: true,
+    push_milestones: true,
+    push_system: false,
+  };
+  const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+  const [prefsSaved, setPrefsSaved] = useState(false);
 
   // Function to translate notification titles based on type
   const getTranslatedTitle = (notification: Notification): string => {
@@ -110,12 +142,40 @@ const Notifications = () => {
       }
 
       setUserId(session.user.id);
-      await fetchNotifications(session.user.id);
+      await Promise.all([
+        fetchNotifications(session.user.id),
+        fetchPrefs(session.user.id),
+      ]);
     } catch (error) {
       console.error('Error checking user:', error);
       navigate("/auth");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPrefs = async (uid: string) => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('notification_preferences')
+      .eq('id', uid)
+      .single();
+    if (data?.notification_preferences && typeof data.notification_preferences === 'object') {
+      setPrefs(prev => ({ ...prev, ...(data.notification_preferences as Partial<NotifPrefs>) }));
+    }
+  };
+
+  const savePrefs = async () => {
+    if (!userId) return;
+    setSavingPrefs(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ notification_preferences: prefs })
+      .eq('id', userId);
+    setSavingPrefs(false);
+    if (!error) {
+      setPrefsSaved(true);
+      setTimeout(() => setPrefsSaved(false), 3000);
     }
   };
 
@@ -281,91 +341,178 @@ const Notifications = () => {
       <Navigation />
       <div className="min-h-screen pt-24 pb-12 px-4">
         <div className="container mx-auto max-w-4xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold">
-              {t('navigation.notifications')}
-            </h1>
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold">{t('navigation.notifications')}</h1>
             {unreadCount > 0 && (
               <p className="text-muted-foreground mt-1">
                 {unreadCount} {unreadCount === 1 ? t('notifications.new_notification') : t('notifications.new_notifications')}
               </p>
             )}
           </div>
-          {unreadCount > 0 && (
-            <Button onClick={markAllAsRead} variant="outline" size="sm">
-              <CheckCircle className="h-4 w-4 mr-2" />
-              {t('notifications.mark_all_read')}
-            </Button>
-          )}
-        </div>
 
-        {notifications.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold mb-2">{t('notifications.no_notifications')}</h3>
-              <p className="text-muted-foreground">
-                {t('notifications.no_notifications_yet')}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <Card
-                key={notification.id}
-                className={`cursor-pointer transition-colors hover:bg-accent/5 ${
-                  !notification.is_read ? 'bg-primary/5 border-primary/20' : ''
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className={`p-2 rounded-full ${
-                      !notification.is_read ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <h4 className="font-semibold text-sm">
-                          {getTranslatedTitle(notification)}
-                        </h4>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {!notification.is_read && (
-                            <Badge variant="default" className="text-xs">
-                              {t('notifications.new')}
-                            </Badge>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+          <Tabs defaultValue="notifications">
+            <TabsList className="mb-6">
+              <TabsTrigger value="notifications" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Notifications
+                {unreadCount > 0 && (
+                  <Badge variant="default" className="ml-1 text-xs">{unreadCount}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="preferences" className="flex items-center gap-2">
+                <Settings2 className="h-4 w-4" />
+                Préférences
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Notifications list tab */}
+            <TabsContent value="notifications">
+              <div className="flex justify-end mb-4">
+                {unreadCount > 0 && (
+                  <Button onClick={markAllAsRead} variant="outline" size="sm">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {t('notifications.mark_all_read')}
+                  </Button>
+                )}
+              </div>
+
+              {notifications.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
+                    <h3 className="text-lg font-semibold mb-2">{t('notifications.no_notifications')}</h3>
+                    <p className="text-muted-foreground">{t('notifications.no_notifications_yet')}</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notification) => (
+                    <Card
+                      key={notification.id}
+                      className={`cursor-pointer transition-colors hover:bg-accent/5 ${
+                        !notification.is_read ? 'bg-primary/5 border-primary/20' : ''
+                      }`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-4">
+                          <div className={`p-2 rounded-full ${
+                            !notification.is_read ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                          }`}>
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2 mb-1">
+                              <h4 className="font-semibold text-sm">{getTranslatedTitle(notification)}</h4>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {!notification.is_read && (
+                                  <Badge variant="default" className="text-xs">{t('notifications.new')}</Badge>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={(e) => { e.stopPropagation(); deleteNotification(notification.id); }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">{getTranslatedMessage(notification)}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(new Date(notification.created_at), 'PPp', {
+                                locale: i18n.language === 'fr' ? fr : enUS,
+                              })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {getTranslatedMessage(notification)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(notification.created_at), 'PPp', {
-                          locale: i18n.language === 'fr' ? fr : enUS,
-                        })}
-                      </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Preferences tab (US-042) */}
+            <TabsContent value="preferences">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Préférences de notifications</CardTitle>
+                  <CardDescription>
+                    Choisissez les événements pour lesquels vous souhaitez être notifié et par quel canal.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {/* Email notifications */}
+                  <div>
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground mb-4">
+                      Notifications par courriel
+                    </h3>
+                    <div className="space-y-4">
+                      {[
+                        { key: "email_messages", label: "Nouveaux messages", desc: "Quand un entrepreneur vous envoie un message" },
+                        { key: "email_proposals", label: "Nouvelles soumissions", desc: "Quand un entrepreneur soumet une proposition pour votre projet" },
+                        { key: "email_contracts", label: "Contrats", desc: "Création, signature et mises à jour de contrats" },
+                        { key: "email_payments", label: "Paiements", desc: "Confirmations de paiement et jalons complétés" },
+                        { key: "email_reviews", label: "Avis et évaluations", desc: "Quand un avis est laissé sur votre profil" },
+                      ].map(({ key, label, desc }) => (
+                        <div key={key} className="flex items-center justify-between py-2">
+                          <div>
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-xs text-muted-foreground">{desc}</p>
+                          </div>
+                          <Switch
+                            checked={prefs[key as keyof NotifPrefs]}
+                            onCheckedChange={(v) => setPrefs(p => ({ ...p, [key]: v }))}
+                          />
+                        </div>
+                      ))}
                     </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Push notifications */}
+                  <div>
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground mb-4">
+                      Notifications push (dans l'application)
+                    </h3>
+                    <div className="space-y-4">
+                      {[
+                        { key: "push_messages", label: "Messages en temps réel", desc: "Alertes instantanées pour les nouveaux messages" },
+                        { key: "push_proposals", label: "Nouvelles soumissions", desc: "Alerte dès qu'une soumission est déposée" },
+                        { key: "push_contracts", label: "Activité sur les contrats", desc: "Signature, modification et expiration" },
+                        { key: "push_milestones", label: "Jalons et progression", desc: "Quand un entrepreneur met à jour l'avancement" },
+                        { key: "push_system", label: "Annonces système", desc: "Mises à jour importantes de la plateforme" },
+                      ].map(({ key, label, desc }) => (
+                        <div key={key} className="flex items-center justify-between py-2">
+                          <div>
+                            <p className="text-sm font-medium">{label}</p>
+                            <p className="text-xs text-muted-foreground">{desc}</p>
+                          </div>
+                          <Switch
+                            checked={prefs[key as keyof NotifPrefs]}
+                            onCheckedChange={(v) => setPrefs(p => ({ ...p, [key]: v }))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2">
+                    {prefsSaved && (
+                      <p className="text-sm text-green-600 flex items-center gap-1">
+                        <CheckCircle className="h-4 w-4" /> Préférences sauvegardées
+                      </p>
+                    )}
+                    <Button onClick={savePrefs} disabled={savingPrefs} className="ml-auto">
+                      {savingPrefs ? "Sauvegarde..." : "Sauvegarder les préférences"}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </>

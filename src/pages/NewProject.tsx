@@ -28,7 +28,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X, MapPin, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Upload, X, MapPin, Plus, Trash2, HardHat } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { geocodePostalCode } from "@/lib/geolocation";
@@ -146,7 +147,21 @@ const NewProject = () => {
   
   // Fichiers
   const [files, setFiles] = useState<File[]>([]);
-  
+
+  // Préférences d'entrepreneur (US-016)
+  const [entrepreneurType, setEntrepreneurType] = useState<"individual" | "company" | "any">("any");
+  const [requiredCertifications, setRequiredCertifications] = useState({
+    rbq: false,
+    liability_insurance: false,
+    apchq: false,
+    asp_construction: false,
+  });
+
+  // Mode de paiement (US-014)
+  const [paymentMode, setPaymentMode] = useState<"full" | "milestones" | "negotiable">("negotiable");
+  const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 100000]);
+  const [useBudgetSlider, setUseBudgetSlider] = useState(false);
+
   // Geolocation
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -398,6 +413,11 @@ const NewProject = () => {
           evaluation_criteria: Object.keys(evaluationCriteriaObj).length > 0 ? evaluationCriteriaObj : null,
           // Exigences d'assurance
           insurance_requirements: Object.keys(insuranceRequirements).length > 0 ? insuranceRequirements : null,
+          // Préférences d'entrepreneur (US-016)
+          preferred_entrepreneur_type: entrepreneurType !== "any" ? entrepreneurType : null,
+          required_certifications: Object.entries(requiredCertifications).filter(([, v]) => v).map(([k]) => k),
+          // Mode de paiement (US-014)
+          payment_mode: paymentMode,
           status: 'open',
         })
         .select()
@@ -576,10 +596,11 @@ const NewProject = () => {
               <CardHeader>
                 <CardTitle>💰 Budget</CardTitle>
                 <CardDescription>
-                  Indiquez votre fourchette budgétaire
+                  Indiquez votre fourchette budgétaire et votre mode de paiement préféré
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
+                {/* Budget inputs */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="budgetMin">{t('new_project.form.budget_min')}</Label>
@@ -603,6 +624,79 @@ const NewProject = () => {
                       min="0"
                     />
                   </div>
+                </div>
+
+                {/* Budget slider (US-014) */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="useBudgetSlider"
+                      checked={useBudgetSlider}
+                      onCheckedChange={(v) => {
+                        setUseBudgetSlider(!!v);
+                        if (v) {
+                          const mn = parseFloat(budgetMin) || 0;
+                          const mx = parseFloat(budgetMax) || 100000;
+                          setBudgetRange([mn, Math.max(mn, mx)]);
+                        }
+                      }}
+                    />
+                    <Label htmlFor="useBudgetSlider" className="font-normal cursor-pointer text-sm text-muted-foreground">
+                      Utiliser le curseur de budget
+                    </Label>
+                  </div>
+                  {useBudgetSlider && (
+                    <div className="space-y-2 px-1">
+                      <div className="flex justify-between text-sm font-medium">
+                        <span>{budgetRange[0].toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}</span>
+                        <span>{budgetRange[1].toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}</span>
+                      </div>
+                      <Slider
+                        value={budgetRange}
+                        onValueChange={(v) => {
+                          setBudgetRange(v as [number, number]);
+                          setBudgetMin(String(v[0]));
+                          setBudgetMax(String(v[1]));
+                        }}
+                        min={0}
+                        max={500000}
+                        step={1000}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>0 $</span>
+                        <span>500 000 $</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment mode (US-014) */}
+                <div className="space-y-3">
+                  <Label>Mode de paiement préféré</Label>
+                  <RadioGroup value={paymentMode} onValueChange={(v) => setPaymentMode(v as typeof paymentMode)} className="space-y-2">
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="full" id="pm-full" />
+                      <Label htmlFor="pm-full" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Paiement complet</span>
+                        <span className="block text-xs text-muted-foreground">Paiement en une seule fois à la fin des travaux</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="milestones" id="pm-milestones" />
+                      <Label htmlFor="pm-milestones" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Versements par jalons</span>
+                        <span className="block text-xs text-muted-foreground">Paiements échelonnés selon l'avancement du projet</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="negotiable" id="pm-negotiable" />
+                      <Label htmlFor="pm-negotiable" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Négociable</span>
+                        <span className="block text-xs text-muted-foreground">À définir avec l'entrepreneur retenu</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
                 </div>
               </CardContent>
             </Card>
@@ -757,6 +851,74 @@ const NewProject = () => {
                     ⚠️ Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
                   </p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* SECTION 5b: Préférences d'entrepreneur (US-016) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HardHat className="h-5 w-5" />
+                  Préférences d'entrepreneur
+                </CardTitle>
+                <CardDescription>
+                  Définissez le type d'entrepreneur et les certifications requises (optionnel)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Type d'entrepreneur */}
+                <div className="space-y-3">
+                  <Label>Type d'entrepreneur</Label>
+                  <RadioGroup value={entrepreneurType} onValueChange={(v) => setEntrepreneurType(v as typeof entrepreneurType)} className="space-y-2">
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="any" id="et-any" />
+                      <Label htmlFor="et-any" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Indifférent</span>
+                        <span className="block text-xs text-muted-foreground">Individuel ou entreprise — toutes les soumissions acceptées</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="individual" id="et-individual" />
+                      <Label htmlFor="et-individual" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Travailleur autonome / Individuel</span>
+                        <span className="block text-xs text-muted-foreground">Entrepreneur indépendant sans structure corporative</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="company" id="et-company" />
+                      <Label htmlFor="et-company" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Entreprise</span>
+                        <span className="block text-xs text-muted-foreground">Société enregistrée avec employés et structure formelle</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Certifications requises */}
+                <div className="space-y-3">
+                  <Label>Certifications et accréditations requises</Label>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {[
+                      { id: "rbq", label: "Licence RBQ obligatoire", desc: "Régie du bâtiment du Québec" },
+                      { id: "liability_insurance", label: "Assurance responsabilité civile", desc: "Minimum requis par la loi" },
+                      { id: "apchq", label: "Membre APCHQ", desc: "Association des professionnels de la construction" },
+                      { id: "asp_construction", label: "Formation ASP Construction", desc: "Santé et sécurité sur les chantiers" },
+                    ].map(({ id, label, desc }) => (
+                      <div key={id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                        <Checkbox
+                          id={`cert-${id}`}
+                          checked={requiredCertifications[id as keyof typeof requiredCertifications]}
+                          onCheckedChange={(v) => setRequiredCertifications(prev => ({ ...prev, [id]: !!v }))}
+                          className="mt-0.5"
+                        />
+                        <Label htmlFor={`cert-${id}`} className="cursor-pointer font-normal">
+                          <span className="font-medium text-sm">{label}</span>
+                          <span className="block text-xs text-muted-foreground">{desc}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

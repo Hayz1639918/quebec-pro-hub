@@ -22,8 +22,15 @@ import {
   Shield,
   Calendar,
   ArrowLeft,
+  Flag,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 interface ProfessionalProfile {
   id: string;
@@ -42,6 +49,16 @@ interface ProfessionalProfile {
   region?: string;
 }
 
+interface Review {
+  id: string;
+  client_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  client_name?: string;
+  project_title?: string;
+}
+
 const ProfessionalProfile = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -55,10 +72,19 @@ const ProfessionalProfile = () => {
     reviewsCount: 0,
   });
 
+  // Reviews (US-040)
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportingReview, setReportingReview] = useState<Review | null>(null);
+  const [reportReason, setReportReason] = useState('offensive');
+  const [reportDetail, setReportDetail] = useState('');
+  const [submittingReport, setSubmittingReport] = useState(false);
+
   useEffect(() => {
     fetchCurrentUser();
     fetchProfile();
     fetchStats();
+    fetchReviews();
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -112,14 +138,72 @@ const ProfessionalProfile = () => {
         .eq('professional_id', id)
         .eq('status', 'accepted');
 
+      // Fetch reviews for real stats
+      const { data: reviewsData } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('professional_id', id);
+
+      const reviewsCount = reviewsData?.length || 0;
+      const avgRating = reviewsCount > 0
+        ? (reviewsData!.reduce((sum, r) => sum + r.rating, 0) / reviewsCount)
+        : 0;
+
       setStats({
         proposalsCount: proposalsCount || 0,
         acceptedProposals: acceptedCount || 0,
-        averageRating: 4.5, // TODO: Calculer depuis la table reviews
-        reviewsCount: 0,
+        averageRating: Math.round(avgRating * 10) / 10,
+        reviewsCount,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const { data } = await supabase
+        .from('reviews')
+        .select('id, client_id, rating, comment, created_at, project_id')
+        .eq('professional_id', id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (data) {
+        // Enrich with client names
+        const enriched = await Promise.all(data.map(async (r) => {
+          const { data: clientData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', r.client_id)
+            .single();
+          return { ...r, client_name: clientData?.full_name || 'Client anonyme' };
+        }));
+        setReviews(enriched);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const handleReportReview = async () => {
+    if (!reportingReview || !currentUserId) return;
+    setSubmittingReport(true);
+    try {
+      // Store report as a notification to admin (fallback mechanism)
+      await supabase.from('notifications').insert({
+        user_id: currentUserId,
+        type: 'review_report',
+        title: 'Avis signalé',
+        message: `Avis #${reportingReview.id} signalé : ${reportReason}${reportDetail ? ` — ${reportDetail}` : ''}`,
+        metadata: { review_id: reportingReview.id, reason: reportReason, detail: reportDetail },
+      });
+      toast.success('Avis signalé. Notre équipe de modération va l\'examiner.');
+      setReportDialogOpen(false);
+      setReportDetail('');
+    } catch {
+      toast.error('Erreur lors du signalement');
+    } finally {
+      setSubmittingReport(false);
     }
   };
 
@@ -379,6 +463,60 @@ const ProfessionalProfile = () => {
             </Card>
           </div>
 
+            {/* Avis clients (US-040) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Avis clients ({reviews.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {reviews.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">Aucun avis pour le moment.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review.id} className="border-b last:border-0 pb-4 last:pb-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="flex">
+                                {[1,2,3,4,5].map(s => (
+                                  <Star key={s} className={`h-4 w-4 ${s <= review.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`} />
+                                ))}
+                              </div>
+                              <span className="text-sm font-medium">{review.client_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(review.created_at), 'PPP', { locale: fr })}
+                              </span>
+                            </div>
+                            {review.comment && (
+                              <p className="text-sm text-gray-700">{review.comment}</p>
+                            )}
+                          </div>
+                          {currentUserId && currentUserId !== review.client_id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-muted-foreground hover:text-destructive shrink-0"
+                              onClick={() => {
+                                setReportingReview(review);
+                                setReportDialogOpen(true);
+                              }}
+                            >
+                              <Flag className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Colonne latérale */}
           <div className="space-y-6">
             {/* Coordonnées */}
@@ -459,6 +597,56 @@ const ProfessionalProfile = () => {
       </div>
 
       <Footer />
+
+      {/* Report review dialog (US-040) */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Flag className="h-5 w-5 text-destructive" />
+              Signaler un avis inapproprié
+            </DialogTitle>
+            <DialogDescription>
+              Notre équipe de modération examinera votre signalement sous 48h.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-3">
+              <Label>Raison du signalement</Label>
+              <RadioGroup value={reportReason} onValueChange={setReportReason} className="space-y-2">
+                {[
+                  { value: 'offensive', label: 'Contenu offensant ou haineux' },
+                  { value: 'fake', label: 'Avis faux ou trompeur' },
+                  { value: 'spam', label: 'Spam ou publicité' },
+                  { value: 'irrelevant', label: 'Hors sujet ou sans rapport' },
+                  { value: 'other', label: 'Autre raison' },
+                ].map(({ value, label }) => (
+                  <div key={value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={value} id={`reason-${value}`} />
+                    <Label htmlFor={`reason-${value}`} className="font-normal cursor-pointer">{label}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="report-detail">Détails supplémentaires (optionnel)</Label>
+              <Textarea
+                id="report-detail"
+                placeholder="Décrivez pourquoi cet avis est inapproprié..."
+                value={reportDetail}
+                onChange={(e) => setReportDetail(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReportDialogOpen(false)}>Annuler</Button>
+            <Button variant="destructive" onClick={handleReportReview} disabled={submittingReport}>
+              {submittingReport ? 'Envoi...' : 'Signaler cet avis'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

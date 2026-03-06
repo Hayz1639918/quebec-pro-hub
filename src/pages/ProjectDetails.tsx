@@ -34,7 +34,10 @@ import {
   X,
   XCircle,
   FolderOpen,
+  Star,
+  ThumbsUp,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -147,11 +150,73 @@ const ProjectDetails = () => {
     company_name: string | null;
   }>>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // US-038 + US-039: Marquer comme terminé + recommandations
+  const [markingComplete, setMarkingComplete] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [recommendedPros, setRecommendedPros] = useState<{
+    id: string;
+    full_name: string;
+    company_name: string | null;
+    services_offered: string | null;
+    city: string | null;
+    region: string | null;
+    average_rating: number;
+    total_reviews: number;
+  }[]>([]);
   
   // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
   const [proposalBudget, setProposalBudget] = useState('');
   const [proposalDelay, setProposalDelay] = useState('');
+
+  const handleMarkAsComplete = async () => {
+    if (!project) return;
+    setMarkingComplete(true);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', project.id);
+      if (error) throw error;
+      setProject(prev => prev ? { ...prev, status: 'completed' } : prev);
+      // Fetch recommendations from same category
+      await fetchRecommendations(project.category);
+      setShowRecommendations(true);
+      toast.success('Projet marqué comme terminé !');
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+  const fetchRecommendations = async (category: string) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+        .eq('user_type', 'professional')
+        .eq('is_rbq_verified', true)
+        .ilike('services_offered', `%${category}%`)
+        .order('average_rating', { ascending: false })
+        .limit(3);
+      if (data) setRecommendedPros(data);
+      else {
+        // Fallback: top rated professionals
+        const { data: topPros } = await supabase
+          .from('profiles')
+          .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+          .eq('user_type', 'professional')
+          .eq('is_rbq_verified', true)
+          .order('average_rating', { ascending: false })
+          .limit(3);
+        setRecommendedPros(topPros || []);
+      }
+    } catch (e) {
+      console.error('Error fetching recommendations:', e);
+    }
+  };
 
   useEffect(() => {
     fetchProjectDetails();
@@ -1221,21 +1286,42 @@ const ProjectDetails = () => {
                   <CardTitle className="text-lg">Gérer le projet</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => navigate('/dashboard?tab=proposals')}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Voir les offres
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => navigate(`/edit-project/${project.id}`)}
                   >
                     Modifier le projet
                   </Button>
+                  {project.status !== 'completed' && project.status !== 'cancelled' && (
+                    <Button
+                      variant="default"
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={handleMarkAsComplete}
+                      disabled={markingComplete}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {markingComplete ? 'Mise à jour...' : 'Marquer comme terminé'}
+                    </Button>
+                  )}
+                  {project.status === 'completed' && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-green-300 text-green-700"
+                      onClick={() => fetchRecommendations(project.category).then(() => setShowRecommendations(true))}
+                    >
+                      <ThumbsUp className="mr-2 h-4 w-4" />
+                      Voir les recommandations
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1244,6 +1330,55 @@ const ProjectDetails = () => {
       </main>
 
       <Footer />
+
+      {/* Recommendations dialog (US-039) */}
+      <Dialog open={showRecommendations} onOpenChange={setShowRecommendations}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ThumbsUp className="h-5 w-5 text-green-600" />
+              Projet terminé — Bravo !
+            </DialogTitle>
+            <DialogDescription>
+              Merci d'avoir utilisé BâtirNet. Voici quelques professionnels recommandés pour votre prochain projet dans la même catégorie.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {recommendedPros.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">Aucune recommandation disponible pour le moment.</p>
+            ) : recommendedPros.map((pro) => (
+              <div key={pro.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/30">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{pro.company_name || pro.full_name}</p>
+                  {pro.company_name && <p className="text-xs text-muted-foreground">{pro.full_name}</p>}
+                  {(pro.city || pro.region) && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                      {pro.city}{pro.city && pro.region && ', '}{pro.region}
+                    </p>
+                  )}
+                  {pro.average_rating > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                      <span className="text-xs font-medium">{pro.average_rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({pro.total_reviews} avis)</span>
+                    </div>
+                  )}
+                </div>
+                <Button size="sm" variant="outline" onClick={() => { setShowRecommendations(false); navigate(`/professionals/${pro.id}`); }}>
+                  Voir le profil
+                </Button>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRecommendations(false)}>Fermer</Button>
+            <Button onClick={() => { setShowRecommendations(false); navigate('/professionals'); }}>
+              Explorer tous les professionnels
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de prévisualisation d'image */}
       {previewImage && (
