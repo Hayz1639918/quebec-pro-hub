@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Search, CheckCircle2 } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-construction.jpg";
@@ -10,91 +10,147 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-[calc(100vh-4rem)] min-h-[calc(100dvh-4rem)] flex items-center pt-20 sm:pt-24 pb-8 overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-subtle -z-10" />
-      
+
+      {/* ── Arrière-plan : lueurs ambre + lignes diagonales ── */}
+      <div className="absolute inset-0 -z-10 pointer-events-none">
+        <div className="absolute inset-0 bg-background" />
+        {/* Lueur ambre coin inférieur droit */}
+        <div className="absolute -bottom-40 -right-40 w-[700px] h-[700px] rounded-full bg-primary/6 blur-[140px]" />
+        {/* Lueur ambre secondaire haut gauche */}
+        <div className="absolute top-1/4 -left-32 w-[400px] h-[400px] rounded-full bg-primary/4 blur-[100px]" />
+        {/* Ligne verticale décorative droite */}
+        <div className="absolute top-0 right-[40%] w-px h-full bg-gradient-to-b from-transparent via-primary/12 to-transparent" />
+        {/* Grille très subtile */}
+        <div
+          className="absolute inset-0 opacity-[0.025]"
+          style={{
+            backgroundImage:
+              'linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)',
+            backgroundSize: '72px 72px',
+          }}
+        />
+      </div>
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-16">
-        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 xl:gap-20 items-center">
-          {/* Left Content */}
-          <div className="space-y-4 sm:space-y-6 lg:space-y-8 animate-fade-in order-2 lg:order-1">
-            <div className="inline-block">
-              <span className="px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 xl:gap-24 items-center">
+
+          {/* ── Colonne gauche : contenu ── */}
+          <div className="space-y-6 lg:space-y-8 order-2 lg:order-1">
+
+            {/* Badge */}
+            <div className="animate-reveal-up">
+              <span className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-sm border border-primary/30 bg-primary/8 text-primary font-ui text-xs font-semibold uppercase tracking-[0.12em]">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
                 {t('hero.badge')}
               </span>
             </div>
-            
-            <h1 className="leading-tight text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold">
-              {t('hero.title')}
-            </h1>
-            
-            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground leading-relaxed max-w-xl">
+
+            {/* Titre — Fraunces grande taille */}
+            <div className="animate-reveal-up animation-delay-100">
+              <h1 className="font-display font-light leading-[1.04] text-foreground">
+                {/* Ligne 1 : normal */}
+                <span className="block text-foreground/70 text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-1">
+                  Trouvez les
+                </span>
+                {/* Ligne 2 : mot clé en ambre italique — effet Fraunces optique */}
+                <span className="block font-bold italic text-primary text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl leading-none">
+                  meilleurs
+                </span>
+                {/* Ligne 3 */}
+                <span className="block text-foreground text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mt-1">
+                  entrepreneurs
+                </span>
+              </h1>
+            </div>
+
+            {/* Sous-titre */}
+            <p className="animate-reveal-up animation-delay-200 font-body text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg">
               {t('hero.subtitle')}
             </p>
 
-            {/* Key Features */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                <span className="text-foreground font-medium text-sm sm:text-base">{t('hero.features.verified')}</span>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                <span className="text-foreground font-medium text-sm sm:text-base">{t('hero.features.payments')}</span>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3">
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
-                <span className="text-foreground font-medium text-sm sm:text-base">{t('hero.features.contracts')}</span>
-              </div>
-            </div>
+            {/* Features — tirets ambre */}
+            <ul className="space-y-3 animate-reveal-up animation-delay-300">
+              {[
+                t('hero.features.verified'),
+                t('hero.features.payments'),
+                t('hero.features.contracts'),
+              ].map((feature) => (
+                <li key={feature} className="flex items-center gap-3 group">
+                  <span className="flex-shrink-0 w-5 h-px bg-primary group-hover:w-8 transition-all duration-300" />
+                  <span className="font-ui text-sm font-medium text-foreground/80 tracking-wide">
+                    {feature}
+                  </span>
+                </li>
+              ))}
+            </ul>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 sm:pt-4">
-              <Button 
-                variant="hero" 
-                size="lg" 
-                className="gap-2 w-full sm:w-auto"
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-reveal-up animation-delay-400">
+              <Button
+                size="lg"
+                className="font-ui font-semibold uppercase tracking-wider gap-2.5 group"
                 onClick={() => navigate("/auth?mode=signup")}
               >
-                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Search className="h-4 w-4" />
                 {t('hero.cta_client')}
+                <ArrowRight className="h-4 w-4 -translate-x-1 group-hover:translate-x-0 transition-transform opacity-0 group-hover:opacity-100" />
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="lg"
-                className="w-full sm:w-auto"
+                className="font-ui font-medium border-border hover:border-primary/50 hover:text-primary transition-colors"
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 {t('hero.cta_pro')}
               </Button>
             </div>
 
-            {/* Social Proof - Responsive */}
-            <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-6 lg:gap-8 pt-3 sm:pt-6 border-t border-border">
-              <div className="text-center sm:text-left">
-                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">2,500+</div>
-                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.professionals')}</div>
-              </div>
-              <div className="hidden sm:block h-10 lg:h-12 w-px bg-border" />
-              <div className="text-center sm:text-left">
-                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">15,000+</div>
-                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.projects')}</div>
-              </div>
-              <div className="hidden sm:block h-10 lg:h-12 w-px bg-border" />
-              <div className="text-center sm:text-left">
-                <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">4.8/5</div>
-                <div className="text-[10px] sm:text-xs lg:text-sm text-muted-foreground leading-tight">{t('hero.stats.satisfaction')}</div>
+            {/* Stats — typographie Fraunces chiffres + Syne labels */}
+            <div className="animate-reveal-up animation-delay-500 pt-5 border-t border-border">
+              <div className="grid grid-cols-3 gap-4 sm:gap-8">
+                {[
+                  { value: '2 500+', label: t('hero.stats.professionals') },
+                  { value: '15K+',   label: t('hero.stats.projects') },
+                  { value: '4.8',    label: t('hero.stats.satisfaction') },
+                ].map(({ value, label }) => (
+                  <div key={label} className="group">
+                    <div className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-primary leading-none">
+                      {value}
+                    </div>
+                    <div className="font-ui text-[10px] sm:text-xs text-muted-foreground mt-1.5 uppercase tracking-wider leading-tight">
+                      {label}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Right Image */}
-          <div className="relative aspect-[16/10] sm:aspect-[4/3] md:aspect-[16/10] lg:aspect-auto lg:h-[450px] xl:h-[550px] order-1 lg:order-2 w-full max-h-[35vh] sm:max-h-[40vh] lg:max-h-none">
-            <div className="absolute inset-0 bg-gradient-hero opacity-10 rounded-xl sm:rounded-2xl lg:rounded-3xl blur-3xl" />
-            <img
-              src={heroImage}
-              alt="Professional construction team collaborating on a project"
-              className="relative rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-large object-cover w-full h-full"
-            />
+          {/* ── Colonne droite : image avec cadre décoratif ── */}
+          <div className="relative order-1 lg:order-2 animate-reveal-fade animation-delay-150">
+            {/* Cadre ambre décalé (derrière) */}
+            <div className="absolute -top-3 -right-3 w-full h-full rounded-xl border border-primary/20 pointer-events-none" />
+            <div className="absolute -top-1.5 -right-1.5 w-full h-full rounded-xl border border-primary/10 pointer-events-none" />
+
+            {/* Image */}
+            <div className="relative rounded-xl overflow-hidden shadow-large animate-float">
+              <img
+                src={heroImage}
+                alt="Entrepreneur professionnel en construction au Québec"
+                className="w-full h-[300px] sm:h-[380px] md:h-[440px] lg:h-[520px] object-cover"
+              />
+              {/* Vignette basse */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent" />
+              {/* Badge flottant en bas gauche */}
+              <div className="absolute bottom-5 left-5 right-5">
+                <div className="inline-flex items-center gap-3 px-4 py-3 rounded-lg bg-card/90 backdrop-blur-sm border border-border">
+                  <div className="w-2 h-2 rounded-full bg-success flex-shrink-0 animate-pulse" />
+                  <span className="font-ui text-xs sm:text-sm font-semibold text-foreground">
+                    Entrepreneurs disponibles dès maintenant
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
