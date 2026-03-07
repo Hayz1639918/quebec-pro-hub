@@ -19,8 +19,15 @@ import {
   Eye,
   User,
   Hammer,
+  DollarSign,
+  Bell,
+  Video,
+  CreditCard,
+  Calendar,
+  Clock,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -80,6 +87,14 @@ const ProDashboard = () => {
   });
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
   const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
+
+  // US-052 — Revenue summary
+  const [revenue, setRevenue] = useState({
+    total: 0,
+    pending: 0,
+    paid: 0,
+  });
+  const [activeTab, setActiveTab] = useState("apercu");
 
   useEffect(() => {
     (async () => {
@@ -413,6 +428,155 @@ const ProDashboard = () => {
           </Card>
         )}
 
+        {/* US-052 — Revenue Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <Card className="bg-green-50 border-green-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-green-700">Total encaissé</p>
+                <DollarSign className="h-4 w-4 text-green-600" />
+              </div>
+              <p className="text-2xl font-bold text-green-900">
+                {revenue.paid.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              </p>
+              <p className="text-xs text-green-600 mt-1">Versements reçus</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-amber-50 border-amber-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-amber-700">En attente</p>
+                <Clock className="h-4 w-4 text-amber-600" />
+              </div>
+              <p className="text-2xl font-bold text-amber-900">
+                {revenue.pending.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              </p>
+              <p className="text-xs text-amber-600 mt-1">Jalons à valider</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-sm text-blue-700">Total contrats actifs</p>
+                <TrendingUp className="h-4 w-4 text-blue-600" />
+              </div>
+              <p className="text-2xl font-bold text-blue-900">
+                {revenue.total.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">Valeur contractuelle</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* US-053 — Navigation tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="grid grid-cols-4 sm:grid-cols-4 w-full">
+            <TabsTrigger value="apercu" className="text-xs sm:text-sm">
+              Aperçu
+            </TabsTrigger>
+            <TabsTrigger value="invitations" className="relative text-xs sm:text-sm">
+              Invitations
+              {pendingContractsList.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                  {pendingContractsList.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="reunions" className="text-xs sm:text-sm">
+              <Video className="h-3 w-3 mr-1 hidden sm:inline" />
+              Réunions
+            </TabsTrigger>
+            <TabsTrigger value="abonnement" className="text-xs sm:text-sm">
+              <CreditCard className="h-3 w-3 mr-1 hidden sm:inline" />
+              Abonnement
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab: Invitations */}
+          <TabsContent value="invitations" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5 text-primary" />
+                  Invitations & Contrats à signer
+                </CardTitle>
+                <CardDescription>Propositions clients en attente de votre réponse</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pendingContractsList.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">Aucune invitation en attente.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingContractsList.map(contract => (
+                      <div key={contract.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/contracts?contract=${contract.id}`)}>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-semibold">{contract.title}</h4>
+                            <p className="text-sm text-muted-foreground">Client : {contract.client_name}</p>
+                            <p className="text-sm font-medium mt-1">{contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                          </div>
+                          <Badge variant="outline" className="text-amber-600 border-amber-300">À signer</Badge>
+                        </div>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-xs text-muted-foreground">{format(new Date(contract.created_at), 'dd MMM yyyy', { locale: fr })}</span>
+                          <Button size="sm">Voir et signer</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Réunions Zoom */}
+          <TabsContent value="reunions" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="h-5 w-5 text-blue-600" />
+                  Réunions Zoom planifiées
+                </CardTitle>
+                <CardDescription>Vos prochaines réunions avec les clients</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 space-y-4">
+                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto" />
+                  <p className="text-muted-foreground">Aucune réunion planifiée pour le moment.</p>
+                  <Button onClick={() => navigate('/pro/meetings')} className="gap-2">
+                    <Video className="h-4 w-4" />
+                    Gérer mes réunions
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Abonnement */}
+          <TabsContent value="abonnement" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Mon abonnement
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+                  <div>
+                    <p className="font-semibold">Plan Gratuit</p>
+                    <p className="text-sm text-muted-foreground">3 soumissions / mois · Visibilité standard</p>
+                  </div>
+                  <Badge variant="outline">Actif</Badge>
+                </div>
+                <Button className="w-full" onClick={() => navigate('/pro/subscription')}>
+                  Passer au Plan Premium
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
         {/* Quick Actions */}
         <Card className="mb-4 sm:mb-6 md:mb-8">
           <CardHeader className="p-3 sm:p-4 md:p-6">
@@ -480,6 +644,32 @@ const ProDashboard = () => {
               >
                 <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 <span className="text-center leading-tight">Mon portfolio</span>
+              </Button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3">
+              <Button
+                variant="outline"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
+                onClick={() => navigate('/pro/meetings')}
+              >
+                <Video className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
+                <span className="text-center leading-tight">Réunions Zoom</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
+                onClick={() => navigate('/pro/payments')}
+              >
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
+                <span className="text-center leading-tight">Mes paiements</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
+                onClick={() => navigate('/pro/bank-account')}
+              >
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                <span className="text-center leading-tight">Compte bancaire</span>
               </Button>
             </div>
           </CardContent>

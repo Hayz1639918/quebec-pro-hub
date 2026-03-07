@@ -43,6 +43,11 @@ const ProjectReport = lazy(() => import("./pages/ProjectReport"));
 const ProMyProjects = lazy(() => import("./pages/ProMyProjects"));
 const ClientProfile = lazy(() => import("./pages/ClientProfile"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+// Epic 10-18 — Entrepreneur pages
+const ProBankAccount = lazy(() => import("./pages/ProBankAccount"));
+const ProMeetings = lazy(() => import("./pages/ProMeetings"));
+const ProPayments = lazy(() => import("./pages/ProPayments"));
+const ProInvoices = lazy(() => import("./pages/ProInvoices"));
 
 const queryClient = new QueryClient();
 
@@ -100,6 +105,11 @@ const App = () => (
               <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              {/* Epic 10-18 — Entrepreneur routes */}
+              <Route path="/pro/bank-account" element={<ProBankAccount />} />
+              <Route path="/pro/meetings" element={<ProMeetings />} />
+              <Route path="/pro/payments" element={<ProPayments />} />
+              <Route path="/pro/invoices" element={<ProInvoices />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

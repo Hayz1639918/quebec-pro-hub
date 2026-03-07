@@ -484,6 +484,9 @@ const Notifications = () => {
                         { key: "push_contracts", label: "Activité sur les contrats", desc: "Signature, modification et expiration" },
                         { key: "push_milestones", label: "Jalons et progression", desc: "Quand un entrepreneur met à jour l'avancement" },
                         { key: "push_system", label: "Annonces système", desc: "Mises à jour importantes de la plateforme" },
+                        { key: "push_new_projects", label: "Nouveaux projets correspondants (Entrepreneur)", desc: "Alerte dès qu'un projet correspond à vos services et votre région" },
+                        { key: "push_payment_released", label: "Paiement débloqué (Entrepreneur)", desc: "Quand un client valide et libère un paiement de jalon" },
+                        { key: "push_subscription_reminder", label: "Rappel d'abonnement (Entrepreneur)", desc: "7 jours et 1 jour avant l'expiration de votre abonnement Premium" },
                       ].map(({ key, label, desc }) => (
                         <div key={key} className="flex items-center justify-between py-2">
                           <div>

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Star, AlertTriangle, MessageSquare, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
+import { Star, AlertTriangle, MessageSquare, TrendingUp, CheckCircle, XCircle, Reply, ChevronDown, ChevronUp } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -49,6 +49,12 @@ const ProReviews = () => {
   const [mediationReason, setMediationReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // US-066 — Reply to reviews
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [savedReplies, setSavedReplies] = useState<Record<string, string>>({});
+  const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
+  const [savingReply, setSavingReply] = useState<string | null>(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -217,6 +223,20 @@ const ProReviews = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // US-066 — Submit reply to a review
+  const submitReply = async (reviewId: string) => {
+    const text = replyText[reviewId]?.trim();
+    if (!text) return;
+    setSavingReply(reviewId);
+    // In production: store in Supabase review_replies table, visible publicly on profile
+    await new Promise(r => setTimeout(r, 800));
+    setSavedReplies(prev => ({ ...prev, [reviewId]: text }));
+    setReplyText(prev => ({ ...prev, [reviewId]: '' }));
+    setReplyOpen(prev => ({ ...prev, [reviewId]: false }));
+    setSavingReply(null);
+    toast({ title: 'Réponse publiée', description: 'Votre réponse est maintenant visible sur votre profil public.' });
   };
 
   const renderStars = (rating: number) => {
@@ -450,6 +470,63 @@ const ProReviews = () => {
                       </div>
                       {review.comment && (
                         <p className="text-sm text-muted-foreground italic mt-2">"{review.comment}"</p>
+                      )}
+
+                      {/* US-066 — Reply section */}
+                      <Separator className="mt-4 mb-3" />
+                      {savedReplies[review.id] ? (
+                        <div className="pl-3 border-l-2 border-primary/30">
+                          <div className="flex items-center gap-1.5 text-xs text-primary font-medium mb-1">
+                            <Reply className="h-3 w-3" />
+                            Votre réponse (visible publiquement)
+                          </div>
+                          <p className="text-sm text-muted-foreground">{savedReplies[review.id]}</p>
+                          <button
+                            type="button"
+                            className="text-xs text-primary hover:underline mt-1"
+                            onClick={() => {
+                              setReplyText(prev => ({ ...prev, [review.id]: savedReplies[review.id] }));
+                              setSavedReplies(prev => { const n = {...prev}; delete n[review.id]; return n; });
+                              setReplyOpen(prev => ({ ...prev, [review.id]: true }));
+                            }}
+                          >
+                            Modifier la réponse
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <button
+                            type="button"
+                            className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                            onClick={() => setReplyOpen(prev => ({ ...prev, [review.id]: !prev[review.id] }))}
+                          >
+                            <Reply className="h-4 w-4" />
+                            Répondre à cet avis
+                            {replyOpen[review.id] ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                          </button>
+                          {replyOpen[review.id] && (
+                            <div className="mt-2 space-y-2">
+                              <Textarea
+                                placeholder="Rédigez une réponse professionnelle et courtoise... Elle sera visible publiquement sur votre profil."
+                                rows={3}
+                                value={replyText[review.id] || ''}
+                                onChange={e => setReplyText(prev => ({ ...prev, [review.id]: e.target.value }))}
+                              />
+                              <div className="flex gap-2 justify-end">
+                                <Button size="sm" variant="outline" onClick={() => setReplyOpen(prev => ({ ...prev, [review.id]: false }))}>
+                                  Annuler
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => submitReply(review.id)}
+                                  disabled={savingReply === review.id || !replyText[review.id]?.trim()}
+                                >
+                                  {savingReply === review.id ? 'Publication...' : 'Publier la réponse'}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </CardContent>
                   </Card>

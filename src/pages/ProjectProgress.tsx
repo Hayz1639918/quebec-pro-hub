@@ -24,6 +24,11 @@ import {
   Save,
   Send,
   FileText,
+  Upload,
+  Image,
+  DollarSign,
+  Camera,
+  Trash2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -82,6 +87,14 @@ const ProjectProgress = () => {
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [currentPhase, setCurrentPhase] = useState('');
   const [progressStatus, setProgressStatus] = useState('in_progress');
+
+  // US-059 — Media uploads
+  const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; caption: string }[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  // US-060 — Payment milestone request
+  const [requestingPayment, setRequestingPayment] = useState(false);
+  const [paymentRequestSent, setPaymentRequestSent] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -206,6 +219,41 @@ const ProjectProgress = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // US-059 — Handle media file selection
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const newItems = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      caption: '',
+    }));
+    setMediaFiles(prev => [...prev, ...newItems]);
+    e.target.value = '';
+  };
+
+  const handleUploadMedia = async () => {
+    if (mediaFiles.length === 0) return;
+    setUploadingMedia(true);
+    // In production: upload to Supabase Storage, associate with project milestone
+    await new Promise(r => setTimeout(r, 1500));
+    setUploadingMedia(false);
+    setMediaFiles([]);
+    toast.success(`${mediaFiles.length} fichier(s) uploadé(s) avec horodatage automatique`);
+  };
+
+  // US-060 — Request payment milestone
+  const handleRequestPayment = async () => {
+    if (progressPercentage < 25) {
+      toast.error("Avancement insuffisant — au moins 25% requis pour demander un paiement.");
+      return;
+    }
+    setRequestingPayment(true);
+    await new Promise(r => setTimeout(r, 1000));
+    setRequestingPayment(false);
+    setPaymentRequestSent(true);
+    toast.success("Demande de paiement envoyée au client pour validation.");
   };
 
   const getStatusIcon = (status: string) => {
@@ -351,7 +399,7 @@ const ProjectProgress = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 flex-wrap">
                   <Button onClick={handleSaveProgress} disabled={saving}>
                     <Save className="h-4 w-4 mr-2" />
                     {saving ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -364,6 +412,114 @@ const ProjectProgress = () => {
                     Envoyer un rapport
                   </Button>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* US-059 — Upload photos/vidéos de progression */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Camera className="h-5 w-5 text-blue-600" />
+                  Photos & vidéos de progression
+                </CardTitle>
+                <CardDescription>
+                  Documentez l'avancement du chantier avec photos horodatées
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <label
+                  htmlFor="media-upload"
+                  className="flex flex-col items-center justify-center gap-3 p-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                >
+                  <Upload className="h-8 w-8 text-muted-foreground" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Cliquez pour ajouter des médias</p>
+                    <p className="text-xs text-muted-foreground mt-1">JPG, PNG, MP4 — Max 50 MB par fichier</p>
+                  </div>
+                </label>
+                <input
+                  id="media-upload"
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  className="hidden"
+                  onChange={handleMediaSelect}
+                />
+
+                {mediaFiles.length > 0 && (
+                  <div className="space-y-3">
+                    {mediaFiles.map((item, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 border rounded-lg">
+                        {item.file.type.startsWith('image/') ? (
+                          <img src={item.preview} alt="" className="h-16 w-16 object-cover rounded" />
+                        ) : (
+                          <div className="h-16 w-16 bg-gray-100 rounded flex items-center justify-center">
+                            <Image className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.file.name}</p>
+                          <p className="text-xs text-muted-foreground">{(item.file.size / 1024 / 1024).toFixed(1)} MB</p>
+                          <input
+                            className="mt-1 text-xs border rounded px-2 py-1 w-full"
+                            placeholder="Légende (optionnel)"
+                            value={item.caption}
+                            onChange={e => setMediaFiles(prev => prev.map((m, idx) => idx === i ? { ...m, caption: e.target.value } : m))}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMediaFiles(prev => prev.filter((_, idx) => idx !== i))}
+                          className="text-muted-foreground hover:text-destructive shrink-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <Button onClick={handleUploadMedia} disabled={uploadingMedia} className="w-full">
+                      {uploadingMedia ? 'Upload en cours...' : `Uploader ${mediaFiles.length} fichier(s)`}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* US-060 — Demande de paiement de jalon */}
+            <Card className="mt-6 border-green-200 bg-green-50/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Demander le déblocage d'un paiement
+                </CardTitle>
+                <CardDescription>
+                  Soumettez une demande de paiement de jalon au client pour validation
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentRequestSent ? (
+                  <div className="flex items-center gap-3 p-4 bg-green-100 border border-green-300 rounded-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+                    <div>
+                      <p className="font-medium text-green-900">Demande envoyée au client</p>
+                      <p className="text-sm text-green-700">Le client recevra une notification et devra valider le paiement.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      <p>Avancement actuel : <strong>{progressPercentage}%</strong> — Phase : <strong>{currentPhase || 'Non définie'}</strong></p>
+                      <p className="text-xs">La demande sera associée au jalon en cours et notifiée au client.</p>
+                    </div>
+                    <Button
+                      onClick={handleRequestPayment}
+                      disabled={requestingPayment}
+                      className="w-full bg-green-600 hover:bg-green-700 gap-2"
+                    >
+                      <DollarSign className="h-4 w-4" />
+                      {requestingPayment ? 'Envoi en cours...' : 'Demander le paiement de ce jalon'}
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -8,10 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
+type CompanyType = "individuel" | "societe";
 
 // Password strength validation
 const PASSWORD_RULES = {
@@ -123,6 +125,11 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  // US-047: company type + document upload
+  const [companyType, setCompanyType] = useState<CompanyType>("individuel");
+  const [docLicence, setDocLicence] = useState<File | null>(null);
+  const [docAssurance, setDocAssurance] = useState<File | null>(null);
+  const [docIdentite, setDocIdentite] = useState<File | null>(null);
 
   // Helper function to redirect based on profile status
   const redirectBasedOnProfile = (profile: {
@@ -647,26 +654,122 @@ const Auth = () => {
                   </div>
                 </div>
 
-                {/* Professional-specific fields - simplified for initial signup */}
-                <TabsContent value="professional" className="mt-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900">
-                          {t('auth.complete_profile.professional_info')}
-                        </h4>
-                        <p className="text-sm text-blue-700 mt-1">
-                          Après confirmation de votre email, vous serez invité à compléter votre profil professionnel avec :
-                        </p>
-                        <ul className="text-sm text-blue-600 mt-2 space-y-1 list-disc list-inside">
-                          <li>Nom de l'entreprise et numéro RBQ</li>
-                          <li>Certification RBQ (document)</li>
-                          <li>Services offerts et assurance</li>
-                          <li>Localisation pour la carte</li>
-                        </ul>
+                {/* Professional-specific fields — US-047 & US-048 */}
+                <TabsContent value="professional" className="mt-4 space-y-5">
+                  {/* Type d'entreprise */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      Type d'entreprise *
+                    </Label>
+                    <RadioGroup
+                      value={companyType}
+                      onValueChange={(v) => setCompanyType(v as CompanyType)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="individuel" id="type-individuel" />
+                        <Label htmlFor="type-individuel" className="font-normal cursor-pointer">
+                          Travailleur autonome / Individuel
+                        </Label>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="societe" id="type-societe" />
+                        <Label htmlFor="type-societe" className="font-normal cursor-pointer">
+                          Société / Entreprise
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Upload documents — US-048 */}
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      Documents de vérification
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ces documents seront examinés par notre équipe pour valider votre compte. Formats acceptés : PDF, JPG, PNG.
+                    </p>
+
+                    {/* Licence RBQ */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-licence" className="text-sm font-normal">
+                        Licence RBQ <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-licence"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-licence"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)}
+                      />
                     </div>
+
+                    {/* Assurance */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-assurance" className="text-sm font-normal">
+                        Certificat d'assurance <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-assurance"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-assurance"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)}
+                      />
+                    </div>
+
+                    {/* Pièce d'identité */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-identite" className="text-sm font-normal">
+                        Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-identite"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-identite"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-700">
+                      Après confirmation de votre email, vous complèterez votre profil professionnel (services, zones, tarifs). Vos documents seront examinés sous 24-48h.
+                    </p>
                   </div>
                 </TabsContent>
 
