@@ -50,6 +50,9 @@ const Notifications = () => {
     push_contracts: boolean;
     push_milestones: boolean;
     push_system: boolean;
+    push_new_projects: boolean;
+    push_payment_released: boolean;
+    push_subscription_reminder: boolean;
   };
   const DEFAULT_PREFS: NotifPrefs = {
     email_messages: true,
@@ -62,6 +65,9 @@ const Notifications = () => {
     push_contracts: true,
     push_milestones: true,
     push_system: false,
+    push_new_projects: true,
+    push_payment_released: true,
+    push_subscription_reminder: true,
   };
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [savingPrefs, setSavingPrefs] = useState(false);

@@ -91,6 +91,7 @@ const ProjectProgress = () => {
   // US-059 — Media uploads
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; caption: string }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [savedMediaUrls, setSavedMediaUrls] = useState<{ url: string; caption: string }[]>([]);
 
   // US-060 — Payment milestone request
   const [requestingPayment, setRequestingPayment] = useState(false);
@@ -139,6 +140,7 @@ const ProjectProgress = () => {
           current_phase,
           contract_id,
           client_id,
+          media_urls,
           profiles:client_id (full_name, company_name),
           contracts:contract_id (start_date, end_date)
         `)
@@ -171,6 +173,9 @@ const ProjectProgress = () => {
       setProgressPercentage(formattedProject.progress_percentage);
       setCurrentPhase(formattedProject.current_phase || '');
       setProgressStatus(formattedProject.progress_status);
+      // Load existing media
+      const existingMedia = (projectData as any).media_urls;
+      if (Array.isArray(existingMedia)) setSavedMediaUrls(existingMedia);
 
       // Fetch reports
       const { data: reportsData } = await supabase
@@ -234,13 +239,37 @@ const ProjectProgress = () => {
   };
 
   const handleUploadMedia = async () => {
-    if (mediaFiles.length === 0) return;
+    if (mediaFiles.length === 0 || !userId || !project) return;
     setUploadingMedia(true);
-    // In production: upload to Supabase Storage, associate with project milestone
-    await new Promise(r => setTimeout(r, 1500));
-    setUploadingMedia(false);
-    setMediaFiles([]);
-    toast.success(`${mediaFiles.length} fichier(s) uploadé(s) avec horodatage automatique`);
+    const newUrls: { url: string; caption: string }[] = [];
+    try {
+      for (const mediaFile of mediaFiles) {
+        const ext = mediaFile.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        const path = `${userId}/${project.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from('project-media')
+          .upload(path, mediaFile.file);
+        if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = supabase.storage
+          .from('project-media')
+          .getPublicUrl(path);
+        newUrls.push({ url: publicUrl, caption: mediaFile.caption });
+      }
+      const combined = [...savedMediaUrls, ...newUrls];
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({ media_urls: combined })
+        .eq('id', project.id);
+      if (updateError) throw updateError;
+      setSavedMediaUrls(combined);
+      setMediaFiles([]);
+      toast.success(`${newUrls.length} fichier(s) uploadé(s) avec succès`);
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      toast.error('Erreur lors de l\'upload des médias');
+    } finally {
+      setUploadingMedia(false);
+    }
   };
 
   // US-060 — Request payment milestone

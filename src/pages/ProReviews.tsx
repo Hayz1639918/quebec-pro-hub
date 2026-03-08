@@ -90,6 +90,7 @@ const ProReviews = () => {
 
       await fetchReviews(session.user.id);
       await fetchMediations(session.user.id);
+      await fetchReplies(session.user.id);
       setLoading(false);
     })();
   }, []);
@@ -225,18 +226,47 @@ const ProReviews = () => {
     }
   };
 
-  // US-066 — Submit reply to a review
+  // Load existing replies from review_replies table
+  const fetchReplies = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('review_replies')
+        .select('review_id, content')
+        .eq('author_id', uid);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (data || []).forEach((r: { review_id: string; content: string }) => {
+        map[r.review_id] = r.content;
+      });
+      setSavedReplies(map);
+    } catch (e) {
+      console.error('Error fetching replies:', e);
+    }
+  };
+
+  // US-066 — Submit reply to a review (persisted in review_replies table)
   const submitReply = async (reviewId: string) => {
     const text = replyText[reviewId]?.trim();
-    if (!text) return;
+    if (!text || !userId) return;
     setSavingReply(reviewId);
-    // In production: store in Supabase review_replies table, visible publicly on profile
-    await new Promise(r => setTimeout(r, 800));
-    setSavedReplies(prev => ({ ...prev, [reviewId]: text }));
-    setReplyText(prev => ({ ...prev, [reviewId]: '' }));
-    setReplyOpen(prev => ({ ...prev, [reviewId]: false }));
-    setSavingReply(null);
-    toast({ title: 'Réponse publiée', description: 'Votre réponse est maintenant visible sur votre profil public.' });
+    try {
+      const { error } = await supabase
+        .from('review_replies')
+        .upsert(
+          { review_id: reviewId, author_id: userId, content: text },
+          { onConflict: 'review_id' }
+        );
+      if (error) throw error;
+      setSavedReplies(prev => ({ ...prev, [reviewId]: text }));
+      setReplyText(prev => ({ ...prev, [reviewId]: '' }));
+      setReplyOpen(prev => ({ ...prev, [reviewId]: false }));
+      toast({ title: 'Réponse publiée', description: 'Votre réponse est maintenant visible sur votre profil public.' });
+    } catch (e) {
+      console.error('Error saving reply:', e);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de publier la réponse' });
+    } finally {
+      setSavingReply(null);
+    }
   };
 
   const renderStars = (rating: number) => {

@@ -75,11 +75,11 @@ const ProSubscription = () => {
   const [currentPlan, setCurrentPlan] = useState<Plan>("free");
   const [saving, setSaving] = useState(false);
   const [autoRenew, setAutoRenew] = useState(true);
+  const [renewalDate, setRenewalDate] = useState<Date | null>(null);
 
-  // US-068 — Renewal date (mock: 15 days from now)
-  const renewalDate = addDays(new Date(), 15);
-  const daysUntilRenewal = differenceInDays(renewalDate, new Date());
-  const isRenewalSoon = currentPlan === "premium" && daysUntilRenewal <= 7;
+  // US-068 — Renewal date derived from subscriptions.ends_at
+  const daysUntilRenewal = renewalDate ? differenceInDays(renewalDate, new Date()) : null;
+  const isRenewalSoon = currentPlan === "premium" && daysUntilRenewal !== null && daysUntilRenewal <= 7;
 
   useEffect(() => {
     (async () => {
@@ -96,6 +96,7 @@ const ProSubscription = () => {
         .limit(1)
         .maybeSingle();
       if (data?.plan) setCurrentPlan(data.plan as Plan);
+      if (data?.ends_at) setRenewalDate(new Date(data.ends_at));
     })();
   }, []);
 
@@ -150,10 +151,10 @@ const ProSubscription = () => {
             <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
             <div className="flex-1">
               <p className="font-medium text-amber-900">
-                Renouvellement dans {daysUntilRenewal} jour{daysUntilRenewal > 1 ? "s" : ""}
+                Renouvellement dans {daysUntilRenewal} jour{(daysUntilRenewal ?? 0) > 1 ? "s" : ""}
               </p>
               <p className="text-sm text-amber-700">
-                Votre abonnement Premium expire le {format(renewalDate, "dd MMMM yyyy", { locale: fr })}.
+                Votre abonnement Premium expire le {renewalDate ? format(renewalDate, "dd MMMM yyyy", { locale: fr }) : "—"}.
                 {autoRenew ? " Renouvellement automatique activé." : " Pensez à renouveler pour maintenir vos avantages."}
               </p>
             </div>
@@ -185,7 +186,7 @@ const ProSubscription = () => {
               <p className="font-semibold">{PLANS[currentPlan].name}</p>
               <p className="text-sm text-muted-foreground">
                 {currentPlan === "premium"
-                  ? `Renouvellement le ${format(renewalDate, "dd MMM yyyy", { locale: fr })}`
+                  ? renewalDate ? `Renouvellement le ${format(renewalDate, "dd MMM yyyy", { locale: fr })}` : "Abonnement actif"
                   : "Accès limité à 3 soumissions / mois"}
               </p>
             </div>
@@ -316,7 +317,9 @@ const ProSubscription = () => {
                 <div>
                   <p className="text-sm font-medium">Renouvellement automatique</p>
                   <p className="text-xs text-muted-foreground">
-                    Votre abonnement sera renouvelé le {format(renewalDate, "dd MMM yyyy", { locale: fr })} à 49 $/mois
+                    {renewalDate
+                      ? `Votre abonnement sera renouvelé le ${format(renewalDate, "dd MMM yyyy", { locale: fr })} à 49 $/mois`
+                      : "Votre abonnement sera renouvelé automatiquement à 49 $/mois"}
                   </p>
                 </div>
                 <button

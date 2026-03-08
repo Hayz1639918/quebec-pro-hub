@@ -293,6 +293,7 @@ const Auth = () => {
             full_name: fullName,
             user_type: userType,
             phone: phone || null,
+            ...(userType === "professional" && { company_type: companyType }),
           }
         },
       });

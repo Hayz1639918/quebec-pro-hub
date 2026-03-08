@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ProtectedProRoute from "@/components/ProtectedProRoute";
 
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -80,21 +81,28 @@ const App = () => (
               <Route path="/tender/:id" element={<TenderView />} />
               <Route path="/proposal/:id" element={<ProposalView />} />
               <Route path="/professional/:id" element={<ProfessionalProfile />} />
-              <Route path="/pro/dashboard" element={<ProDashboard />} />
-              <Route path="/pro/profile" element={<ProProfile />} />
-              <Route path="/pro/subscription" element={<ProSubscription />} />
-              <Route path="/pro/kpis" element={<ProKpis />} />
-              <Route path="/pro/subcontractors" element={<Subcontractors />} />
-              <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
-              <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
-              <Route path="/proposals/review" element={<ReviewContractProposals />} />
-              <Route path="/pro/reviews" element={<ProReviews />} />
-              <Route path="/pro/contracts" element={<ProContracts />} />
-              <Route path="/pro/portfolio" element={<ProPortfolio />} />
-              <Route path="/pro/calendar" element={<ProCalendar />} />
-              <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
-              <Route path="/pro/project/:id/report" element={<ProjectReport />} />
-              <Route path="/pro/my-projects" element={<ProMyProjects />} />
+              {/* All /pro/* routes require a professional account */}
+              <Route element={<ProtectedProRoute />}>
+                <Route path="/pro/dashboard" element={<ProDashboard />} />
+                <Route path="/pro/profile" element={<ProProfile />} />
+                <Route path="/pro/subscription" element={<ProSubscription />} />
+                <Route path="/pro/kpis" element={<ProKpis />} />
+                <Route path="/pro/subcontractors" element={<Subcontractors />} />
+                <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
+                <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
+                <Route path="/proposals/review" element={<ReviewContractProposals />} />
+                <Route path="/pro/reviews" element={<ProReviews />} />
+                <Route path="/pro/contracts" element={<ProContracts />} />
+                <Route path="/pro/portfolio" element={<ProPortfolio />} />
+                <Route path="/pro/calendar" element={<ProCalendar />} />
+                <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
+                <Route path="/pro/project/:id/report" element={<ProjectReport />} />
+                <Route path="/pro/my-projects" element={<ProMyProjects />} />
+                <Route path="/pro/bank-account" element={<ProBankAccount />} />
+                <Route path="/pro/meetings" element={<ProMeetings />} />
+                <Route path="/pro/payments" element={<ProPayments />} />
+                <Route path="/pro/invoices" element={<ProInvoices />} />
+              </Route>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/profile" element={<ClientProfile />} />
               <Route path="/dashboard/new-project" element={<NewProject />} />
@@ -105,11 +113,6 @@ const App = () => (
               <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/admin" element={<AdminDashboard />} />
-              {/* Epic 10-18 — Entrepreneur routes */}
-              <Route path="/pro/bank-account" element={<ProBankAccount />} />
-              <Route path="/pro/meetings" element={<ProMeetings />} />
-              <Route path="/pro/payments" element={<ProPayments />} />
-              <Route path="/pro/invoices" element={<ProInvoices />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

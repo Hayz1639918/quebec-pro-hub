@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,72 +22,38 @@ import {
   ExternalLink,
   Plus,
   CheckCircle2,
-  AlertTriangle,
   ClipboardList,
   Trash2,
+  Link,
+  Loader2,
 } from "lucide-react";
-import { format, addDays, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-// US-057 — Gestion des réunions Zoom
+// US-057 — Gestion des réunions (lien manuel Zoom/Meet/Teams)
 
 interface Meeting {
   id: string;
-  title: string;
-  clientName: string;
-  projectTitle: string;
-  date: Date;
-  duration: number; // minutes
-  zoomLink: string;
+  organizer_id: string;
+  client_name: string;
+  project_name: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
+  meeting_url: string | null;
   status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  hasReminder: boolean;
-  preQuestions?: string;
-  notes?: string;
+  has_reminder: boolean;
+  pre_questions: string | null;
+  notes: string | null;
+  created_at: string;
 }
-
-const MOCK_MEETINGS: Meeting[] = [
-  {
-    id: "m1",
-    title: "Présentation de l'approche — Rénovation cuisine",
-    clientName: "Marie Tremblay",
-    projectTitle: "Rénovation cuisine moderne",
-    date: addDays(new Date(), 2),
-    duration: 60,
-    zoomLink: "https://zoom.us/j/123456789",
-    status: "upcoming",
-    hasReminder: true,
-    preQuestions: "Quels sont les matériaux préférés ? Budget flexible ?",
-  },
-  {
-    id: "m2",
-    title: "Suivi de chantier — Toiture résidentielle",
-    clientName: "Jean Gagnon",
-    projectTitle: "Remplacement toiture complète",
-    date: addDays(new Date(), 5),
-    duration: 30,
-    zoomLink: "https://zoom.us/j/987654321",
-    status: "upcoming",
-    hasReminder: false,
-    preQuestions: "",
-  },
-  {
-    id: "m3",
-    title: "Bilan de projet — Extension maison",
-    clientName: "Sophie Côté",
-    projectTitle: "Extension maison familiale",
-    date: addDays(new Date(), -3),
-    duration: 45,
-    zoomLink: "https://zoom.us/j/111222333",
-    status: "completed",
-    hasReminder: false,
-    notes: "Client satisfait. Demande un devis pour la finition.",
-  },
-];
 
 const ProMeetings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [meetings, setMeetings] = useState<Meeting[]>(MOCK_MEETINGS);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [detailMeeting, setDetailMeeting] = useState<Meeting | null>(null);
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("upcoming");
@@ -98,57 +65,103 @@ const ProMeetings = () => {
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [newDuration, setNewDuration] = useState("60");
+  const [newMeetingUrl, setNewMeetingUrl] = useState("");
   const [newPreQuestions, setNewPreQuestions] = useState("");
+
+  useEffect(() => {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { navigate("/auth"); return; }
+      setUserId(session.user.id);
+      await fetchMeetings(session.user.id);
+      setLoading(false);
+    })();
+  }, []);
+
+  const fetchMeetings = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("pro_meetings")
+      .select("*")
+      .eq("organizer_id", uid)
+      .order("scheduled_at", { ascending: true });
+    if (error) {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les réunions" });
+      return;
+    }
+    setMeetings((data || []) as Meeting[]);
+  };
 
   const upcoming = meetings.filter(m => m.status === "upcoming");
   const completed = meetings.filter(m => m.status === "completed");
-
   const filtered = filter === "all" ? meetings : filter === "upcoming" ? upcoming : completed;
 
-  const toggleReminder = (id: string) => {
-    setMeetings(prev => prev.map(m =>
-      m.id === id ? { ...m, hasReminder: !m.hasReminder } : m
-    ));
-    const m = meetings.find(m => m.id === id);
+  const toggleReminder = async (id: string) => {
+    const meeting = meetings.find(m => m.id === id);
+    if (!meeting) return;
+    const newVal = !meeting.has_reminder;
+    const { error } = await supabase
+      .from("pro_meetings")
+      .update({ has_reminder: newVal })
+      .eq("id", id);
+    if (error) {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de mettre à jour le rappel" });
+      return;
+    }
+    setMeetings(prev => prev.map(m => m.id === id ? { ...m, has_reminder: newVal } : m));
     toast({
-      title: m?.hasReminder ? "Rappel désactivé" : "Rappel activé",
-      description: m?.hasReminder
-        ? "Vous ne recevrez plus de rappel pour cette réunion."
-        : "Vous recevrez un rappel 1h avant la réunion.",
+      title: newVal ? "Rappel activé" : "Rappel désactivé",
+      description: newVal ? "Vous recevrez un rappel 1h avant la réunion." : "Rappel désactivé.",
     });
   };
 
-  const handleSchedule = () => {
-    if (!newTitle || !newClient || !newDate || !newTime) {
+  const handleSchedule = async () => {
+    if (!newTitle || !newClient || !newDate || !newTime || !userId) {
       toast({ variant: "destructive", title: "Champs requis", description: "Remplissez tous les champs obligatoires." });
       return;
     }
-    const meetingDate = new Date(`${newDate}T${newTime}`);
-    const newMeeting: Meeting = {
-      id: `m${Date.now()}`,
-      title: newTitle,
-      clientName: newClient,
-      projectTitle: newProject || "Projet non spécifié",
-      date: meetingDate,
-      duration: parseInt(newDuration),
-      zoomLink: `https://zoom.us/j/${Math.floor(Math.random() * 900000000) + 100000000}`,
-      status: "upcoming",
-      hasReminder: true,
-      preQuestions: newPreQuestions,
-    };
-    setMeetings(prev => [newMeeting, ...prev]);
+    const scheduledAt = new Date(`${newDate}T${newTime}`).toISOString();
+    setSaving(true);
+    const { data, error } = await supabase
+      .from("pro_meetings")
+      .insert({
+        organizer_id: userId,
+        client_name: newClient,
+        project_name: newProject || null,
+        scheduled_at: scheduledAt,
+        duration_minutes: parseInt(newDuration),
+        meeting_url: newMeetingUrl.trim() || null,
+        pre_questions: newPreQuestions.trim() || null,
+        has_reminder: true,
+        status: "upcoming",
+      })
+      .select()
+      .single();
+    setSaving(false);
+    if (error) {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de créer la réunion" });
+      return;
+    }
+    setMeetings(prev => [data as Meeting, ...prev].sort((a, b) =>
+      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    ));
     setScheduleOpen(false);
-    setNewTitle(""); setNewClient(""); setNewProject(""); setNewDate(""); setNewTime(""); setNewPreQuestions("");
-    toast({
-      title: "✅ Réunion planifiée",
-      description: `Un lien Zoom a été créé et envoyé à ${newClient}.`,
-    });
+    setNewTitle(""); setNewClient(""); setNewProject(""); setNewDate(""); setNewTime("");
+    setNewMeetingUrl(""); setNewPreQuestions("");
+    toast({ title: "✅ Réunion planifiée", description: `Réunion avec ${newClient} créée avec succès.` });
   };
 
-  const handleDelete = (id: string) => {
-    setMeetings(prev => prev.filter(m => m.id !== id));
+  const handleCancel = async (id: string) => {
+    const { error } = await supabase
+      .from("pro_meetings")
+      .update({ status: "cancelled" })
+      .eq("id", id);
+    if (error) {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible d'annuler la réunion" });
+      return;
+    }
+    setMeetings(prev => prev.map(m => m.id === id ? { ...m, status: "cancelled" } : m));
     setDetailMeeting(null);
-    toast({ title: "Réunion annulée", description: "La réunion a été supprimée et le client notifié." });
+    toast({ title: "Réunion annulée", description: "La réunion a été annulée." });
   };
 
   const getStatusBadge = (status: Meeting["status"]) => {
@@ -160,15 +173,26 @@ const ProMeetings = () => {
     }
   };
 
-  const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
-  };
-
-  const isSoon = (date: Date) => {
-    const diff = (date.getTime() - Date.now()) / 1000 / 60; // minutes
+  const isSoon = (dateStr: string) => {
+    const diff = (new Date(dateStr).getTime() - Date.now()) / 1000 / 60;
     return diff > 0 && diff <= 60;
   };
+
+  const isToday = (dateStr: string) => {
+    return new Date(dateStr).toDateString() === new Date().toDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col">
+        <Navigation />
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,10 +209,10 @@ const ProMeetings = () => {
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <Video className="h-6 w-6 text-blue-600" />
-              Réunions Zoom
+              Réunions
             </h1>
             <p className="text-muted-foreground mt-1">
-              {upcoming.length} réunion{upcoming.length !== 1 ? 's' : ''} à venir
+              {upcoming.length} réunion{upcoming.length !== 1 ? "s" : ""} à venir
             </p>
           </div>
           <Button onClick={() => setScheduleOpen(true)} className="gap-2">
@@ -197,7 +221,7 @@ const ProMeetings = () => {
           </Button>
         </div>
 
-        {/* Stats row */}
+        {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           <Card>
             <CardContent className="p-4 text-center">
@@ -214,7 +238,7 @@ const ProMeetings = () => {
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-amber-600">
-                {meetings.filter(m => m.hasReminder && m.status === "upcoming").length}
+                {meetings.filter(m => m.has_reminder && m.status === "upcoming").length}
               </p>
               <p className="text-xs text-muted-foreground">Rappels actifs</p>
             </CardContent>
@@ -249,54 +273,55 @@ const ProMeetings = () => {
             <Card
               key={meeting.id}
               className={`cursor-pointer hover:shadow-md transition-shadow ${
-                isSoon(meeting.date) ? 'border-green-400 bg-green-50/30' : ''
-              } ${isToday(meeting.date) ? 'border-blue-400' : ''}`}
+                isSoon(meeting.scheduled_at) ? "border-green-400 bg-green-50/30" : ""
+              } ${isToday(meeting.scheduled_at) ? "border-blue-400" : ""}`}
               onClick={() => setDetailMeeting(meeting)}
             >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="font-semibold truncate">{meeting.title}</h3>
+                      <h3 className="font-semibold truncate">{meeting.client_name} — {meeting.project_name || "Projet"}</h3>
                       {getStatusBadge(meeting.status)}
-                      {isSoon(meeting.date) && (
+                      {isSoon(meeting.scheduled_at) && (
                         <Badge className="bg-green-500 text-white animate-pulse">Bientôt!</Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                       <span className="flex items-center gap-1">
                         <User className="h-3 w-3" />
-                        {meeting.clientName}
+                        {meeting.client_name}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {format(meeting.date, "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}
+                        {format(new Date(meeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {meeting.duration} min
+                        {meeting.duration_minutes} min
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1 truncate">{meeting.projectTitle}</p>
                   </div>
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     {meeting.status === "upcoming" && (
                       <>
-                        <Button
-                          size="sm"
-                          className="gap-1.5 bg-blue-600 hover:bg-blue-700"
-                          onClick={e => { e.stopPropagation(); window.open(meeting.zoomLink, '_blank'); }}
-                        >
-                          <Video className="h-3 w-3" />
-                          Rejoindre
-                        </Button>
+                        {meeting.meeting_url && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5 bg-blue-600 hover:bg-blue-700"
+                            onClick={e => { e.stopPropagation(); window.open(meeting.meeting_url!, "_blank"); }}
+                          >
+                            <Video className="h-3 w-3" />
+                            Rejoindre
+                          </Button>
+                        )}
                         <button
                           type="button"
                           onClick={e => { e.stopPropagation(); toggleReminder(meeting.id); }}
-                          className={`flex items-center gap-1 text-xs ${meeting.hasReminder ? 'text-amber-600' : 'text-muted-foreground'}`}
+                          className={`flex items-center gap-1 text-xs ${meeting.has_reminder ? "text-amber-600" : "text-muted-foreground"}`}
                         >
                           <Bell className="h-3 w-3" />
-                          {meeting.hasReminder ? 'Rappel ON' : 'Rappel OFF'}
+                          {meeting.has_reminder ? "Rappel ON" : "Rappel OFF"}
                         </button>
                       </>
                     )}
@@ -318,30 +343,30 @@ const ProMeetings = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Video className="h-5 w-5 text-blue-600" />
-                {detailMeeting.title}
+                {detailMeeting.client_name}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Client</p>
-                  <p className="font-medium">{detailMeeting.clientName}</p>
+                  <p className="font-medium">{detailMeeting.client_name}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Projet</p>
-                  <p className="font-medium">{detailMeeting.projectTitle}</p>
+                  <p className="font-medium">{detailMeeting.project_name || "—"}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Date & heure</p>
-                  <p className="font-medium">{format(detailMeeting.date, "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}</p>
+                  <p className="font-medium">{format(new Date(detailMeeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Durée</p>
-                  <p className="font-medium">{detailMeeting.duration} minutes</p>
+                  <p className="font-medium">{detailMeeting.duration_minutes} minutes</p>
                 </div>
               </div>
 
-              {detailMeeting.preQuestions && (
+              {detailMeeting.pre_questions && (
                 <>
                   <Separator />
                   <div className="space-y-1">
@@ -349,14 +374,14 @@ const ProMeetings = () => {
                       <ClipboardList className="h-4 w-4 text-muted-foreground" />
                       Questionnaire pré-réunion
                     </p>
-                    <p className="text-sm text-muted-foreground bg-gray-50 rounded p-2">{detailMeeting.preQuestions}</p>
+                    <p className="text-sm text-muted-foreground bg-gray-50 rounded p-2">{detailMeeting.pre_questions}</p>
                   </div>
                 </>
               )}
 
               {detailMeeting.notes && (
                 <div className="space-y-1">
-                  <p className="text-sm font-medium">Notes de réunion</p>
+                  <p className="text-sm font-medium">Notes</p>
                   <p className="text-sm text-muted-foreground bg-gray-50 rounded p-2">{detailMeeting.notes}</p>
                 </div>
               )}
@@ -365,24 +390,28 @@ const ProMeetings = () => {
                 <>
                   <Separator />
                   <div className="space-y-2">
-                    <p className="text-sm font-medium">Lien Zoom</p>
-                    <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                      <span className="flex-1 truncate text-blue-700">{detailMeeting.zoomLink}</span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1 shrink-0"
-                        onClick={() => window.open(detailMeeting.zoomLink, '_blank')}
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Ouvrir
-                      </Button>
-                    </div>
+                    <p className="text-sm font-medium">Lien de réunion</p>
+                    {detailMeeting.meeting_url ? (
+                      <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
+                        <span className="flex-1 truncate text-blue-700">{detailMeeting.meeting_url}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-1 shrink-0"
+                          onClick={() => window.open(detailMeeting.meeting_url!, "_blank")}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Ouvrir
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Aucun lien défini</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <Bell className={`h-4 w-4 ${detailMeeting.hasReminder ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                    <Bell className={`h-4 w-4 ${detailMeeting.has_reminder ? "text-amber-500" : "text-muted-foreground"}`} />
                     <span className="text-muted-foreground">
-                      Rappel automatique : {detailMeeting.hasReminder ? <strong className="text-amber-600">1h avant</strong> : <span>désactivé</span>}
+                      Rappel : {detailMeeting.has_reminder ? <strong className="text-amber-600">1h avant</strong> : <span>désactivé</span>}
                     </span>
                   </div>
                 </>
@@ -390,24 +419,24 @@ const ProMeetings = () => {
             </div>
             <DialogFooter className="gap-2">
               {detailMeeting.status === "upcoming" && (
-                <>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleDelete(detailMeeting.id)}
-                    className="gap-1.5 mr-auto"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Annuler la réunion
-                  </Button>
-                  <Button
-                    onClick={() => window.open(detailMeeting.zoomLink, '_blank')}
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Video className="h-4 w-4" />
-                    Rejoindre Zoom
-                  </Button>
-                </>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleCancel(detailMeeting.id)}
+                  className="gap-1.5 mr-auto"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Annuler la réunion
+                </Button>
+              )}
+              {detailMeeting.meeting_url && detailMeeting.status === "upcoming" && (
+                <Button
+                  onClick={() => window.open(detailMeeting.meeting_url!, "_blank")}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  <Video className="h-4 w-4" />
+                  Rejoindre
+                </Button>
               )}
               <Button variant="outline" onClick={() => setDetailMeeting(null)}>Fermer</Button>
             </DialogFooter>
@@ -421,7 +450,7 @@ const ProMeetings = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Planifier une réunion Zoom
+              Planifier une réunion
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -442,7 +471,7 @@ const ProMeetings = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Date *</Label>
-                <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+                <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} min={new Date().toISOString().split("T")[0]} />
               </div>
               <div className="space-y-2">
                 <Label>Heure *</Label>
@@ -457,12 +486,24 @@ const ProMeetings = () => {
                     key={d}
                     type="button"
                     onClick={() => setNewDuration(String(d))}
-                    className={`flex-1 py-2 rounded border text-sm transition-colors ${newDuration === String(d) ? 'bg-primary text-white border-primary' : 'hover:border-primary'}`}
+                    className={`flex-1 py-2 rounded border text-sm transition-colors ${newDuration === String(d) ? "bg-primary text-white border-primary" : "hover:border-primary"}`}
                   >
                     {d} min
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1.5">
+                <Link className="h-4 w-4 text-muted-foreground" />
+                Lien de réunion (Zoom, Google Meet, Teams…)
+              </Label>
+              <Input
+                value={newMeetingUrl}
+                onChange={e => setNewMeetingUrl(e.target.value)}
+                placeholder="https://zoom.us/j/... ou https://meet.google.com/..."
+                type="url"
+              />
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5">
@@ -472,19 +513,15 @@ const ProMeetings = () => {
               <Textarea
                 value={newPreQuestions}
                 onChange={e => setNewPreQuestions(e.target.value)}
-                placeholder="Questions à envoyer au client avant la réunion..."
+                placeholder="Questions à préparer avant la réunion..."
                 rows={3}
               />
-            </div>
-            <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-              <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-              Un lien Zoom sera généré automatiquement et envoyé au client par email. Un rappel automatique sera activé 1h avant.
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setScheduleOpen(false)}>Annuler</Button>
-            <Button onClick={handleSchedule} className="gap-2">
-              <Video className="h-4 w-4" />
+            <Button onClick={handleSchedule} disabled={saving} className="gap-2">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
               Créer la réunion
             </Button>
           </DialogFooter>
