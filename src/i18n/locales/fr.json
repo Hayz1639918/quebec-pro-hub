@@ -1217,6 +1217,69 @@
       "cookies": "Politique de cookies",
       "compliance": "Conformité Loi 25"
     }
+  },
+  "pro_profile": {
+    "title": "Mon profil professionnel",
+    "subtitle": "Gérez vos informations, licences, assurances, certifications et grille tarifaire.",
+    "tabs": {
+      "infos": "Informations",
+      "metiers": "Métiers",
+      "licences": "Licences & Assurances",
+      "certifications": "Certifications",
+      "experience": "Expérience",
+      "tarifs": "Tarifs"
+    },
+    "trades": {
+      "title": "Métiers et spécialisations",
+      "description": "Sélectionnez vos corps de métier (liste normalisée CCQ/RBQ).",
+      "selected": "Métiers sélectionnés",
+      "primary": "Métier principal",
+      "save": "Enregistrer les métiers"
+    },
+    "rbq": {
+      "title": "Licences RBQ",
+      "description": "Ajoutez vos numéros de licence RBQ par catégorie de travaux.",
+      "format_hint": "Format : 7 chiffres + tiret + 2 chiffres (ex : 8365477-01)",
+      "status": {
+        "pending_verification": "En attente",
+        "valid": "Valide",
+        "expired": "Expiré",
+        "revoked": "Révoqué"
+      }
+    },
+    "insurance": {
+      "title": "Assurances",
+      "badge": "Assuré",
+      "expiring_soon_alert": "Une ou plusieurs assurances expirent dans moins de 30 jours.",
+      "types": {
+        "liability": "Responsabilité civile",
+        "professional": "Assurance professionnelle",
+        "other": "Autre"
+      }
+    },
+    "certifications": {
+      "title": "Certifications professionnelles",
+      "types": {
+        "ccq": "CCQ",
+        "asp": "ASP Construction",
+        "other": "Autre"
+      }
+    },
+    "experience": {
+      "title": "Expérience et historique",
+      "years": "Années d'expérience",
+      "external_projects": "Projets hors plateforme",
+      "business_volume": "Volume d'affaires (CAD)",
+      "platform_stats": "Statistiques BâtirNet (automatiques)"
+    },
+    "rates": {
+      "title": "Grille tarifaire",
+      "types": {
+        "hourly": "Taux horaire",
+        "flat": "Prix forfaitaire",
+        "per_sqft": "Au pied carré"
+      }
+    }
   }
 }
 
