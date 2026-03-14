@@ -25,6 +25,7 @@ import {
   CreditCard,
   Calendar,
   Clock,
+  Linkedin,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -665,11 +666,19 @@ const ProDashboard = () => {
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
                 onClick={() => navigate('/pro/bank-account')}
               >
                 <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 <span className="text-center leading-tight">Compte bancaire</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
+                onClick={() => navigate('/pro/entrepreneur-profile')}
+              >
+                <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
+                <span className="text-center leading-tight">Profil entrepreneur</span>
               </Button>
             </div>
           </CardContent>
