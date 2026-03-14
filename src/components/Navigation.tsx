@@ -186,16 +186,14 @@ const Navigation = () => {
                   Trouver un professionnel
                 </button>
               )}
-              {/* Trouver un projet — visible to entrepreneur, trade_professional */}
-              {profile?.user_type === 'professional' && (
-                <button
-                  onClick={() => navigate("/projects")}
-                  className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
-                >
-                  <Search className="h-3.5 w-3.5" />
-                  Trouver un projet
-                </button>
-              )}
+              {/* Trouver un projet — visible to everyone */}
+              <button
+                onClick={() => navigate("/projects")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
+              >
+                <Search className="h-3.5 w-3.5" />
+                Trouver un projet
+              </button>
             </div>
 
             {/* ── Desktop right actions ── */}
@@ -382,12 +380,11 @@ const Navigation = () => {
                           <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un professionnel</span>
                         </button>
                       )}
-                      {profile?.user_type === 'professional' && (
-                        <button onClick={() => navigateTo('/projects')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
-                          <Search className="h-5 w-5 text-primary flex-shrink-0" />
-                          <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un projet</span>
-                        </button>
-                      )}
+                      {/* Trouver un projet — everyone */}
+                      <button onClick={() => navigateTo('/projects')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <Search className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un projet</span>
+                      </button>
 
                       {user && (
                         <>

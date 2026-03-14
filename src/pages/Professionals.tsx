@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -82,11 +82,16 @@ interface Professional {
   proposals_last_30_days: number | null;
   // Calculated fields
   distance?: number;
+  professional_type?: string | null;
 }
 
 const Professionals = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // ?type=entrepreneur → show entrepreneurs (incl. old accounts without professional_type)
+  // ?type=trade_professional → show trade professionals only
+  const typeFilter = searchParams.get('type'); // 'entrepreneur' | 'trade_professional' | null
   
   const SERVICES = [
     t('professionals.filters.services.all'),
@@ -179,7 +184,7 @@ const Professionals = () => {
     fetchProfessionals();
     requestUserLocation();
     checkUser();
-  }, []);
+  }, [typeFilter]); // re-fetch when ?type= changes
 
   // Reset filters when language changes to ensure translated values match
   useEffect(() => {
@@ -238,8 +243,7 @@ const Professionals = () => {
   const fetchProfessionals = async () => {
     try {
       // Afficher uniquement les professionnels vérifiés RBQ
-      // Les informations sensibles (rbq_certification_url) ne sont pas récupérées
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select(`
           id,
@@ -275,11 +279,23 @@ const Professionals = () => {
           last_active_at,
           activity_score,
           total_proposals_sent,
-          proposals_last_30_days
+          proposals_last_30_days,
+          professional_type
         `)
         .eq('user_type', 'professional')
-        .eq('is_rbq_verified', true) // Seulement les professionnels vérifiés
-        .order('created_at', { ascending: false });
+        .eq('is_rbq_verified', true);
+
+      // Filter by professional_type based on ?type= URL param
+      // ?type=trade_professional → only trade professionals (aucun pour l'instant)
+      // ?type=entrepreneur → entrepreneurs + anciens comptes (professional_type IS NULL)
+      // No param → show all
+      if (typeFilter === 'trade_professional') {
+        query = query.eq('professional_type', 'trade_professional');
+      } else if (typeFilter === 'entrepreneur') {
+        query = query.or('professional_type.eq.entrepreneur,professional_type.is.null');
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       setProfessionals(data || []);
@@ -461,10 +477,18 @@ const Professionals = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold">
-              {t('professionals.hero_title')}
+              {typeFilter === 'entrepreneur'
+                ? 'Trouver un entrepreneur général'
+                : typeFilter === 'trade_professional'
+                ? 'Trouver un professionnel métier'
+                : t('professionals.hero_title')}
             </h1>
             <p className="text-xl text-muted-foreground">
-              {t('professionals.hero_subtitle')}
+              {typeFilter === 'entrepreneur'
+                ? 'Entrepreneurs généraux vérifiés RBQ — construction, rénovation, gestion de projets'
+                : typeFilter === 'trade_professional'
+                ? 'Spécialistes certifiés CCQ — électriciens, plombiers, maçons, menuisiers…'
+                : t('professionals.hero_subtitle')}
             </p>
             
             {/* Main Search Bar */}

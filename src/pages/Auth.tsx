@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase, HardHat } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
@@ -131,6 +132,9 @@ const Auth = () => {
   const [docLicence, setDocLicence] = useState<File | null>(null);
   const [docAssurance, setDocAssurance] = useState<File | null>(null);
   const [docIdentite, setDocIdentite] = useState<File | null>(null);
+  // Trade professional specific
+  const [docCCQ, setDocCCQ] = useState<File | null>(null);
+  const [tradeSpecialty, setTradeSpecialty] = useState("");
 
   // Helper function to redirect based on profile status
   const redirectBasedOnProfile = (profile: {
@@ -299,6 +303,9 @@ const Auth = () => {
             ...(userType === "professional" && {
               company_type: companyType,
               professional_type: professionalType,
+              ...(professionalType === "trade_professional" && tradeSpecialty && {
+                trade_specialty: tradeSpecialty,
+              }),
             }),
           }
         },
@@ -802,13 +809,46 @@ const Auth = () => {
                 </div>
               )}
 
-              {/* Professionnel métier-specific fields */}
+              {/* Professionnel métier-specific fields — exigences légales Québec */}
               {userType === "professional" && professionalType === "trade_professional" && (
                 <div className="space-y-4">
+                  {/* Spécialité */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <HardHat className="h-4 w-4 text-amber-600" />
+                      Corps de métier *
+                    </Label>
+                    <Select value={tradeSpecialty} onValueChange={setTradeSpecialty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez votre spécialité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="electricien">Électricien (licence CMEQ)</SelectItem>
+                        <SelectItem value="plombier">Plombier / Mécanicien en tuyauterie (licence CMMTQ)</SelectItem>
+                        <SelectItem value="charpentier">Charpentier-menuisier</SelectItem>
+                        <SelectItem value="macon">Maçon / Briqueteur</SelectItem>
+                        <SelectItem value="peintre">Peintre en bâtiment</SelectItem>
+                        <SelectItem value="carreleur">Carreleur / Poseur de revêtements</SelectItem>
+                        <SelectItem value="couvreur">Couvreur</SelectItem>
+                        <SelectItem value="ferblantier">Ferblantier</SelectItem>
+                        <SelectItem value="calorifugeur">Calorifugeur</SelectItem>
+                        <SelectItem value="excavation">Opérateur d'excavation / Terrassier</SelectItem>
+                        <SelectItem value="soudeur">Soudeur</SelectItem>
+                        <SelectItem value="autre">Autre corps de métier CCQ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {tradeSpecialty === 'electricien' && "⚡ Licence délivrée par la CMEQ (Corporation des maîtres électriciens du Québec)"}
+                      {tradeSpecialty === 'plombier' && "🔧 Licence délivrée par la CMMTQ (Corporation des maîtres mécaniciens en tuyauterie du Québec)"}
+                      {tradeSpecialty && tradeSpecialty !== 'electricien' && tradeSpecialty !== 'plombier' && "📋 Carte de compétence CCQ obligatoire pour tous les travailleurs de la construction au Québec"}
+                    </p>
+                  </div>
+
+                  {/* Statut */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-muted-foreground" />
-                      Statut de travail *
+                      Statut *
                     </Label>
                     <RadioGroup
                       value={companyType}
@@ -817,41 +857,57 @@ const Auth = () => {
                     >
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="individuel" id="trade-individuel" />
-                        <Label htmlFor="trade-individuel" className="font-normal cursor-pointer">
-                          Travailleur autonome
-                        </Label>
+                        <Label htmlFor="trade-individuel" className="font-normal cursor-pointer">Travailleur autonome</Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="societe" id="trade-societe" />
-                        <Label htmlFor="trade-societe" className="font-normal cursor-pointer">
-                          Société / Entreprise
-                        </Label>
+                        <Label htmlFor="trade-societe" className="font-normal cursor-pointer">Maître (entreprise)</Label>
                       </div>
                     </RadioGroup>
                   </div>
 
+                  {/* Documents */}
                   <div className="space-y-3">
                     <Label className="flex items-center gap-2">
                       <Upload className="h-4 w-4 text-muted-foreground" />
                       Documents de vérification
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.
-                    </p>
+                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
 
-                    {/* Licence RBQ */}
+                    {/* Carte de compétence CCQ — OBLIGATOIRE */}
+                    <div className="space-y-1">
+                      <Label htmlFor="trade-doc-ccq" className="text-sm font-normal flex items-center gap-1">
+                        Carte de compétence CCQ
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                      </Label>
+                      <p className="text-[11px] text-muted-foreground">
+                        {tradeSpecialty === 'electricien'
+                          ? "Carte de compétence ou carte d'apprenti CMEQ"
+                          : tradeSpecialty === 'plombier'
+                          ? "Carte de compétence ou carte d'apprenti CMMTQ"
+                          : "Carte de compétence délivrée par la Commission de la construction du Québec (CCQ)"}
+                      </p>
+                      <label htmlFor="trade-doc-ccq" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docCCQ ? 'border-green-400 bg-green-50' : 'border-amber-400 hover:border-amber-500 hover:bg-amber-50/30'}`}>
+                        <Upload className={`h-4 w-4 ${docCCQ ? 'text-green-600' : 'text-amber-600'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docCCQ ? docCCQ.name : 'Cliquez pour choisir un fichier'}</span>
+                        {docCCQ && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input id="trade-doc-ccq" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocCCQ(e.target.files?.[0] ?? null)} />
+                    </div>
+
+                    {/* Licence RBQ / CMEQ / CMMTQ */}
                     <div className="space-y-1">
                       <Label htmlFor="trade-doc-licence" className="text-sm font-normal">
-                        Licence RBQ / Certificat de compétence CCQ <span className="text-muted-foreground">(recommandé)</span>
+                        {tradeSpecialty === 'electricien'
+                          ? "Licence CMEQ (si maître électricien)"
+                          : tradeSpecialty === 'plombier'
+                          ? "Licence CMMTQ (si maître mécanicien)"
+                          : "Licence RBQ entrepreneur spécialisé (si applicable)"}
+                        <span className="text-muted-foreground ml-1">(si applicable)</span>
                       </Label>
-                      <label
-                        htmlFor="trade-doc-licence"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}
-                      >
+                      <label htmlFor="trade-doc-licence" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
                         {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="trade-doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
@@ -860,16 +916,11 @@ const Auth = () => {
                     {/* Assurance */}
                     <div className="space-y-1">
                       <Label htmlFor="trade-doc-assurance" className="text-sm font-normal">
-                        Certificat d'assurance responsabilité <span className="text-muted-foreground">(recommandé)</span>
+                        Assurance responsabilité civile <span className="text-muted-foreground">(recommandé)</span>
                       </Label>
-                      <label
-                        htmlFor="trade-doc-assurance"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}
-                      >
+                      <label htmlFor="trade-doc-assurance" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
                         {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="trade-doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
@@ -880,14 +931,9 @@ const Auth = () => {
                       <Label htmlFor="trade-doc-identite" className="text-sm font-normal">
                         Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
                       </Label>
-                      <label
-                        htmlFor="trade-doc-identite"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}
-                      >
+                      <label htmlFor="trade-doc-identite" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
                         {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="trade-doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
@@ -896,9 +942,13 @@ const Auth = () => {
 
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                     <HardHat className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-amber-700">
-                      Après confirmation de votre email, vous complèterez votre profil métier (spécialité, licences RBQ, certifications CCQ, grille de tarifs). Vos documents seront examinés sous 24-48h.
-                    </p>
+                    <div className="text-xs text-amber-700 space-y-1">
+                      <p className="font-medium">Exigences légales au Québec :</p>
+                      <p>• La <strong>carte de compétence CCQ</strong> est obligatoire pour tout travailleur de la construction.</p>
+                      {tradeSpecialty === 'electricien' && <p>• Les électriciens sont réglementés par la <strong>CMEQ</strong>.</p>}
+                      {tradeSpecialty === 'plombier' && <p>• Les plombiers/mécaniciens sont réglementés par la <strong>CMMTQ</strong>.</p>}
+                      <p>• Vos documents seront examinés sous 24-48h.</p>
+                    </div>
                   </div>
                 </div>
               )}
