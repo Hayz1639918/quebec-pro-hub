@@ -257,20 +257,7 @@ const Navigation = () => {
                       )}
                       {profile?.user_type === 'professional' && (
                         <>
-                          {!profile.profile_completed ? (
-                            <DropdownMenuItem
-                              onClick={() => navigate(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")}
-                              className="cursor-pointer font-ui text-sm"
-                            >
-                              <User className="mr-2 h-4 w-4 text-primary" />
-                              Compléter mon profil
-                            </DropdownMenuItem>
-                          ) : !profile.is_rbq_verified ? (
-                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
-                              <Clock className="mr-2 h-4 w-4 text-primary" />
-                              Vérification en attente
-                            </DropdownMenuItem>
-                          ) : (
+                          {profile.is_rbq_verified ? (
                             <>
                               <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer font-ui text-sm">
                                 <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
@@ -281,6 +268,19 @@ const Navigation = () => {
                                 Mon profil
                               </DropdownMenuItem>
                             </>
+                          ) : !profile.profile_completed ? (
+                            <DropdownMenuItem
+                              onClick={() => navigate(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")}
+                              className="cursor-pointer font-ui text-sm"
+                            >
+                              <User className="mr-2 h-4 w-4 text-primary" />
+                              Compléter mon profil
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
+                              <Clock className="mr-2 h-4 w-4 text-primary" />
+                              Vérification en attente
+                            </DropdownMenuItem>
                           )}
                         </>
                       )}
@@ -388,15 +388,15 @@ const Navigation = () => {
                             </>
                           )}
                           {profile?.user_type === 'professional' && (
-                            !profile.profile_completed ? (
-                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")} />
-                            ) : !profile.is_rbq_verified ? (
-                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
-                            ) : (
+                            profile.is_rbq_verified ? (
                               <>
                                 <MobileNavItem icon={LayoutDashboard} label="Dashboard Pro" onClick={() => navigateTo("/pro/dashboard")} />
                                 <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/pro/profile")} />
                               </>
+                            ) : !profile.profile_completed ? (
+                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")} />
+                            ) : (
+                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
                             )
                           )}
                           {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (

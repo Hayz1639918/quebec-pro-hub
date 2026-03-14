@@ -31,7 +31,6 @@ import {
   Wrench,
   Search,
   Building2,
-  AlertCircle,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -102,7 +101,6 @@ const ProDashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isVerified, setIsVerified] = useState(true);
   const [professionalType, setProfessionalType] = useState<'entrepreneur' | 'trade_professional'>('entrepreneur');
   const [stats, setStats] = useState<DashboardStats>({
     activeProjects: 0,
@@ -148,9 +146,13 @@ const ProDashboard = () => {
 
       // Set professional sub-type (default to entrepreneur for backward compat)
       setProfessionalType((prof?.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur');
-      setIsVerified(!!prof?.is_rbq_verified);
 
-      // Always load dashboard — show pending banner if not yet verified
+      // Only verified professionals can access the dashboard
+      if (!prof?.is_rbq_verified) {
+        navigate('/pending-verification');
+        return;
+      }
+
       await fetchDashboardData(session.user.id);
       await fetchPendingContractsList(session.user.id);
       setLoading(false);
@@ -348,19 +350,6 @@ const ProDashboard = () => {
             </p>
           </div>
         </div>
-
-        {/* Verification pending banner */}
-        {!isVerified && (
-          <div className="mb-4 sm:mb-6 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-amber-800">Vérification de documents en attente</p>
-              <p className="text-sm text-amber-700 mt-0.5">
-                Vos documents sont en cours d'examen par notre équipe (24-48h). Votre compte sera pleinement actif après approbation. Vous pouvez déjà explorer la plateforme et préparer votre profil.
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
