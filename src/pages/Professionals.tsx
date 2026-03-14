@@ -286,14 +286,13 @@ const Professionals = () => {
         .eq('is_rbq_verified', true);
 
       // Filter by professional_type based on ?type= URL param
-      // ?type=trade_professional → only actual trade professionals
-      // ?type=entrepreneur or no param → show all (old accounts have NULL = entrepreneur by default)
-      // We only restrict when explicitly filtering for trade_professional
       if (typeFilter === 'trade_professional') {
         query = query.eq('professional_type', 'trade_professional');
+      } else if (typeFilter === 'entrepreneur') {
+        // Include accounts explicitly typed as entrepreneur AND old accounts (NULL = entrepreneur by default)
+        query = query.or('professional_type.eq.entrepreneur,professional_type.is.null');
       }
-      // For 'entrepreneur' filter: don't restrict — NULL accounts are entrepreneurs by default
-      // This ensures all previously created professional accounts remain visible
+      // No typeFilter → show all verified professionals (no professional_type restriction)
 
       const { data, error } = await query.order('created_at', { ascending: false });
 
