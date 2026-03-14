@@ -68,7 +68,7 @@ COMMENT ON FUNCTION increment_profile_views IS
 CREATE OR REPLACE VIEW favorites_with_details AS
 SELECT
   f.id AS favorite_id,
-  f.user_id,
+  f.client_id AS user_id,
   f.created_at AS favorited_at,
   p.id,
   p.full_name,
