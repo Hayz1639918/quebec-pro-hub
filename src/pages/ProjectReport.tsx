@@ -79,8 +79,8 @@ const ProjectReport = () => {
         .eq('id', session.user.id)
         .single();
 
-      if (profile?.user_type !== 'professional') {
-        navigate('/');
+      if (!profile || profile.user_type !== 'professional') {
+        navigate('/auth?mode=login', { replace: true });
         return;
       }
 

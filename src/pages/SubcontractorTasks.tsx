@@ -22,7 +22,7 @@ const SubcontractorTasks = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate('/auth?mode=login'); return; }
       const { data: prof } = await supabase.from('profiles').select('user_type').eq('id', session.user.id).single();
-      if (prof?.user_type !== 'professional') { navigate('/'); return; }
+      if (!prof || prof.user_type !== 'professional') { navigate('/auth?mode=login', { replace: true }); return; }
       setOwnerId(session.user.id);
       await fetchSubs(session.user.id);
       await fetchTasks(session.user.id);
