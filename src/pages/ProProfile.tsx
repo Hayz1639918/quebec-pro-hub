@@ -71,19 +71,6 @@ const ProProfile = () => {
   const [geocoding, setGeocoding] = useState(false);
   const [activeTab, setActiveTab] = useState("infos");
 
-  // US-049/US-050 — LinkedIn, certifications, langues
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [certifications, setCertifications] = useState<{ name: string; issuer: string; year: string }[]>([]);
-  const [newCert, setNewCert] = useState({ name: "", issuer: "", year: "" });
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
-
-  const LANGUAGES = ["Français", "English", "Español", "Português", "Arabe", "Mandarin", "Italien"];
-  const SERVICE_ZONES = [
-    "Montréal", "Laval", "Québec", "Longueuil", "Sherbrooke", "Gatineau",
-    "Saguenay", "Lévis", "Trois-Rivières", "Terrebonne", "Repentigny", "Saint-Jean-sur-Richelieu",
-  ];
-  const [selectedZones, setSelectedZones] = useState<string[]>([]);
-
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -137,17 +124,6 @@ const ProProfile = () => {
     setProfile(data);
     if (data.latitude) setLatitude(data.latitude);
     if (data.longitude) setLongitude(data.longitude);
-    // US-050 — LinkedIn + certifications + langues + zones
-    if (data.linkedin_url) setLinkedinUrl(data.linkedin_url);
-    if (data.certifications) {
-      try { setCertifications(JSON.parse(data.certifications)); } catch { /* ignore */ }
-    }
-    if (data.languages) {
-      try { setSelectedLanguages(JSON.parse(data.languages)); } catch { /* ignore */ }
-    }
-    if (data.service_zones) {
-      try { setSelectedZones(JSON.parse(data.service_zones)); } catch { /* ignore */ }
-    }
   };
 
   const saveProfile = async () => {
@@ -160,7 +136,7 @@ const ProProfile = () => {
           full_name: profile.full_name || null,
           phone: profile.phone || null,
           address: profile.address || null,
-          services_offered: selectedServices.length > 0 ? selectedServices.join(', ') : null,
+          services_offered: profile.services_offered || null,
           city: profile.city || null,
           region: profile.region || null,
           postal_code: profile.postal_code || null,
@@ -178,10 +154,6 @@ const ProProfile = () => {
           accepts_small_projects: profile.accepts_small_projects ?? null,
           minimum_project_budget: profile.minimum_project_budget ? Number(profile.minimum_project_budget) : null,
           travel_distance_km: profile.travel_distance_km ? Number(profile.travel_distance_km) : null,
-          linkedin_url: linkedinUrl || null,
-          certifications: certifications.length > 0 ? JSON.stringify(certifications) : null,
-          languages: selectedLanguages.length > 0 ? JSON.stringify(selectedLanguages) : null,
-          service_zones: selectedZones.length > 0 ? JSON.stringify(selectedZones) : null,
         })
         .eq("id", userId);
       if (error) throw error;

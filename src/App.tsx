@@ -45,6 +45,7 @@ const ProMyProjects = lazy(() => import("./pages/ProMyProjects"));
 const ClientProfile = lazy(() => import("./pages/ClientProfile"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 // Epic 10-18 — Entrepreneur pages
+const ProEntrepreneurProfile = lazy(() => import("./pages/ProEntrepreneurProfile"));
 const ProBankAccount = lazy(() => import("./pages/ProBankAccount"));
 const ProMeetings = lazy(() => import("./pages/ProMeetings"));
 const ProPayments = lazy(() => import("./pages/ProPayments"));
@@ -98,6 +99,7 @@ const App = () => (
                 <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
                 <Route path="/pro/project/:id/report" element={<ProjectReport />} />
                 <Route path="/pro/my-projects" element={<ProMyProjects />} />
+                <Route path="/pro/entrepreneur-profile" element={<ProEntrepreneurProfile />} />
                 <Route path="/pro/bank-account" element={<ProBankAccount />} />
                 <Route path="/pro/meetings" element={<ProMeetings />} />
                 <Route path="/pro/payments" element={<ProPayments />} />
