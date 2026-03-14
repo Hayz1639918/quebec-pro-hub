@@ -132,6 +132,9 @@ const Auth = () => {
   const [docLicence, setDocLicence] = useState<File | null>(null);
   const [docAssurance, setDocAssurance] = useState<File | null>(null);
   const [docIdentite, setDocIdentite] = useState<File | null>(null);
+  // Entrepreneur specific
+  const [rbqNumber, setRbqNumber] = useState("");
+  const [rbqSubcat, setRbqSubcat] = useState("");
   // Trade professional specific
   const [docCCQ, setDocCCQ] = useState<File | null>(null);
   const [tradeSpecialty, setTradeSpecialty] = useState("");
@@ -275,6 +278,39 @@ const Auth = () => {
         return;
       }
 
+      // Entrepreneur — licence RBQ + assurance obligatoires
+      if (userType === "professional" && professionalType === "entrepreneur") {
+        if (!rbqNumber.trim()) {
+          toast({ variant: "destructive", title: "Numéro de licence RBQ requis", description: "Entrez votre numéro de licence RBQ ou 'EN COURS' si votre demande est en traitement." });
+          setLoading(false);
+          return;
+        }
+        if (!docLicence) {
+          toast({ variant: "destructive", title: "Licence RBQ obligatoire", description: "Veuillez uploader votre licence RBQ (PDF, JPG ou PNG)." });
+          setLoading(false);
+          return;
+        }
+        if (!docAssurance) {
+          toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Professionnel métier — carte CCQ obligatoire
+      if (userType === "professional" && professionalType === "trade_professional") {
+        if (!tradeSpecialty) {
+          toast({ variant: "destructive", title: "Corps de métier requis", description: "Sélectionnez votre spécialité." });
+          setLoading(false);
+          return;
+        }
+        if (!docCCQ) {
+          toast({ variant: "destructive", title: "Carte de compétence CCQ obligatoire", description: "Veuillez uploader votre carte de compétence CCQ." });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Password complexity validation
       if (!isPasswordValid(password)) {
         toast({
@@ -303,6 +339,10 @@ const Auth = () => {
             ...(userType === "professional" && {
               company_type: companyType,
               professional_type: professionalType,
+              ...(professionalType === "entrepreneur" && {
+                rbq_number: rbqNumber.trim(),
+                ...(rbqSubcat && { rbq_subcat: rbqSubcat }),
+              }),
               ...(professionalType === "trade_professional" && tradeSpecialty && {
                 trade_specialty: tradeSpecialty,
               }),
@@ -708,92 +748,116 @@ const Auth = () => {
                 </div>
               </div>
 
-              {/* Entrepreneur-specific fields */}
+              {/* Entrepreneur-specific fields — exigences légales RBQ Québec */}
               {userType === "professional" && professionalType === "entrepreneur" && (
                 <div className="space-y-4">
+
+                  {/* Type d'entreprise */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-muted-foreground" />
                       Type d'entreprise *
                     </Label>
-                    <RadioGroup
-                      value={companyType}
-                      onValueChange={(v) => setCompanyType(v as CompanyType)}
-                      className="flex gap-6"
-                    >
+                    <RadioGroup value={companyType} onValueChange={(v) => setCompanyType(v as CompanyType)} className="flex gap-6">
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="individuel" id="ent-individuel" />
-                        <Label htmlFor="ent-individuel" className="font-normal cursor-pointer">
-                          Travailleur autonome
-                        </Label>
+                        <Label htmlFor="ent-individuel" className="font-normal cursor-pointer">Travailleur autonome</Label>
                       </div>
                       <div className="flex items-center gap-2">
                         <RadioGroupItem value="societe" id="ent-societe" />
-                        <Label htmlFor="ent-societe" className="font-normal cursor-pointer">
-                          Société / Entreprise
-                        </Label>
+                        <Label htmlFor="ent-societe" className="font-normal cursor-pointer">Société / Compagnie</Label>
                       </div>
                     </RadioGroup>
                   </div>
 
+                  {/* Numéro de licence RBQ — OBLIGATOIRE */}
+                  <div className="space-y-2">
+                    <Label htmlFor="rbq-number" className="flex items-center gap-1">
+                      Numéro de licence RBQ
+                      <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                    </Label>
+                    <Input
+                      id="rbq-number"
+                      value={rbqNumber}
+                      onChange={(e) => setRbqNumber(e.target.value)}
+                      placeholder="Ex: 8291-4521-01 — ou 'EN COURS' si demande en traitement"
+                      className={!rbqNumber ? "border-red-200 focus-visible:ring-red-400" : ""}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Obligatoire pour exercer légalement au Québec (Loi sur le bâtiment). Vérifiable sur rbq.gouv.qc.ca.
+                    </p>
+                  </div>
+
+                  {/* Sous-catégorie RBQ */}
+                  <div className="space-y-2">
+                    <Label>Sous-catégorie de licence RBQ <span className="text-muted-foreground text-xs">(si connue)</span></Label>
+                    <Select value={rbqSubcat} onValueChange={setRbqSubcat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez votre sous-catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1.1.1">1.1.1 — Bâtiments résidentiels neufs, Classe I (tous types)</SelectItem>
+                        <SelectItem value="1.1.2">1.1.2 — Bâtiments résidentiels neufs, Classe II (≤ 3 étages)</SelectItem>
+                        <SelectItem value="1.2">1.2 — Entrepreneur en petits bâtiments</SelectItem>
+                        <SelectItem value="1.3">1.3 — Bâtiments de tout genre (résidentiel, commercial, industriel)</SelectItem>
+                        <SelectItem value="specialise">Entrepreneur spécialisé (autre)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Documents */}
                   <div className="space-y-3">
                     <Label className="flex items-center gap-2">
                       <Upload className="h-4 w-4 text-muted-foreground" />
                       Documents de vérification
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.
-                    </p>
+                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
 
-                    {/* Licence RBQ */}
+                    {/* Licence RBQ — OBLIGATOIRE */}
                     <div className="space-y-1">
-                      <Label htmlFor="doc-licence" className="text-sm font-normal">
-                        Licence RBQ <span className="text-muted-foreground">(recommandé)</span>
+                      <Label htmlFor="doc-licence" className="text-sm font-normal flex items-center gap-1">
+                        Scan de la licence RBQ
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
                       </Label>
                       <label
                         htmlFor="doc-licence"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-blue-400/50 hover:bg-blue-50/30'}`}
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
                       >
-                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-red-400'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
                         {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
                     </div>
 
-                    {/* Assurance */}
+                    {/* Assurance responsabilité civile — OBLIGATOIRE */}
                     <div className="space-y-1">
-                      <Label htmlFor="doc-assurance" className="text-sm font-normal">
-                        Certificat d'assurance <span className="text-muted-foreground">(recommandé)</span>
+                      <Label htmlFor="doc-assurance" className="text-sm font-normal flex items-center gap-1">
+                        Certificat d'assurance responsabilité civile
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
                       </Label>
                       <label
                         htmlFor="doc-assurance"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-blue-400/50 hover:bg-blue-50/30'}`}
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
                       >
-                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-red-400'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
                         {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
                     </div>
 
-                    {/* Pièce d'identité */}
+                    {/* Pièce d'identité — recommandé */}
                     <div className="space-y-1">
                       <Label htmlFor="doc-identite" className="text-sm font-normal">
-                        Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
+                        Pièce d'identité du répondant <span className="text-muted-foreground">(recommandé)</span>
                       </Label>
                       <label
                         htmlFor="doc-identite"
                         className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-blue-400/50 hover:bg-blue-50/30'}`}
                       >
                         <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
                         {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
                       <input id="doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
@@ -802,9 +866,12 @@ const Auth = () => {
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
                     <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-blue-700">
-                      Après confirmation de votre email, vous complèterez votre profil entrepreneur (services offerts, zones couvertes, tarifs). Vos documents seront examinés sous 24-48h.
-                    </p>
+                    <div className="text-xs text-blue-700 space-y-1">
+                      <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
+                      <p>• La <strong>licence RBQ</strong> est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
+                      <p>• L'<strong>assurance responsabilité civile</strong> protège le client et l'entrepreneur en cas de dommages.</p>
+                      <p>• Vos documents seront vérifiés sous 24-48h avant activation de votre compte.</p>
+                    </div>
                   </div>
                 </div>
               )}
