@@ -1217,6 +1217,69 @@
       "cookies": "Cookie Policy",
       "compliance": "Law 25 Compliance"
     }
+  },
+  "pro_profile": {
+    "title": "My Professional Profile",
+    "subtitle": "Manage your information, licenses, insurance, certifications and rate grid.",
+    "tabs": {
+      "infos": "Information",
+      "metiers": "Trades",
+      "licences": "Licenses & Insurance",
+      "certifications": "Certifications",
+      "experience": "Experience",
+      "tarifs": "Rates"
+    },
+    "trades": {
+      "title": "Trades & Specializations",
+      "description": "Select your trade(s) from the normalized CCQ/RBQ list.",
+      "selected": "Selected trades",
+      "primary": "Primary trade",
+      "save": "Save trades"
+    },
+    "rbq": {
+      "title": "RBQ Licenses",
+      "description": "Add your RBQ license numbers per work category.",
+      "format_hint": "Format: 7 digits + dash + 2 digits (e.g. 8365477-01)",
+      "status": {
+        "pending_verification": "Pending",
+        "valid": "Valid",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      }
+    },
+    "insurance": {
+      "title": "Insurance",
+      "badge": "Insured",
+      "expiring_soon_alert": "One or more insurance policies expire within 30 days.",
+      "types": {
+        "liability": "General Liability",
+        "professional": "Professional Insurance",
+        "other": "Other"
+      }
+    },
+    "certifications": {
+      "title": "Professional Certifications",
+      "types": {
+        "ccq": "CCQ",
+        "asp": "ASP Construction",
+        "other": "Other"
+      }
+    },
+    "experience": {
+      "title": "Experience & History",
+      "years": "Years of experience",
+      "external_projects": "Projects outside platform",
+      "business_volume": "Business volume (CAD)",
+      "platform_stats": "BâtirNet Statistics (automatic)"
+    },
+    "rates": {
+      "title": "Rate Grid",
+      "types": {
+        "hourly": "Hourly rate",
+        "flat": "Flat rate",
+        "per_sqft": "Per square foot"
+      }
+    }
   }
 }
 
