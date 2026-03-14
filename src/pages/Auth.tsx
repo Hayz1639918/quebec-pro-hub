@@ -144,20 +144,23 @@ const Auth = () => {
     user_type: string;
     profile_completed: boolean;
     is_rbq_verified: boolean;
+    professional_type?: string | null;
   }) => {
     if (profile.user_type === 'client') {
       navigate("/dashboard");
     } else if (profile.user_type === 'professional') {
-      if (!profile.profile_completed) {
-        // Professional hasn't completed their profile yet - redirect to home
-        // They can click "Compléter mon profil" in menu when ready
-        navigate("/");
-      } else if (!profile.is_rbq_verified) {
-        // Professional completed profile but waiting for RBQ validation
-        navigate("/pending-verification");
-      } else {
-        // Professional is fully verified
+      if (profile.is_rbq_verified) {
+        // Fully verified — go straight to pro dashboard regardless of profile_completed
         navigate("/pro/dashboard");
+      } else if (!profile.profile_completed) {
+        // Not yet completed profile — route to the right completion page
+        const completionRoute = profile.professional_type === 'trade_professional'
+          ? "/complete-profile"
+          : "/complete-profile-entrepreneur";
+        navigate(completionRoute);
+      } else {
+        // Profile complete but awaiting admin verification
+        navigate("/pending-verification");
       }
     }
   };
@@ -421,43 +424,47 @@ const Auth = () => {
       // Fetch user profile to determine where to redirect
       const { data: profile } = await supabase
         .from('profiles')
-        .select('user_type, full_name, profile_completed, is_rbq_verified')
+        .select('user_type, full_name, profile_completed, is_rbq_verified, professional_type')
         .eq('id', authData.user.id)
         .single();
-      
-      const userProfile = profile as { 
-        user_type: UserType; 
+
+      const userProfile = profile as {
+        user_type: UserType;
         full_name: string;
         profile_completed: boolean;
         is_rbq_verified: boolean;
+        professional_type?: string | null;
       } | null;
-      
+
       toast({
         title: t('auth.messages.login_success'),
-        description: userProfile?.full_name 
+        description: userProfile?.full_name
           ? t('auth.messages.welcome', { name: userProfile.full_name })
           : t('auth.messages.welcome_default'),
       });
-      
+
       // Redirect based on user type and profile status
       setTimeout(() => {
         if (!userProfile) {
           navigate("/");
           return;
         }
-        
+
         if (userProfile.user_type === 'client') {
           navigate("/dashboard");
         } else if (userProfile.user_type === 'professional') {
-          if (!userProfile.profile_completed) {
+          if (userProfile.is_rbq_verified) {
+            // Fully verified — go straight to pro dashboard
+            navigate("/pro/dashboard");
+          } else if (!userProfile.profile_completed) {
             // Professional hasn't completed their profile yet
-            navigate("/complete-profile");
-          } else if (!userProfile.is_rbq_verified) {
+            const completionRoute = userProfile.professional_type === 'trade_professional'
+              ? "/complete-profile"
+              : "/complete-profile-entrepreneur";
+            navigate(completionRoute);
+          } else {
             // Professional completed profile but waiting for RBQ validation
             navigate("/pending-verification");
-          } else {
-            // Professional is fully verified
-            navigate("/pro/dashboard");
           }
         } else {
           navigate("/");

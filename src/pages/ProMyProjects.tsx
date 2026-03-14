@@ -60,7 +60,7 @@ const ProMyProjects = () => {
         .single();
 
       if (prof?.user_type !== 'professional') {
-        navigate('/');
+        navigate('/auth?mode=login', { replace: true });
         return;
       }
 

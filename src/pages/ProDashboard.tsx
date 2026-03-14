@@ -132,24 +132,30 @@ const ProDashboard = () => {
       }
       setUserId(session.user.id);
 
-      // Ensure professional
-      const { data: prof } = await supabase
+      // Fetch professional profile — select only stable columns (avoid missing column errors)
+      const { data: prof, error: profError } = await supabase
         .from('profiles')
         .select('user_type, is_rbq_verified, professional_type')
         .eq('id', session.user.id)
         .single();
 
-      if (prof?.user_type !== 'professional') {
-        navigate('/');
+      if (profError || !prof) {
+        // Query failed (DB error, network, or RLS issue) — send to auth to re-authenticate
+        navigate('/auth?mode=login', { replace: true });
+        return;
+      }
+
+      if (prof.user_type !== 'professional') {
+        navigate('/', { replace: true });
         return;
       }
 
       // Set professional sub-type (default to entrepreneur for backward compat)
-      setProfessionalType((prof?.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur');
+      setProfessionalType((prof.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur');
 
       // Only verified professionals can access the dashboard
-      if (!prof?.is_rbq_verified) {
-        navigate('/pending-verification');
+      if (!prof.is_rbq_verified) {
+        navigate('/pending-verification', { replace: true });
         return;
       }
 

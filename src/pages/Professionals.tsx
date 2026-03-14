@@ -285,14 +285,12 @@ const Professionals = () => {
         .eq('user_type', 'professional')
         .eq('is_rbq_verified', true);
 
-      // Filter by professional_type based on ?type= URL param
+      // Only restrict at DB level for trade_professional (exclusive filter).
+      // For entrepreneur we filter client-side so old accounts (professional_type=NULL)
+      // are included without relying on PostgREST OR-null syntax.
       if (typeFilter === 'trade_professional') {
         query = query.eq('professional_type', 'trade_professional');
-      } else if (typeFilter === 'entrepreneur') {
-        // Include accounts explicitly typed as entrepreneur AND old accounts (NULL = entrepreneur by default)
-        query = query.or('professional_type.eq.entrepreneur,professional_type.is.null');
       }
-      // No typeFilter → show all verified professionals (no professional_type restriction)
 
       const { data, error } = await query.order('created_at', { ascending: false });
 
@@ -307,6 +305,15 @@ const Professionals = () => {
 
   const filterAndSortProfessionals = () => {
     let filtered = [...professionals];
+
+    // Professional type filter (client-side, reliable for NULL accounts)
+    if (typeFilter === 'entrepreneur') {
+      // Keep entrepreneurs and old accounts (NULL = entrepreneur by default)
+      filtered = filtered.filter(
+        (pro) => !pro.professional_type || pro.professional_type === 'entrepreneur'
+      );
+    }
+    // trade_professional is already filtered at DB level; no client-side override needed
 
     // Search filter
     if (searchTerm) {

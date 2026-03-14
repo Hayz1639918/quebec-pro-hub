@@ -102,7 +102,7 @@ const ProposeContract = () => {
       if (!session) { navigate('/auth?mode=login'); return; }
       setUserId(session.user.id);
       const { data: prof } = await supabase.from('profiles').select('user_type').eq('id', session.user.id).single();
-      if (prof?.user_type !== 'professional') { navigate('/'); return; }
+      if (!prof || prof.user_type !== 'professional') { navigate('/auth?mode=login', { replace: true }); return; }
       
       await fetchTemplates();
       await fetchProjects(session.user.id);

@@ -27,6 +27,7 @@ export type Database = {
           services_offered: string | null
           insurance_info: string | null
           is_rbq_verified: boolean
+          professional_type: 'entrepreneur' | 'trade_professional' | null
           city: string | null
           region: string | null
           postal_code: string | null
@@ -53,6 +54,7 @@ export type Database = {
           services_offered?: string | null
           insurance_info?: string | null
           is_rbq_verified?: boolean
+          professional_type?: 'entrepreneur' | 'trade_professional' | null
           city?: string | null
           region?: string | null
           postal_code?: string | null
@@ -79,6 +81,7 @@ export type Database = {
           services_offered?: string | null
           insurance_info?: string | null
           is_rbq_verified?: boolean
+          professional_type?: 'entrepreneur' | 'trade_professional' | null
           city?: string | null
           region?: string | null
           postal_code?: string | null
