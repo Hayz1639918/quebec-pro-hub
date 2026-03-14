@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +26,11 @@ import {
   Calendar,
   Clock,
   Linkedin,
+  HardHat,
+  Award,
+  Wrench,
+  Search,
+  Building2,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -71,11 +76,32 @@ interface PendingContract {
   professional_signed_at: string | null;
 }
 
+// Reusable quick-action button
+const ActionBtn = ({
+  icon: Icon, label, onClick, badge, primary, span, iconColor,
+}: {
+  icon: React.ElementType; label: string; onClick: () => void;
+  badge?: number; primary?: boolean; span?: boolean; iconColor?: string;
+}) => (
+  <Button
+    variant="outline"
+    className={`h-auto py-3 sm:py-4 flex-col gap-1.5 text-[11px] sm:text-xs md:text-sm relative ${primary ? 'border-primary text-primary hover:bg-primary/5' : ''} ${span ? 'col-span-2 sm:col-span-1' : ''}`}
+    onClick={onClick}
+  >
+    <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${iconColor || ''}`} />
+    <span className="text-center leading-tight">{label}</span>
+    {badge !== undefined && badge > 0 && (
+      <Badge variant="destructive" className="absolute -top-1 -right-1 text-[10px] h-4 min-w-4 px-1">{badge}</Badge>
+    )}
+  </Button>
+);
+
 const ProDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [professionalType, setProfessionalType] = useState<'entrepreneur' | 'trade_professional'>('entrepreneur');
   const [stats, setStats] = useState<DashboardStats>({
     activeProjects: 0,
     proposalsSent: 0,
@@ -109,7 +135,7 @@ const ProDashboard = () => {
       // Ensure professional
       const { data: prof } = await supabase
         .from('profiles')
-        .select('user_type,is_rbq_verified')
+        .select('user_type, is_rbq_verified, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -118,7 +144,10 @@ const ProDashboard = () => {
         return;
       }
 
-      // Redirect to pending verification if RBQ not verified
+      // Set professional sub-type (default to entrepreneur for backward compat)
+      setProfessionalType((prof?.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur');
+
+      // Only verified professionals can access the dashboard
       if (!prof?.is_rbq_verified) {
         navigate('/pending-verification');
         return;
@@ -305,11 +334,21 @@ const ProDashboard = () => {
       <Navigation />
       <main className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 pt-16 sm:pt-20 md:pt-24 pb-8 sm:pb-12 flex-1">
         {/* Header */}
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">Dashboard Professionnel</h1>
-          <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
-            {t('pro_dashboard.subtitle')}
-          </p>
+        <div className="mb-4 sm:mb-6 md:mb-8 flex items-start gap-3">
+          {professionalType === 'trade_professional'
+            ? <HardHat className="h-7 w-7 text-amber-600 mt-1 flex-shrink-0" />
+            : <Building2 className="h-7 w-7 text-blue-600 mt-1 flex-shrink-0" />
+          }
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1">
+              {professionalType === 'trade_professional' ? 'Tableau de bord — Professionnel Métier' : 'Tableau de bord — Entrepreneur'}
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
+              {professionalType === 'trade_professional'
+                ? 'Gérez vos missions, certifications, portfolio et réputation.'
+                : t('pro_dashboard.subtitle')}
+            </p>
+          </div>
         </div>
 
         {/* Quick Stats */}
@@ -469,31 +508,48 @@ const ProDashboard = () => {
           </Card>
         </div>
 
-        {/* US-053 — Navigation tabs */}
+        {/* US-053 — Navigation tabs — context-aware by professional type */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
-          <TabsList className="grid grid-cols-4 sm:grid-cols-4 w-full">
-            <TabsTrigger value="apercu" className="text-xs sm:text-sm">
-              Aperçu
-            </TabsTrigger>
-            <TabsTrigger value="invitations" className="relative text-xs sm:text-sm">
-              Invitations
-              {pendingContractsList.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {pendingContractsList.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="reunions" className="text-xs sm:text-sm">
-              <Video className="h-3 w-3 mr-1 hidden sm:inline" />
-              Réunions
-            </TabsTrigger>
-            <TabsTrigger value="abonnement" className="text-xs sm:text-sm">
-              <CreditCard className="h-3 w-3 mr-1 hidden sm:inline" />
-              Abonnement
-            </TabsTrigger>
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${professionalType === 'entrepreneur' ? 4 : 4}, 1fr)` }}>
+            <TabsTrigger value="apercu" className="text-xs sm:text-sm">Aperçu</TabsTrigger>
+            {professionalType === 'entrepreneur' ? (
+              <>
+                <TabsTrigger value="invitations" className="relative text-xs sm:text-sm">
+                  Invitations
+                  {pendingContractsList.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {pendingContractsList.length}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="reunions" className="text-xs sm:text-sm">
+                  <Video className="h-3 w-3 mr-1 hidden sm:inline" />Réunions
+                </TabsTrigger>
+                <TabsTrigger value="abonnement" className="text-xs sm:text-sm">
+                  <CreditCard className="h-3 w-3 mr-1 hidden sm:inline" />Abonnement
+                </TabsTrigger>
+              </>
+            ) : (
+              <>
+                <TabsTrigger value="missions" className="relative text-xs sm:text-sm">
+                  Missions
+                  {assignedProjects.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {assignedProjects.length}
+                    </span>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="profil-metier" className="text-xs sm:text-sm">
+                  <HardHat className="h-3 w-3 mr-1 hidden sm:inline" />Profil métier
+                </TabsTrigger>
+                <TabsTrigger value="abonnement" className="text-xs sm:text-sm">
+                  <CreditCard className="h-3 w-3 mr-1 hidden sm:inline" />Abonnement
+                </TabsTrigger>
+              </>
+            )}
           </TabsList>
 
-          {/* Tab: Invitations */}
+          {/* Tab: Invitations (entrepreneur only) */}
           <TabsContent value="invitations" className="mt-4">
             <Card>
               <CardHeader>
@@ -553,7 +609,95 @@ const ProDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* Tab: Abonnement */}
+          {/* Tab: Missions (trade_professional only) */}
+          <TabsContent value="missions" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-amber-600" />
+                  Mes missions en cours
+                </CardTitle>
+                <CardDescription>Projets sur lesquels vous êtes assigné</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {assignedProjects.length === 0 ? (
+                  <div className="text-center py-8 space-y-4">
+                    <Search className="h-12 w-12 text-muted-foreground mx-auto" />
+                    <p className="text-muted-foreground">Aucune mission en cours.</p>
+                    <Button onClick={() => navigate('/projects')} variant="outline" className="gap-2">
+                      <Search className="h-4 w-4" />
+                      Parcourir les projets disponibles
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {assignedProjects.map(project => (
+                      <div key={project.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/pro/project/${project.id}/progress`)}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold">{project.title}</h4>
+                            <p className="text-sm text-muted-foreground">{project.category} · {project.city || '—'}</p>
+                          </div>
+                          <Badge variant="outline">{project.progress_status}</Badge>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Progression</span>
+                            <span>{project.progress_percentage}%</span>
+                          </div>
+                          <Progress value={project.progress_percentage} className="h-1.5" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Profil métier (trade_professional only) */}
+          <TabsContent value="profil-metier" className="mt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/profile')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <HardHat className="h-8 w-8 text-amber-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Profil métier</p>
+                    <p className="text-xs text-muted-foreground">Spécialité, licences RBQ, certifications CCQ</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/portfolio')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Briefcase className="h-8 w-8 text-primary flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Portfolio</p>
+                    <p className="text-xs text-muted-foreground">Photos avant/après, réalisations</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/reviews')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Star className="h-8 w-8 text-warning flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Mes avis</p>
+                    <p className="text-xs text-muted-foreground">Témoignages clients vérifiés</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/kpis')}>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Award className="h-8 w-8 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Grille de tarifs & KPIs</p>
+                    <p className="text-xs text-muted-foreground">Tarifs horaires, forfaits, stats</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Abonnement (both types) */}
           <TabsContent value="abonnement" className="mt-4">
             <Card>
               <CardHeader>
@@ -578,109 +722,54 @@ const ProDashboard = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Quick Actions */}
+        {/* Quick Actions — context-aware by professional type */}
         <Card className="mb-4 sm:mb-6 md:mb-8">
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="text-base sm:text-lg md:text-xl">{t('pro_dashboard.quick_actions.title')}</CardTitle>
             <CardDescription className="text-xs sm:text-sm">{t('pro_dashboard.quick_actions.description')}</CardDescription>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-3 md:mb-4">
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 border-primary text-primary hover:bg-primary/5 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/pro/my-projects')}
-              >
-                <Hammer className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.my_projects')}</span>
-                {assignedProjects.length > 0 && (
-                  <Badge variant="default" className="text-[10px] sm:text-xs">
-                    {assignedProjects.length}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 border-primary text-primary hover:bg-primary/5 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate(`/professional/${userId}`)}
-              >
-                <User className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">Visualiser mon profil</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
-                onClick={() => navigate('/projects')}
-              >
-                <Eye className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.browse_projects')}</span>
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4">
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/messages')}
-              >
-                <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.messaging')}</span>
-                {stats.unreadMessages > 0 && (
-                  <Badge variant="destructive" className="text-[10px] sm:text-xs">
-                    {stats.unreadMessages}
-                  </Badge>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/contracts')}
-              >
-                <FileText className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">{t('pro_dashboard.quick_actions.my_contracts')}</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
-                onClick={() => navigate('/pro/portfolio')}
-              >
-                <Briefcase className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">Mon portfolio</span>
-              </Button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3">
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/pro/meetings')}
-              >
-                <Video className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
-                <span className="text-center leading-tight">Réunions Zoom</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/pro/payments')}
-              >
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-green-600" />
-                <span className="text-center leading-tight">Mes paiements</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm"
-                onClick={() => navigate('/pro/bank-account')}
-              >
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
-                <span className="text-center leading-tight">Compte bancaire</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 sm:py-4 flex-col gap-1.5 sm:gap-2 text-[11px] sm:text-xs md:text-sm col-span-2 sm:col-span-1"
-                onClick={() => navigate('/pro/entrepreneur-profile')}
-              >
-                <Linkedin className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-600" />
-                <span className="text-center leading-tight">Profil entrepreneur</span>
-              </Button>
-            </div>
+            {professionalType === 'entrepreneur' ? (
+              /* ── Entrepreneur quick actions (Epics 10-18) ── */
+              <div className="space-y-2 sm:space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} primary />
+                  <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
+                  <ActionBtn icon={Search} label={t('pro_dashboard.quick_actions.browse_projects')} onClick={() => navigate('/projects')} span />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={MessageSquare} label={t('pro_dashboard.quick_actions.messaging')} onClick={() => navigate('/messages')} badge={stats.unreadMessages || undefined} />
+                  <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
+                  <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} span />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
+                  <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
+                  <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
+                  <ActionBtn icon={Linkedin} label="Profil entrepreneur" onClick={() => navigate('/pro/entrepreneur-profile')} iconColor="text-blue-600" />
+                  <ActionBtn icon={Users} label="Sous-traitants" onClick={() => navigate('/pro/subcontractors')} />
+                </div>
+              </div>
+            ) : (
+              /* ── Professionnel Métier quick actions (Epics 30-32) ── */
+              <div className="space-y-2 sm:space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={HardHat} label="Mon profil métier" onClick={() => navigate('/pro/profile')} primary iconColor="text-amber-600" />
+                  <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
+                  <ActionBtn icon={Search} label="Trouver un projet" onClick={() => navigate('/projects')} span />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={MessageSquare} label="Messagerie" onClick={() => navigate('/messages')} badge={stats.unreadMessages || undefined} />
+                  <ActionBtn icon={FileText} label="Mes contrats" onClick={() => navigate('/contracts')} />
+                  <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} span />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={Star} label="Mes évaluations" onClick={() => navigate('/pro/reviews')} iconColor="text-amber-500" />
+                  <ActionBtn icon={Award} label="Grille de tarifs" onClick={() => navigate('/pro/kpis')} iconColor="text-green-600" />
+                  <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -759,7 +848,7 @@ const ProDashboard = () => {
           </Card>
         </div>
 
-        {/* Quick Links */}
+        {/* Quick Links — context-aware */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
           <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/subscription')}>
             <CardContent className="p-3 sm:p-4 md:pt-6">
@@ -785,17 +874,33 @@ const ProDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/subcontractors')}>
-            <CardContent className="p-3 sm:p-4 md:pt-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">Mes sous-traitants</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer mon équipe</p>
+          {professionalType === 'entrepreneur' ? (
+            /* Entrepreneur: sous-traitants */
+            <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/subcontractors')}>
+              <CardContent className="p-3 sm:p-4 md:pt-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm sm:text-base truncate">Mes sous-traitants</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer mon équipe</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            /* Trade professional: profil métier */
+            <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/profile')}>
+              <CardContent className="p-3 sm:p-4 md:pt-6">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <HardHat className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-amber-600 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm sm:text-base truncate">Mon profil métier</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">RBQ, CCQ, tarifs</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       <Footer />

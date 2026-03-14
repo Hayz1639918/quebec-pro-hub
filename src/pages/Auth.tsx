@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase, HardHat } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
+type ProfessionalType = "entrepreneur" | "trade_professional";
 type CompanyType = "individuel" | "societe";
 
 // Password strength validation
@@ -110,6 +111,7 @@ const Auth = () => {
   const mode = searchParams.get('mode');
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [userType, setUserType] = useState<UserType>("client");
+  const [professionalType, setProfessionalType] = useState<ProfessionalType>("entrepreneur");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
@@ -130,6 +132,12 @@ const Auth = () => {
   const [docLicence, setDocLicence] = useState<File | null>(null);
   const [docAssurance, setDocAssurance] = useState<File | null>(null);
   const [docIdentite, setDocIdentite] = useState<File | null>(null);
+  // Entrepreneur specific
+  const [rbqNumber, setRbqNumber] = useState("");
+  const [rbqSubcat, setRbqSubcat] = useState("");
+  // Trade professional specific
+  const [docCCQ, setDocCCQ] = useState<File | null>(null);
+  const [tradeSpecialty, setTradeSpecialty] = useState("");
 
   // Helper function to redirect based on profile status
   const redirectBasedOnProfile = (profile: {
@@ -270,6 +278,39 @@ const Auth = () => {
         return;
       }
 
+      // Entrepreneur — licence RBQ + assurance obligatoires
+      if (userType === "professional" && professionalType === "entrepreneur") {
+        if (!rbqNumber.trim()) {
+          toast({ variant: "destructive", title: "Numéro de licence RBQ requis", description: "Entrez votre numéro de licence RBQ ou 'EN COURS' si votre demande est en traitement." });
+          setLoading(false);
+          return;
+        }
+        if (!docLicence) {
+          toast({ variant: "destructive", title: "Licence RBQ obligatoire", description: "Veuillez uploader votre licence RBQ (PDF, JPG ou PNG)." });
+          setLoading(false);
+          return;
+        }
+        if (!docAssurance) {
+          toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Professionnel métier — carte CCQ obligatoire
+      if (userType === "professional" && professionalType === "trade_professional") {
+        if (!tradeSpecialty) {
+          toast({ variant: "destructive", title: "Corps de métier requis", description: "Sélectionnez votre spécialité." });
+          setLoading(false);
+          return;
+        }
+        if (!docCCQ) {
+          toast({ variant: "destructive", title: "Carte de compétence CCQ obligatoire", description: "Veuillez uploader votre carte de compétence CCQ." });
+          setLoading(false);
+          return;
+        }
+      }
+
       // Password complexity validation
       if (!isPasswordValid(password)) {
         toast({
@@ -295,7 +336,17 @@ const Auth = () => {
             full_name: fullName,
             user_type: userType,
             phone: phone || null,
-            ...(userType === "professional" && { company_type: companyType }),
+            ...(userType === "professional" && {
+              company_type: companyType,
+              professional_type: professionalType,
+              ...(professionalType === "entrepreneur" && {
+                rbq_number: rbqNumber.trim(),
+                ...(rbqSubcat && { rbq_subcat: rbqSubcat }),
+              }),
+              ...(professionalType === "trade_professional" && tradeSpecialty && {
+                trade_specialty: tradeSpecialty,
+              }),
+            }),
           }
         },
       });
@@ -330,13 +381,14 @@ const Auth = () => {
             : t('auth.messages.success_client'),
         });
 
-        // Redirect based on user type
+        // Redirect based on user type and professional sub-type
         setTimeout(() => {
           if (userType === "client") {
             navigate("/dashboard");
-          } else {
-            // Professional needs to complete profile
+          } else if (professionalType === "trade_professional") {
             navigate("/complete-profile");
+          } else {
+            navigate("/complete-profile-entrepreneur");
           }
         }, 1500);
       }
@@ -579,91 +631,291 @@ const Auth = () => {
               </Button>
             </form>
           ) : (
-            // Sign Up Form with Tabs
-            <Tabs value={userType} onValueChange={(value) => setUserType(value as UserType)} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="client">
-                  <User className="mr-2 h-4 w-4" />
-                  {t('auth.signup.client')}
-                </TabsTrigger>
-                <TabsTrigger value="professional">
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {t('auth.signup.professional')}
-                </TabsTrigger>
-              </TabsList>
+            // Sign Up Form — 3 account types
+            <form onSubmit={handleSignUp} className="space-y-5">
+              {/* Account type selector */}
+              <div className="space-y-2">
+                <Label>Type de compte *</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Client */}
+                  <button
+                    type="button"
+                    onClick={() => setUserType("client")}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-center ${
+                      userType === "client"
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <User className={`h-5 w-5 ${userType === "client" ? "text-primary" : "text-muted-foreground"}`} />
+                    <span className="text-xs font-medium leading-tight">Propriétaire</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Client / particulier</span>
+                  </button>
 
-              <form onSubmit={handleSignUp} className="mt-4">
-                {/* Common Fields */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">{t('auth.signup.email')} {t('auth.signup.required')}</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder={t('auth.signup.email_placeholder')}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
+                  {/* Entrepreneur */}
+                  <button
+                    type="button"
+                    onClick={() => { setUserType("professional"); setProfessionalType("entrepreneur"); }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-center ${
+                      userType === "professional" && professionalType === "entrepreneur"
+                        ? "border-blue-600 bg-blue-50"
+                        : "border-border hover:border-blue-300"
+                    }`}
+                  >
+                    <Building2 className={`h-5 w-5 ${userType === "professional" && professionalType === "entrepreneur" ? "text-blue-600" : "text-muted-foreground"}`} />
+                    <span className="text-xs font-medium leading-tight">Entrepreneur</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Entrepreneur général</span>
+                  </button>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">{t('auth.signup.password')} {t('auth.signup.required')}</Label>
-                    <PasswordField
-                      id="signup-password"
-                      label=""
-                      value={password}
-                      onChange={setPassword}
-                      show={showPassword}
-                      onToggleShow={() => setShowPassword(!showPassword)}
-                      placeholder="Min. 8 car., majuscule, chiffre, spécial"
-                      showStrength
+                  {/* Professionnel métier */}
+                  <button
+                    type="button"
+                    onClick={() => { setUserType("professional"); setProfessionalType("trade_professional"); }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border-2 transition-colors text-center ${
+                      userType === "professional" && professionalType === "trade_professional"
+                        ? "border-amber-600 bg-amber-50"
+                        : "border-border hover:border-amber-300"
+                    }`}
+                  >
+                    <HardHat className={`h-5 w-5 ${userType === "professional" && professionalType === "trade_professional" ? "text-amber-600" : "text-muted-foreground"}`} />
+                    <span className="text-xs font-medium leading-tight">Pro métier</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Électricien, plombier…</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Common fields */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">{t('auth.signup.email')} {t('auth.signup.required')}</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder={t('auth.signup.email_placeholder')}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      required
                     />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="fullname">{t('auth.signup.full_name')} {t('auth.signup.required')}</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="fullname"
-                        type="text"
-                        placeholder={t('auth.signup.full_name_placeholder')}
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">{t('auth.signup.phone')}</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder={t('auth.signup.phone_placeholder')}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
                   </div>
                 </div>
 
-                {/* Professional-specific fields — US-047 & US-048 */}
-                <TabsContent value="professional" className="mt-4 space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">{t('auth.signup.password')} {t('auth.signup.required')}</Label>
+                  <PasswordField
+                    id="signup-password"
+                    label=""
+                    value={password}
+                    onChange={setPassword}
+                    show={showPassword}
+                    onToggleShow={() => setShowPassword(!showPassword)}
+                    placeholder="Min. 8 car., majuscule, chiffre, spécial"
+                    showStrength
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fullname">{t('auth.signup.full_name')} {t('auth.signup.required')}</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="fullname"
+                      type="text"
+                      placeholder={t('auth.signup.full_name_placeholder')}
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">{t('auth.signup.phone')}</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder={t('auth.signup.phone_placeholder')}
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Entrepreneur-specific fields — exigences légales RBQ Québec */}
+              {userType === "professional" && professionalType === "entrepreneur" && (
+                <div className="space-y-4">
+
                   {/* Type d'entreprise */}
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <Briefcase className="h-4 w-4 text-muted-foreground" />
                       Type d'entreprise *
+                    </Label>
+                    <RadioGroup value={companyType} onValueChange={(v) => setCompanyType(v as CompanyType)} className="flex gap-6">
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="individuel" id="ent-individuel" />
+                        <Label htmlFor="ent-individuel" className="font-normal cursor-pointer">Travailleur autonome</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="societe" id="ent-societe" />
+                        <Label htmlFor="ent-societe" className="font-normal cursor-pointer">Société / Compagnie</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Numéro de licence RBQ — OBLIGATOIRE */}
+                  <div className="space-y-2">
+                    <Label htmlFor="rbq-number" className="flex items-center gap-1">
+                      Numéro de licence RBQ
+                      <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                    </Label>
+                    <Input
+                      id="rbq-number"
+                      value={rbqNumber}
+                      onChange={(e) => setRbqNumber(e.target.value)}
+                      placeholder="Ex: 8291-4521-01 — ou 'EN COURS' si demande en traitement"
+                      className={!rbqNumber ? "border-red-200 focus-visible:ring-red-400" : ""}
+                    />
+                    <p className="text-[11px] text-muted-foreground">
+                      Obligatoire pour exercer légalement au Québec (Loi sur le bâtiment). Vérifiable sur rbq.gouv.qc.ca.
+                    </p>
+                  </div>
+
+                  {/* Sous-catégorie RBQ */}
+                  <div className="space-y-2">
+                    <Label>Sous-catégorie de licence RBQ <span className="text-muted-foreground text-xs">(si connue)</span></Label>
+                    <Select value={rbqSubcat} onValueChange={setRbqSubcat}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez votre sous-catégorie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1.1.1">1.1.1 — Bâtiments résidentiels neufs, Classe I (tous types)</SelectItem>
+                        <SelectItem value="1.1.2">1.1.2 — Bâtiments résidentiels neufs, Classe II (≤ 3 étages)</SelectItem>
+                        <SelectItem value="1.2">1.2 — Entrepreneur en petits bâtiments</SelectItem>
+                        <SelectItem value="1.3">1.3 — Bâtiments de tout genre (résidentiel, commercial, industriel)</SelectItem>
+                        <SelectItem value="specialise">Entrepreneur spécialisé (autre)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Documents */}
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      Documents de vérification
+                    </Label>
+                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
+
+                    {/* Licence RBQ — OBLIGATOIRE */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-licence" className="text-sm font-normal flex items-center gap-1">
+                        Scan de la licence RBQ
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-licence"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-red-400'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
+                        {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input id="doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
+                    </div>
+
+                    {/* Assurance responsabilité civile — OBLIGATOIRE */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-assurance" className="text-sm font-normal flex items-center gap-1">
+                        Certificat d'assurance responsabilité civile
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-assurance"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-red-400'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
+                        {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input id="doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
+                    </div>
+
+                    {/* Pièce d'identité — recommandé */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-identite" className="text-sm font-normal">
+                        Pièce d'identité du répondant <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-identite"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-blue-400/50 hover:bg-blue-50/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
+                        {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input id="doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                    <div className="text-xs text-blue-700 space-y-1">
+                      <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
+                      <p>• La <strong>licence RBQ</strong> est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
+                      <p>• L'<strong>assurance responsabilité civile</strong> protège le client et l'entrepreneur en cas de dommages.</p>
+                      <p>• Vos documents seront vérifiés sous 24-48h avant activation de votre compte.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Professionnel métier-specific fields — exigences légales Québec */}
+              {userType === "professional" && professionalType === "trade_professional" && (
+                <div className="space-y-4">
+                  {/* Spécialité */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <HardHat className="h-4 w-4 text-amber-600" />
+                      Corps de métier *
+                    </Label>
+                    <Select value={tradeSpecialty} onValueChange={setTradeSpecialty}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionnez votre spécialité" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="electricien">Électricien (licence CMEQ)</SelectItem>
+                        <SelectItem value="plombier">Plombier / Mécanicien en tuyauterie (licence CMMTQ)</SelectItem>
+                        <SelectItem value="charpentier">Charpentier-menuisier</SelectItem>
+                        <SelectItem value="macon">Maçon / Briqueteur</SelectItem>
+                        <SelectItem value="peintre">Peintre en bâtiment</SelectItem>
+                        <SelectItem value="carreleur">Carreleur / Poseur de revêtements</SelectItem>
+                        <SelectItem value="couvreur">Couvreur</SelectItem>
+                        <SelectItem value="ferblantier">Ferblantier</SelectItem>
+                        <SelectItem value="calorifugeur">Calorifugeur</SelectItem>
+                        <SelectItem value="excavation">Opérateur d'excavation / Terrassier</SelectItem>
+                        <SelectItem value="soudeur">Soudeur</SelectItem>
+                        <SelectItem value="autre">Autre corps de métier CCQ</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {tradeSpecialty === 'electricien' && "⚡ Licence délivrée par la CMEQ (Corporation des maîtres électriciens du Québec)"}
+                      {tradeSpecialty === 'plombier' && "🔧 Licence délivrée par la CMMTQ (Corporation des maîtres mécaniciens en tuyauterie du Québec)"}
+                      {tradeSpecialty && tradeSpecialty !== 'electricien' && tradeSpecialty !== 'plombier' && "📋 Carte de compétence CCQ obligatoire pour tous les travailleurs de la construction au Québec"}
+                    </p>
+                  </div>
+
+                  {/* Statut */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      Statut *
                     </Label>
                     <RadioGroup
                       value={companyType}
@@ -671,126 +923,114 @@ const Auth = () => {
                       className="flex gap-6"
                     >
                       <div className="flex items-center gap-2">
-                        <RadioGroupItem value="individuel" id="type-individuel" />
-                        <Label htmlFor="type-individuel" className="font-normal cursor-pointer">
-                          Travailleur autonome / Individuel
-                        </Label>
+                        <RadioGroupItem value="individuel" id="trade-individuel" />
+                        <Label htmlFor="trade-individuel" className="font-normal cursor-pointer">Travailleur autonome</Label>
                       </div>
                       <div className="flex items-center gap-2">
-                        <RadioGroupItem value="societe" id="type-societe" />
-                        <Label htmlFor="type-societe" className="font-normal cursor-pointer">
-                          Société / Entreprise
-                        </Label>
+                        <RadioGroupItem value="societe" id="trade-societe" />
+                        <Label htmlFor="trade-societe" className="font-normal cursor-pointer">Maître (entreprise)</Label>
                       </div>
                     </RadioGroup>
                   </div>
 
-                  {/* Upload documents — US-048 */}
+                  {/* Documents */}
                   <div className="space-y-3">
                     <Label className="flex items-center gap-2">
                       <Upload className="h-4 w-4 text-muted-foreground" />
                       Documents de vérification
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Ces documents seront examinés par notre équipe pour valider votre compte. Formats acceptés : PDF, JPG, PNG.
-                    </p>
+                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
 
-                    {/* Licence RBQ */}
+                    {/* Carte de compétence CCQ — OBLIGATOIRE */}
                     <div className="space-y-1">
-                      <Label htmlFor="doc-licence" className="text-sm font-normal">
-                        Licence RBQ <span className="text-muted-foreground">(recommandé)</span>
+                      <Label htmlFor="trade-doc-ccq" className="text-sm font-normal flex items-center gap-1">
+                        Carte de compétence CCQ
+                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
                       </Label>
-                      <label
-                        htmlFor="doc-licence"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
-                      >
+                      <p className="text-[11px] text-muted-foreground">
+                        {tradeSpecialty === 'electricien'
+                          ? "Carte de compétence ou carte d'apprenti CMEQ"
+                          : tradeSpecialty === 'plombier'
+                          ? "Carte de compétence ou carte d'apprenti CMMTQ"
+                          : "Carte de compétence délivrée par la Commission de la construction du Québec (CCQ)"}
+                      </p>
+                      <label htmlFor="trade-doc-ccq" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docCCQ ? 'border-green-400 bg-green-50' : 'border-amber-400 hover:border-amber-500 hover:bg-amber-50/30'}`}>
+                        <Upload className={`h-4 w-4 ${docCCQ ? 'text-green-600' : 'text-amber-600'}`} />
+                        <span className="text-sm text-muted-foreground truncate">{docCCQ ? docCCQ.name : 'Cliquez pour choisir un fichier'}</span>
+                        {docCCQ && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input id="trade-doc-ccq" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocCCQ(e.target.files?.[0] ?? null)} />
+                    </div>
+
+                    {/* Licence RBQ / CMEQ / CMMTQ */}
+                    <div className="space-y-1">
+                      <Label htmlFor="trade-doc-licence" className="text-sm font-normal">
+                        {tradeSpecialty === 'electricien'
+                          ? "Licence CMEQ (si maître électricien)"
+                          : tradeSpecialty === 'plombier'
+                          ? "Licence CMMTQ (si maître mécanicien)"
+                          : "Licence RBQ entrepreneur spécialisé (si applicable)"}
+                        <span className="text-muted-foreground ml-1">(si applicable)</span>
+                      </Label>
+                      <label htmlFor="trade-doc-licence" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
                         {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
-                      <input
-                        id="doc-licence"
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)}
-                      />
+                      <input id="trade-doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
                     </div>
 
                     {/* Assurance */}
                     <div className="space-y-1">
-                      <Label htmlFor="doc-assurance" className="text-sm font-normal">
-                        Certificat d'assurance <span className="text-muted-foreground">(recommandé)</span>
+                      <Label htmlFor="trade-doc-assurance" className="text-sm font-normal">
+                        Assurance responsabilité civile <span className="text-muted-foreground">(recommandé)</span>
                       </Label>
-                      <label
-                        htmlFor="doc-assurance"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
-                      >
+                      <label htmlFor="trade-doc-assurance" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
                         {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
-                      <input
-                        id="doc-assurance"
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)}
-                      />
+                      <input id="trade-doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
                     </div>
 
                     {/* Pièce d'identité */}
                     <div className="space-y-1">
-                      <Label htmlFor="doc-identite" className="text-sm font-normal">
+                      <Label htmlFor="trade-doc-identite" className="text-sm font-normal">
                         Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
                       </Label>
-                      <label
-                        htmlFor="doc-identite"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
-                      >
+                      <label htmlFor="trade-doc-identite" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
                         <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">
-                          {docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}
-                        </span>
+                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
                         {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                       </label>
-                      <input
-                        id="doc-identite"
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        className="hidden"
-                        onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)}
-                      />
+                      <input id="trade-doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-                    <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
-                    <p className="text-xs text-blue-700">
-                      Après confirmation de votre email, vous complèterez votre profil professionnel (services, zones, tarifs). Vos documents seront examinés sous 24-48h.
-                    </p>
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                    <HardHat className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <div className="text-xs text-amber-700 space-y-1">
+                      <p className="font-medium">Exigences légales au Québec :</p>
+                      <p>• La <strong>carte de compétence CCQ</strong> est obligatoire pour tout travailleur de la construction.</p>
+                      {tradeSpecialty === 'electricien' && <p>• Les électriciens sont réglementés par la <strong>CMEQ</strong>.</p>}
+                      {tradeSpecialty === 'plombier' && <p>• Les plombiers/mécaniciens sont réglementés par la <strong>CMMTQ</strong>.</p>}
+                      <p>• Vos documents seront examinés sous 24-48h.</p>
+                    </div>
                   </div>
-                </TabsContent>
+                </div>
+              )}
 
-                <TabsContent value="client" className="mt-4">
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    {t('auth.signup.client_description')}
-                  </p>
-                </TabsContent>
+              {/* Client description */}
+              {userType === "client" && (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  {t('auth.signup.client_description')}
+                </p>
+              )}
 
-                <Button
-                  type="submit"
-                  className="w-full mt-6"
-                  disabled={loading}
-                >
-                  {loading ? t('auth.signup.button_loading') : t('auth.signup.button')}
-            </Button>
-          </form>
-            </Tabs>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? t('auth.signup.button_loading') : t('auth.signup.button')}
+              </Button>
+            </form>
           )}
 
           {!forgotPassword && !isPasswordRecovery && (

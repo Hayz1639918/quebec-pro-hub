@@ -14,7 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, X, Building2, Briefcase, Clock } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, X, Building2, Briefcase, Clock, HardHat, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -35,7 +35,7 @@ const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType
 const Navigation = () => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string; email?: string} | null>(null);
-  const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean} | null>(null);
+  const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean; professional_type?: string} | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -164,19 +164,31 @@ const Navigation = () => {
               />
             </div>
 
-            {/* ── Desktop nav links ── */}
-            <div className="hidden md:flex items-center gap-7 lg:gap-9">
+            {/* ── Desktop nav links — context-aware ── */}
+            <div className="hidden md:flex items-center gap-5 lg:gap-7">
+              {/* Trouver un entrepreneur — visible to everyone */}
               <button
-                onClick={() => navigate("/professionals")}
-                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5"
+                onClick={() => navigate("/professionals?type=entrepreneur")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
               >
-                {t('navigation.professionals')}
+                <Building2 className="h-3.5 w-3.5" />
+                Trouver un entrepreneur
               </button>
+              {/* Trouver un professionnel — visible to everyone */}
+              <button
+                onClick={() => navigate("/professionals?type=trade_professional")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
+              >
+                <HardHat className="h-3.5 w-3.5" />
+                Trouver un professionnel
+              </button>
+              {/* Trouver un projet — visible to everyone */}
               <button
                 onClick={() => navigate("/projects")}
-                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5"
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
               >
-                {t('navigation.projects')}
+                <Search className="h-3.5 w-3.5" />
+                Trouver un projet
               </button>
             </div>
 
@@ -221,7 +233,13 @@ const Navigation = () => {
                           {profile?.full_name || user.email}
                         </p>
                         <p className="font-ui text-xs text-muted-foreground mt-0.5">
-                          {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
+                          {profile?.user_type === 'client'
+                            ? 'Client'
+                            : profile?.professional_type === 'entrepreneur'
+                            ? 'Entrepreneur'
+                            : profile?.professional_type === 'trade_professional'
+                            ? 'Professionnel métier'
+                            : 'Professionnel'}
                         </p>
                       </div>
                       <DropdownMenuSeparator />
@@ -239,17 +257,7 @@ const Navigation = () => {
                       )}
                       {profile?.user_type === 'professional' && (
                         <>
-                          {!profile.profile_completed ? (
-                            <DropdownMenuItem onClick={() => navigate("/complete-profile")} className="cursor-pointer font-ui text-sm">
-                              <User className="mr-2 h-4 w-4 text-primary" />
-                              Compléter mon profil
-                            </DropdownMenuItem>
-                          ) : !profile.is_rbq_verified ? (
-                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
-                              <Clock className="mr-2 h-4 w-4 text-primary" />
-                              Vérification en attente
-                            </DropdownMenuItem>
-                          ) : (
+                          {profile.is_rbq_verified ? (
                             <>
                               <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer font-ui text-sm">
                                 <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
@@ -260,6 +268,19 @@ const Navigation = () => {
                                 Mon profil
                               </DropdownMenuItem>
                             </>
+                          ) : !profile.profile_completed ? (
+                            <DropdownMenuItem
+                              onClick={() => navigate(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")}
+                              className="cursor-pointer font-ui text-sm"
+                            >
+                              <User className="mr-2 h-4 w-4 text-primary" />
+                              Compléter mon profil
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
+                              <Clock className="mr-2 h-4 w-4 text-primary" />
+                              Vérification en attente
+                            </DropdownMenuItem>
                           )}
                         </>
                       )}
@@ -342,19 +363,20 @@ const Navigation = () => {
 
                   <div className="flex flex-col h-[calc(100%-60px)] overflow-hidden">
                     <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1 scroll-momentum">
-                      {[
-                        { label: t('navigation.professionals'), path: '/professionals', icon: Building2 },
-                        { label: t('navigation.projects'), path: '/projects', icon: Briefcase },
-                      ].map(({ label, path, icon: Icon }) => (
-                        <button
-                          key={path}
-                          onClick={() => navigateTo(path)}
-                          className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group"
-                        >
-                          <Icon className="h-5 w-5 text-primary flex-shrink-0" />
-                          <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">{label}</span>
-                        </button>
-                      ))}
+                      {/* Discovery links — visible to everyone */}
+                      <button onClick={() => navigateTo('/professionals?type=entrepreneur')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un entrepreneur</span>
+                      </button>
+                      <button onClick={() => navigateTo('/professionals?type=trade_professional')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <HardHat className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un professionnel</span>
+                      </button>
+                      {/* Trouver un projet — everyone */}
+                      <button onClick={() => navigateTo('/projects')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <Search className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un projet</span>
+                      </button>
 
                       {user && (
                         <>
@@ -366,15 +388,15 @@ const Navigation = () => {
                             </>
                           )}
                           {profile?.user_type === 'professional' && (
-                            !profile.profile_completed ? (
-                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo("/complete-profile")} />
-                            ) : !profile.is_rbq_verified ? (
-                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
-                            ) : (
+                            profile.is_rbq_verified ? (
                               <>
                                 <MobileNavItem icon={LayoutDashboard} label="Dashboard Pro" onClick={() => navigateTo("/pro/dashboard")} />
                                 <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/pro/profile")} />
                               </>
+                            ) : !profile.profile_completed ? (
+                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")} />
+                            ) : (
+                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
                             )
                           )}
                           {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
@@ -398,7 +420,13 @@ const Navigation = () => {
                           <div className="p-3 bg-muted rounded-md border border-border/50">
                             <div className="font-ui font-semibold text-xs text-foreground truncate">{profile?.full_name || user.email}</div>
                             <div className="font-ui text-[10px] text-muted-foreground mt-0.5">
-                              {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
+                              {profile?.user_type === 'client'
+                                ? 'Client'
+                                : profile?.professional_type === 'entrepreneur'
+                                ? 'Entrepreneur'
+                                : profile?.professional_type === 'trade_professional'
+                                ? 'Professionnel métier'
+                                : 'Professionnel'}
                             </div>
                           </div>
                           <Button
