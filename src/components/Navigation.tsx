@@ -166,26 +166,22 @@ const Navigation = () => {
 
             {/* ── Desktop nav links — context-aware ── */}
             <div className="hidden md:flex items-center gap-5 lg:gap-7">
-              {/* Trouver un entrepreneur — visible to client, trade_professional, non-connected */}
-              {(!user || profile?.user_type === 'client' || (profile?.user_type === 'professional' && profile?.professional_type === 'trade_professional')) && (
-                <button
-                  onClick={() => navigate("/professionals?type=entrepreneur")}
-                  className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
-                >
-                  <Building2 className="h-3.5 w-3.5" />
-                  Trouver un entrepreneur
-                </button>
-              )}
-              {/* Trouver un professionnel — visible to client, entrepreneur, non-connected */}
-              {(!user || profile?.user_type === 'client' || (profile?.user_type === 'professional' && profile?.professional_type === 'entrepreneur')) && (
-                <button
-                  onClick={() => navigate("/professionals?type=trade_professional")}
-                  className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
-                >
-                  <HardHat className="h-3.5 w-3.5" />
-                  Trouver un professionnel
-                </button>
-              )}
+              {/* Trouver un entrepreneur — visible to everyone */}
+              <button
+                onClick={() => navigate("/professionals?type=entrepreneur")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                Trouver un entrepreneur
+              </button>
+              {/* Trouver un professionnel — visible to everyone */}
+              <button
+                onClick={() => navigate("/professionals?type=trade_professional")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5 flex items-center gap-1.5"
+              >
+                <HardHat className="h-3.5 w-3.5" />
+                Trouver un professionnel
+              </button>
               {/* Trouver un projet — visible to everyone */}
               <button
                 onClick={() => navigate("/projects")}
@@ -367,19 +363,15 @@ const Navigation = () => {
 
                   <div className="flex flex-col h-[calc(100%-60px)] overflow-hidden">
                     <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1 scroll-momentum">
-                      {/* Context-aware discovery links */}
-                      {(!user || profile?.user_type === 'client' || (profile?.user_type === 'professional' && profile?.professional_type === 'trade_professional')) && (
-                        <button onClick={() => navigateTo('/professionals?type=entrepreneur')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
-                          <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                          <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un entrepreneur</span>
-                        </button>
-                      )}
-                      {(!user || profile?.user_type === 'client' || (profile?.user_type === 'professional' && profile?.professional_type === 'entrepreneur')) && (
-                        <button onClick={() => navigateTo('/professionals?type=trade_professional')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
-                          <HardHat className="h-5 w-5 text-primary flex-shrink-0" />
-                          <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un professionnel</span>
-                        </button>
-                      )}
+                      {/* Discovery links — visible to everyone */}
+                      <button onClick={() => navigateTo('/professionals?type=entrepreneur')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un entrepreneur</span>
+                      </button>
+                      <button onClick={() => navigateTo('/professionals?type=trade_professional')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
+                        <HardHat className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">Trouver un professionnel</span>
+                      </button>
                       {/* Trouver un projet — everyone */}
                       <button onClick={() => navigateTo('/projects')} className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group">
                         <Search className="h-5 w-5 text-primary flex-shrink-0" />
