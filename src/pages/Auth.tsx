@@ -8,10 +8,101 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, Building2, Phone } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import logo from "/logo-batirnet.png";
 
 type UserType = "client" | "professional";
+type CompanyType = "individuel" | "societe";
+
+// Password strength validation
+const PASSWORD_RULES = {
+  minLength: 8,
+  hasUppercase: /[A-Z]/,
+  hasNumber: /[0-9]/,
+  hasSpecial: /[^A-Za-z0-9]/,
+};
+
+function getPasswordStrength(password: string) {
+  return {
+    minLength: password.length >= PASSWORD_RULES.minLength,
+    hasUppercase: PASSWORD_RULES.hasUppercase.test(password),
+    hasNumber: PASSWORD_RULES.hasNumber.test(password),
+    hasSpecial: PASSWORD_RULES.hasSpecial.test(password),
+  };
+}
+
+function isPasswordValid(password: string) {
+  const s = getPasswordStrength(password);
+  return s.minLength && s.hasUppercase && s.hasNumber && s.hasSpecial;
+}
+
+// Reusable password input with show/hide and strength indicator
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  show,
+  onToggleShow,
+  placeholder = "••••••••",
+  showStrength = false,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  show: boolean;
+  onToggleShow: () => void;
+  placeholder?: string;
+  showStrength?: boolean;
+}) {
+  const strength = getPasswordStrength(value);
+  const rules = [
+    { key: "minLength", label: "8 caractères minimum" },
+    { key: "hasUppercase", label: "Une lettre majuscule" },
+    { key: "hasNumber", label: "Un chiffre" },
+    { key: "hasSpecial", label: "Un caractère spécial (!@#$...)" },
+  ] as const;
+
+  return (
+    <div className="space-y-2">
+      {label && <Label htmlFor={id}>{label}</Label>}
+      <div className="relative">
+        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <input
+          id={id}
+          type={show ? "text" : "password"}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex h-10 w-full rounded-md border border-input bg-background pl-10 pr-10 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          required
+        />
+        <button
+          type="button"
+          onClick={onToggleShow}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          tabIndex={-1}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </div>
+      {showStrength && value.length > 0 && (
+        <ul className="space-y-1 mt-1">
+          {rules.map(({ key, label: ruleLabel }) => (
+            <li key={key} className={`flex items-center gap-1.5 text-xs ${strength[key] ? 'text-green-600' : 'text-muted-foreground'}`}>
+              {strength[key]
+                ? <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                : <XCircle className="h-3 w-3 flex-shrink-0" />}
+              {ruleLabel}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 const Auth = () => {
   const { t } = useTranslation();
@@ -20,6 +111,12 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(mode !== 'signup');
   const [userType, setUserType] = useState<UserType>("client");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,6 +125,11 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  // US-047: company type + document upload
+  const [companyType, setCompanyType] = useState<CompanyType>("individuel");
+  const [docLicence, setDocLicence] = useState<File | null>(null);
+  const [docAssurance, setDocAssurance] = useState<File | null>(null);
+  const [docIdentite, setDocIdentite] = useState<File | null>(null);
 
   // Helper function to redirect based on profile status
   const redirectBasedOnProfile = (profile: {
@@ -61,9 +163,9 @@ const Auth = () => {
           .select('user_type, profile_completed, is_rbq_verified')
           .eq('id', session.user.id)
           .single();
-        
+
         if (!profile) return;
-        
+
         redirectBasedOnProfile(profile as {
           user_type: string;
           profile_completed: boolean;
@@ -74,16 +176,23 @@ const Auth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session && event === 'SIGNED_IN') {
+      if (event === 'PASSWORD_RECOVERY') {
+        // User clicked password reset link — show the new-password form
+        setIsPasswordRecovery(true);
+        setIsLogin(false);
+        setForgotPassword(false);
+        return;
+      }
+      if (session && event === 'SIGNED_IN' && !isPasswordRecovery) {
         // Fetch user profile to determine where to redirect
         const { data: profile } = await supabase
           .from('profiles')
           .select('user_type, profile_completed, is_rbq_verified')
           .eq('id', session.user.id)
           .single();
-        
+
         if (!profile) return;
-        
+
         redirectBasedOnProfile(profile as {
           user_type: string;
           profile_completed: boolean;
@@ -93,7 +202,56 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isPasswordRecovery]);
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/auth?mode=reset`,
+      });
+      if (error) throw error;
+      toast({
+        title: "Email envoyé",
+        description: "Un lien de réinitialisation vous a été envoyé. Vérifiez votre boîte de réception.",
+      });
+      setForgotPassword(false);
+      setIsLogin(true);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erreur lors de l'envoi.";
+      toast({ variant: "destructive", title: "Erreur", description: msg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast({ variant: "destructive", title: "Erreur", description: "Les mots de passe ne correspondent pas." });
+      return;
+    }
+    if (!isPasswordValid(newPassword)) {
+      toast({ variant: "destructive", title: "Mot de passe invalide", description: "Le mot de passe doit contenir 8+ caractères, une majuscule, un chiffre et un caractère spécial." });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast({ title: "Mot de passe mis à jour", description: "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe." });
+      setIsPasswordRecovery(false);
+      setIsLogin(true);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erreur lors de la mise à jour.";
+      toast({ variant: "destructive", title: "Erreur", description: msg });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,6 +264,17 @@ const Auth = () => {
           variant: "destructive",
           title: t('auth.messages.missing_fields'),
           description: t('auth.messages.missing_fields_description'),
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Password complexity validation
+      if (!isPasswordValid(password)) {
+        toast({
+          variant: "destructive",
+          title: "Mot de passe trop faible",
+          description: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.",
         });
         setLoading(false);
         return;
@@ -124,6 +293,7 @@ const Auth = () => {
             full_name: fullName,
             user_type: userType,
             phone: phone || null,
+            ...(userType === "professional" && { company_type: companyType }),
           }
         },
       });
@@ -256,65 +426,153 @@ const Auth = () => {
       <Card className="w-full max-w-2xl mx-auto shadow-lg">
         <CardHeader className="space-y-2 sm:space-y-3 md:space-y-4 text-center px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <div className="flex justify-center">
-            <img 
-              src={logo} 
-              alt="BâtirNet Logo" 
+            <img
+              src={logo}
+              alt="BâtirNet Logo"
               className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 rounded-lg object-cover"
             />
           </div>
           <div>
             <CardTitle className="text-lg sm:text-xl md:text-2xl">
-              {isLogin ? t('auth.login.title') : t('auth.signup.title')}
+              {isPasswordRecovery
+                ? "Nouveau mot de passe"
+                : forgotPassword
+                ? "Mot de passe oublié"
+                : isLogin ? t('auth.login.title') : t('auth.signup.title')}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              {isLogin 
+              {isPasswordRecovery
+                ? "Choisissez un nouveau mot de passe sécurisé"
+                : forgotPassword
+                ? "Entrez votre email pour recevoir un lien de réinitialisation"
+                : isLogin
                 ? t('auth.subtitle_login')
                 : t('auth.subtitle_signup')}
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
-          {isLogin ? (
+
+          {/* Password Recovery Form */}
+          {isPasswordRecovery ? (
+            <form onSubmit={handleSetNewPassword} className="space-y-4">
+              <PasswordField
+                id="new-password"
+                label="Nouveau mot de passe"
+                value={newPassword}
+                onChange={setNewPassword}
+                show={showPassword}
+                onToggleShow={() => setShowPassword(!showPassword)}
+                showStrength
+              />
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirmer le mot de passe</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="confirm-password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Répétez le nouveau mot de passe"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-destructive">Les mots de passe ne correspondent pas.</p>
+                )}
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Mise à jour..." : "Enregistrer le nouveau mot de passe"}
+              </Button>
+            </form>
+
+          /* Forgot Password Form */
+          ) : forgotPassword ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="forgot-email">Adresse email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="nom@exemple.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Envoi en cours..." : "Envoyer le lien de réinitialisation"}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setForgotPassword(false)}
+                  className="text-sm text-primary hover:underline"
+                >
+                  Retour à la connexion
+                </button>
+              </div>
+            </form>
+
+          ) : isLogin ? (
             // Login Form
             <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('auth.login.email')}</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder={t('auth.login.email_placeholder')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('auth.login.email')}</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t('auth.login.email_placeholder')}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('auth.login.password')}</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder={t('auth.login.password_placeholder')}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  required
-                  minLength={6}
-                />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">{t('auth.login.password')}</Label>
+                  <button
+                    type="button"
+                    onClick={() => { setForgotPassword(true); setForgotEmail(email); }}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t('auth.login.forgot')}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={t('auth.login.password_placeholder')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
+              <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? t('auth.login.button_loading') : t('auth.login.button')}
               </Button>
             </form>
@@ -353,19 +611,16 @@ const Auth = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">{t('auth.signup.password')} {t('auth.signup.required')}</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder={t('auth.signup.password_placeholder')}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                        minLength={6}
-                      />
-                    </div>
+                    <PasswordField
+                      id="signup-password"
+                      label=""
+                      value={password}
+                      onChange={setPassword}
+                      show={showPassword}
+                      onToggleShow={() => setShowPassword(!showPassword)}
+                      placeholder="Min. 8 car., majuscule, chiffre, spécial"
+                      showStrength
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -400,26 +655,122 @@ const Auth = () => {
                   </div>
                 </div>
 
-                {/* Professional-specific fields - simplified for initial signup */}
-                <TabsContent value="professional" className="mt-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-blue-900">
-                          {t('auth.complete_profile.professional_info')}
-                        </h4>
-                        <p className="text-sm text-blue-700 mt-1">
-                          Après confirmation de votre email, vous serez invité à compléter votre profil professionnel avec :
-                        </p>
-                        <ul className="text-sm text-blue-600 mt-2 space-y-1 list-disc list-inside">
-                          <li>Nom de l'entreprise et numéro RBQ</li>
-                          <li>Certification RBQ (document)</li>
-                          <li>Services offerts et assurance</li>
-                          <li>Localisation pour la carte</li>
-                        </ul>
+                {/* Professional-specific fields — US-047 & US-048 */}
+                <TabsContent value="professional" className="mt-4 space-y-5">
+                  {/* Type d'entreprise */}
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-muted-foreground" />
+                      Type d'entreprise *
+                    </Label>
+                    <RadioGroup
+                      value={companyType}
+                      onValueChange={(v) => setCompanyType(v as CompanyType)}
+                      className="flex gap-6"
+                    >
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="individuel" id="type-individuel" />
+                        <Label htmlFor="type-individuel" className="font-normal cursor-pointer">
+                          Travailleur autonome / Individuel
+                        </Label>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="societe" id="type-societe" />
+                        <Label htmlFor="type-societe" className="font-normal cursor-pointer">
+                          Société / Entreprise
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  {/* Upload documents — US-048 */}
+                  <div className="space-y-3">
+                    <Label className="flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      Documents de vérification
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      Ces documents seront examinés par notre équipe pour valider votre compte. Formats acceptés : PDF, JPG, PNG.
+                    </p>
+
+                    {/* Licence RBQ */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-licence" className="text-sm font-normal">
+                        Licence RBQ <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-licence"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-licence"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)}
+                      />
                     </div>
+
+                    {/* Assurance */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-assurance" className="text-sm font-normal">
+                        Certificat d'assurance <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-assurance"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-assurance"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)}
+                      />
+                    </div>
+
+                    {/* Pièce d'identité */}
+                    <div className="space-y-1">
+                      <Label htmlFor="doc-identite" className="text-sm font-normal">
+                        Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
+                      </Label>
+                      <label
+                        htmlFor="doc-identite"
+                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-primary/50 hover:bg-muted/30'}`}
+                      >
+                        <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
+                        <span className="text-sm text-muted-foreground truncate">
+                          {docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}
+                        </span>
+                        {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                      </label>
+                      <input
+                        id="doc-identite"
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+                    <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-700">
+                      Après confirmation de votre email, vous complèterez votre profil professionnel (services, zones, tarifs). Vos documents seront examinés sous 24-48h.
+                    </p>
                   </div>
                 </TabsContent>
 
@@ -440,17 +791,19 @@ const Auth = () => {
             </Tabs>
           )}
 
-          <div className="text-center text-sm">
-            <button
-              type="button"
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-primary hover:underline"
-            >
-              {isLogin 
-                ? t('auth.login.no_account')
-                : t('auth.signup.already_account')}
-            </button>
-          </div>
+          {!forgotPassword && !isPasswordRecovery && (
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-primary hover:underline"
+              >
+                {isLogin
+                  ? t('auth.login.no_account')
+                  : t('auth.signup.already_account')}
+              </button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -5,14 +5,20 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Send, 
-  MessageSquare, 
-  Loader2, 
-  AlertCircle, 
-  RefreshCw, 
+import {
+  Send,
+  MessageSquare,
+  Loader2,
+  AlertCircle,
+  RefreshCw,
   Trash2,
-  MoreVertical 
+  MoreVertical,
+  Paperclip,
+  MapPin,
+  DollarSign,
+  FileText,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -20,12 +26,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Conversation, Message } from "@/types/messaging";
 import { formatDistanceToNow, format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
+import { MeetingSchedulerDialog } from "./MeetingSchedulerDialog";
 
 // Constants for validation and pagination
 const MAX_MESSAGE_LENGTH = 5000;
@@ -58,6 +74,16 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
   
+  // File upload state
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Quote request dialog state
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [quoteProjectName, setQuoteProjectName] = useState("");
+  const [quoteDetails, setQuoteDetails] = useState("");
+  const [sendingQuote, setSendingQuote] = useState(false);
+
   // ✅ Phase 2: IntersectionObserver for reliable read receipts
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -417,6 +443,126 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     sendMessage(e as any, failedMsg.content);
   }, []);
 
+  // Upload a file and send as message attachment
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !conversation) return;
+
+    const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+    if (file.size > MAX_SIZE) {
+      toast({ variant: "destructive", title: "Fichier trop volumineux", description: "La taille maximale est de 10 Mo." });
+      return;
+    }
+
+    const receiverId = conversation.other_participant_id;
+    if (!receiverId) return;
+
+    setUploadingFile(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(path, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
+
+      const isImage = file.type.startsWith("image/");
+      const content = isImage ? `📷 Image partagée : ${file.name}` : `📎 Fichier partagé : ${file.name}`;
+
+      await supabase.from("messages").insert({
+        conversation_id: conversation.id,
+        sender_id: userId,
+        receiver_id: receiverId,
+        content,
+        attachment_url: publicUrl,
+        attachment_type: isImage ? "image" : "file",
+      });
+
+      toast({ title: "Fichier envoyé", description: file.name });
+    } catch (error) {
+      console.error("File upload error:", error);
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible d'envoyer le fichier." });
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // Share current GPS position as a Google Maps link
+  const handleShareLocation = () => {
+    if (!conversation) return;
+    const receiverId = conversation.other_participant_id;
+    if (!receiverId) return;
+
+    if (!navigator.geolocation) {
+      toast({ variant: "destructive", title: "Non supporté", description: "La géolocalisation n'est pas disponible sur votre navigateur." });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const { latitude, longitude } = coords;
+        const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+        const content = `📍 Ma position actuelle : ${mapsUrl}`;
+        try {
+          await supabase.from("messages").insert({
+            conversation_id: conversation.id,
+            sender_id: userId,
+            receiver_id: receiverId,
+            content,
+          });
+        } catch (error) {
+          console.error("GPS share error:", error);
+          toast({ variant: "destructive", title: "Erreur", description: "Impossible de partager la position." });
+        }
+      },
+      () => {
+        toast({ variant: "destructive", title: "Accès refusé", description: "Autorisez l'accès à votre position dans les paramètres du navigateur." });
+      }
+    );
+  };
+
+  // Send a structured quote request message
+  const handleSendQuoteRequest = async () => {
+    if (!conversation || !quoteProjectName.trim()) return;
+    const receiverId = conversation.other_participant_id;
+    if (!receiverId) return;
+
+    setSendingQuote(true);
+    try {
+      let content = `💰 **Demande de devis**\n📋 Projet : ${quoteProjectName.trim()}`;
+      if (quoteDetails.trim()) content += `\n📝 Détails : ${quoteDetails.trim()}`;
+      content += `\n\nMerci de me faire parvenir une soumission détaillée pour ce projet.`;
+
+      await supabase.from("messages").insert({
+        conversation_id: conversation.id,
+        sender_id: userId,
+        receiver_id: receiverId,
+        content,
+      });
+
+      // Notification to professional
+      await supabase.from("notifications").insert({
+        user_id: receiverId,
+        type: "quote_request",
+        title: "Demande de devis reçue",
+        message: `Un client demande un devis pour : ${quoteProjectName.trim()}`,
+        action_url: `/messages?conversation=${conversation.id}`,
+        metadata: { conversation_id: conversation.id },
+      });
+
+      toast({ title: "Demande envoyée", description: "Votre demande de devis a été envoyée." });
+      setQuoteDialogOpen(false);
+      setQuoteProjectName("");
+      setQuoteDetails("");
+    } catch (error) {
+      console.error("Quote request error:", error);
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible d'envoyer la demande." });
+    } finally {
+      setSendingQuote(false);
+    }
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -459,21 +605,42 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="p-4 border-b bg-background">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={conversation.other_participant_avatar || undefined} />
-            <AvatarFallback>
-              {getInitials(conversation.other_participant_name)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold">{conversation.other_participant_name}</h3>
-            <p className="text-xs text-muted-foreground capitalize">
-              {conversation.other_participant_type === 'professional'
-                ? t('common.professional')
-                : t('common.client')}
-            </p>
+      <div className="p-3 border-b bg-background">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={conversation.other_participant_avatar || undefined} />
+              <AvatarFallback>
+                {getInitials(conversation.other_participant_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h3 className="font-semibold">{conversation.other_participant_name}</h3>
+              <p className="text-xs text-muted-foreground capitalize">
+                {conversation.other_participant_type === 'professional'
+                  ? t('common.professional')
+                  : t('common.client')}
+              </p>
+            </div>
+          </div>
+          {/* Header action buttons */}
+          <div className="flex items-center gap-1">
+            {/* US-028: Schedule meeting */}
+            <MeetingSchedulerDialog
+              conversationId={conversation.id}
+              organizerId={userId}
+              participantId={conversation.other_participant_id || ""}
+              participantName={conversation.other_participant_name || ""}
+            />
+            {/* US-030: Request quote */}
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Demander un devis"
+              onClick={() => setQuoteDialogOpen(true)}
+            >
+              <DollarSign className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
@@ -595,7 +762,33 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                         🗑️ Message supprimé
                       </p>
                     ) : (
-                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                      <>
+                        <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+                        {/* Attachment preview */}
+                        {message.attachment_url && (
+                          <div className="mt-2">
+                            {message.attachment_type === 'image' ? (
+                              <a href={message.attachment_url} target="_blank" rel="noopener noreferrer">
+                                <img
+                                  src={message.attachment_url}
+                                  alt="Image partagée"
+                                  className="max-w-xs max-h-48 rounded-lg object-cover border"
+                                />
+                              </a>
+                            ) : (
+                              <a
+                                href={message.attachment_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`flex items-center gap-2 text-xs underline ${isOwnMessage ? 'text-primary-foreground/80' : 'text-primary'}`}
+                              >
+                                <FileText className="h-4 w-4 flex-shrink-0" />
+                                Télécharger le fichier
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* Timestamp and Status */}
@@ -631,9 +824,39 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="p-4 border-t bg-background">
+      <form onSubmit={sendMessage} className="p-3 border-t bg-background">
         <div className="space-y-2">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {/* US-027: File upload button */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,.pdf,.doc,.docx"
+              onChange={handleFileUpload}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="Joindre un fichier"
+              disabled={uploadingFile}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {uploadingFile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+            </Button>
+
+            {/* US-027: GPS share button */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              title="Partager ma position"
+              onClick={handleShareLocation}
+            >
+              <MapPin className="h-4 w-4" />
+            </Button>
+
             <div className="flex-1 relative">
               <Input
                 placeholder={t('messaging.type_message')}
@@ -654,9 +877,9 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                 {newMessage.length}/{MAX_MESSAGE_LENGTH}
               </div>
             </div>
-            <Button 
-              type="submit" 
-              size="icon" 
+            <Button
+              type="submit"
+              size="icon"
               disabled={sending || !newMessage.trim() || newMessage.length > MAX_MESSAGE_LENGTH}
             >
               {sending ? (
@@ -666,7 +889,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
               )}
             </Button>
           </div>
-          
+
           {/* Warning if approaching limit */}
           {newMessage.length > MAX_MESSAGE_LENGTH * 0.8 && newMessage.length <= MAX_MESSAGE_LENGTH && (
             <p className="text-xs text-muted-foreground">
@@ -680,6 +903,49 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
           )}
         </div>
       </form>
+
+      {/* US-030: Quote request dialog */}
+      <Dialog open={quoteDialogOpen} onOpenChange={setQuoteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              Demander un devis
+            </DialogTitle>
+            <DialogDescription>
+              Envoyez une demande de devis à {conversation.other_participant_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1">
+              <Label>Nom du projet *</Label>
+              <Input
+                value={quoteProjectName}
+                onChange={e => setQuoteProjectName(e.target.value)}
+                placeholder="Ex : Rénovation salle de bain principale"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Détails supplémentaires <span className="text-muted-foreground text-xs">(optionnel)</span></Label>
+              <Textarea
+                value={quoteDetails}
+                onChange={e => setQuoteDetails(e.target.value)}
+                placeholder="Surface, matériaux souhaités, contraintes particulières..."
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setQuoteDialogOpen(false)}>Annuler</Button>
+              <Button
+                onClick={handleSendQuoteRequest}
+                disabled={sendingQuote || !quoteProjectName.trim()}
+              >
+                {sendingQuote ? "Envoi..." : "Envoyer la demande"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

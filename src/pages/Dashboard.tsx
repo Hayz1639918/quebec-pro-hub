@@ -169,6 +169,18 @@ const Dashboard = () => {
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   const [pendingContracts, setPendingContracts] = useState<PendingContract[]>([]);
   const [allContracts, setAllContracts] = useState<ClientContract[]>([]);
+  const [milestonesTransactions, setMilestonesTransactions] = useState<{
+    id: string;
+    title: string;
+    contract_title: string;
+    contract_id: string;
+    project_title: string | null;
+    professional_name: string;
+    amount: number;
+    status: string;
+    validated_at: string | null;
+    created_at: string;
+  }[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
@@ -224,6 +236,7 @@ const Dashboard = () => {
       await fetchActiveProjectsAndReports(session.user.id);
       await fetchPendingContracts(session.user.id);
       await fetchAllContracts(session.user.id);
+      await fetchMilestoneTransactions(session.user.id);
     } catch (error) {
       console.error('Error checking user:', error);
       navigate("/auth?mode=login");
@@ -610,6 +623,89 @@ const Dashboard = () => {
       console.warn('Error fetching all contracts:', error);
       setAllContracts([]);
     }
+  };
+
+  const fetchMilestoneTransactions = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from('contract_milestones')
+        .select(`
+          id, title, amount, status, validated_at, created_at,
+          contracts:contract_id (
+            id, title, project_id,
+            projects:project_id (title),
+            profiles:professional_id (full_name)
+          )
+        `)
+        .eq('contracts.client_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        const formatted = data
+          .filter((m: any) => m.contracts)
+          .map((m: any) => ({
+            id: m.id,
+            title: m.title,
+            contract_title: m.contracts?.title || '',
+            contract_id: m.contracts?.id || '',
+            project_title: m.contracts?.projects?.title || null,
+            professional_name: m.contracts?.profiles?.full_name || 'Entrepreneur',
+            amount: m.amount,
+            status: m.status,
+            validated_at: m.validated_at,
+            created_at: m.created_at,
+          }));
+        setMilestonesTransactions(formatted);
+      }
+    } catch (error) {
+      console.warn('Error fetching milestone transactions:', error);
+    }
+  };
+
+  const handleDownloadInvoice = (contract: ClientContract) => {
+    const doc = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Facture — ${contract.title}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; color: #1a1a1a; }
+    h1 { color: #0066cc; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f0f5ff; }
+    .total { font-size: 1.2em; font-weight: bold; text-align: right; margin-top: 20px; }
+    .footer { margin-top: 40px; font-size: 0.85em; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>BâtirNet — Facture</h1>
+  <p><strong>Date :</strong> ${format(new Date(), 'PPP', { locale: fr })}</p>
+  <p><strong>Contrat :</strong> ${contract.title}</p>
+  ${contract.project_title ? `<p><strong>Projet :</strong> ${contract.project_title}</p>` : ''}
+  <p><strong>Entrepreneur :</strong> ${contract.professional_name}${contract.company_name ? ` — ${contract.company_name}` : ''}</p>
+  <p><strong>Statut du contrat :</strong> ${contract.status === 'active' ? 'Actif' : contract.status}</p>
+  <table>
+    <thead><tr><th>Description</th><th>Montant</th></tr></thead>
+    <tbody>
+      <tr><td>${contract.title}</td><td>${contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</td></tr>
+    </tbody>
+  </table>
+  <p class="total">Total : ${contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+  <div class="footer">
+    <p>BâtirNet — Plateforme de mise en relation pour la construction au Québec</p>
+    <p>Ce document est généré automatiquement et ne constitue pas une facture officielle sans signature.</p>
+  </div>
+</body>
+</html>`;
+    const blob = new Blob([doc], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `facture-${contract.id.slice(0, 8)}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleRemoveFavorite = async (favoriteId: string) => {
@@ -1368,36 +1464,95 @@ const Dashboard = () => {
 
             {/* Invoices Tab */}
             <TabsContent value="invoices">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{t('dashboard.invoices.title')}</CardTitle>
-                      <CardDescription>
-                        {t('dashboard.invoices.description')}
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12">
-                    <Receipt className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                    <h3 className="text-lg font-semibold mb-2">{t('dashboard.invoices.no_invoices')}</h3>
-                    <p className="text-muted-foreground mb-4">
-                      {t('dashboard.invoices.no_invoices_desc')}
-                    </p>
-                    <div className="mt-6 p-4 bg-success-light border border-success/30 rounded-lg text-sm text-left max-w-md mx-auto">
-                      <p className="font-semibold text-foreground mb-2">💳 Fonctionnalité à venir</p>
-                      <ul className="text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Facturation automatique par jalon</li>
-                        <li>Export PDF des factures</li>
-                        <li>Historique des paiements</li>
-                        <li>Reçus fiscaux disponibles</li>
-                      </ul>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="space-y-6">
+                {/* Résumé des contrats (Transactions) */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Receipt className="h-5 w-5" />
+                      Historique des transactions
+                    </CardTitle>
+                    <CardDescription>
+                      Tous vos contrats et paiements de jalons
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {allContracts.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Receipt className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                        <p>Aucun contrat enregistré pour le moment.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {allContracts.map((contract) => {
+                          const fullyPaid = contract.status === 'completed';
+                          const signed = contract.client_signed_at && contract.professional_signed_at;
+                          return (
+                            <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{contract.title}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {contract.professional_name}{contract.company_name ? ` — ${contract.company_name}` : ''}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {format(new Date(contract.created_at), 'PPP', { locale: fr })}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-3 ml-4">
+                                <div className="text-right">
+                                  <p className="font-semibold">{contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                                  <Badge variant={fullyPaid ? 'default' : signed ? 'secondary' : 'outline'} className="text-xs">
+                                    {fullyPaid ? 'Complété' : signed ? 'En cours' : 'En attente'}
+                                  </Badge>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={() => handleDownloadInvoice(contract)}>
+                                  <Download className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Jalons (paiements échelonnés) */}
+                {milestonesTransactions.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5" />
+                        Jalons de paiement
+                      </CardTitle>
+                      <CardDescription>Détail des versements par jalon</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {milestonesTransactions.map((m) => (
+                          <div key={m.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="text-sm font-medium">{m.title}</p>
+                              <p className="text-xs text-muted-foreground">{m.contract_title}{m.project_title ? ` — ${m.project_title}` : ''}</p>
+                              {m.validated_at && (
+                                <p className="text-xs text-green-600 mt-0.5">
+                                  Validé le {format(new Date(m.validated_at), 'PPP', { locale: fr })}
+                                </p>
+                              )}
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold">{m.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
+                              <Badge variant={m.status === 'completed' ? 'default' : m.status === 'requested' ? 'secondary' : 'outline'} className="text-xs">
+                                {m.status === 'completed' ? 'Payé' : m.status === 'requested' ? 'Demandé' : 'En attente'}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </TabsContent>
 
             {/* Activity Tab */}

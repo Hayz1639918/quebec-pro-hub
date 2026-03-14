@@ -6,18 +6,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import ProfessionalProposalForm from '@/components/forms/ProfessionalProposalForm';
-import { 
-  MapPin, 
-  Calendar, 
-  DollarSign, 
-  Tag, 
-  User, 
+import {
+  MapPin,
+  Calendar,
+  DollarSign,
+  Tag,
+  User,
   MessageSquare,
   ArrowLeft,
   Send,
@@ -30,8 +31,13 @@ import {
   Paperclip,
   Image as ImageIcon,
   FileDown,
-  X
+  X,
+  XCircle,
+  FolderOpen,
+  Star,
+  ThumbsUp,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -133,12 +139,84 @@ const ProjectDetails = () => {
   const [acceptedProposal, setAcceptedProposal] = useState<AcceptedProposal | null>(null);
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   const [projectImages, setProjectImages] = useState<ProjectImage[]>([]);
+  const [allProposals, setAllProposals] = useState<Array<{
+    id: string;
+    message: string;
+    estimated_budget: number | null;
+    estimated_duration_days: number | null;
+    status: string;
+    created_at: string;
+    professional_name: string;
+    company_name: string | null;
+  }>>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  // US-038 + US-039: Marquer comme terminé + recommandations
+  const [markingComplete, setMarkingComplete] = useState(false);
+  const [showRecommendations, setShowRecommendations] = useState(false);
+  const [recommendedPros, setRecommendedPros] = useState<{
+    id: string;
+    full_name: string;
+    company_name: string | null;
+    services_offered: string | null;
+    city: string | null;
+    region: string | null;
+    average_rating: number;
+    total_reviews: number;
+  }[]>([]);
   
   // Formulaire de proposition (ancien - à garder pour compatibilité)
   const [proposalMessage, setProposalMessage] = useState('');
   const [proposalBudget, setProposalBudget] = useState('');
   const [proposalDelay, setProposalDelay] = useState('');
+
+  const handleMarkAsComplete = async () => {
+    if (!project) return;
+    setMarkingComplete(true);
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', project.id);
+      if (error) throw error;
+      setProject(prev => prev ? { ...prev, status: 'completed' } : prev);
+      // Fetch recommendations from same category
+      await fetchRecommendations(project.category);
+      setShowRecommendations(true);
+      toast.success('Projet marqué comme terminé !');
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+  const fetchRecommendations = async (category: string) => {
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+        .eq('user_type', 'professional')
+        .eq('is_rbq_verified', true)
+        .ilike('services_offered', `%${category}%`)
+        .order('average_rating', { ascending: false })
+        .limit(3);
+      if (data) setRecommendedPros(data);
+      else {
+        // Fallback: top rated professionals
+        const { data: topPros } = await supabase
+          .from('profiles')
+          .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+          .eq('user_type', 'professional')
+          .eq('is_rbq_verified', true)
+          .order('average_rating', { ascending: false })
+          .limit(3);
+        setRecommendedPros(topPros || []);
+      }
+    } catch (e) {
+      console.error('Error fetching recommendations:', e);
+    }
+  };
 
   useEffect(() => {
     fetchProjectDetails();
@@ -219,6 +297,34 @@ const ProjectDetails = () => {
             company_name: (contractData.profiles as any)?.company_name || null,
           });
         }
+      }
+
+      // Fetch all proposals (for project owner's Documents tab)
+      const { data: allProposalsData } = await supabase
+        .from('proposals')
+        .select(`
+          id,
+          message,
+          estimated_budget,
+          estimated_duration_days,
+          status,
+          created_at,
+          profiles:professional_id (full_name, company_name)
+        `)
+        .eq('project_id', project.id)
+        .order('created_at', { ascending: false });
+
+      if (allProposalsData) {
+        setAllProposals(allProposalsData.map((p: any) => ({
+          id: p.id,
+          message: p.message,
+          estimated_budget: p.estimated_budget,
+          estimated_duration_days: p.estimated_duration_days,
+          status: p.status,
+          created_at: p.created_at,
+          professional_name: p.profiles?.full_name || 'Entrepreneur',
+          company_name: p.profiles?.company_name || null,
+        })));
       }
 
       // Fetch reports
@@ -578,7 +684,7 @@ const ProjectDetails = () => {
     <div className="min-h-screen flex flex-col">
       <Navigation />
       
-      <main className="container mx-auto px-6 lg:px-8 pt-24 pb-12 flex-1">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
         {/* Bouton retour */}
         <Button 
           variant="ghost" 
@@ -822,156 +928,221 @@ const ProjectDetails = () => {
             )}
           </div>
 
-          {/* Section Documents du projet - pour le client propriétaire */}
-          {isProjectOwner && (acceptedProposal || projectContract || projectReports.length > 0) && (
-            <div className="lg:col-span-2 space-y-6">
+          {/* Onglet Documents du projet - pour le client propriétaire */}
+          {isProjectOwner && (
+            <div className="lg:col-span-2 space-y-4">
               <h2 className="text-xl font-bold flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+                <FolderOpen className="h-5 w-5" />
                 Documents du projet
               </h2>
 
-              {/* Soumission acceptée */}
-              {acceptedProposal && (
-                <Card className="border-green-300 bg-green-50/30">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileText className="h-5 w-5" />
-                          Soumission acceptée
-                        </CardTitle>
-                        <CardDescription>
-                          Par {acceptedProposal.company_name || acceptedProposal.professional_name}
-                        </CardDescription>
-                      </div>
-                      <Badge className="bg-green-600 text-white">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Acceptée
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="text-sm text-muted-foreground">
-                        {acceptedProposal.estimated_budget && (
-                          <p>Budget proposé: <span className="font-medium text-foreground">{acceptedProposal.estimated_budget.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
-                        )}
-                        {acceptedProposal.estimated_duration_days && (
-                          <p>Délai: <span className="font-medium text-foreground">{acceptedProposal.estimated_duration_days} jours</span></p>
-                        )}
-                        <p>Acceptée le {format(new Date(acceptedProposal.created_at), 'dd MMM yyyy', { locale: fr })}</p>
-                      </div>
-                      
-                      {/* Boutons pour voir la soumission */}
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          onClick={() => navigate(`/proposal/${acceptedProposal.id}`)}
-                          variant="outline"
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          Voir les détails
-                        </Button>
-                        <Button 
-                          onClick={() => navigate(`/proposal/${acceptedProposal.id}?showPDF=true`)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <FileText className="h-4 w-4 mr-2" />
-                          Voir le PDF
-                        </Button>
-                      </div>
-                      
-                      {/* Message d'attente du contrat (si pas encore de contrat) */}
-                      {!projectContract && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-800">
-                            <Clock className="h-4 w-4 inline mr-1" />
-                            <strong>En attente du contrat</strong> - L'entrepreneur doit maintenant vous envoyer un contrat à signer.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-              
-              {/* Contrat */}
-              {projectContract && (
-                <Card className={projectContract.client_signed_at && projectContract.professional_signed_at ? 'border-green-300 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="flex items-center gap-2">
-                          <FileText className="h-5 w-5" />
-                          {projectContract.title}
-                        </CardTitle>
-                        <CardDescription>
-                          Par {projectContract.company_name || projectContract.professional_name}
-                        </CardDescription>
-                      </div>
-                      {projectContract.client_signed_at && projectContract.professional_signed_at ? (
-                        <Badge className="bg-green-600 text-white">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          Signé
-                        </Badge>
-                      ) : !projectContract.client_signed_at ? (
-                        <Badge className="bg-orange-500 text-white">
-                          À signer
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-yellow-600 border-yellow-400">
-                          En attente signature entrepreneur
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-muted-foreground">
-                        <p>Montant: <span className="font-medium text-foreground">{projectContract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
-                        <p>Créé le {format(new Date(projectContract.created_at), 'dd MMM yyyy', { locale: fr })}</p>
-                      </div>
-                      <Button 
-                        onClick={() => navigate(`/contracts?contract=${projectContract.id}`)}
-                        className={projectContract.client_signed_at ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}
-                      >
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        {!projectContract.client_signed_at ? 'Voir et signer' : 'Voir le contrat'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              <Tabs defaultValue="soumissions">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="soumissions" className="relative">
+                    Soumissions
+                    {allProposals.length > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs w-4 h-4 font-bold">
+                        {allProposals.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="contrat">
+                    Contrat
+                    {projectContract && !projectContract.client_signed_at && (
+                      <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-orange-500 text-white text-xs w-2 h-2" />
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="rapports" className="relative">
+                    Rapports
+                    {projectReports.filter(r => !r.is_read_by_client).length > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs w-4 h-4 font-bold">
+                        {projectReports.filter(r => !r.is_read_by_client).length}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="fichiers">
+                    Fichiers joints
+                    {projectImages.length > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-xs w-4 h-4 font-bold">
+                        {projectImages.length}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Rapports */}
-              {projectReports.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <ClipboardList className="h-5 w-5" />
-                      Rapports de l'entrepreneur ({projectReports.length})
-                      {projectReports.filter(r => !r.is_read_by_client).length > 0 && (
-                        <Badge variant="destructive" className="ml-2">
-                          {projectReports.filter(r => !r.is_read_by_client).length} nouveau(x)
-                        </Badge>
-                      )}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                {/* Onglet Soumissions */}
+                <TabsContent value="soumissions" className="mt-4">
+                  {allProposals.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p>Aucune soumission reçue pour l'instant.</p>
+                        <p className="text-sm mt-1">Les professionnels peuvent soumettre leurs offres depuis la page publique du projet.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {allProposals.map((proposal) => {
+                        const statusConfig: Record<string, { label: string; className: string }> = {
+                          pending:  { label: 'En attente', className: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+                          accepted: { label: 'Acceptée',   className: 'bg-green-100 text-green-800 border-green-300' },
+                          rejected: { label: 'Refusée',    className: 'bg-red-100 text-red-800 border-red-300' },
+                        };
+                        const cfg = statusConfig[proposal.status] || { label: proposal.status, className: '' };
+                        return (
+                          <Card
+                            key={proposal.id}
+                            className={proposal.status === 'accepted' ? 'border-green-300 bg-green-50/30' : ''}
+                          >
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <CardTitle className="text-base">
+                                    {proposal.company_name || proposal.professional_name}
+                                  </CardTitle>
+                                  <CardDescription>
+                                    Reçue le {format(new Date(proposal.created_at), 'dd MMM yyyy', { locale: fr })}
+                                  </CardDescription>
+                                </div>
+                                <Badge className={cfg.className}>
+                                  {proposal.status === 'accepted' && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                                  {cfg.label}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                {proposal.estimated_budget && (
+                                  <span className="flex items-center gap-1">
+                                    <DollarSign className="h-4 w-4" />
+                                    {proposal.estimated_budget.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                                  </span>
+                                )}
+                                {proposal.estimated_duration_days && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="h-4 w-4" />
+                                    {proposal.estimated_duration_days} jours
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm line-clamp-3 text-muted-foreground">{proposal.message}</p>
+                              <div className="flex flex-wrap gap-2 pt-1">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => navigate(`/proposal/${proposal.id}`)}
+                                >
+                                  <Eye className="h-3.5 w-3.5 mr-1.5" />
+                                  Voir les détails
+                                </Button>
+                                {proposal.status === 'accepted' && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700"
+                                    onClick={() => navigate(`/proposal/${proposal.id}?showPDF=true`)}
+                                  >
+                                    <FileDown className="h-3.5 w-3.5 mr-1.5" />
+                                    Télécharger PDF
+                                  </Button>
+                                )}
+                              </div>
+                              {proposal.status === 'accepted' && !projectContract && (
+                                <div className="p-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800 flex items-start gap-2">
+                                  <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                                  <span><strong>En attente du contrat</strong> — L'entrepreneur doit vous envoyer un contrat à signer.</span>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Onglet Contrat */}
+                <TabsContent value="contrat" className="mt-4">
+                  {!projectContract ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p>Aucun contrat disponible pour ce projet.</p>
+                        {acceptedProposal && (
+                          <p className="text-sm mt-1">Une soumission a été acceptée — l'entrepreneur prépare le contrat.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className={projectContract.client_signed_at && projectContract.professional_signed_at ? 'border-green-300 bg-green-50/30' : 'border-orange-300 bg-orange-50/30'}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              <FileText className="h-5 w-5" />
+                              {projectContract.title}
+                            </CardTitle>
+                            <CardDescription>
+                              Par {projectContract.company_name || projectContract.professional_name}
+                            </CardDescription>
+                          </div>
+                          {projectContract.client_signed_at && projectContract.professional_signed_at ? (
+                            <Badge className="bg-green-600 text-white">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Signé
+                            </Badge>
+                          ) : !projectContract.client_signed_at ? (
+                            <Badge className="bg-orange-500 text-white">À signer</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-yellow-600 border-yellow-400">
+                              En attente signature entrepreneur
+                            </Badge>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="text-sm text-muted-foreground space-y-1">
+                          <p>Montant: <span className="font-medium text-foreground">{projectContract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span></p>
+                          <p>Créé le {format(new Date(projectContract.created_at), 'dd MMM yyyy', { locale: fr })}</p>
+                          {projectContract.client_signed_at && (
+                            <p>Signé par vous le {format(new Date(projectContract.client_signed_at), 'dd MMM yyyy', { locale: fr })}</p>
+                          )}
+                          {projectContract.professional_signed_at && (
+                            <p>Signé par l'entrepreneur le {format(new Date(projectContract.professional_signed_at), 'dd MMM yyyy', { locale: fr })}</p>
+                          )}
+                        </div>
+                        <Button
+                          onClick={() => navigate(`/contracts?contract=${projectContract.id}`)}
+                          className={!projectContract.client_signed_at ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'}
+                        >
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          {!projectContract.client_signed_at ? 'Voir et signer le contrat' : 'Voir le contrat'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                {/* Onglet Rapports */}
+                <TabsContent value="rapports" className="mt-4">
+                  {projectReports.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p>Aucun rapport disponible pour ce projet.</p>
+                        <p className="text-sm mt-1">L'entrepreneur partagera les rapports d'avancement ici.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
                     <div className="space-y-4">
                       {projectReports.map((report) => (
-                        <div 
+                        <div
                           key={report.id}
-                          className={`border rounded-lg p-4 transition-colors ${!report.is_read_by_client ? 'bg-blue-50 border-blue-300 shadow-sm' : 'hover:bg-muted/30'}`}
+                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${!report.is_read_by_client ? 'bg-blue-50 border-blue-300 shadow-sm' : 'hover:bg-muted/30'}`}
                           onClick={async () => {
                             if (!report.is_read_by_client) {
                               try {
-                                await supabase
-                                  .from('project_reports')
-                                  .update({ is_read_by_client: true })
-                                  .eq('id', report.id);
-                                setProjectReports(prev => 
-                                  prev.map(r => r.id === report.id ? { ...r, is_read_by_client: true } : r)
-                                );
+                                await supabase.from('project_reports').update({ is_read_by_client: true }).eq('id', report.id);
+                                setProjectReports(prev => prev.map(r => r.id === report.id ? { ...r, is_read_by_client: true } : r));
                               } catch (e) {
                                 console.warn('Could not mark report as read');
                               }
@@ -999,15 +1170,11 @@ const ProjectDetails = () => {
                               </div>
                             )}
                           </div>
-                          
                           <div className="bg-white rounded-lg p-3 border mb-3">
                             <p className="text-sm whitespace-pre-wrap">{report.content}</p>
                           </div>
-                          
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>
-                              {format(new Date(report.created_at), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}
-                            </span>
+                            <span>{format(new Date(report.created_at), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}</span>
                             {!report.is_read_by_client && (
                               <span className="text-blue-600 font-medium">Cliquez pour marquer comme lu</span>
                             )}
@@ -1015,9 +1182,62 @@ const ProjectDetails = () => {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  )}
+                </TabsContent>
+
+                {/* Onglet Fichiers joints */}
+                <TabsContent value="fichiers" className="mt-4">
+                  {projectImages.length === 0 ? (
+                    <Card>
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        <ImageIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p>Aucun fichier joint à ce projet.</p>
+                        <p className="text-sm mt-1">Ajoutez des photos ou documents lors de la création ou modification du projet.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {projectImages.map((img) => {
+                        const isImage = /\.(jpe?g|png|gif|webp|svg)$/i.test(img.image_url);
+                        return (
+                          <div
+                            key={img.id}
+                            className="border rounded-lg overflow-hidden group cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => isImage && setPreviewImage(img.image_url)}
+                          >
+                            {isImage ? (
+                              <img
+                                src={img.image_url}
+                                alt={img.caption || 'Fichier joint'}
+                                className="w-full h-36 object-cover group-hover:scale-105 transition-transform"
+                              />
+                            ) : (
+                              <div className="w-full h-36 bg-muted flex flex-col items-center justify-center gap-2">
+                                <Paperclip className="h-8 w-8 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground text-center px-2 break-all">
+                                  {img.image_url.split('/').pop()}
+                                </span>
+                              </div>
+                            )}
+                            <div className="p-2 flex items-center justify-between gap-1">
+                              <p className="text-xs text-muted-foreground truncate flex-1">{img.caption || 'Sans titre'}</p>
+                              <a
+                                href={img.image_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-primary hover:text-primary/80"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           )}
 
@@ -1066,21 +1286,42 @@ const ProjectDetails = () => {
                   <CardTitle className="text-lg">Gérer le projet</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => navigate('/dashboard?tab=proposals')}
                   >
                     <FileText className="mr-2 h-4 w-4" />
                     Voir les offres
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full"
                     onClick={() => navigate(`/edit-project/${project.id}`)}
                   >
                     Modifier le projet
                   </Button>
+                  {project.status !== 'completed' && project.status !== 'cancelled' && (
+                    <Button
+                      variant="default"
+                      className="w-full bg-green-600 hover:bg-green-700"
+                      onClick={handleMarkAsComplete}
+                      disabled={markingComplete}
+                    >
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      {markingComplete ? 'Mise à jour...' : 'Marquer comme terminé'}
+                    </Button>
+                  )}
+                  {project.status === 'completed' && (
+                    <Button
+                      variant="outline"
+                      className="w-full border-green-300 text-green-700"
+                      onClick={() => fetchRecommendations(project.category).then(() => setShowRecommendations(true))}
+                    >
+                      <ThumbsUp className="mr-2 h-4 w-4" />
+                      Voir les recommandations
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1089,6 +1330,55 @@ const ProjectDetails = () => {
       </main>
 
       <Footer />
+
+      {/* Recommendations dialog (US-039) */}
+      <Dialog open={showRecommendations} onOpenChange={setShowRecommendations}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ThumbsUp className="h-5 w-5 text-green-600" />
+              Projet terminé — Bravo !
+            </DialogTitle>
+            <DialogDescription>
+              Merci d'avoir utilisé BâtirNet. Voici quelques professionnels recommandés pour votre prochain projet dans la même catégorie.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {recommendedPros.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-4">Aucune recommandation disponible pour le moment.</p>
+            ) : recommendedPros.map((pro) => (
+              <div key={pro.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/30">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{pro.company_name || pro.full_name}</p>
+                  {pro.company_name && <p className="text-xs text-muted-foreground">{pro.full_name}</p>}
+                  {(pro.city || pro.region) && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                      {pro.city}{pro.city && pro.region && ', '}{pro.region}
+                    </p>
+                  )}
+                  {pro.average_rating > 0 && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                      <span className="text-xs font-medium">{pro.average_rating.toFixed(1)}</span>
+                      <span className="text-xs text-muted-foreground">({pro.total_reviews} avis)</span>
+                    </div>
+                  )}
+                </div>
+                <Button size="sm" variant="outline" onClick={() => { setShowRecommendations(false); navigate(`/professionals/${pro.id}`); }}>
+                  Voir le profil
+                </Button>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRecommendations(false)}>Fermer</Button>
+            <Button onClick={() => { setShowRecommendations(false); navigate('/professionals'); }}>
+              Explorer tous les professionnels
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de prévisualisation d'image */}
       {previewImage && (

@@ -5,24 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-ui font-semibold tracking-wide transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover shadow-soft hover:shadow-medium",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-soft hover:shadow-medium",
-        outline: "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-muted",
-        ghost: "hover:bg-muted hover:text-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-hero text-primary-foreground hover:shadow-large scale-100 hover:scale-105 text-base",
-        accent: "bg-accent text-accent-foreground hover:bg-accent-hover shadow-soft hover:shadow-medium",
+        default:     "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.98] shadow-soft hover:shadow-medium",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/85 active:scale-[0.98]",
+        outline:     "border border-border text-foreground bg-transparent hover:border-primary/50 hover:text-primary hover:bg-primary/5 active:scale-[0.98]",
+        secondary:   "bg-secondary text-secondary-foreground hover:bg-muted active:scale-[0.98]",
+        ghost:       "text-foreground/70 hover:bg-muted hover:text-foreground",
+        link:        "text-primary underline-offset-4 hover:underline p-0 h-auto",
+        hero:        "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.98] shadow-medium hover:shadow-large",
+        accent:      "bg-primary text-primary-foreground hover:bg-primary-hover active:scale-[0.98] shadow-soft",
       },
       size: {
-        default: "h-12 px-6 py-3",
-        sm: "h-10 px-4 py-2",
-        lg: "h-14 px-8 py-4 text-base",
-        icon: "h-12 w-12",
+        default: "h-11 px-5 py-2.5",
+        sm:      "h-9 px-4 py-2 text-xs",
+        lg:      "h-13 px-7 py-3.5 text-sm",
+        icon:    "h-11 w-11",
       },
     },
     defaultVariants: {

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Briefcase } from "lucide-react";
+import { ArrowRight, Briefcase, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
@@ -8,68 +8,87 @@ const CTA = () => {
   const { t } = useTranslation();
 
   return (
-    <section className="py-12 sm:py-16 lg:py-24 relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-hero opacity-5" />
-      
+    <section className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
+      {/* Amber glow center */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-primary/5 blur-[120px] rounded-full" />
+      </div>
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="grid md:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 max-w-6xl mx-auto">
-          {/* Client CTA */}
-          <div className="bg-card border-2 border-primary/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-large hover:shadow-xl transition-all duration-300">
-            <div className="mb-4 sm:mb-6">
-              <div className="inline-flex p-3 sm:p-4 rounded-lg sm:rounded-xl bg-primary/10 mb-4 sm:mb-6">
-                <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-primary" />
+
+        {/* ── Overline ── */}
+        <div className="text-center mb-10">
+          <span className="inline-block font-ui text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+            Rejoindre BâtirNet
+          </span>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-5 sm:gap-6 max-w-5xl mx-auto">
+
+          {/* ── Client card ── */}
+          <div className="card-lift group bg-card border border-primary/25 rounded-lg p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+            {/* Top amber bar */}
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+
+            <div className="mb-6">
+              <div className="inline-flex p-3 rounded-sm bg-primary/10 border border-primary/20 mb-5">
+                <ArrowRight className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="mb-3 sm:mb-4 text-xl sm:text-2xl lg:text-3xl font-semibold">{t('cta.client.title')}</h3>
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed mb-6 sm:mb-8">
+              <h3 className="font-display font-bold text-xl sm:text-2xl text-foreground mb-3 leading-snug">
+                {t('cta.client.title')}
+              </h3>
+              <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed">
                 {t('cta.client.description')}
               </p>
             </div>
-            
-            <div className="space-y-3 sm:space-y-4">
-              <Button 
-                variant="hero" 
-                size="lg" 
-                className="w-full"
+
+            <div className="space-y-3">
+              <Button
+                size="lg"
+                className="w-full font-ui font-semibold uppercase tracking-wider group/btn"
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 {t('cta.client.button')}
+                <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
               </Button>
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-                <span>✓ {t('cta.client.benefits.commitment')}</span>
-                <span className="hidden sm:inline">•</span>
-                <span>✓ {t('cta.client.benefits.response')}</span>
-                <span className="hidden sm:inline">•</span>
-                <span>✓ {t('cta.client.benefits.free')}</span>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-muted-foreground font-ui">
+                <span className="flex items-center gap-1"><span className="text-primary">✓</span> {t('cta.client.benefits.commitment')}</span>
+                <span className="flex items-center gap-1"><span className="text-primary">✓</span> {t('cta.client.benefits.response')}</span>
+                <span className="flex items-center gap-1"><span className="text-primary">✓</span> {t('cta.client.benefits.free')}</span>
               </div>
             </div>
           </div>
 
-          {/* Contractor CTA */}
-          <div className="bg-card border-2 border-accent/20 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 shadow-large hover:shadow-xl transition-all duration-300">
-            <div className="mb-4 sm:mb-6">
-              <div className="inline-flex p-3 sm:p-4 rounded-lg sm:rounded-xl bg-accent/10 mb-4 sm:mb-6">
-                <Briefcase className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-accent" />
+          {/* ── Contractor card ── */}
+          <div className="card-lift group bg-card border border-border rounded-lg p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+            {/* Top subtle bar */}
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-border to-transparent group-hover:via-primary/30 transition-colors" />
+
+            <div className="mb-6">
+              <div className="inline-flex p-3 rounded-sm bg-muted border border-border mb-5 group-hover:border-primary/20 transition-colors">
+                <Briefcase className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-              <h3 className="mb-3 sm:mb-4 text-xl sm:text-2xl lg:text-3xl font-semibold">{t('cta.contractor.title')}</h3>
-              <p className="text-sm sm:text-base lg:text-lg text-muted-foreground leading-relaxed mb-6 sm:mb-8">
+              <h3 className="font-display font-bold text-xl sm:text-2xl text-foreground mb-3 leading-snug">
+                {t('cta.contractor.title')}
+              </h3>
+              <p className="font-body text-sm sm:text-base text-muted-foreground leading-relaxed">
                 {t('cta.contractor.description')}
               </p>
             </div>
-            
-            <div className="space-y-3 sm:space-y-4">
-              <Button 
-                variant="accent" 
-                size="lg" 
-                className="w-full"
+
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full font-ui font-medium border-border hover:border-primary/40 hover:text-primary group/btn"
                 onClick={() => navigate("/auth?mode=signup")}
               >
+                <Sparkles className="mr-2 h-4 w-4" />
                 {t('cta.contractor.button')}
               </Button>
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-                <span>✓ {t('cta.contractor.benefits.trial')}</span>
-                <span className="hidden sm:inline">•</span>
-                <span>✓ {t('cta.contractor.benefits.payments')}</span>
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-muted-foreground font-ui">
+                <span className="flex items-center gap-1"><span className="text-primary">✓</span> {t('cta.contractor.benefits.trial')}</span>
+                <span className="flex items-center gap-1"><span className="text-primary">✓</span> {t('cta.contractor.benefits.payments')}</span>
               </div>
             </div>
           </div>

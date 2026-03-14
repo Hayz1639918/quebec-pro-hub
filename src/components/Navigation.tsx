@@ -1,3 +1,4 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,6 +21,16 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import logo from "/logo-batirnet.png";
+
+const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group"
+  >
+    <Icon className="h-4.5 w-4.5 text-muted-foreground group-hover:text-primary flex-shrink-0 transition-colors" />
+    <span className="font-ui text-sm text-foreground/75 group-hover:text-foreground transition-colors">{label}</span>
+  </button>
+);
 
 const Navigation = () => {
   const { t } = useTranslation();
@@ -136,339 +147,285 @@ const Navigation = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border supports-[backdrop-filter]:bg-background/80">
-      {/* Safe area top padding for notch devices */}
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/96 backdrop-blur-md border-b border-border/60">
       <div className="pt-safe">
         <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
-            {/* Logo */}
-            <div 
-              className="flex items-center gap-2 flex-shrink-0 cursor-pointer touch-target" 
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
+
+            {/* ── Logo ── */}
+            <div
+              className="flex items-center gap-2 flex-shrink-0 cursor-pointer touch-target"
               onClick={() => navigateTo("/")}
             >
-              <img 
-                src={logo} 
-                alt="BâtirNet" 
-                className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto object-contain"
+              <img
+                src={logo}
+                alt="BâtirNet"
+                className="h-9 sm:h-11 md:h-14 lg:h-16 w-auto object-contain"
               />
             </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            <button 
-              onClick={() => navigate("/professionals")}
-              className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap text-sm lg:text-base"
-            >
-              {t('navigation.professionals')}
-            </button>
-            <button 
-              onClick={() => navigate("/projects")}
-              className="text-foreground hover:text-primary transition-colors font-medium whitespace-nowrap text-sm lg:text-base"
-            >
-              {t('navigation.projects')}
-            </button>
-          </div>
+            {/* ── Desktop nav links ── */}
+            <div className="hidden md:flex items-center gap-7 lg:gap-9">
+              <button
+                onClick={() => navigate("/professionals")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5"
+              >
+                {t('navigation.professionals')}
+              </button>
+              <button
+                onClick={() => navigate("/projects")}
+                className="nav-link text-foreground/75 hover:text-foreground transition-colors text-sm lg:text-base pb-0.5"
+              >
+                {t('navigation.projects')}
+              </button>
+            </div>
 
-          {/* Desktop Right Side Actions */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-4 flex-shrink-0">
-            <LanguageSwitcher />
-            
-            {user ? (
-              <>
-                {/* Notification Bell */}
+            {/* ── Desktop right actions ── */}
+            <div className="hidden md:flex items-center gap-2 lg:gap-3 flex-shrink-0">
+              <LanguageSwitcher />
+
+              {user ? (
+                <>
+                  {/* Bell */}
+                  <div className="relative">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full text-foreground/70 hover:text-foreground hover:bg-muted"
+                      onClick={() => navigate("/notifications")}
+                    >
+                      <Bell className={`h-4.5 w-4.5 ${unreadNotifications > 0 ? 'text-primary' : ''}`} />
+                    </Button>
+                    {unreadNotifications > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
+                        <span className="text-[9px] font-ui font-bold text-primary-foreground">
+                          {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                        </span>
+                      </span>
+                    )}
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full border border-border/50 hover:border-primary/40 hover:bg-muted text-foreground/70 hover:text-foreground"
+                      >
+                        <User className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-card border-border z-50">
+                      <div className="px-3 py-2">
+                        <p className="font-ui text-sm font-semibold text-foreground truncate">
+                          {profile?.full_name || user.email}
+                        </p>
+                        <p className="font-ui text-xs text-muted-foreground mt-0.5">
+                          {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
+                        </p>
+                      </div>
+                      <DropdownMenuSeparator />
+                      {profile?.user_type === 'client' && (
+                        <>
+                          <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer font-ui text-sm">
+                            <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
+                            {t('navigation.dashboard')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer font-ui text-sm">
+                            <User className="mr-2 h-4 w-4 text-primary" />
+                            Mon profil
+                          </DropdownMenuItem>
+                        </>
+                      )}
+                      {profile?.user_type === 'professional' && (
+                        <>
+                          {!profile.profile_completed ? (
+                            <DropdownMenuItem onClick={() => navigate("/complete-profile")} className="cursor-pointer font-ui text-sm">
+                              <User className="mr-2 h-4 w-4 text-primary" />
+                              Compléter mon profil
+                            </DropdownMenuItem>
+                          ) : !profile.is_rbq_verified ? (
+                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
+                              <Clock className="mr-2 h-4 w-4 text-primary" />
+                              Vérification en attente
+                            </DropdownMenuItem>
+                          ) : (
+                            <>
+                              <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer font-ui text-sm">
+                                <LayoutDashboard className="mr-2 h-4 w-4 text-primary" />
+                                Dashboard Pro
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate("/pro/profile")} className="cursor-pointer font-ui text-sm">
+                                <User className="mr-2 h-4 w-4 text-primary" />
+                                Mon profil
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </>
+                      )}
+                      <DropdownMenuSeparator />
+                      {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                        <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer font-ui text-sm">
+                          <MessageSquare className="mr-2 h-4 w-4 text-primary" />
+                          {t('navigation.messages')}
+                        </DropdownMenuItem>
+                      )}
+                      {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
+                        <DropdownMenuItem onClick={() => navigate("/contracts")} className="cursor-pointer font-ui text-sm">
+                          <FileText className="mr-2 h-4 w-4 text-primary" />
+                          {t('navigation.contracts')}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer font-ui text-sm text-destructive focus:text-destructive">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {t('navigation.logout')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    className="hidden sm:inline-flex font-ui text-sm text-foreground/75 hover:text-foreground"
+                    onClick={() => navigate("/auth?mode=login")}
+                  >
+                    {t('navigation.login')}
+                  </Button>
+                  <Button
+                    className="font-ui font-semibold text-sm uppercase tracking-wider"
+                    size="sm"
+                    onClick={() => navigate("/auth?mode=signup")}
+                  >
+                    {t('navigation.signup')}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* ── Mobile: bell + sheet menu ── */}
+            <div className="flex md:hidden items-center gap-1.5 sm:gap-2">
+              {user && (
                 <div className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="rounded-full"
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full h-10 w-10 touch-target text-foreground/70"
                     onClick={() => navigate("/notifications")}
                   >
-                    <Bell className={`h-5 w-5 ${unreadNotifications > 0 ? 'text-destructive' : ''}`} />
+                    <Bell className={`h-5 w-5 ${unreadNotifications > 0 ? 'text-primary' : ''}`} />
                   </Button>
                   {unreadNotifications > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-destructive rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
-                      <span className="text-[10px] font-bold text-white">
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
+                      <span className="text-[9px] font-ui font-bold text-primary-foreground">
                         {unreadNotifications > 99 ? '99+' : unreadNotifications}
                       </span>
                     </span>
                   )}
                 </div>
+              )}
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full relative">
-                      <User className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 bg-card z-50">
-                    <div className="px-2 py-1.5 text-sm font-semibold">
-                      {profile?.full_name || user.email}
-                    </div>
-                    <div className="px-2 py-1 text-xs text-muted-foreground">
-                      {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
-                    </div>
-                    <DropdownMenuSeparator />
-                    {profile?.user_type === 'client' && (
-                      <>
-                        <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
-                          <LayoutDashboard className="mr-2 h-4 w-4" />
-                          {t('navigation.dashboard')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          Mon profil
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    {profile?.user_type === 'professional' && (
-                      <>
-                        {!profile.profile_completed ? (
-                          <DropdownMenuItem onClick={() => navigate("/complete-profile")} className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4" />
-                            Compléter mon profil
-                          </DropdownMenuItem>
-                        ) : !profile.is_rbq_verified ? (
-                          <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer">
-                            <Clock className="mr-2 h-4 w-4" />
-                            Vérification en attente
-                          </DropdownMenuItem>
-                        ) : (
-                          <>
-                            <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer">
-                              <LayoutDashboard className="mr-2 h-4 w-4" />
-                              Dashboard Pro
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate("/pro/profile")} className="cursor-pointer">
-                              <User className="mr-2 h-4 w-4" />
-                              Mon profil
-                            </DropdownMenuItem>
-                          </>
-                        )}
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
-                      <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        {t('navigation.messages')}
-                      </DropdownMenuItem>
-                    )}
-                    {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
-                      <DropdownMenuItem onClick={() => navigate("/contracts")} className="cursor-pointer">
-                        <FileText className="mr-2 h-4 w-4" />
-                        {t('navigation.contracts')}
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {t('navigation.logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  className="hidden sm:inline-flex"
-                  onClick={() => navigate("/auth?mode=login")}
-                >
-                  {t('navigation.login')}
-                </Button>
-                <Button onClick={() => navigate("/auth?mode=signup")} size="sm" className="lg:size-default">
-                  {t('navigation.signup')}
-                </Button>
-              </>
-            )}
-          </div>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-10 w-10 touch-target text-foreground/70">
+                    <Menu className="h-6 w-6" />
+                    <span className="sr-only">Menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0 pt-safe bg-card border-border">
+                  <SheetHeader className="p-4 border-b border-border">
+                    <SheetTitle className="flex items-center gap-2">
+                      <img src={logo} alt="BâtirNet" className="h-9 w-auto" />
+                    </SheetTitle>
+                  </SheetHeader>
 
-          {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-1.5 sm:gap-2">
-            {user && (
-              <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="rounded-full h-10 w-10 touch-target"
-                  onClick={() => navigate("/notifications")}
-                >
-                  <Bell className={`h-5 w-5 ${unreadNotifications > 0 ? 'text-destructive' : ''}`} />
-                </Button>
-                {unreadNotifications > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-destructive rounded-full border-2 border-background flex items-center justify-center pointer-events-none">
-                    <span className="text-[9px] font-bold text-white">
-                      {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                    </span>
-                  </span>
-                )}
-              </div>
-            )}
-            
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-10 w-10 touch-target">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px] md:w-[350px] p-0 pt-safe">
-                <SheetHeader className="p-4 border-b">
-                  <SheetTitle className="flex items-center gap-2">
-                    <img src={logo} alt="BâtirNet" className="h-10 w-auto" />
-                  </SheetTitle>
-                </SheetHeader>
-                
-                <div className="flex flex-col h-[calc(100%-60px)] overflow-hidden">
-                  {/* Main Navigation */}
-                  <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1.5 sm:space-y-2 scroll-momentum">
-                    <button
-                      onClick={() => navigateTo("/professionals")}
-                      className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                    >
-                      <Building2 className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="font-medium text-sm sm:text-base">{t('navigation.professionals')}</span>
-                    </button>
-                    <button
-                      onClick={() => navigateTo("/projects")}
-                      className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                    >
-                      <Briefcase className="h-5 w-5 text-primary flex-shrink-0" />
-                      <span className="font-medium text-sm sm:text-base">{t('navigation.projects')}</span>
-                    </button>
+                  <div className="flex flex-col h-[calc(100%-60px)] overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-1 scroll-momentum">
+                      {[
+                        { label: t('navigation.professionals'), path: '/professionals', icon: Building2 },
+                        { label: t('navigation.projects'), path: '/projects', icon: Briefcase },
+                      ].map(({ label, path, icon: Icon }) => (
+                        <button
+                          key={path}
+                          onClick={() => navigateTo(path)}
+                          className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-md hover:bg-muted active:bg-muted/60 transition-colors text-left touch-target group"
+                        >
+                          <Icon className="h-5 w-5 text-primary flex-shrink-0" />
+                          <span className="font-ui font-medium text-sm text-foreground/80 group-hover:text-foreground transition-colors">{label}</span>
+                        </button>
+                      ))}
 
-                    {user && (
-                      <>
-                        <div className="h-px bg-border my-3 sm:my-4" />
-                        
-                        {profile?.user_type === 'client' && (
-                          <>
-                            <button
-                              onClick={() => navigateTo("/dashboard")}
-                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                            >
-                              <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-sm sm:text-base">{t('navigation.dashboard')}</span>
-                            </button>
-                            <button
-                              onClick={() => navigateTo("/dashboard/profile")}
-                              className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                            >
-                              <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                              <span className="text-sm sm:text-base">Mon profil</span>
-                            </button>
-                          </>
-                        )}
-                        
-                        {profile?.user_type === 'professional' && (
-                          <>
-                            {!profile.profile_completed ? (
-                              <button
-                                onClick={() => navigateTo("/complete-profile")}
-                                className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                              >
-                                <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                <span className="text-sm sm:text-base">Compléter mon profil</span>
-                              </button>
+                      {user && (
+                        <>
+                          <div className="h-px bg-border my-2" />
+                          {profile?.user_type === 'client' && (
+                            <>
+                              <MobileNavItem icon={LayoutDashboard} label={t('navigation.dashboard')} onClick={() => navigateTo("/dashboard")} />
+                              <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/dashboard/profile")} />
+                            </>
+                          )}
+                          {profile?.user_type === 'professional' && (
+                            !profile.profile_completed ? (
+                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo("/complete-profile")} />
                             ) : !profile.is_rbq_verified ? (
-                              <button
-                                onClick={() => navigateTo("/pending-verification")}
-                                className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                              >
-                                <Clock className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                <span className="text-sm sm:text-base">Vérification en attente</span>
-                              </button>
+                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
                             ) : (
                               <>
-                                <button
-                                  onClick={() => navigateTo("/pro/dashboard")}
-                                  className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                                >
-                                  <LayoutDashboard className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                  <span className="text-sm sm:text-base">Dashboard Pro</span>
-                                </button>
-                                <button
-                                  onClick={() => navigateTo("/pro/profile")}
-                                  className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                                >
-                                  <User className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                                  <span className="text-sm sm:text-base">Mon profil</span>
-                                </button>
+                                <MobileNavItem icon={LayoutDashboard} label="Dashboard Pro" onClick={() => navigateTo("/pro/dashboard")} />
+                                <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/pro/profile")} />
                               </>
-                            )}
-                          </>
-                        )}
-
-                        {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
-                          <button
-                            onClick={() => navigateTo("/messages")}
-                            className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                          >
-                            <MessageSquare className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                            <span className="text-sm sm:text-base">{t('navigation.messages')}</span>
-                          </button>
-                        )}
-
-                        {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
-                          <button
-                            onClick={() => navigateTo("/contracts")}
-                            className="flex items-center gap-3 w-full min-h-[44px] p-3 rounded-lg hover:bg-muted active:bg-muted/80 transition-colors text-left touch-target"
-                          >
-                            <FileText className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                            <span className="text-sm sm:text-base">{t('navigation.contracts')}</span>
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-
-                  {/* Bottom Section */}
-                  <div className="border-t p-3 sm:p-4 space-y-2.5 sm:space-y-3 pb-safe flex-shrink-0">
-                    <div className="flex items-center justify-between min-h-[44px]">
-                      <span className="text-xs sm:text-sm text-muted-foreground">Langue</span>
-                      <LanguageSwitcher />
+                            )
+                          )}
+                          {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                            <MobileNavItem icon={MessageSquare} label={t('navigation.messages')} onClick={() => navigateTo("/messages")} />
+                          )}
+                          {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
+                            <MobileNavItem icon={FileText} label={t('navigation.contracts')} onClick={() => navigateTo("/contracts")} />
+                          )}
+                        </>
+                      )}
                     </div>
-                    
-                    {user ? (
-                      <div className="space-y-2">
-                        <div className="p-2.5 sm:p-3 bg-muted rounded-lg">
-                          <div className="font-medium text-xs sm:text-sm truncate">{profile?.full_name || user.email}</div>
-                          <div className="text-[10px] sm:text-xs text-muted-foreground">
-                            {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
+
+                    <div className="border-t border-border p-3 sm:p-4 space-y-2.5 pb-safe flex-shrink-0">
+                      <div className="flex items-center justify-between min-h-[44px]">
+                        <span className="font-ui text-xs text-muted-foreground uppercase tracking-wider">Langue</span>
+                        <LanguageSwitcher />
+                      </div>
+
+                      {user ? (
+                        <div className="space-y-2">
+                          <div className="p-3 bg-muted rounded-md border border-border/50">
+                            <div className="font-ui font-semibold text-xs text-foreground truncate">{profile?.full_name || user.email}</div>
+                            <div className="font-ui text-[10px] text-muted-foreground mt-0.5">
+                              {profile?.user_type === 'client' ? t('auth.signup.client') : t('auth.signup.professional')}
+                            </div>
                           </div>
+                          <Button
+                            variant="outline"
+                            className="w-full min-h-[44px] font-ui text-sm text-destructive border-destructive/30 hover:bg-destructive/10"
+                            onClick={handleLogout}
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            {t('navigation.logout')}
+                          </Button>
                         </div>
-                        <Button 
-                          variant="outline" 
-                          className="w-full min-h-[44px] text-red-600 hover:text-red-700 hover:bg-red-50 active:bg-red-100 text-sm sm:text-base"
-                          onClick={handleLogout}
-                        >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          {t('navigation.logout')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Button 
-                          className="w-full min-h-[44px] text-sm sm:text-base" 
-                          onClick={() => navigateTo("/auth?mode=signup")}
-                        >
-                          {t('navigation.signup')}
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          className="w-full min-h-[44px] text-sm sm:text-base"
-                          onClick={() => navigateTo("/auth?mode=login")}
-                        >
-                          {t('navigation.login')}
-                        </Button>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="space-y-2">
+                          <Button className="w-full min-h-[44px] font-ui font-semibold text-sm uppercase tracking-wider" onClick={() => navigateTo("/auth?mode=signup")}>
+                            {t('navigation.signup')}
+                          </Button>
+                          <Button variant="outline" className="w-full min-h-[44px] font-ui text-sm" onClick={() => navigateTo("/auth?mode=login")}>
+                            {t('navigation.login')}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
-        </div>
         </div>
       </div>
     </nav>

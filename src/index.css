@@ -6,109 +6,107 @@
 All colors MUST be HSL.
 */
 
+/* ============================================================
+   BLEU BATIRNET — Thème officiel blanc & bleu #0066CC
+   Fonts : Fraunces (affichage) · Lora (corps) · Syne (UI)
+   ============================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 13% 14%;
+    /* ─── Surfaces — fond blanc froid, très légèrement bleuté ─── */
+    --background: 214 45% 97%;         /* #f2f6fd — blanc bleuté */
+    --foreground: 214 60% 11%;         /* #0d1c34 — marine profond */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 13% 14%;
+    --card: 0 0% 100%;                 /* blanc pur */
+    --card-foreground: 214 60% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 13% 14%;
+    --popover-foreground: 214 60% 11%;
 
-    /* Couleur principale - Bleu professionnel BâtirNet */
-    --primary: 214 84% 42%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 214 84% 35%;
-    --primary-light: 214 84% 95%;
+    /* ─── #0066CC — bleu logo exact ─── */
+    --primary: 210 100% 40%;           /* #0066cc */
+    --primary-foreground: 0 0% 100%;   /* blanc */
+    --primary-hover: 210 100% 33%;     /* #0052a8 — plus intense */
+    --primary-light: 210 100% 95%;     /* #e6f2ff — très pâle */
 
-    --secondary: 210 17% 98%;
-    --secondary-foreground: 222 13% 14%;
+    /* ─── Surfaces secondaires ─── */
+    --secondary: 214 40% 95%;
+    --secondary-foreground: 214 60% 11%;
 
-    --muted: 210 17% 96%;
-    --muted-foreground: 215 14% 50%;
+    --muted: 214 35% 93%;
+    --muted-foreground: 214 22% 45%;   /* gris-bleu moyen */
 
-    --accent: 215 25% 27%;
+    --accent: 210 100% 40%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 215 25% 20%;
+    --accent-hover: 210 100% 33%;
 
-    --destructive: 0 72% 51%;
+    /* ─── Fonctionnel ─── */
+    --destructive: 4 72% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 214 84% 42%;
+    --border: 214 30% 87%;
+    --input: 214 25% 90%;
+    --ring: 210 100% 40%;
 
-    --radius: 0.75rem;
+    --radius: 0.375rem;
 
-    /* Couleurs sémantiques unifiées */
-    --success: 152 69% 40%;
+    /* ─── Sémantique ─── */
+    --success: 145 55% 36%;
     --success-foreground: 0 0% 100%;
-    --success-light: 152 69% 95%;
-    
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --warning-light: 38 92% 95%;
-    
-    --info: 214 84% 42%;
-    --info-foreground: 0 0% 100%;
-    --info-light: 214 84% 95%;
+    --success-light: 145 55% 94%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(214 84% 42%), hsl(214 84% 52%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 17% 98%));
-    
-    --shadow-soft: 0 2px 8px -2px hsl(214 84% 42% / 0.08);
-    --shadow-medium: 0 8px 24px -4px hsl(214 84% 42% / 0.12);
-    --shadow-large: 0 16px 48px -8px hsl(214 84% 42% / 0.16);
+    --warning: 38 90% 48%;
+    --warning-foreground: 0 0% 100%;
+    --warning-light: 38 90% 94%;
+
+    --info: 210 100% 40%;
+    --info-foreground: 0 0% 100%;
+    --info-light: 210 100% 95%;
+
+    /* ─── Effets ─── */
+    --gradient-hero: linear-gradient(145deg, hsl(210 100% 40% / 0.07) 0%, hsl(214 45% 97% / 0) 60%);
+    --gradient-subtle: linear-gradient(180deg, hsl(214 45% 97%), hsl(214 35% 93%));
+
+    --shadow-soft:   0 2px 8px -2px hsl(210 100% 40% / 0.10);
+    --shadow-medium: 0 8px 24px -4px hsl(210 100% 40% / 0.14);
+    --shadow-large:  0 20px 56px -8px hsl(210 100% 40% / 0.18);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* ── Mode sombre — marine BâtirNet ── */
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-
-    --card: 222 47% 13%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 13%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 214 84% 52%;
+    --background: 214 55% 8%;          /* #0b1524 — marine très foncé */
+    --foreground: 214 30% 93%;
+    --card: 214 50% 11%;
+    --card-foreground: 214 30% 93%;
+    --popover: 214 50% 10%;
+    --popover-foreground: 214 30% 93%;
+    --primary: 210 100% 55%;           /* bleu plus lumineux sur fond sombre */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 214 84% 60%;
-    --primary-light: 214 84% 20%;
-
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 215 25% 27%;
+    --primary-hover: 210 100% 63%;
+    --primary-light: 210 100% 16%;
+    --secondary: 214 40% 14%;
+    --secondary-foreground: 214 30% 90%;
+    --muted: 214 35% 13%;
+    --muted-foreground: 214 20% 58%;
+    --accent: 210 100% 55%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 215 25% 35%;
-
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 214 84% 52%;
-
-    /* Couleurs sémantiques unifiées - Dark mode */
-    --success: 152 69% 45%;
+    --accent-hover: 210 100% 63%;
+    --destructive: 4 68% 52%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214 30% 20%;
+    --input: 214 30% 18%;
+    --ring: 210 100% 55%;
+    --success: 145 55% 42%;
     --success-foreground: 0 0% 100%;
-    --success-light: 152 69% 15%;
-    
-    --warning: 38 92% 55%;
-    --warning-foreground: 0 0% 100%;
-    --warning-light: 38 92% 15%;
-    
-    --info: 214 84% 52%;
+    --success-light: 145 55% 12%;
+    --warning: 38 90% 54%;
+    --warning-foreground: 214 55% 8%;
+    --warning-light: 38 90% 12%;
+    --info: 210 100% 55%;
     --info-foreground: 0 0% 100%;
-    --info-light: 214 84% 20%;
+    --info-light: 210 100% 14%;
   }
 }
 
@@ -121,52 +119,171 @@ All colors MUST be HSL.
   html {
     @apply scroll-smooth;
     -webkit-tap-highlight-color: transparent;
-    /* Fix pour iOS Safari viewport */
     height: 100%;
     height: -webkit-fill-available;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Lora', Georgia, 'Times New Roman', serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
     overflow-x: hidden;
-    /* Support pour les nouvelles unités viewport */
     min-height: 100vh;
-    min-height: 100dvh; /* Dynamic viewport height - meilleur pour mobile */
-    /* Safe area pour les appareils avec notch (iPhone X+) */
+    min-height: 100dvh;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+  /* Display headings — Fraunces : sérif optique, haut contraste */
+  h1, h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+
+  h3, h4 {
+    font-family: 'Syne', system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  h5, h6 {
+    font-family: 'Syne', system-ui, sans-serif;
+    font-weight: 500;
   }
 
   h1 {
-    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl;
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl;
   }
-
   h2 {
-    @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl;
+    @apply text-2xl sm:text-3xl md:text-4xl lg:text-5xl;
   }
-
   h3 {
-    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl;
+    @apply text-xl sm:text-2xl md:text-3xl;
   }
-
   h4 {
-    @apply text-base sm:text-lg md:text-xl lg:text-2xl;
+    @apply text-base sm:text-lg md:text-xl;
   }
 
-  /* Prevent horizontal scroll on mobile */
+  /* UI elements — Syne */
+  button, [role="button"],
+  .font-ui, label,
+  nav, .badge-text {
+    font-family: 'Syne', system-ui, sans-serif;
+  }
+
   #root {
     overflow-x: hidden;
     width: 100%;
     min-height: 100vh;
     min-height: 100dvh;
   }
+}
+
+/* ── Grain texture overlay — très subtil sur fond clair ── */
+#root::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.018;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ── Animations ── */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes reveal-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes amber-line {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-6px); }
+}
+
+.animate-reveal-up   { animation: reveal-up   0.65s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-reveal-fade { animation: reveal-fade  0.55s ease both; }
+.animate-reveal-left { animation: reveal-left  0.6s  cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-float       { animation: float-gentle 5s ease-in-out infinite; }
+
+.animation-delay-75  { animation-delay:  75ms; }
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-150 { animation-delay: 150ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+
+/* ── Card hover glow ── */
+.card-lift {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s ease;
+}
+.card-lift:hover {
+  transform: translateY(-3px);
+  border-color: hsl(var(--primary) / 0.35);
+  box-shadow: 0 16px 40px -8px hsl(var(--primary) / 0.22);
+}
+
+/* ── Nav link underline amber ── */
+.nav-link {
+  position: relative;
+  font-family: 'Syne', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: hsl(var(--primary));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link:hover::after,
+.nav-link.active::after { transform: scaleX(1); }
+
+/* ── Amber accent border-left on cards ── */
+.card-accent {
+  border-left: 2px solid hsl(var(--primary));
+}
+
+/* ── Section reveal animation (intersection) ── */
+.section-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Utility classes for semantic colors */

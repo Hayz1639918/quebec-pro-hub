@@ -33,6 +33,14 @@ export default {
       "2xl": "1400px",
     },
     extend: {
+      fontFamily: {
+        display: ['Fraunces', 'Georgia', 'serif'],
+        body:    ['Lora', 'Georgia', 'serif'],
+        ui:      ['Syne', 'system-ui', 'sans-serif'],
+        sans:    ['Syne', 'system-ui', 'sans-serif'],
+        serif:   ['Lora', 'Georgia', 'serif'],
+        mono:    ['"JetBrains Mono"', '"Courier New"', 'monospace'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
