@@ -651,25 +651,41 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 GRANT EXECUTE ON FUNCTION increment_profile_views(UUID) TO authenticated, anon;
 
-CREATE OR REPLACE VIEW favorites_with_details AS
+-- DROP first to allow column changes (CREATE OR REPLACE cannot remove columns)
+DROP VIEW IF EXISTS favorites_with_details;
+
+CREATE VIEW favorites_with_details AS
 SELECT
-  f.id AS favorite_id,
-  f.client_id AS user_id,
-  f.created_at AS favorited_at,
+  f.id          AS favorite_id,
+  f.client_id   AS user_id,
+  f.professional_id,
+  f.created_at  AS favorited_at,
+  f.notes,
+  f.priority,
   p.id,
   p.full_name,
+  p.email,
+  p.phone,
   p.company_name,
+  p.rbq_number,
   p.services_offered,
   p.city,
   p.region,
+  p.bio,
+  p.years_experience,
   p.average_rating,
   p.total_reviews,
+  p.total_projects,
   p.profile_picture_url,
   p.is_rbq_verified,
-  p.response_time_hours,
+  p.hourly_rate_min,
+  p.hourly_rate_max,
   p.availability_status,
-  p.years_experience,
-  p.bio,
+  p.available_from,
+  p.response_time_hours,
+  p.activity_score,
+  p.latitude,
+  p.longitude,
   p.subscription_tier
 FROM favorites f
 JOIN profiles p ON f.professional_id = p.id
