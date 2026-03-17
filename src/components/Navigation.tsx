@@ -275,7 +275,7 @@ const Navigation = () => {
                     {t('navigation.login')}
                   </button>
                   <button
-                    className="font-ui font-medium text-sm px-5 py-2 bg-foreground hover:bg-foreground/90 text-background transition-colors rounded-full"
+                    className="font-ui font-medium text-sm px-5 py-2 bg-primary hover:bg-primary-hover text-white transition-colors rounded-full"
                     onClick={() => navigate("/auth?mode=signup")}
                   >
                     {t('navigation.signup')}
@@ -395,7 +395,7 @@ const Navigation = () => {
                       ) : (
                         <div className="space-y-2">
                           <button
-                            className="w-full min-h-[44px] font-ui font-medium text-sm bg-foreground text-background hover:bg-foreground/90 transition-colors rounded-full"
+                            className="w-full min-h-[44px] font-ui font-medium text-sm bg-primary text-white hover:bg-primary-hover transition-colors rounded-full"
                             onClick={() => navigateTo("/auth?mode=signup")}
                           >
                             {t('navigation.signup')}

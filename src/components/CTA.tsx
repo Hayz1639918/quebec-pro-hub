@@ -29,7 +29,7 @@ const CTA = () => {
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
 
           {/* Client card — dark */}
-          <div className="relative bg-[hsl(220,20%,8%)] p-8 sm:p-10 lg:p-12 group overflow-hidden hover:bg-[hsl(220,18%,10%)] transition-colors duration-500">
+          <div className="relative bg-[hsl(214,75%,7%)] p-8 sm:p-10 lg:p-12 group overflow-hidden hover:bg-[hsl(214,70%,10%)] transition-colors duration-500">
 
             <div className="relative">
               <span className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em] block mb-8">
@@ -44,7 +44,7 @@ const CTA = () => {
               </p>
 
               <button
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-ui font-medium text-sm px-8 py-3.5 bg-white text-[hsl(220,20%,8%)] hover:bg-white/90 transition-all duration-300 rounded-full group/btn"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-3 font-ui font-medium text-sm px-8 py-3.5 bg-white text-[hsl(214,75%,7%)] hover:bg-blue-50 transition-all duration-300 rounded-full group/btn shadow-[0_0_32px_-8px_hsl(210,100%,40%,0.4)]"
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 {t("cta.client.button")}
@@ -81,7 +81,7 @@ const CTA = () => {
               </p>
 
               <button
-                className="w-full sm:w-auto inline-flex items-center justify-center font-ui font-medium text-sm px-8 py-3.5 border border-foreground/15 text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-all duration-300 rounded-full"
+                className="w-full sm:w-auto inline-flex items-center justify-center font-ui font-medium text-sm px-8 py-3.5 bg-primary text-white hover:bg-[hsl(210,100%,33%)] transition-all duration-300 rounded-full"
                 onClick={() => navigate("/auth?mode=signup")}
               >
                 {t("cta.contractor.button")}

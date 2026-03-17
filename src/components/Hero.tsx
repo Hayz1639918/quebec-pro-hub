@@ -57,14 +57,14 @@ const Hero = () => {
         {/* ── CTA buttons ── */}
         <div className="flex flex-col sm:flex-row gap-4 animate-reveal-up animation-delay-300 mb-16 sm:mb-20">
           <button
-            className="inline-flex items-center justify-center gap-3 font-ui font-medium text-sm sm:text-base px-8 py-3.5 bg-foreground text-background hover:bg-foreground/90 transition-all duration-300 rounded-full group"
+            className="inline-flex items-center justify-center gap-3 font-ui font-medium text-sm sm:text-base px-8 py-3.5 bg-primary text-white hover:bg-[hsl(210,100%,33%)] transition-all duration-300 rounded-full group shadow-[0_0_32px_-8px_hsl(210,100%,40%,0.4)]"
             onClick={() => navigate("/auth?mode=signup")}
           >
             {t("hero.cta_client")}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
           <button
-            className="inline-flex items-center justify-center font-ui font-medium text-sm sm:text-base px-8 py-3.5 border border-foreground/15 text-foreground/60 hover:text-foreground hover:border-foreground/30 transition-all duration-300 rounded-full"
+            className="inline-flex items-center justify-center font-ui font-medium text-sm sm:text-base px-8 py-3.5 border border-primary/25 text-primary/70 hover:text-primary hover:border-primary/50 transition-all duration-300 rounded-full"
             onClick={() => navigate("/auth?mode=signup")}
           >
             {t("hero.cta_pro")}
