@@ -8,56 +8,47 @@ const Footer = () => {
 
   const links = {
     company: [
-      { label: t('footer.company.about'), href: "#" },
-      { label: t('footer.company.careers'), href: "#" },
-      { label: t('footer.company.blog'), href: "#" },
-      { label: t('footer.company.contact'), href: "#" },
+      { label: t("footer.company.about"), href: "#" },
+      { label: t("footer.company.careers"), href: "#" },
+      { label: t("footer.company.blog"), href: "#" },
+      { label: t("footer.company.contact"), href: "#" },
     ],
     resources: [
-      { label: t('footer.resources.help_center'), href: "#" },
-      { label: t('footer.resources.client_guide'), href: "#" },
-      { label: t('footer.resources.contractor_guide'), href: "#" },
-      { label: t('footer.resources.faq'), href: "#" },
+      { label: t("footer.resources.help_center"), href: "#" },
+      { label: t("footer.resources.client_guide"), href: "#" },
+      { label: t("footer.resources.contractor_guide"), href: "#" },
+      { label: t("footer.resources.faq"), href: "#" },
     ],
     legal: [
-      { label: t('footer.legal.terms'), href: "#" },
-      { label: t('footer.legal.privacy'), href: "/privacy-policy" },
-      { label: t('footer.legal.cookies'), href: "#" },
-      { label: t('footer.legal.compliance'), href: "/privacy-policy" },
+      { label: t("footer.legal.terms"), href: "#" },
+      { label: t("footer.legal.privacy"), href: "/privacy-policy" },
+      { label: t("footer.legal.cookies"), href: "#" },
+      { label: t("footer.legal.compliance"), href: "/privacy-policy" },
     ],
   };
 
   return (
-    <footer className="relative border-t border-border bg-secondary/30 overflow-hidden">
-      {/* Lueur bleue subtile */}
-      <div className="absolute top-0 right-0 w-[400px] h-[250px] bg-primary/5 blur-[90px] pointer-events-none" />
+    <footer className="relative border-t border-primary/20 bg-white overflow-hidden">
+      <div className="absolute inset-0 blueprint-grid opacity-30 pointer-events-none" />
+      <div className="absolute -top-10 right-0 w-[420px] h-[260px] bg-primary/10 blur-[95px] pointer-events-none" />
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-16 mb-12 sm:mb-16">
-
-          {/* ── Brand ── */}
           <div className="col-span-2 md:col-span-1 space-y-5">
-            <img
-              src={logo}
-              alt="BâtirNet Logo"
-              className="h-10 sm:h-12 w-auto object-contain"
-            />
-            <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-[240px]">
-              {t('footer.tagline')}
-            </p>
-            {/* Socials */}
+            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain" />
+            <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-[240px]">{t("footer.tagline")}</p>
             <div className="flex gap-3">
               {[
-                { Icon: Facebook,  href: "#", label: "Facebook" },
-                { Icon: Twitter,   href: "#", label: "Twitter" },
-                { Icon: Linkedin,  href: "#", label: "LinkedIn" },
+                { Icon: Facebook, href: "#", label: "Facebook" },
+                { Icon: Twitter, href: "#", label: "Twitter" },
+                { Icon: Linkedin, href: "#", label: "LinkedIn" },
                 { Icon: Instagram, href: "#", label: "Instagram" },
               ].map(({ Icon, href, label }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="w-8 h-8 rounded-sm border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                  className="w-8 h-8 rounded-md border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
                 >
                   <Icon className="h-3.5 w-3.5" />
                 </a>
@@ -65,23 +56,17 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* ── Link columns ── */}
           {[
-            { title: t('footer.company.title'),   items: links.company   },
-            { title: t('footer.resources.title'), items: links.resources },
-            { title: t('footer.legal.title'),     items: links.legal     },
+            { title: t("footer.company.title"), items: links.company },
+            { title: t("footer.resources.title"), items: links.resources },
+            { title: t("footer.legal.title"), items: links.legal },
           ].map(({ title, items }) => (
             <div key={title}>
-              <h4 className="font-ui text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
-                {title}
-              </h4>
+              <h4 className="font-ui text-xs font-semibold uppercase tracking-[0.12em] text-primary/80 mb-4">{title}</h4>
               <ul className="space-y-2.5">
                 {items.map(({ label, href }) => (
                   <li key={label}>
-                    <a
-                      href={href}
-                      className="group inline-flex items-center gap-1 font-body text-sm text-foreground/60 hover:text-foreground transition-colors py-0.5"
-                    >
+                    <a href={href} className="group inline-flex items-center gap-1 font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-0.5">
                       {label}
                       <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-0.5 translate-x-0.5 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all" />
                     </a>
@@ -92,14 +77,9 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* ── Bottom bar ── */}
         <div className="pt-8 border-t border-border pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-ui text-xs text-muted-foreground">
-            © {currentYear} BâtirNet. {t('footer.rights')}
-          </p>
-          <p className="font-ui text-xs text-muted-foreground">
-            {t('footer.made_with_love')}
-          </p>
+          <p className="font-ui text-xs text-muted-foreground">© {currentYear} BâtirNet. {t("footer.rights")}</p>
+          <p className="font-ui text-xs text-muted-foreground">{t("footer.made_with_love")}</p>
         </div>
       </div>
     </footer>
