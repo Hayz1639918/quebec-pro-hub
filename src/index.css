@@ -247,6 +247,24 @@ All colors MUST be HSL.
   box-shadow: 0 16px 40px -8px hsl(var(--primary) / 0.22);
 }
 
+/* ── Blueprint texture for landing sections ── */
+.blueprint-grid {
+  background-image:
+    linear-gradient(hsl(var(--primary) / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.06) 1px, transparent 1px),
+    linear-gradient(hsl(var(--primary) / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--primary) / 0.04) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+  background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+}
+
+.modern-frame {
+  border: 1px solid hsl(var(--primary) / 0.24);
+  box-shadow:
+    0 18px 50px -20px hsl(var(--primary) / 0.45),
+    0 0 0 1px hsl(var(--background));
+}
+
 /* ── Nav link underline amber ── */
 .nav-link {
   position: relative;
