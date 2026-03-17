@@ -34,12 +34,13 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
-        body:    ['Lora', 'Georgia', 'serif'],
-        ui:      ['Syne', 'system-ui', 'sans-serif'],
-        sans:    ['Syne', 'system-ui', 'sans-serif'],
-        serif:   ['Lora', 'Georgia', 'serif'],
-        mono:    ['"JetBrains Mono"', '"Courier New"', 'monospace'],
+        display:    ['Fraunces', 'Georgia', 'serif'],
+        body:       ['Lora', 'Georgia', 'serif'],
+        ui:         ['Syne', 'system-ui', 'sans-serif'],
+        sans:       ['Syne', 'system-ui', 'sans-serif'],
+        serif:      ['Lora', 'Georgia', 'serif'],
+        mono:       ['"Space Mono"', '"JetBrains Mono"', '"Courier New"', 'monospace'],
+        technical:  ['"Space Mono"', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
