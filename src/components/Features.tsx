@@ -16,7 +16,7 @@ const Features = () => {
   ];
 
   return (
-    <section className="relative py-24 sm:py-32 lg:py-40 overflow-hidden bg-[hsl(214,75%,7%)]">
+    <section className="relative py-24 sm:py-32 lg:py-40 overflow-hidden bg-[hsl(210,100%,32%)]">
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -41,7 +41,7 @@ const Features = () => {
             return (
               <div
                 key={index}
-                className="relative bg-[hsl(214,75%,7%)] p-8 sm:p-10 group hover:bg-white/[0.03] transition-colors duration-500"
+                className="relative bg-[hsl(210,100%,32%)] p-8 sm:p-10 group hover:bg-white/[0.03] transition-colors duration-500"
               >
                 <div className="flex items-start justify-between mb-8">
                   <div className="p-2.5 border border-blue-400/15 bg-white/[0.03] group-hover:border-blue-400/30 transition-all duration-500">
@@ -85,7 +85,7 @@ const Features = () => {
                 alt={alt}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(214,75%,7%)] via-[hsl(214,75%,7%)]/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,100%,32%)] via-[hsl(210,100%,32%)]/20 to-transparent" />
 
               <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
                 <div className="h-px w-10 bg-white/20 mb-4" />

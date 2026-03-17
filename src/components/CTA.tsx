@@ -29,7 +29,7 @@ const CTA = () => {
         <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
 
           {/* Client card — dark */}
-          <div className="relative bg-[hsl(214,75%,7%)] p-8 sm:p-10 lg:p-12 group overflow-hidden hover:bg-[hsl(214,70%,10%)] transition-colors duration-500">
+          <div className="relative bg-[hsl(210,100%,32%)] p-8 sm:p-10 lg:p-12 group overflow-hidden hover:bg-[hsl(210,100%,28%)] transition-colors duration-500">
 
             <div className="relative">
               <span className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em] block mb-8">
