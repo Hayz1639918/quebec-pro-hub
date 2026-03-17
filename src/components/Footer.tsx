@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Linkedin, Instagram, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logo from "/logo-batirnet.png";
 
@@ -28,80 +28,26 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-[hsl(214,75%,7%)] border-t border-white/8 overflow-hidden">
+    <footer className="relative bg-[hsl(220,20%,8%)] overflow-hidden">
 
-      {/* Blueprint grid */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-30"
-        style={{
-          backgroundImage: `
-            linear-gradient(hsl(210,100%,65%,0.15) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(210,100%,65%,0.15) 1px, transparent 1px),
-            linear-gradient(hsl(210,100%,65%,0.07) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(210,100%,65%,0.07) 1px, transparent 1px)
-          `,
-          backgroundSize: '80px 80px, 80px 80px, 16px 16px, 16px 16px',
-        }}
-      />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
 
-      {/* Top glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/10 blur-[80px] pointer-events-none" />
+        {/* Top divider */}
+        <div className="h-px w-full bg-white/6 mb-16 sm:mb-20" />
 
-      {/* Corner annotation */}
-      <div className="absolute top-6 right-4 sm:right-8 font-mono text-[9px] text-blue-400/20 uppercase tracking-[0.2em] text-right pointer-events-none hidden sm:block">
-        <div>SEC. 005</div>
-        <div className="mt-1 opacity-60">FOOTER</div>
-      </div>
-
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative">
-
-        {/* Top horizontal rule with dimension marks */}
-        <div className="flex items-center gap-3 mb-12 sm:mb-16">
-          <div className="w-2 h-2 border border-blue-400/40 rotate-45 flex-shrink-0" />
-          <div className="h-px flex-1 bg-white/8" />
-          <span className="font-mono text-[9px] text-blue-400/25 uppercase tracking-[0.2em] whitespace-nowrap">
-            BATIRNET © {currentYear}
-          </span>
-          <div className="h-px flex-1 bg-white/8" />
-          <div className="w-2 h-2 border border-blue-400/40 rotate-45 flex-shrink-0" />
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 mb-12 sm:mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 lg:gap-12 mb-16 sm:mb-20">
 
           {/* Brand column */}
-          <div className="col-span-2 md:col-span-1 space-y-5">
-            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain brightness-110" />
+          <div className="col-span-2 md:col-span-4 lg:col-span-5 space-y-6">
+            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain" />
 
-            <p className="font-body text-sm text-white/45 leading-relaxed max-w-[220px]">
+            <p className="font-body text-sm text-white/25 leading-relaxed max-w-[280px]">
               {t("footer.tagline")}
             </p>
 
-            {/* Social links */}
-            <div className="flex gap-2">
-              {[
-                { Icon: Facebook, href: "#", label: "Facebook" },
-                { Icon: Twitter, href: "#", label: "Twitter" },
-                { Icon: Linkedin, href: "#", label: "LinkedIn" },
-                { Icon: Instagram, href: "#", label: "Instagram" },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-8 h-8 border border-white/12 bg-white/5 flex items-center justify-center text-white/40 hover:text-blue-400 hover:border-blue-400/40 hover:bg-blue-400/10 transition-all"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </a>
-              ))}
-            </div>
-
-            {/* Technical stamp */}
-            <div className="border border-blue-400/15 p-2.5 inline-block">
-              <div className="font-mono text-[9px] text-blue-400/40 uppercase tracking-[0.15em] leading-loose">
-                <div>QC — CA</div>
-                <div>RBQ CERTIFIÉ</div>
-                <div>PROJ-{currentYear}</div>
-              </div>
+            <div className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em] leading-loose">
+              <div>Québec, Canada</div>
+              <div>RBQ certifié</div>
             </div>
           </div>
 
@@ -111,22 +57,19 @@ const Footer = () => {
             { title: t("footer.resources.title"), items: links.resources },
             { title: t("footer.legal.title"), items: links.legal },
           ].map(({ title, items }) => (
-            <div key={title}>
-              <div className="flex items-center gap-2 mb-5">
-                <div className="w-1.5 h-1.5 bg-blue-400/50" />
-                <h4 className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-blue-400/60">
-                  {title}
-                </h4>
-              </div>
-              <ul className="space-y-2.5">
+            <div key={title} className="col-span-1 md:col-span-2 lg:col-span-2">
+              <h4 className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-white/30 mb-5">
+                {title}
+              </h4>
+              <ul className="space-y-3">
                 {items.map(({ label, href }) => (
                   <li key={label}>
                     <a
                       href={href}
-                      className="group inline-flex items-center gap-1.5 font-body text-sm text-white/40 hover:text-white transition-colors py-0.5"
+                      className="group inline-flex items-center gap-1 font-body text-sm text-white/20 hover:text-white/50 transition-colors"
                     >
                       {label}
-                      <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all -translate-y-0.5 translate-x-0.5 group-hover:translate-y-0 group-hover:translate-x-0" />
+                      <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </a>
                   </li>
                 ))}
@@ -136,11 +79,12 @@ const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="pt-6 border-t border-white/8 pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-mono text-[10px] text-white/25 uppercase tracking-[0.12em]">
+        <div className="h-px w-full bg-white/6 mb-6" />
+        <div className="pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em]">
             © {currentYear} BâtirNet. {t("footer.rights")}
           </p>
-          <p className="font-mono text-[10px] text-white/20 uppercase tracking-[0.1em]">
+          <p className="font-mono text-[10px] text-white/10 uppercase tracking-[0.08em]">
             {t("footer.made_with_love")}
           </p>
         </div>
