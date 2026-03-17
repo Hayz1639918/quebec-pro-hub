@@ -28,16 +28,56 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative border-t border-primary/20 bg-white overflow-hidden">
-      <div className="absolute inset-0 blueprint-grid opacity-30 pointer-events-none" />
-      <div className="absolute -top-10 right-0 w-[420px] h-[260px] bg-primary/10 blur-[95px] pointer-events-none" />
+    <footer className="relative bg-[hsl(214,75%,7%)] border-t border-white/8 overflow-hidden">
+
+      {/* Blueprint grid */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-30"
+        style={{
+          backgroundImage: `
+            linear-gradient(hsl(210,100%,65%,0.15) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(210,100%,65%,0.15) 1px, transparent 1px),
+            linear-gradient(hsl(210,100%,65%,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(210,100%,65%,0.07) 1px, transparent 1px)
+          `,
+          backgroundSize: '80px 80px, 80px 80px, 16px 16px, 16px 16px',
+        }}
+      />
+
+      {/* Top glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-primary/10 blur-[80px] pointer-events-none" />
+
+      {/* Corner annotation */}
+      <div className="absolute top-6 right-4 sm:right-8 font-mono text-[9px] text-blue-400/20 uppercase tracking-[0.2em] text-right pointer-events-none hidden sm:block">
+        <div>SEC. 005</div>
+        <div className="mt-1 opacity-60">FOOTER</div>
+      </div>
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-16 mb-12 sm:mb-16">
+
+        {/* Top horizontal rule with dimension marks */}
+        <div className="flex items-center gap-3 mb-12 sm:mb-16">
+          <div className="w-2 h-2 border border-blue-400/40 rotate-45 flex-shrink-0" />
+          <div className="h-px flex-1 bg-white/8" />
+          <span className="font-mono text-[9px] text-blue-400/25 uppercase tracking-[0.2em] whitespace-nowrap">
+            BATIRNET © {currentYear}
+          </span>
+          <div className="h-px flex-1 bg-white/8" />
+          <div className="w-2 h-2 border border-blue-400/40 rotate-45 flex-shrink-0" />
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-12 mb-12 sm:mb-16">
+
+          {/* Brand column */}
           <div className="col-span-2 md:col-span-1 space-y-5">
-            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain" />
-            <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-[240px]">{t("footer.tagline")}</p>
-            <div className="flex gap-3">
+            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain brightness-110" />
+
+            <p className="font-body text-sm text-white/45 leading-relaxed max-w-[220px]">
+              {t("footer.tagline")}
+            </p>
+
+            {/* Social links */}
+            <div className="flex gap-2">
               {[
                 { Icon: Facebook, href: "#", label: "Facebook" },
                 { Icon: Twitter, href: "#", label: "Twitter" },
@@ -48,27 +88,45 @@ const Footer = () => {
                   key={label}
                   href={href}
                   aria-label={label}
-                  className="w-8 h-8 rounded-md border border-border bg-card flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+                  className="w-8 h-8 border border-white/12 bg-white/5 flex items-center justify-center text-white/40 hover:text-blue-400 hover:border-blue-400/40 hover:bg-blue-400/10 transition-all"
                 >
                   <Icon className="h-3.5 w-3.5" />
                 </a>
               ))}
             </div>
+
+            {/* Technical stamp */}
+            <div className="border border-blue-400/15 p-2.5 inline-block">
+              <div className="font-mono text-[9px] text-blue-400/40 uppercase tracking-[0.15em] leading-loose">
+                <div>QC — CA</div>
+                <div>RBQ CERTIFIÉ</div>
+                <div>PROJ-{currentYear}</div>
+              </div>
+            </div>
           </div>
 
+          {/* Link columns */}
           {[
             { title: t("footer.company.title"), items: links.company },
             { title: t("footer.resources.title"), items: links.resources },
             { title: t("footer.legal.title"), items: links.legal },
           ].map(({ title, items }) => (
             <div key={title}>
-              <h4 className="font-ui text-xs font-semibold uppercase tracking-[0.12em] text-primary/80 mb-4">{title}</h4>
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-1.5 h-1.5 bg-blue-400/50" />
+                <h4 className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-blue-400/60">
+                  {title}
+                </h4>
+              </div>
               <ul className="space-y-2.5">
                 {items.map(({ label, href }) => (
                   <li key={label}>
-                    <a href={href} className="group inline-flex items-center gap-1 font-body text-sm text-foreground/70 hover:text-foreground transition-colors py-0.5">
+                    <a
+                      href={href}
+                      className="group inline-flex items-center gap-1.5 font-body text-sm text-white/40 hover:text-white transition-colors py-0.5"
+                    >
                       {label}
-                      <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-0.5 translate-x-0.5 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all" />
+                      <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-all -translate-y-0.5 translate-x-0.5 group-hover:translate-y-0 group-hover:translate-x-0" />
                     </a>
                   </li>
                 ))}
@@ -77,9 +135,14 @@ const Footer = () => {
           ))}
         </div>
 
-        <div className="pt-8 border-t border-border pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-ui text-xs text-muted-foreground">© {currentYear} BâtirNet. {t("footer.rights")}</p>
-          <p className="font-ui text-xs text-muted-foreground">{t("footer.made_with_love")}</p>
+        {/* Bottom bar */}
+        <div className="pt-6 border-t border-white/8 pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="font-mono text-[10px] text-white/25 uppercase tracking-[0.12em]">
+            © {currentYear} BâtirNet. {t("footer.rights")}
+          </p>
+          <p className="font-mono text-[10px] text-white/20 uppercase tracking-[0.1em]">
+            {t("footer.made_with_love")}
+          </p>
         </div>
       </div>
     </footer>
