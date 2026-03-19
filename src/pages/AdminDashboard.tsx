@@ -401,11 +401,15 @@ const AdminDashboard = () => {
   };
 
   // Filter pending verifications
-  const filteredPending = pendingVerifications.filter(p => 
-    p.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.rbq_number.includes(searchTerm)
-  );
+  const filteredPending = pendingVerifications.filter(p => {
+    const term = searchTerm.toLowerCase();
+    return (
+      (p.company_name ?? "").toLowerCase().includes(term) ||
+      p.full_name.toLowerCase().includes(term) ||
+      (p.rbq_number ?? "").toLowerCase().includes(term) ||
+      (p.trade_specialty ?? "").toLowerCase().includes(term)
+    );
+  });
 
   // Loading state
   if (loading) {
