@@ -30,7 +30,7 @@ const PendingVerification = () => {
 
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('full_name, company_name, rbq_number, is_rbq_verified, user_type, profile_completed')
+        .select('full_name, company_name, rbq_number, is_rbq_verified, user_type, profile_completed, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -45,9 +45,12 @@ const PendingVerification = () => {
         return;
       }
 
-      // If professional but profile not completed, redirect to complete-profile
+      // If professional but profile not completed, redirect to the right completion page
       if (!profileData.profile_completed) {
-        navigate("/complete-profile");
+        const completionRoute = profileData.professional_type === 'trade_professional'
+          ? "/complete-profile-trade"
+          : "/complete-profile-entrepreneur";
+        navigate(completionRoute);
         return;
       }
 

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Upload, Briefcase, HardHat } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Briefcase, HardHat } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "/logo-batirnet.png";
@@ -128,16 +128,12 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  // US-047: company type + document upload
+  // US-047: company type
   const [companyType, setCompanyType] = useState<CompanyType>("individuel");
-  const [docLicence, setDocLicence] = useState<File | null>(null);
-  const [docAssurance, setDocAssurance] = useState<File | null>(null);
-  const [docIdentite, setDocIdentite] = useState<File | null>(null);
   // Entrepreneur specific
   const [rbqNumber, setRbqNumber] = useState("");
   const [rbqSubcat, setRbqSubcat] = useState("");
   // Trade professional specific
-  const [docCCQ, setDocCCQ] = useState<File | null>(null);
   const [tradeSpecialty, setTradeSpecialty] = useState("");
 
   const redirectBasedOnProfile = (profile: AppProfile | null | undefined) => {
@@ -151,7 +147,7 @@ const Auth = () => {
         // Fetch user profile to determine where to redirect
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, profile_completed, is_rbq_verified')
+          .select('user_type, profile_completed, is_rbq_verified, professional_type')
           .eq('id', session.user.id)
           .single();
 
@@ -174,7 +170,7 @@ const Auth = () => {
         // Fetch user profile to determine where to redirect
         const { data: profile } = await supabase
           .from('profiles')
-          .select('user_type, profile_completed, is_rbq_verified')
+          .select('user_type, profile_completed, is_rbq_verified, professional_type')
           .eq('id', session.user.id)
           .single();
 
@@ -252,34 +248,19 @@ const Auth = () => {
         return;
       }
 
-      // Entrepreneur — licence RBQ + assurance obligatoires
+      // Entrepreneur — numéro RBQ requis à l'inscription
       if (userType === "professional" && professionalType === "entrepreneur") {
         if (!rbqNumber.trim()) {
           toast({ variant: "destructive", title: "Numéro de licence RBQ requis", description: "Entrez votre numéro de licence RBQ ou 'EN COURS' si votre demande est en traitement." });
           setLoading(false);
           return;
         }
-        if (!docLicence) {
-          toast({ variant: "destructive", title: "Licence RBQ obligatoire", description: "Veuillez uploader votre licence RBQ (PDF, JPG ou PNG)." });
-          setLoading(false);
-          return;
-        }
-        if (!docAssurance) {
-          toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
-          setLoading(false);
-          return;
-        }
       }
 
-      // Professionnel métier — carte CCQ obligatoire
+      // Professionnel métier — spécialité obligatoire
       if (userType === "professional" && professionalType === "trade_professional") {
         if (!tradeSpecialty) {
           toast({ variant: "destructive", title: "Corps de métier requis", description: "Sélectionnez votre spécialité." });
-          setLoading(false);
-          return;
-        }
-        if (!docCCQ) {
-          toast({ variant: "destructive", title: "Carte de compétence CCQ obligatoire", description: "Veuillez uploader votre carte de compétence CCQ." });
           setLoading(false);
           return;
         }
@@ -751,71 +732,11 @@ const Auth = () => {
                     </Select>
                   </div>
 
-                  {/* Documents */}
-                  <div className="space-y-3">
-                    <Label className="flex items-center gap-2">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                      Documents de vérification
-                    </Label>
-                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
-
-                    {/* Licence RBQ — OBLIGATOIRE */}
-                    <div className="space-y-1">
-                      <Label htmlFor="doc-licence" className="text-sm font-normal flex items-center gap-1">
-                        Scan de la licence RBQ
-                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                      </Label>
-                      <label
-                        htmlFor="doc-licence"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
-                      >
-                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-red-400'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
-                    </div>
-
-                    {/* Assurance responsabilité civile — OBLIGATOIRE */}
-                    <div className="space-y-1">
-                      <Label htmlFor="doc-assurance" className="text-sm font-normal flex items-center gap-1">
-                        Certificat d'assurance responsabilité civile
-                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                      </Label>
-                      <label
-                        htmlFor="doc-assurance"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-red-300 hover:border-blue-400 hover:bg-blue-50/30'}`}
-                      >
-                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-red-400'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
-                    </div>
-
-                    {/* Pièce d'identité — recommandé */}
-                    <div className="space-y-1">
-                      <Label htmlFor="doc-identite" className="text-sm font-normal">
-                        Pièce d'identité du répondant <span className="text-muted-foreground">(recommandé)</span>
-                      </Label>
-                      <label
-                        htmlFor="doc-identite"
-                        className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-blue-400/50 hover:bg-blue-50/30'}`}
-                      >
-                        <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
-                    </div>
-                  </div>
-
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
                     <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-blue-700 space-y-1">
-                      <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
-                      <p>• La <strong>licence RBQ</strong> est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
-                      <p>• L'<strong>assurance responsabilité civile</strong> protège le client et l'entrepreneur en cas de dommages.</p>
+                      <p className="font-medium">Après confirmation de votre courriel :</p>
+                      <p>• Vous serez invité à uploader votre <strong>licence RBQ</strong> et votre <strong>assurance responsabilité civile</strong>.</p>
                       <p>• Vos documents seront vérifiés sous 24-48h avant activation de votre compte.</p>
                     </div>
                   </div>
@@ -879,85 +800,11 @@ const Auth = () => {
                     </RadioGroup>
                   </div>
 
-                  {/* Documents */}
-                  <div className="space-y-3">
-                    <Label className="flex items-center gap-2">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                      Documents de vérification
-                    </Label>
-                    <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
-
-                    {/* Carte de compétence CCQ — OBLIGATOIRE */}
-                    <div className="space-y-1">
-                      <Label htmlFor="trade-doc-ccq" className="text-sm font-normal flex items-center gap-1">
-                        Carte de compétence CCQ
-                        <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                      </Label>
-                      <p className="text-[11px] text-muted-foreground">
-                        {tradeSpecialty === 'electricien'
-                          ? "Carte de compétence ou carte d'apprenti CMEQ"
-                          : tradeSpecialty === 'plombier'
-                          ? "Carte de compétence ou carte d'apprenti CMMTQ"
-                          : "Carte de compétence délivrée par la Commission de la construction du Québec (CCQ)"}
-                      </p>
-                      <label htmlFor="trade-doc-ccq" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docCCQ ? 'border-green-400 bg-green-50' : 'border-amber-400 hover:border-amber-500 hover:bg-amber-50/30'}`}>
-                        <Upload className={`h-4 w-4 ${docCCQ ? 'text-green-600' : 'text-amber-600'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docCCQ ? docCCQ.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docCCQ && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="trade-doc-ccq" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocCCQ(e.target.files?.[0] ?? null)} />
-                    </div>
-
-                    {/* Licence RBQ / CMEQ / CMMTQ */}
-                    <div className="space-y-1">
-                      <Label htmlFor="trade-doc-licence" className="text-sm font-normal">
-                        {tradeSpecialty === 'electricien'
-                          ? "Licence CMEQ (si maître électricien)"
-                          : tradeSpecialty === 'plombier'
-                          ? "Licence CMMTQ (si maître mécanicien)"
-                          : "Licence RBQ entrepreneur spécialisé (si applicable)"}
-                        <span className="text-muted-foreground ml-1">(si applicable)</span>
-                      </Label>
-                      <label htmlFor="trade-doc-licence" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docLicence ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
-                        <Upload className={`h-4 w-4 ${docLicence ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="trade-doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
-                    </div>
-
-                    {/* Assurance */}
-                    <div className="space-y-1">
-                      <Label htmlFor="trade-doc-assurance" className="text-sm font-normal">
-                        Assurance responsabilité civile <span className="text-muted-foreground">(recommandé)</span>
-                      </Label>
-                      <label htmlFor="trade-doc-assurance" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docAssurance ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
-                        <Upload className={`h-4 w-4 ${docAssurance ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="trade-doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
-                    </div>
-
-                    {/* Pièce d'identité */}
-                    <div className="space-y-1">
-                      <Label htmlFor="trade-doc-identite" className="text-sm font-normal">
-                        Pièce d'identité <span className="text-muted-foreground">(recommandé)</span>
-                      </Label>
-                      <label htmlFor="trade-doc-identite" className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${docIdentite ? 'border-green-400 bg-green-50' : 'border-border hover:border-amber-400/50 hover:bg-amber-50/30'}`}>
-                        <Upload className={`h-4 w-4 ${docIdentite ? 'text-green-600' : 'text-muted-foreground'}`} />
-                        <span className="text-sm text-muted-foreground truncate">{docIdentite ? docIdentite.name : 'Cliquez pour choisir un fichier'}</span>
-                        {docIdentite && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                      </label>
-                      <input id="trade-doc-identite" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentite(e.target.files?.[0] ?? null)} />
-                    </div>
-                  </div>
-
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                     <HardHat className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-amber-700 space-y-1">
-                      <p className="font-medium">Exigences légales au Québec :</p>
-                      <p>• La <strong>carte de compétence CCQ</strong> est obligatoire pour tout travailleur de la construction.</p>
+                      <p className="font-medium">Après confirmation de votre courriel :</p>
+                      <p>• Vous serez invité à uploader votre <strong>carte de compétence CCQ</strong> pour compléter votre profil.</p>
                       {tradeSpecialty === 'electricien' && <p>• Les électriciens sont réglementés par la <strong>CMEQ</strong>.</p>}
                       {tradeSpecialty === 'plombier' && <p>• Les plombiers/mécaniciens sont réglementés par la <strong>CMMTQ</strong>.</p>}
                       <p>• Vos documents seront examinés sous 24-48h.</p>

@@ -21,7 +21,7 @@ export function getPostAuthRoute(profile: AppProfile | null | undefined): string
 
     if (!profile.profile_completed) {
       return profile.professional_type === "trade_professional"
-        ? "/complete-profile"
+        ? "/complete-profile-trade"
         : "/complete-profile-entrepreneur";
     }
 
