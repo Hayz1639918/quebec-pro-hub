@@ -32,14 +32,14 @@ const CTA = () => {
           <div className="relative bg-[hsl(210,100%,32%)] p-8 sm:p-10 lg:p-12 group overflow-hidden hover:bg-[hsl(210,100%,28%)] transition-colors duration-500">
 
             <div className="relative">
-              <span className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em] block mb-8">
+              <span className="font-mono text-[10px] text-white/60 uppercase tracking-[0.1em] block mb-8">
                 Pour les clients
               </span>
 
               <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl text-white/90 mb-4 leading-tight">
                 {t("cta.client.title")}
               </h3>
-              <p className="font-body text-base text-white/30 leading-relaxed mb-10">
+              <p className="font-body text-base text-white/75 leading-relaxed mb-10">
                 {t("cta.client.description")}
               </p>
 
@@ -57,7 +57,7 @@ const CTA = () => {
                   t("cta.client.benefits.response"),
                   t("cta.client.benefits.free"),
                 ].map((b) => (
-                  <span key={b} className="font-mono text-[10px] text-white/20 uppercase tracking-[0.08em]">
+                  <span key={b} className="font-mono text-[10px] text-white/60 uppercase tracking-[0.08em]">
                     {b}
                   </span>
                 ))}
