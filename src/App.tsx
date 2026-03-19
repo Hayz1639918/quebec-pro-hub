@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedProRoute from "@/components/ProtectedProRoute";
+import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
 
 // Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -116,7 +117,9 @@ const App = () => (
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route element={<ProtectedAdminRoute />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+              </Route>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
