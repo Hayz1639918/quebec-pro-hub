@@ -69,14 +69,16 @@ interface PendingVerification {
   email: string;
   full_name: string;
   phone: string | null;
-  company_name: string;
-  rbq_number: string;
+  company_name: string | null;
+  rbq_number: string | null;
   rbq_certification_url: string | null;
   services_offered: string | null;
   insurance_info: string | null;
   city: string | null;
   region: string | null;
   postal_code: string | null;
+  professional_type: string | null;
+  trade_specialty: string | null;
   created_at: string;
   missing_certification: boolean;
 }
@@ -600,8 +602,8 @@ const AdminDashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Entreprise</TableHead>
-                      <TableHead>Numéro RBQ</TableHead>
+                      <TableHead>Professionnel</TableHead>
+                      <TableHead>Type / Licence</TableHead>
                       <TableHead>Localisation</TableHead>
                       <TableHead>Date inscription</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -612,15 +614,20 @@ const AdminDashboard = () => {
                       <TableRow key={pro.id}>
                         <TableCell>
                           <div>
-                            <p className="font-medium">{pro.company_name}</p>
+                            <p className="font-medium">{pro.company_name || pro.full_name}</p>
                             <p className="text-sm text-muted-foreground">{pro.full_name}</p>
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              {pro.professional_type === 'trade_professional' ? 'Métier' : 'Entrepreneur'}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <code className="bg-muted px-2 py-1 rounded text-sm">
-                              {pro.rbq_number}
-                            </code>
+                            {pro.professional_type === 'trade_professional' ? (
+                              <span className="bg-muted px-2 py-1 rounded text-sm">{pro.trade_specialty || '—'}</span>
+                            ) : (
+                              <code className="bg-muted px-2 py-1 rounded text-sm">{pro.rbq_number || '—'}</code>
+                            )}
                             {pro.missing_certification && (
                               <Badge variant="outline" className="text-orange-600 border-orange-300">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
@@ -851,19 +858,32 @@ const AdminDashboard = () => {
 
               <Separator />
 
-              {/* RBQ Info */}
+              {/* Certification Info */}
               <div className="space-y-4">
                 <h4 className="font-medium flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  Informations RBQ
+                  {selectedProfessional.professional_type === 'trade_professional'
+                    ? 'Informations corps de métier'
+                    : 'Informations RBQ'}
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Numéro RBQ</Label>
-                    <p className="font-mono text-lg">{selectedProfessional.rbq_number}</p>
+                    {selectedProfessional.professional_type === 'trade_professional' ? (
+                      <>
+                        <Label className="text-muted-foreground">Corps de métier</Label>
+                        <p className="font-medium">{selectedProfessional.trade_specialty || '—'}</p>
+                      </>
+                    ) : (
+                      <>
+                        <Label className="text-muted-foreground">Numéro RBQ</Label>
+                        <p className="font-mono text-lg">{selectedProfessional.rbq_number || '—'}</p>
+                      </>
+                    )}
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Certification</Label>
+                    <Label className="text-muted-foreground">
+                      {selectedProfessional.professional_type === 'trade_professional' ? 'Carte CCQ' : 'Licence RBQ'}
+                    </Label>
                     {selectedProfessional.rbq_certification_url ? (
                       <Button
                         variant="outline"
@@ -881,34 +901,51 @@ const AdminDashboard = () => {
                     )}
                   </div>
                 </div>
-                
+
+                {selectedProfessional.insurance_info && (
+                  <div>
+                    <Label className="text-muted-foreground">Assurance responsabilité civile</Label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-1"
+                      onClick={() => window.open(selectedProfessional.insurance_info!, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Voir le document
+                    </Button>
+                  </div>
+                )}
+
                 {selectedProfessional.missing_certification && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <div className="flex items-start gap-2">
                       <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
                       <div>
-                        <p className="font-medium text-orange-900">Certification manquante</p>
+                        <p className="font-medium text-orange-900">Document manquant</p>
                         <p className="text-sm text-orange-700">
-                          Ce professionnel n'a pas encore téléchargé sa certification RBQ. 
-                          Vous ne pouvez pas valider sa licence sans ce document.
+                          {selectedProfessional.professional_type === 'trade_professional'
+                            ? "Ce professionnel n'a pas encore téléchargé sa carte de compétence CCQ."
+                            : "Ce professionnel n'a pas encore téléchargé sa certification RBQ."}
                         </p>
                       </div>
                     </div>
                   </div>
                 )}
-                
-                {/* External RBQ verification link */}
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <Label className="text-muted-foreground">Vérification externe</Label>
-                  <Button
-                    variant="link"
-                    className="px-0 h-auto"
-                    onClick={() => window.open(`https://www.rbq.gouv.qc.ca/services-en-ligne/registre-des-detenteurs-de-licence/`, '_blank')}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Vérifier sur le site de la RBQ →
-                  </Button>
-                </div>
+
+                {selectedProfessional.professional_type !== 'trade_professional' && (
+                  <div className="bg-muted/50 rounded-lg p-4">
+                    <Label className="text-muted-foreground">Vérification externe</Label>
+                    <Button
+                      variant="link"
+                      className="px-0 h-auto"
+                      onClick={() => window.open(`https://www.rbq.gouv.qc.ca/services-en-ligne/registre-des-detenteurs-de-licence/`, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Vérifier sur le site de la RBQ →
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <Separator />
@@ -933,13 +970,6 @@ const AdminDashboard = () => {
                 <div>
                   <Label className="text-muted-foreground">Services offerts</Label>
                   <p className="text-sm">{selectedProfessional.services_offered}</p>
-                </div>
-              )}
-
-              {selectedProfessional.insurance_info && (
-                <div>
-                  <Label className="text-muted-foreground">Assurance</Label>
-                  <p className="text-sm">{selectedProfessional.insurance_info}</p>
                 </div>
               )}
 
