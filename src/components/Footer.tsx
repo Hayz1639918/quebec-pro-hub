@@ -33,19 +33,19 @@ const Footer = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
 
         {/* Top divider */}
-        <div className="h-px w-full bg-white/6 mb-16 sm:mb-20" />
+        <div className="h-px w-full bg-white/25 mb-16 sm:mb-20" />
 
         <div className="grid grid-cols-2 md:grid-cols-12 gap-8 lg:gap-12 mb-16 sm:mb-20">
 
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-5 space-y-6">
-            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain" />
+            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain brightness-0 invert" />
 
-            <p className="font-body text-sm text-white/25 leading-relaxed max-w-[280px]">
+            <p className="font-body text-sm text-white/70 leading-relaxed max-w-[280px]">
               {t("footer.tagline")}
             </p>
 
-            <div className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em] leading-loose">
+            <div className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em] leading-loose">
               <div>Québec, Canada</div>
               <div>RBQ certifié</div>
             </div>
@@ -58,7 +58,7 @@ const Footer = () => {
             { title: t("footer.legal.title"), items: links.legal },
           ].map(({ title, items }) => (
             <div key={title} className="col-span-1 md:col-span-2 lg:col-span-2">
-              <h4 className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-white/30 mb-5">
+              <h4 className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-white/70 mb-5">
                 {title}
               </h4>
               <ul className="space-y-3">
@@ -66,7 +66,7 @@ const Footer = () => {
                   <li key={label}>
                     <a
                       href={href}
-                      className="group inline-flex items-center gap-1 font-body text-sm text-white/20 hover:text-white/50 transition-colors"
+                      className="group inline-flex items-center gap-1 font-body text-sm text-white/65 hover:text-white transition-colors"
                     >
                       {label}
                       <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -79,12 +79,12 @@ const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="h-px w-full bg-white/6 mb-6" />
+        <div className="h-px w-full bg-white/25 mb-6" />
         <div className="pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-mono text-[10px] text-white/15 uppercase tracking-[0.1em]">
+          <p className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em]">
             © {currentYear} BâtirNet. {t("footer.rights")}
           </p>
-          <p className="font-mono text-[10px] text-white/10 uppercase tracking-[0.08em]">
+          <p className="font-mono text-[10px] text-white/45 uppercase tracking-[0.08em]">
             {t("footer.made_with_love")}
           </p>
         </div>

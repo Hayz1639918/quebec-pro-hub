@@ -22,14 +22,14 @@ const Features = () => {
 
         {/* Section header */}
         <div className="mb-16 sm:mb-24 max-w-3xl">
-          <span className="font-mono text-[11px] text-white/25 uppercase tracking-[0.15em] block mb-6">
+          <span className="font-mono text-[11px] text-white/65 uppercase tracking-[0.15em] block mb-6">
             Fonctionnalités
           </span>
           <h2 className="font-display text-white/90 leading-[1.02] mb-6">
             {t("features.title")}
           </h2>
           <div className="h-px w-16 bg-white/10 mb-6" />
-          <p className="font-body text-lg text-white/30 leading-relaxed max-w-xl">
+          <p className="font-body text-lg text-white/70 leading-relaxed max-w-xl">
             {t("features.subtitle")}
           </p>
         </div>
@@ -44,10 +44,10 @@ const Features = () => {
                 className="relative bg-[hsl(210,100%,32%)] p-8 sm:p-10 group hover:bg-white/[0.03] transition-colors duration-500"
               >
                 <div className="flex items-start justify-between mb-8">
-                  <div className="p-2.5 border border-blue-400/15 bg-white/[0.03] group-hover:border-blue-400/30 transition-all duration-500">
-                    <Icon className="h-5 w-5 text-white/25 group-hover:text-white/50 transition-colors duration-500" />
+                  <div className="p-2.5 border border-white/40 bg-white/[0.08] group-hover:border-white/70 transition-all duration-500">
+                    <Icon className="h-5 w-5 text-white/70 group-hover:text-white transition-colors duration-500" />
                   </div>
-                  <span className="font-mono text-[10px] text-white/10 tracking-[0.1em] group-hover:text-white/20 transition-colors">
+                  <span className="font-mono text-[10px] text-white/40 tracking-[0.1em] group-hover:text-white/65 transition-colors">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
@@ -55,7 +55,7 @@ const Features = () => {
                 <h3 className="font-ui font-medium text-base text-white/80 mb-3">
                   {feature.title}
                 </h3>
-                <p className="font-body text-sm text-white/25 leading-relaxed">
+                <p className="font-body text-sm text-white/65 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -92,7 +92,7 @@ const Features = () => {
                 <h3 className="font-display text-xl sm:text-2xl text-white/90 mb-2 leading-tight">
                   {title}
                 </h3>
-                <p className="font-body text-sm text-white/35 leading-relaxed line-clamp-2">
+                <p className="font-body text-sm text-white/75 leading-relaxed line-clamp-2">
                   {desc}
                 </p>
               </div>
