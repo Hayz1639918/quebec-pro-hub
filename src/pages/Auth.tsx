@@ -130,9 +130,6 @@ const Auth = () => {
   const [phone, setPhone] = useState("");
   // US-047: company type
   const [companyType, setCompanyType] = useState<CompanyType>("individuel");
-  // Entrepreneur specific
-  const [rbqNumber, setRbqNumber] = useState("");
-  const [rbqSubcat, setRbqSubcat] = useState("");
   // Trade professional specific
   const [tradeSpecialty, setTradeSpecialty] = useState("");
 
@@ -248,15 +245,6 @@ const Auth = () => {
         return;
       }
 
-      // Entrepreneur — numéro RBQ requis à l'inscription
-      if (userType === "professional" && professionalType === "entrepreneur") {
-        if (!rbqNumber.trim()) {
-          toast({ variant: "destructive", title: "Numéro de licence RBQ requis", description: "Entrez votre numéro de licence RBQ ou 'EN COURS' si votre demande est en traitement." });
-          setLoading(false);
-          return;
-        }
-      }
-
       // Professionnel métier — spécialité obligatoire
       if (userType === "professional" && professionalType === "trade_professional") {
         if (!tradeSpecialty) {
@@ -294,10 +282,6 @@ const Auth = () => {
             ...(userType === "professional" && {
               company_type: companyType === "individuel" ? "sole_proprietor" : "corporation",
               professional_type: professionalType,
-              ...(professionalType === "entrepreneur" && {
-                rbq_number: rbqNumber.trim(),
-                ...(rbqSubcat && { rbq_subcat: rbqSubcat }),
-              }),
               ...(professionalType === "trade_professional" && tradeSpecialty && {
                 trade_specialty: tradeSpecialty,
               }),
@@ -695,41 +679,6 @@ const Auth = () => {
                         <Label htmlFor="ent-societe" className="font-normal cursor-pointer">Société / Compagnie</Label>
                       </div>
                     </RadioGroup>
-                  </div>
-
-                  {/* Numéro de licence RBQ — OBLIGATOIRE */}
-                  <div className="space-y-2">
-                    <Label htmlFor="rbq-number" className="flex items-center gap-1">
-                      Numéro de licence RBQ
-                      <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                    </Label>
-                    <Input
-                      id="rbq-number"
-                      value={rbqNumber}
-                      onChange={(e) => setRbqNumber(e.target.value)}
-                      placeholder="Ex: 8291-4521-01 — ou 'EN COURS' si demande en traitement"
-                      className={!rbqNumber ? "border-red-200 focus-visible:ring-red-400" : ""}
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Obligatoire pour exercer légalement au Québec (Loi sur le bâtiment). Vérifiable sur rbq.gouv.qc.ca.
-                    </p>
-                  </div>
-
-                  {/* Sous-catégorie RBQ */}
-                  <div className="space-y-2">
-                    <Label>Sous-catégorie de licence RBQ <span className="text-muted-foreground text-xs">(si connue)</span></Label>
-                    <Select value={rbqSubcat} onValueChange={setRbqSubcat}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sélectionnez votre sous-catégorie" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1.1.1">1.1.1 — Bâtiments résidentiels neufs, Classe I (tous types)</SelectItem>
-                        <SelectItem value="1.1.2">1.1.2 — Bâtiments résidentiels neufs, Classe II (≤ 3 étages)</SelectItem>
-                        <SelectItem value="1.2">1.2 — Entrepreneur en petits bâtiments</SelectItem>
-                        <SelectItem value="1.3">1.3 — Bâtiments de tout genre (résidentiel, commercial, industriel)</SelectItem>
-                        <SelectItem value="specialise">Entrepreneur spécialisé (autre)</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
