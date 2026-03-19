@@ -311,7 +311,7 @@ const Auth = () => {
             user_type: userType,
             phone: phone || null,
             ...(userType === "professional" && {
-              company_type: companyType,
+              company_type: companyType === "individuel" ? "sole_proprietor" : "corporation",
               professional_type: professionalType,
               ...(professionalType === "entrepreneur" && {
                 rbq_number: rbqNumber.trim(),
