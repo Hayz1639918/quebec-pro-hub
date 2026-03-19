@@ -1,5 +1,5 @@
-// CompleteProfileEntrepreneur — Onboarding entrepreneur après inscription
-// Redirected to from Auth.tsx when professional_type === 'entrepreneur'
+// CompleteProfileTrade — Onboarding professionnel de métier après confirmation email
+// Redirected from Auth.tsx when professional_type === 'trade_professional'
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -10,42 +10,57 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Building2, MapPin, Plus, X, Loader2, CheckCircle2, Upload } from "lucide-react";
+import { HardHat, MapPin, Upload, CheckCircle2, Loader2, X, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { geocodePostalCode } from "@/lib/geolocation";
 import logo from "/logo-batirnet.png";
 
-const PREDEFINED_SERVICES = [
-  "Rénovation résidentielle", "Construction neuve", "Toiture", "Plomberie",
-  "Électricité", "Menuiserie", "Maçonnerie", "Peinture", "Isolation",
-  "Aménagement paysager", "Cuisine et salle de bain", "Extension et agrandissement",
-  "Gestion de projet", "Autre",
-];
+const TRADE_LABELS: Record<string, string> = {
+  electricien: "Électricien",
+  plombier: "Plombier / Mécanicien en tuyauterie",
+  charpentier: "Charpentier-menuisier",
+  macon: "Maçon / Briqueteur",
+  peintre: "Peintre en bâtiment",
+  carreleur: "Carreleur / Poseur de revêtements",
+  couvreur: "Couvreur",
+  ferblantier: "Ferblantier",
+  calorifugeur: "Calorifugeur",
+  excavation: "Opérateur d'excavation / Terrassier",
+  soudeur: "Soudeur",
+  autre: "Autre corps de métier CCQ",
+};
 
 const REGIONS = [
   "Montréal", "Québec", "Laval", "Gatineau", "Longueuil", "Sherbrooke",
   "Saguenay", "Trois-Rivières", "Terrebonne", "Saint-Jean-sur-Richelieu", "Autre",
 ];
 
-const CompleteProfileEntrepreneur = () => {
+const PREDEFINED_SERVICES = [
+  "Rénovation résidentielle", "Construction neuve", "Électricité",
+  "Plomberie", "Menuiserie", "Maçonnerie", "Peinture", "Toiture",
+  "Isolation", "Carrelage", "Soudure", "Excavation", "Autre",
+];
+
+const CompleteProfileTrade = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
-
-  const [companyName, setCompanyName] = useState("");
-  const [rbqNumber, setRbqNumber] = useState("");
-  const [bio, setBio] = useState("");
+  const [tradeSpecialty, setTradeSpecialty] = useState<string>("");
 
   // Documents
-  const [docLicence, setDocLicence] = useState<File | null>(null);
+  const [docCCQ, setDocCCQ] = useState<File | null>(null);
   const [docAssurance, setDocAssurance] = useState<File | null>(null);
+
+  // Profile fields
+  const [bio, setBio] = useState("");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceInput, setCustomServiceInput] = useState("");
 
+  // Location
   const [city, setCity] = useState("");
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
@@ -63,7 +78,7 @@ const CompleteProfileEntrepreneur = () => {
       }
       const { data: profile } = await supabase
         .from("profiles")
-        .select("user_type, profile_completed, professional_type")
+        .select("user_type, profile_completed, professional_type, trade_specialty")
         .eq("id", session.user.id)
         .single();
 
@@ -75,7 +90,14 @@ const CompleteProfileEntrepreneur = () => {
         navigate("/pro/dashboard");
         return;
       }
+      if (profile.professional_type !== "trade_professional") {
+        // Entrepreneur who ended up here — redirect to correct page
+        navigate("/complete-profile-entrepreneur");
+        return;
+      }
+
       setUserId(session.user.id);
+      setTradeSpecialty(profile.trade_specialty || "");
       setCheckingAuth(false);
     })();
   }, [navigate]);
@@ -95,6 +117,17 @@ const CompleteProfileEntrepreneur = () => {
     }
   };
 
+  const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
+    if (!userId) return null;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const filePath = `${userId}/${prefix}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("certifications")
+      .upload(filePath, file, { cacheControl: "3600", upsert: false });
+    if (error) throw error;
+    return supabase.storage.from("certifications").getPublicUrl(filePath).data.publicUrl;
+  };
+
   const toggleService = (service: string) => {
     setSelectedServices(prev =>
       prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]
@@ -108,65 +141,42 @@ const CompleteProfileEntrepreneur = () => {
     setCustomServiceInput("");
   };
 
-  const uploadFile = async (file: File, prefix: string): Promise<string | null> => {
-    if (!userId) return null;
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    const filePath = `${userId}/${prefix}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage
-      .from("certifications")
-      .upload(filePath, file, { cacheControl: "3600", upsert: false });
-    if (error) throw error;
-    return supabase.storage.from("certifications").getPublicUrl(filePath).data.publicUrl;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId) return;
-    if (!companyName.trim()) {
-      toast({ variant: "destructive", title: "Nom de l'entreprise requis" });
-      return;
-    }
-    if (!docLicence) {
-      toast({ variant: "destructive", title: "Licence RBQ obligatoire", description: "Veuillez uploader votre licence RBQ." });
-      return;
-    }
-    if (!docAssurance) {
-      toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
-      return;
-    }
-    if (selectedServices.length === 0) {
-      toast({ variant: "destructive", title: "Sélectionnez au moins un service" });
+
+    if (!docCCQ) {
+      toast({ variant: "destructive", title: "Carte de compétence CCQ obligatoire", description: "Veuillez uploader votre carte de compétence CCQ." });
       return;
     }
 
     setLoading(true);
     try {
-      const licenceUrl = await uploadFile(docLicence, "rbq");
-      const assuranceUrl = await uploadFile(docAssurance, "assurance");
+      const ccqUrl = await uploadFile(docCCQ, "ccq");
+      const assuranceUrl = docAssurance ? await uploadFile(docAssurance, "assurance") : null;
 
       const finalRegion = region === "Autre" ? customRegion : region;
       const { error } = await supabase.from("profiles").update({
-        company_name: companyName.trim(),
-        rbq_number: rbqNumber.trim() || null,
-        rbq_certification_url: licenceUrl,
-        insurance_info: assuranceUrl,
+        professional_type: "trade_professional",
+        trade_specialty: tradeSpecialty || null,
+        rbq_certification_url: ccqUrl,
+        insurance_info: assuranceUrl || null,
         bio: bio.trim() || null,
-        services_offered: JSON.stringify(selectedServices),
+        services_offered: selectedServices.length > 0 ? JSON.stringify(selectedServices) : null,
         city: city.trim() || null,
         region: finalRegion || null,
         postal_code: postalCode.trim() || null,
-        latitude: latitude,
-        longitude: longitude,
-        professional_type: "entrepreneur",
+        latitude,
+        longitude,
         profile_completed: true,
       }).eq("id", userId);
 
       if (error) throw error;
 
-      toast({ title: "Profil entrepreneur créé !", description: "Votre dossier est en attente de validation sous 24-48h." });
+      toast({ title: "Profil soumis !", description: "Votre dossier est en attente de validation sous 24-48h." });
       navigate("/pending-verification");
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       toast({ variant: "destructive", title: "Erreur", description: "Impossible de sauvegarder votre profil." });
     } finally {
       setLoading(false);
@@ -187,106 +197,108 @@ const CompleteProfileEntrepreneur = () => {
         <div className="flex flex-col items-center gap-3">
           <img src={logo} alt="BatirNet" className="h-10" />
           <div className="text-center">
-            <h1 className="text-2xl font-bold">Complétez votre profil entrepreneur</h1>
+            <h1 className="text-2xl font-bold">Complétez votre profil de métier</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Ces informations permettent aux clients de vous trouver et vous contacter.
+              Ces informations permettent aux clients et entrepreneurs de vous trouver.
             </p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Entreprise */}
+          {/* Corps de métier */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                Informations de l'entreprise
+                <HardHat className="h-4 w-4 text-amber-600" />
+                Corps de métier
               </CardTitle>
+              <CardDescription>
+                {tradeSpecialty
+                  ? `Votre spécialité : ${TRADE_LABELS[tradeSpecialty] ?? tradeSpecialty}`
+                  : "Spécialité non renseignée"}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="company-name">Nom de l'entreprise *</Label>
-                <Input
-                  id="company-name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Construction ABC inc."
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="rbq">Numéro de licence RBQ</Label>
-                <Input
-                  id="rbq"
-                  value={rbqNumber}
-                  onChange={(e) => setRbqNumber(e.target.value)}
-                  placeholder="Ex: 8291-4521-01"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bio">Description de l'entreprise</Label>
+                <Label htmlFor="bio">Description / présentation</Label>
                 <Textarea
                   id="bio"
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  placeholder="Présentez votre entreprise, votre expérience, vos spécialités…"
+                  placeholder="Présentez-vous : années d'expérience, types de chantiers, certifications…"
                   rows={3}
                 />
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Documents obligatoires */}
-              <div className="space-y-3 pt-2 border-t">
-                <Label className="flex items-center gap-2">
-                  <Upload className="h-4 w-4 text-muted-foreground" />
-                  Documents de vérification
+          {/* Documents obligatoires */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Documents de vérification</CardTitle>
+              <CardDescription>Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Carte CCQ — obligatoire */}
+              <div className="space-y-1">
+                <Label className="flex items-center gap-1">
+                  {tradeSpecialty === "electricien"
+                    ? "Carte de compétence / apprenti CMEQ"
+                    : tradeSpecialty === "plombier"
+                    ? "Carte de compétence / apprenti CMMTQ"
+                    : "Carte de compétence CCQ"}
+                  <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
                 </Label>
-                <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
+                <label
+                  htmlFor="doc-ccq"
+                  className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    docCCQ ? "border-green-400 bg-green-50" : "border-amber-400 hover:border-amber-500 hover:bg-amber-50/30"
+                  }`}
+                >
+                  <Upload className={`h-4 w-4 ${docCCQ ? "text-green-600" : "text-amber-600"}`} />
+                  <span className="text-sm text-muted-foreground truncate">
+                    {docCCQ ? docCCQ.name : "Cliquez pour choisir un fichier"}
+                  </span>
+                  {docCCQ && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                </label>
+                <input
+                  id="doc-ccq"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={(e) => setDocCCQ(e.target.files?.[0] ?? null)}
+                />
+              </div>
 
-                {/* Licence RBQ */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-normal flex items-center gap-1">
-                    Scan de la licence RBQ
-                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                  </Label>
-                  <label
-                    htmlFor="ent-doc-licence"
-                    className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      docLicence ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
-                    }`}
-                  >
-                    <Upload className={`h-4 w-4 ${docLicence ? "text-green-600" : "text-red-400"}`} />
-                    <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : "Cliquez pour choisir un fichier"}</span>
-                    {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                  </label>
-                  <input id="ent-doc-licence" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocLicence(e.target.files?.[0] ?? null)} />
-                </div>
+              {/* Assurance — optionnelle */}
+              <div className="space-y-1">
+                <Label>Assurance responsabilité civile <span className="text-muted-foreground">(recommandé)</span></Label>
+                <label
+                  htmlFor="doc-assurance"
+                  className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                    docAssurance ? "border-green-400 bg-green-50" : "border-border hover:border-amber-400/50 hover:bg-amber-50/30"
+                  }`}
+                >
+                  <Upload className={`h-4 w-4 ${docAssurance ? "text-green-600" : "text-muted-foreground"}`} />
+                  <span className="text-sm text-muted-foreground truncate">
+                    {docAssurance ? docAssurance.name : "Cliquez pour choisir un fichier"}
+                  </span>
+                  {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                </label>
+                <input
+                  id="doc-assurance"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  className="hidden"
+                  onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)}
+                />
+              </div>
 
-                {/* Assurance */}
-                <div className="space-y-1">
-                  <Label className="text-sm font-normal flex items-center gap-1">
-                    Certificat d'assurance responsabilité civile
-                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
-                  </Label>
-                  <label
-                    htmlFor="ent-doc-assurance"
-                    className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      docAssurance ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
-                    }`}
-                  >
-                    <Upload className={`h-4 w-4 ${docAssurance ? "text-green-600" : "text-red-400"}`} />
-                    <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : "Cliquez pour choisir un fichier"}</span>
-                    {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
-                  </label>
-                  <input id="ent-doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
-                  <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
-                  <p>• La licence RBQ est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
-                  <p>• L'assurance responsabilité civile protège le client et l'entrepreneur en cas de dommages.</p>
-                </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 space-y-1">
+                <p className="font-medium">Exigences légales au Québec :</p>
+                <p>• La carte de compétence CCQ est obligatoire pour tout travailleur de la construction.</p>
+                {tradeSpecialty === "electricien" && <p>• Les électriciens sont réglementés par la CMEQ.</p>}
+                {tradeSpecialty === "plombier" && <p>• Les plombiers sont réglementés par la CMMTQ.</p>}
               </div>
             </CardContent>
           </Card>
@@ -294,7 +306,7 @@ const CompleteProfileEntrepreneur = () => {
           {/* Services */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Services offerts *</CardTitle>
+              <CardTitle className="text-base">Services offerts</CardTitle>
               <CardDescription>Sélectionnez les types de travaux que vous réalisez.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -306,16 +318,15 @@ const CompleteProfileEntrepreneur = () => {
                     onClick={() => toggleService(service)}
                     className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                       selectedServices.includes(service)
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-border hover:border-blue-400 hover:text-blue-600"
+                        ? "bg-amber-600 text-white border-amber-600"
+                        : "border-border hover:border-amber-400 hover:text-amber-600"
                     }`}
                   >
                     {service}
                   </button>
                 ))}
               </div>
-
-              {selectedServices.length > 0 && (
+              {selectedServices.filter(s => !PREDEFINED_SERVICES.includes(s)).length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
                   {selectedServices.filter(s => !PREDEFINED_SERVICES.includes(s)).map(s => (
                     <Badge key={s} variant="secondary" className="gap-1">
@@ -327,7 +338,6 @@ const CompleteProfileEntrepreneur = () => {
                   ))}
                 </div>
               )}
-
               <div className="flex gap-2">
                 <Input
                   placeholder="Autre service…"
@@ -401,7 +411,7 @@ const CompleteProfileEntrepreneur = () => {
           </Card>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enregistrement…</> : "Créer mon profil entrepreneur"}
+            {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enregistrement…</> : "Soumettre mon profil"}
           </Button>
         </form>
       </div>
@@ -409,4 +419,4 @@ const CompleteProfileEntrepreneur = () => {
   );
 };
 
-export default CompleteProfileEntrepreneur;
+export default CompleteProfileTrade;
