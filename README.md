@@ -73,6 +73,10 @@ Créez un fichier `.env` à la racine:
 ```env
 VITE_SUPABASE_URL=https://votre-projet.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=votre-cle-anon-publique
+
+# Optionnel: emails transactionnels de signature (via Edge Function)
+RESEND_API_KEY=votre-cle-resend
+SIGNATURE_EMAIL_FROM=BâtirNet <signatures@votre-domaine.com>
 ```
 
 > ⚠️ N'utilisez jamais la clé `service_role` côté client!

@@ -11,6 +11,7 @@ import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle,
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import logo from "/logo-batirnet.png";
+import { AppProfile, getPostAuthRoute } from "@/lib/auth-routing";
 
 type UserType = "client" | "professional";
 type ProfessionalType = "entrepreneur" | "trade_professional";
@@ -135,30 +136,8 @@ const Auth = () => {
   // Trade professional specific
   const [tradeSpecialty, setTradeSpecialty] = useState("");
 
-  // Helper function to redirect based on profile status
-  const redirectBasedOnProfile = (profile: {
-    user_type: string;
-    profile_completed: boolean;
-    is_rbq_verified: boolean;
-    professional_type?: string | null;
-  }) => {
-    if (profile.user_type === 'client') {
-      navigate("/dashboard");
-    } else if (profile.user_type === 'professional') {
-      if (profile.is_rbq_verified) {
-        // Fully verified — go straight to pro dashboard regardless of profile_completed
-        navigate("/pro/dashboard");
-      } else if (!profile.profile_completed) {
-        // Not yet completed profile — route to the right completion page
-        const completionRoute = profile.professional_type === 'trade_professional'
-          ? "/complete-profile-trade"
-          : "/complete-profile-entrepreneur";
-        navigate(completionRoute);
-      } else {
-        // Profile complete but awaiting admin verification
-        navigate("/pending-verification");
-      }
-    }
+  const redirectBasedOnProfile = (profile: AppProfile | null | undefined) => {
+    navigate(getPostAuthRoute(profile));
   };
 
   useEffect(() => {
@@ -174,12 +153,7 @@ const Auth = () => {
 
         if (!profile) return;
 
-        redirectBasedOnProfile(profile as {
-          user_type: string;
-          profile_completed: boolean;
-          is_rbq_verified: boolean;
-          professional_type?: string | null;
-        });
+        redirectBasedOnProfile(profile as AppProfile);
       }
     });
 
@@ -202,12 +176,7 @@ const Auth = () => {
 
         if (!profile) return;
 
-        redirectBasedOnProfile(profile as {
-          user_type: string;
-          profile_completed: boolean;
-          is_rbq_verified: boolean;
-          professional_type?: string | null;
-        });
+        redirectBasedOnProfile(profile as AppProfile);
       }
     });
 
@@ -367,16 +336,14 @@ const Auth = () => {
             : t('auth.messages.success_client'),
         });
 
-        // Redirect based on user type and professional sub-type
-        setTimeout(() => {
-          if (userType === "client") {
-            navigate("/dashboard");
-          } else if (professionalType === "trade_professional") {
-            navigate("/complete-profile-trade");
-          } else {
-            navigate("/complete-profile-entrepreneur");
-          }
-        }, 1500);
+        const nextRoute = getPostAuthRoute({
+          user_type: userType,
+          profile_completed: false,
+          is_rbq_verified: false,
+          professional_type: userType === "professional" ? professionalType : null,
+        });
+
+        navigate(nextRoute);
       }
 
     } catch (error) {
@@ -411,13 +378,9 @@ const Auth = () => {
         .eq('id', authData.user.id)
         .single();
 
-      const userProfile = profile as {
-        user_type: UserType;
+      const userProfile = profile as (AppProfile & {
         full_name: string;
-        profile_completed: boolean;
-        is_rbq_verified: boolean;
-        professional_type?: string | null;
-      } | null;
+      }) | null;
 
       toast({
         title: t('auth.messages.login_success'),
@@ -426,33 +389,7 @@ const Auth = () => {
           : t('auth.messages.welcome_default'),
       });
 
-      // Redirect based on user type and profile status
-      setTimeout(() => {
-        if (!userProfile) {
-          navigate("/");
-          return;
-        }
-
-        if (userProfile.user_type === 'client') {
-          navigate("/dashboard");
-        } else if (userProfile.user_type === 'professional') {
-          if (userProfile.is_rbq_verified) {
-            // Fully verified — go straight to pro dashboard
-            navigate("/pro/dashboard");
-          } else if (!userProfile.profile_completed) {
-            // Professional hasn't completed their profile yet
-            const completionRoute = userProfile.professional_type === 'trade_professional'
-              ? "/complete-profile-trade"
-              : "/complete-profile-entrepreneur";
-            navigate(completionRoute);
-          } else {
-            // Professional completed profile but waiting for RBQ validation
-            navigate("/pending-verification");
-          }
-        } else {
-          navigate("/");
-        }
-      }, 1000);
+      redirectBasedOnProfile(userProfile);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : t('auth.messages.invalid_credentials');
       toast({

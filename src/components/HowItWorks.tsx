@@ -5,71 +5,62 @@ const HowItWorks = () => {
   const { t } = useTranslation();
 
   const steps = [
-    { icon: Search,        title: t('how_it_works.steps.find.title'),   description: t('how_it_works.steps.find.description') },
-    { icon: FileText,      title: t('how_it_works.steps.sign.title'),   description: t('how_it_works.steps.sign.description') },
-    { icon: CreditCard,    title: t('how_it_works.steps.pay.title'),    description: t('how_it_works.steps.pay.description') },
-    { icon: CheckCircle2,  title: t('how_it_works.steps.review.title'), description: t('how_it_works.steps.review.description') },
+    { icon: Search,       num: "01", title: t("how_it_works.steps.find.title"),   description: t("how_it_works.steps.find.description") },
+    { icon: FileText,     num: "02", title: t("how_it_works.steps.sign.title"),   description: t("how_it_works.steps.sign.description") },
+    { icon: CreditCard,   num: "03", title: t("how_it_works.steps.pay.title"),    description: t("how_it_works.steps.pay.description") },
+    { icon: CheckCircle2, num: "04", title: t("how_it_works.steps.review.title"), description: t("how_it_works.steps.review.description") },
   ];
 
   return (
-    <section id="how-it-works" className="py-16 sm:py-20 lg:py-28 relative overflow-hidden">
-      {/* Bande de fond secondaire subtile */}
-      <div className="absolute inset-0 bg-secondary/40 -skew-y-1 origin-top-left pointer-events-none" />
+    <section id="how-it-works" className="relative py-24 sm:py-32 lg:py-40 overflow-hidden bg-background">
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* ── Section header ── */}
-        <div className="max-w-2xl mb-14 sm:mb-20">
-          <span className="inline-block font-ui text-xs font-semibold uppercase tracking-[0.14em] text-primary mb-4">
+        {/* Section header — editorial style */}
+        <div className="mb-16 sm:mb-24 max-w-3xl">
+          <span className="font-mono text-[11px] text-foreground/30 uppercase tracking-[0.15em] block mb-6">
             Comment ça marche
           </span>
-          <h2 className="font-display font-bold text-foreground leading-tight">
-            {t('how_it_works.title')}
+          <h2 className="font-display text-foreground leading-[1.02] mb-6">
+            {t("how_it_works.title")}
           </h2>
-          <p className="font-body text-muted-foreground mt-4 text-base sm:text-lg leading-relaxed">
-            {t('how_it_works.subtitle')}
+          <div className="h-px w-16 bg-foreground/12 mb-6" />
+          <p className="font-body text-lg text-foreground/40 leading-relaxed max-w-xl">
+            {t("how_it_works.subtitle")}
           </p>
         </div>
 
-        {/* ── Steps ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+        {/* Steps — clean numbered list */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0">
           {steps.map((step, index) => {
             const Icon = step.icon;
-            const isLast = index === steps.length - 1;
             return (
-              <div key={index} className="relative group">
-                {/* Connector line between steps (desktop) */}
-                {!isLast && (
-                  <div className="hidden lg:block absolute top-8 left-1/2 w-full h-px bg-border z-0">
-                    <div className="h-full bg-gradient-to-r from-primary/30 to-transparent w-0 group-hover:w-full transition-all duration-700" />
+              <div
+                key={index}
+                className="relative py-10 xl:py-12 xl:px-8 border-t border-foreground/8 group hover:bg-foreground/[0.02] transition-colors duration-500"
+              >
+                {/* Number + icon row */}
+                <div className="flex items-start justify-between mb-8">
+                  <span className="font-mono text-[11px] text-foreground/20 tracking-[0.1em]">
+                    {step.num}
+                  </span>
+                  <div className="p-2.5 border border-foreground/8 bg-foreground/[0.02] group-hover:border-primary/20 group-hover:bg-primary/5 transition-all duration-500">
+                    <Icon className="h-5 w-5 text-foreground/25 group-hover:text-primary transition-colors duration-500" />
                   </div>
-                )}
-
-                <div className="relative z-10 p-6 lg:p-8 card-lift rounded-lg border border-border bg-card hover:bg-card/80 mx-2 lg:mx-3">
-                  {/* Step number — large Fraunces italic */}
-                  <div className="font-display font-bold italic text-5xl sm:text-6xl text-primary/15 leading-none mb-4 select-none">
-                    {String(index + 1).padStart(2, '0')}
-                  </div>
-
-                  {/* Icon */}
-                  <div className="mb-5 inline-flex p-3 rounded-sm bg-primary/10 border border-primary/20 group-hover:bg-primary/15 transition-colors">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-ui font-semibold text-base sm:text-lg text-foreground mb-2 leading-snug">
-                    {step.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="font-body text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
                 </div>
+
+                {/* Content */}
+                <h3 className="font-ui font-medium text-lg text-foreground mb-3">
+                  {step.title}
+                </h3>
+                <p className="font-body text-sm text-foreground/35 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
             );
           })}
         </div>
+
       </div>
     </section>
   );

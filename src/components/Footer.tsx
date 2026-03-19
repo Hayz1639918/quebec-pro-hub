@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Linkedin, Instagram, ArrowUpRight } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import logo from "/logo-batirnet.png";
 
@@ -8,82 +8,68 @@ const Footer = () => {
 
   const links = {
     company: [
-      { label: t('footer.company.about'), href: "#" },
-      { label: t('footer.company.careers'), href: "#" },
-      { label: t('footer.company.blog'), href: "#" },
-      { label: t('footer.company.contact'), href: "#" },
+      { label: t("footer.company.about"), href: "#" },
+      { label: t("footer.company.careers"), href: "#" },
+      { label: t("footer.company.blog"), href: "#" },
+      { label: t("footer.company.contact"), href: "#" },
     ],
     resources: [
-      { label: t('footer.resources.help_center'), href: "#" },
-      { label: t('footer.resources.client_guide'), href: "#" },
-      { label: t('footer.resources.contractor_guide'), href: "#" },
-      { label: t('footer.resources.faq'), href: "#" },
+      { label: t("footer.resources.help_center"), href: "#" },
+      { label: t("footer.resources.client_guide"), href: "#" },
+      { label: t("footer.resources.contractor_guide"), href: "#" },
+      { label: t("footer.resources.faq"), href: "#" },
     ],
     legal: [
-      { label: t('footer.legal.terms'), href: "#" },
-      { label: t('footer.legal.privacy'), href: "/privacy-policy" },
-      { label: t('footer.legal.cookies'), href: "#" },
-      { label: t('footer.legal.compliance'), href: "/privacy-policy" },
+      { label: t("footer.legal.terms"), href: "#" },
+      { label: t("footer.legal.privacy"), href: "/privacy-policy" },
+      { label: t("footer.legal.cookies"), href: "#" },
+      { label: t("footer.legal.compliance"), href: "/privacy-policy" },
     ],
   };
 
   return (
-    <footer className="relative border-t border-border bg-secondary/30 overflow-hidden">
-      {/* Lueur bleue subtile */}
-      <div className="absolute top-0 right-0 w-[400px] h-[250px] bg-primary/5 blur-[90px] pointer-events-none" />
+    <footer className="relative bg-[hsl(210,100%,32%)] overflow-hidden">
 
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 relative">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-16 mb-12 sm:mb-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
 
-          {/* ── Brand ── */}
-          <div className="col-span-2 md:col-span-1 space-y-5">
-            <img
-              src={logo}
-              alt="BâtirNet Logo"
-              className="h-10 sm:h-12 w-auto object-contain"
-            />
-            <p className="font-body text-sm text-muted-foreground leading-relaxed max-w-[240px]">
-              {t('footer.tagline')}
+        {/* Top divider */}
+        <div className="h-px w-full bg-white/25 mb-16 sm:mb-20" />
+
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-8 lg:gap-12 mb-16 sm:mb-20">
+
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-4 lg:col-span-5 space-y-6">
+            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain brightness-0 invert" />
+
+            <p className="font-body text-sm text-white/70 leading-relaxed max-w-[280px]">
+              {t("footer.tagline")}
             </p>
-            {/* Socials */}
-            <div className="flex gap-3">
-              {[
-                { Icon: Facebook,  href: "#", label: "Facebook" },
-                { Icon: Twitter,   href: "#", label: "Twitter" },
-                { Icon: Linkedin,  href: "#", label: "LinkedIn" },
-                { Icon: Instagram, href: "#", label: "Instagram" },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-8 h-8 rounded-sm border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </a>
-              ))}
+
+            <div className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em] leading-loose">
+              <div>Québec, Canada</div>
+              <div>RBQ certifié</div>
             </div>
           </div>
 
-          {/* ── Link columns ── */}
+          {/* Link columns */}
           {[
-            { title: t('footer.company.title'),   items: links.company   },
-            { title: t('footer.resources.title'), items: links.resources },
-            { title: t('footer.legal.title'),     items: links.legal     },
+            { title: t("footer.company.title"), items: links.company },
+            { title: t("footer.resources.title"), items: links.resources },
+            { title: t("footer.legal.title"), items: links.legal },
           ].map(({ title, items }) => (
-            <div key={title}>
-              <h4 className="font-ui text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground mb-4">
+            <div key={title} className="col-span-1 md:col-span-2 lg:col-span-2">
+              <h4 className="font-mono text-[11px] font-medium uppercase tracking-[0.1em] text-white/70 mb-5">
                 {title}
               </h4>
-              <ul className="space-y-2.5">
+              <ul className="space-y-3">
                 {items.map(({ label, href }) => (
                   <li key={label}>
                     <a
                       href={href}
-                      className="group inline-flex items-center gap-1 font-body text-sm text-foreground/60 hover:text-foreground transition-colors py-0.5"
+                      className="group inline-flex items-center gap-1 font-body text-sm text-white/65 hover:text-white transition-colors"
                     >
                       {label}
-                      <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-0.5 translate-x-0.5 group-hover:opacity-100 group-hover:translate-y-0 group-hover:translate-x-0 transition-all" />
+                      <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </a>
                   </li>
                 ))}
@@ -92,13 +78,14 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* ── Bottom bar ── */}
-        <div className="pt-8 border-t border-border pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-ui text-xs text-muted-foreground">
-            © {currentYear} BâtirNet. {t('footer.rights')}
+        {/* Bottom bar */}
+        <div className="h-px w-full bg-white/25 mb-6" />
+        <div className="pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em]">
+            © {currentYear} BâtirNet. {t("footer.rights")}
           </p>
-          <p className="font-ui text-xs text-muted-foreground">
-            {t('footer.made_with_love')}
+          <p className="font-mono text-[10px] text-white/45 uppercase tracking-[0.08em]">
+            {t("footer.made_with_love")}
           </p>
         </div>
       </div>

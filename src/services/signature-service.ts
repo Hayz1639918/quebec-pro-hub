@@ -116,17 +116,22 @@ class SignatureService {
     verificationCode: string
   ): Promise<boolean> {
     try {
-      // Pour l'instant, on simule l'envoi d'email
-      // Dans un vrai projet, utiliser un service d'email comme Resend, SendGrid, etc.
-      console.log('Email de confirmation envoyé:', {
-        contractId,
-        recipientEmail,
-        recipientName,
-        verificationCode,
-        verificationUrl: `${window.location.origin}/contracts/verify/${verificationCode}`,
+      const verificationUrl = `${window.location.origin}/contracts/verify/${verificationCode}`;
+      const { data, error } = await supabase.functions.invoke('send-signature-confirmation', {
+        body: {
+          contractId,
+          recipientEmail,
+          recipientName,
+          verificationCode,
+          verificationUrl,
+        },
       });
-      
-      return true;
+
+      if (error) {
+        throw error;
+      }
+
+      return Boolean(data?.success);
     } catch (error) {
       console.error('Error sending confirmation email:', error);
       return false;
