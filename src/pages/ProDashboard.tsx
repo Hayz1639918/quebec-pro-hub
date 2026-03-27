@@ -25,7 +25,6 @@ import {
   CreditCard,
   Calendar,
   Clock,
-  Linkedin,
   HardHat,
   Award,
   Wrench,
@@ -741,18 +740,15 @@ const ProDashboard = () => {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} primary />
                   <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
-                  <ActionBtn icon={Search} label={t('pro_dashboard.quick_actions.browse_projects')} onClick={() => navigate('/projects')} span />
+                  <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <ActionBtn icon={MessageSquare} label={t('pro_dashboard.quick_actions.messaging')} onClick={() => navigate('/messages')} badge={stats.unreadMessages || undefined} />
-                  <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
-                  <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} span />
+                  <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} />
+                  <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
+                  <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
-                  <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
-                  <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
-                  <ActionBtn icon={Linkedin} label="Profil entrepreneur" onClick={() => navigate('/pro/entrepreneur-profile')} iconColor="text-blue-600" />
                   <ActionBtn icon={Users} label="Sous-traitants" onClick={() => navigate('/pro/subcontractors')} />
                 </div>
               </div>
