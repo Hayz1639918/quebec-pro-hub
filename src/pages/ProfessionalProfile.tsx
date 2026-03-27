@@ -23,6 +23,7 @@ import {
   Calendar,
   ArrowLeft,
   Flag,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -49,6 +50,15 @@ interface ProfessionalProfile {
   region?: string;
 }
 
+interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string | null;
+  image_url: string | null;
+  project_date: string | null;
+  category: string | null;
+}
+
 interface Review {
   id: string;
   client_id: string;
@@ -72,6 +82,9 @@ const ProfessionalProfile = () => {
     reviewsCount: 0,
   });
 
+  // Portfolio
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+
   // Reviews (US-040)
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -85,6 +98,7 @@ const ProfessionalProfile = () => {
     fetchProfile();
     fetchStats();
     fetchReviews();
+    fetchPortfolio();
   }, [id]);
 
   const fetchCurrentUser = async () => {
@@ -182,6 +196,19 @@ const ProfessionalProfile = () => {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchPortfolio = async () => {
+    try {
+      const { data } = await supabase
+        .from('portfolio_items')
+        .select('id, title, description, image_url, project_date, category')
+        .eq('professional_id', id)
+        .order('project_date', { ascending: false });
+      if (data) setPortfolioItems(data);
+    } catch (error) {
+      console.error('Error fetching portfolio:', error);
     }
   };
 
@@ -461,6 +488,55 @@ const ProfessionalProfile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Portfolio */}
+            {portfolioItems.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="h-5 w-5" />
+                    Portfolio ({portfolioItems.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {portfolioItems.map((item) => (
+                      <div key={item.id} className="group rounded-lg border overflow-hidden hover:shadow-md transition-shadow">
+                        <div className="aspect-video bg-muted relative overflow-hidden">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <ImageIcon className="h-10 w-10 text-muted-foreground/40" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-3 space-y-1.5">
+                          <h4 className="font-medium text-sm line-clamp-1">{item.title}</h4>
+                          {item.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.category && (
+                              <Badge variant="secondary" className="text-xs">{item.category}</Badge>
+                            )}
+                            {item.project_date && (
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(item.project_date), 'MMM yyyy', { locale: fr })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Avis clients (US-040) */}
             <Card>
