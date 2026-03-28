@@ -736,21 +736,15 @@ const ProDashboard = () => {
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0 sm:pt-0 md:pt-0">
             {professionalType === 'entrepreneur' ? (
               /* ── Entrepreneur quick actions (Epics 10-18) ── */
-              <div className="space-y-2 sm:space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} primary />
-                  <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
-                  <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} />
-                  <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
-                  <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                  <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
-                  <ActionBtn icon={Users} label="Sous-traitants" onClick={() => navigate('/pro/subcontractors')} />
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} primary />
+                <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
+                <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
+                <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} />
+                <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
+                <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
+                <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
+                <ActionBtn icon={Users} label="Sous-traitants" onClick={() => navigate('/pro/subcontractors')} />
               </div>
             ) : (
               /* ── Professionnel Métier quick actions (Epics 30-32) ── */
