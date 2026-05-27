@@ -75,7 +75,7 @@ CREATE POLICY "Admins can view all disputes"
     USING (
         EXISTS (
             SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid() AND p.role = 'admin'
+            WHERE p.id = auth.uid() AND p.is_admin = TRUE
         )
     );
 
@@ -86,7 +86,7 @@ CREATE POLICY "Admins can update all disputes"
     USING (
         EXISTS (
             SELECT 1 FROM profiles p
-            WHERE p.id = auth.uid() AND p.role = 'admin'
+            WHERE p.id = auth.uid() AND p.is_admin = TRUE
         )
     );
 
