@@ -32,6 +32,40 @@ import { fr } from "date-fns/locale";
 
 // US-057 — Gestion des réunions (lien manuel Zoom/Meet/Teams)
 
+// Accept HTTPS URLs and recognize the most common video-conferencing providers.
+// We intentionally allow arbitrary HTTPS URLs so users can paste links from
+// Whereby, Jitsi, Webex, etc. We only reject obviously invalid input.
+const KNOWN_MEETING_HOSTS = [
+  'zoom.us',
+  'us02web.zoom.us',
+  'us04web.zoom.us',
+  'us05web.zoom.us',
+  'us06web.zoom.us',
+  'meet.google.com',
+  'teams.microsoft.com',
+  'teams.live.com',
+  'webex.com',
+  'whereby.com',
+  'meet.jit.si',
+  'jitsi.org',
+];
+
+const validateMeetingUrl = (raw: string): { valid: boolean; reason?: string; known?: boolean } => {
+  const trimmed = raw.trim();
+  if (!trimmed) return { valid: true };
+  try {
+    const u = new URL(trimmed);
+    if (u.protocol !== 'https:') {
+      return { valid: false, reason: 'Le lien doit commencer par https:// pour des raisons de sécurité.' };
+    }
+    const host = u.hostname.toLowerCase();
+    const known = KNOWN_MEETING_HOSTS.some((h) => host === h || host.endsWith('.' + h));
+    return { valid: true, known };
+  } catch {
+    return { valid: false, reason: 'URL invalide. Exemple : https://zoom.us/j/123456789' };
+  }
+};
+
 interface Meeting {
   id: string;
   organizer_id: string;
@@ -109,8 +143,10 @@ const ProMeetings = () => {
     }
     setMeetings(prev => prev.map(m => m.id === id ? { ...m, has_reminder: newVal } : m));
     toast({
-      title: newVal ? "Rappel activé" : "Rappel désactivé",
-      description: newVal ? "Vous recevrez un rappel 1h avant la réunion." : "Rappel désactivé.",
+      title: newVal ? "Rappels activés" : "Rappels désactivés",
+      description: newVal
+        ? "Vous recevrez automatiquement un rappel 24h puis 1h avant la réunion."
+        : "Aucun rappel ne sera envoyé.",
     });
   };
 
@@ -119,7 +155,23 @@ const ProMeetings = () => {
       toast({ variant: "destructive", title: "Champs requis", description: "Remplissez tous les champs obligatoires." });
       return;
     }
+
+    // Validate the meeting URL if provided
+    const urlCheck = validateMeetingUrl(newMeetingUrl);
+    if (!urlCheck.valid) {
+      toast({ variant: "destructive", title: "Lien de réunion invalide", description: urlCheck.reason });
+      return;
+    }
+
     const scheduledAt = new Date(`${newDate}T${newTime}`).toISOString();
+    if (new Date(scheduledAt).getTime() < Date.now() - 60_000) {
+      toast({
+        variant: "destructive",
+        title: "Date passée",
+        description: "La réunion doit être planifiée dans le futur.",
+      });
+      return;
+    }
     setSaving(true);
     const { data, error } = await supabase
       .from("pro_meetings")
@@ -503,7 +555,33 @@ const ProMeetings = () => {
                 onChange={e => setNewMeetingUrl(e.target.value)}
                 placeholder="https://zoom.us/j/... ou https://meet.google.com/..."
                 type="url"
+                className={(() => {
+                  const check = validateMeetingUrl(newMeetingUrl);
+                  if (!check.valid) return 'border-red-500 focus-visible:ring-red-500';
+                  return '';
+                })()}
               />
+              {(() => {
+                const check = validateMeetingUrl(newMeetingUrl);
+                if (!check.valid && newMeetingUrl.trim()) {
+                  return <p className="text-xs text-red-600">{check.reason}</p>;
+                }
+                if (check.valid && newMeetingUrl.trim() && !check.known) {
+                  return (
+                    <p className="text-xs text-amber-600">
+                      Domaine non reconnu — vérifiez qu'il s'agit bien d'un lien de visioconférence.
+                    </p>
+                  );
+                }
+                if (check.valid && newMeetingUrl.trim() && check.known) {
+                  return <p className="text-xs text-green-600">Lien valide.</p>;
+                }
+                return null;
+              })()}
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Bell className="h-3 w-3" />
+                Rappels automatiques 24h et 1h avant la réunion.
+              </p>
             </div>
             <div className="space-y-2">
               <Label className="flex items-center gap-1.5">

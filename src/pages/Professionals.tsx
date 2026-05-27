@@ -40,6 +40,8 @@ import {
   List,
 } from "lucide-react";
 
+import InviteProfessionalDialog from "@/components/invitations/InviteProfessionalDialog";
+
 // Lazy load the map component
 const InteractiveMap = lazy(() => import("@/components/map/InteractiveMap"));
 
@@ -177,8 +179,10 @@ const Professionals = () => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [locationPermission, setLocationPermission] = useState<'prompt' | 'granted' | 'denied'>('prompt');
   const [userId, setUserId] = useState<string | null>(null);
+  const [userType, setUserType] = useState<'client' | 'professional' | null>(null);
   const [showMap, setShowMap] = useState(true);
   const [mapRadius, setMapRadius] = useState(50);
+  const [inviteTarget, setInviteTarget] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     fetchProfessionals();
@@ -199,6 +203,14 @@ const Professionals = () => {
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     setUserId(user?.id || null);
+    if (user) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+      if (data?.user_type) setUserType(data.user_type as 'client' | 'professional');
+    }
   };
 
   const handleStartConversation = async (professionalId: string) => {
@@ -1002,15 +1014,30 @@ const Professionals = () => {
                         <Separator />
 
                         {/* Contact Actions */}
-                        <div className="flex gap-2">
-                          <Button 
-                            className="flex-1" 
+                        <div className="flex gap-2 flex-wrap">
+                          <Button
+                            className="flex-1 min-w-[140px]"
                             onClick={() => navigate(`/professional/${pro.id}`)}
                           >
                             {t('professionals.card.view_profile')}
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          {userType === 'client' && (
+                            <Button
+                              variant="secondary"
+                              onClick={() =>
+                                setInviteTarget({
+                                  id: pro.id,
+                                  name: pro.company_name || pro.full_name,
+                                })
+                              }
+                              title={t('professionals.card.invite', { defaultValue: 'Inviter à soumissionner' })}
+                            >
+                              <Award className="h-4 w-4 mr-1.5" />
+                              {t('professionals.card.invite', { defaultValue: 'Inviter' })}
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
                             size="icon"
                             onClick={() => handleStartConversation(pro.id)}
                             title={t('professionals.card.contact')}
@@ -1032,6 +1059,15 @@ const Professionals = () => {
       </section>
 
       <Footer />
+
+      {inviteTarget && (
+        <InviteProfessionalDialog
+          open={!!inviteTarget}
+          onOpenChange={(open) => !open && setInviteTarget(null)}
+          professionalId={inviteTarget.id}
+          professionalName={inviteTarget.name}
+        />
+      )}
     </div>
   );
 };

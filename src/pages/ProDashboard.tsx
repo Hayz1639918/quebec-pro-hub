@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
@@ -113,6 +113,15 @@ const ProDashboard = () => {
   });
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
   const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
+  const [pendingInvitations, setPendingInvitations] = useState<Array<{
+    id: string;
+    project_id: string;
+    project_title: string;
+    client_name: string;
+    message: string | null;
+    created_at: string;
+  }>>([]);
+  const [respondingInvitation, setRespondingInvitation] = useState<string | null>(null);
 
   // US-052 — Revenue summary (real data from contractor_payments + contracts)
   const [revenue, setRevenue] = useState({
@@ -121,7 +130,23 @@ const ProDashboard = () => {
     paid: 0,         // Sum of contractor_payments.net_amount where status released
     paidThisMonth: 0,
   });
-  const [activeTab, setActiveTab] = useState("apercu");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'apercu');
+
+  // Keep the URL in sync so notifications can deep-link to a tab
+  useEffect(() => {
+    const current = searchParams.get('tab');
+    if (current !== activeTab) {
+      const next = new URLSearchParams(searchParams);
+      if (activeTab === 'apercu') {
+        next.delete('tab');
+      } else {
+        next.set('tab', activeTab);
+      }
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   useEffect(() => {
     (async () => {
@@ -161,9 +186,89 @@ const ProDashboard = () => {
 
       await fetchDashboardData(session.user.id);
       await fetchPendingContractsList(session.user.id);
+      await fetchPendingInvitations(session.user.id);
       setLoading(false);
     })();
   }, []);
+
+  // Realtime: refresh invitations on insert/update (separate effect so cleanup runs properly)
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`pro-invitations-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_invitations',
+          filter: `professional_id=eq.${userId}`,
+        },
+        () => fetchPendingInvitations(userId)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  const fetchPendingInvitations = async (uid: string) => {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('project_invitations')
+        .select('id, project_id, client_id, message, status, created_at, projects:project_id(title), profiles:client_id(full_name, company_name)')
+        .eq('professional_id', uid)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Error fetching invitations:', error.message);
+        setPendingInvitations([]);
+        return;
+      }
+
+      setPendingInvitations(
+        (data || []).map((inv: any) => ({
+          id: inv.id,
+          project_id: inv.project_id,
+          project_title: inv.projects?.title || 'Projet sans titre',
+          client_name:
+            inv.profiles?.company_name || inv.profiles?.full_name || 'Client',
+          message: inv.message,
+          created_at: inv.created_at,
+        }))
+      );
+    } catch (e) {
+      console.warn('Error fetching invitations:', e);
+      setPendingInvitations([]);
+    }
+  };
+
+  const respondToInvitation = async (
+    invitationId: string,
+    response: 'accepted' | 'declined',
+    projectId?: string
+  ) => {
+    setRespondingInvitation(invitationId);
+    try {
+      const { error } = await (supabase as any).rpc('respond_to_invitation', {
+        p_invitation_id: invitationId,
+        p_response: response,
+      });
+      if (error) throw error;
+      if (response === 'accepted' && projectId) {
+        // Take the pro straight to the proposal form
+        navigate(`/projects/${projectId}`);
+      } else {
+        setPendingInvitations((prev) => prev.filter((i) => i.id !== invitationId));
+      }
+    } catch (e: any) {
+      console.error('Error responding to invitation:', e);
+    } finally {
+      setRespondingInvitation(null);
+    }
+  };
 
   const fetchPendingContractsList = async (uid: string) => {
     try {
@@ -562,9 +667,9 @@ const ProDashboard = () => {
               <>
                 <TabsTrigger value="invitations" className="relative text-xs sm:text-sm">
                   Invitations
-                  {pendingContractsList.length > 0 && (
+                  {(pendingContractsList.length + pendingInvitations.length) > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                      {pendingContractsList.length}
+                      {pendingContractsList.length + pendingInvitations.length}
                     </span>
                   )}
                 </TabsTrigger>
@@ -596,18 +701,90 @@ const ProDashboard = () => {
           </TabsList>
 
           {/* Tab: Invitations (entrepreneur only) */}
-          <TabsContent value="invitations" className="mt-4">
+          <TabsContent value="invitations" className="mt-4 space-y-4">
+            {/* Section 1: Direct invitations from clients (US-053) */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5 text-primary" />
-                  Invitations & Contrats à signer
+                  Invitations de clients
                 </CardTitle>
-                <CardDescription>Propositions clients en attente de votre réponse</CardDescription>
+                <CardDescription>
+                  Des clients vous ont sollicité directement pour soumissionner sur leurs projets
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {pendingInvitations.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-6 text-sm">
+                    Aucune invitation client en attente.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingInvitations.map((inv) => (
+                      <div key={inv.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-semibold truncate">{inv.project_title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Invité par : <span className="font-medium text-foreground">{inv.client_name}</span>
+                            </p>
+                            {inv.message && (
+                              <p className="text-sm text-muted-foreground italic mt-2 line-clamp-2">
+                                "{inv.message}"
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-2">
+                              {format(new Date(inv.created_at), 'dd MMM yyyy', { locale: fr })}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-blue-600 border-blue-300 shrink-0">
+                            Nouvelle
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-2 mt-3 justify-end">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/projects/${inv.project_id}`)}
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1.5" />
+                            Voir le projet
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={respondingInvitation === inv.id}
+                            onClick={() => respondToInvitation(inv.id, 'declined')}
+                          >
+                            Décliner
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={respondingInvitation === inv.id}
+                            onClick={() => respondToInvitation(inv.id, 'accepted', inv.project_id)}
+                          >
+                            Accepter et soumissionner
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Section 2: Contracts to sign */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-amber-600" />
+                  Contrats à signer
+                </CardTitle>
+                <CardDescription>Propositions acceptées en attente de votre signature</CardDescription>
               </CardHeader>
               <CardContent>
                 {pendingContractsList.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Aucune invitation en attente.</p>
+                  <p className="text-center text-muted-foreground py-6 text-sm">Aucun contrat en attente.</p>
                 ) : (
                   <div className="space-y-3">
                     {pendingContractsList.map(contract => (

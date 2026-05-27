@@ -33,6 +33,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import InviteProfessionalDialog from '@/components/invitations/InviteProfessionalDialog';
 
 interface ProfessionalProfile {
   id: string;
@@ -68,6 +69,18 @@ interface Review {
   created_at: string;
   client_name?: string;
   project_title?: string;
+  pro_reply?: { content: string; created_at: string } | null;
+}
+
+interface PublicCertification {
+  id: string;
+  cert_type: string;
+  cert_name: string;
+  cert_number: string | null;
+  issuer: string | null;
+  issued_at: string | null;
+  expires_at: string | null;
+  certificate_url: string | null;
 }
 
 const ProfessionalProfile = () => {
@@ -86,7 +99,10 @@ const ProfessionalProfile = () => {
   // Portfolio
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
 
-  // Reviews (US-040)
+  // Public certifications (US-050)
+  const [certifications, setCertifications] = useState<PublicCertification[]>([]);
+
+  // Reviews (US-040) + replies (US-066)
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportingReview, setReportingReview] = useState<Review | null>(null);
@@ -94,18 +110,32 @@ const ProfessionalProfile = () => {
   const [reportDetail, setReportDetail] = useState('');
   const [submittingReport, setSubmittingReport] = useState(false);
 
+  // Invite flow (client -> pro)
+  const [inviteOpen, setInviteOpen] = useState(false);
+
   useEffect(() => {
     fetchCurrentUser();
     fetchProfile();
     fetchStats();
     fetchReviews();
     fetchPortfolio();
+    fetchCertifications();
   }, [id]);
+
+  const [currentUserType, setCurrentUserType] = useState<'client' | 'professional' | null>(null);
 
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       setCurrentUserId(user.id);
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+      if (prof?.user_type) {
+        setCurrentUserType(prof.user_type as 'client' | 'professional');
+      }
     }
   };
 
@@ -183,20 +213,53 @@ const ProfessionalProfile = () => {
         .eq('professional_id', id)
         .order('created_at', { ascending: false })
         .limit(10);
-      if (data) {
-        // Enrich with client names
-        const enriched = await Promise.all(data.map(async (r) => {
-          const { data: clientData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', r.client_id)
-            .single();
-          return { ...r, client_name: clientData?.full_name || 'Client anonyme' };
+      if (data && data.length > 0) {
+        const reviewIds = data.map((r: any) => r.id);
+        const clientIds = Array.from(new Set(data.map((r: any) => r.client_id)));
+
+        const [clientsRes, repliesRes] = await Promise.all([
+          supabase.from('profiles').select('id, full_name').in('id', clientIds),
+          (supabase as any)
+            .from('review_replies')
+            .select('review_id, content, created_at')
+            .in('review_id', reviewIds),
+        ]);
+
+        const clientMap = new Map<string, string>();
+        (clientsRes.data || []).forEach((c: any) =>
+          clientMap.set(c.id, c.full_name || 'Client anonyme')
+        );
+        const replyMap = new Map<string, { content: string; created_at: string }>();
+        (repliesRes.data || []).forEach((r: any) =>
+          replyMap.set(r.review_id, { content: r.content, created_at: r.created_at })
+        );
+
+        const enriched: Review[] = (data as any[]).map((r) => ({
+          ...r,
+          client_name: clientMap.get(r.client_id) || 'Client anonyme',
+          pro_reply: replyMap.get(r.id) || null,
         }));
         setReviews(enriched);
+      } else {
+        setReviews([]);
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
+    }
+  };
+
+  const fetchCertifications = async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from('professional_certifications')
+        .select(
+          'id, cert_type, cert_name, cert_number, issuer, issued_at, expires_at, certificate_url'
+        )
+        .eq('professional_id', id)
+        .order('issued_at', { ascending: false });
+      if (data) setCertifications(data as PublicCertification[]);
+    } catch (error) {
+      console.error('Error fetching certifications:', error);
     }
   };
 
@@ -390,10 +453,18 @@ const ProfessionalProfile = () => {
                   </div>
 
                   {!isOwnProfile && (
-                    <Button onClick={handleContact} className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Contacter
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button onClick={handleContact} className="gap-2" variant="outline">
+                        <MessageSquare className="h-4 w-4" />
+                        Contacter
+                      </Button>
+                      {currentUserType === 'client' && profile && (
+                        <Button onClick={() => setInviteOpen(true)} className="gap-2">
+                          <Briefcase className="h-4 w-4" />
+                          Inviter à soumissionner
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -458,38 +529,94 @@ const ProfessionalProfile = () => {
             )}
 
             {/* Certifications */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Certifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {profile.rbq_number && (
-                    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                        <div>
-                          <p className="font-medium">Licence RBQ</p>
-                          <p className="text-sm text-gray-600">{profile.rbq_number}</p>
+            {(profile.rbq_number || certifications.length > 0) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Certifications & accréditations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {profile.rbq_number && (
+                      <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          <div>
+                            <p className="font-medium">Licence RBQ</p>
+                            <p className="text-sm text-gray-600">{profile.rbq_number}</p>
+                          </div>
                         </div>
+                        {profile.rbq_certification_url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(profile.rbq_certification_url!, '_blank')}
+                          >
+                            Voir le certificat
+                          </Button>
+                        )}
                       </div>
-                      {profile.rbq_certification_url && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(profile.rbq_certification_url!, '_blank')}
+                    )}
+
+                    {certifications.map((cert) => {
+                      const expired =
+                        cert.expires_at && new Date(cert.expires_at) < new Date();
+                      const typeLabel =
+                        cert.cert_type === 'ccq'
+                          ? 'CCQ'
+                          : cert.cert_type === 'asp'
+                          ? 'ASP Construction'
+                          : 'Certification';
+                      return (
+                        <div
+                          key={cert.id}
+                          className={`flex items-center justify-between p-3 rounded-lg border ${
+                            expired
+                              ? 'bg-gray-50 border-gray-200'
+                              : 'bg-blue-50 border-blue-200'
+                          }`}
                         >
-                          Voir le certificat
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Award
+                              className={`h-5 w-5 shrink-0 ${
+                                expired ? 'text-gray-400' : 'text-blue-600'
+                              }`}
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">
+                                {typeLabel} — {cert.cert_name}
+                              </p>
+                              <div className="flex flex-wrap gap-2 text-xs text-gray-600 mt-0.5">
+                                {cert.issuer && <span>Émis par {cert.issuer}</span>}
+                                {cert.cert_number && <span>N° {cert.cert_number}</span>}
+                                {cert.expires_at && (
+                                  <span className={expired ? 'text-red-600' : ''}>
+                                    {expired ? 'Expirée le ' : 'Expire le '}
+                                    {format(new Date(cert.expires_at), 'PPP', { locale: fr })}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {cert.certificate_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="shrink-0"
+                              onClick={() => window.open(cert.certificate_url!, '_blank')}
+                            >
+                              Voir
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Portfolio */}
             {portfolioItems.length > 0 && (
@@ -570,6 +697,20 @@ const ProfessionalProfile = () => {
                             </div>
                             {review.comment && (
                               <p className="text-sm text-gray-700">{review.comment}</p>
+                            )}
+                            {review.pro_reply && (
+                              <div className="mt-3 pl-3 border-l-2 border-primary/40 bg-primary/5 rounded-r-md py-2 pr-3">
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-primary mb-1">
+                                  <MessageSquare className="h-3 w-3" />
+                                  Réponse de l'entrepreneur
+                                  <span className="text-muted-foreground font-normal">
+                                    · {format(new Date(review.pro_reply.created_at), 'PPP', { locale: fr })}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {review.pro_reply.content}
+                                </p>
+                              </div>
                             )}
                           </div>
                           {currentUserId && currentUserId !== review.client_id && (
@@ -724,6 +865,16 @@ const ProfessionalProfile = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* US-053 — Invite professional to bid */}
+      {profile && (
+        <InviteProfessionalDialog
+          open={inviteOpen}
+          onOpenChange={setInviteOpen}
+          professionalId={profile.id}
+          professionalName={profile.company_name || profile.full_name}
+        />
+      )}
     </div>
   );
 };

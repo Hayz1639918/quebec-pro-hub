@@ -13,6 +13,9 @@ import {
   Sparkles,
   Inbox,
   Check,
+  UserPlus,
+  Video,
+  Reply,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,6 +79,14 @@ const typeIcon = (type: string) => {
       return Flag;
     case "verification":
       return ShieldAlert;
+    case "invitation_received":
+    case "invitation_accepted":
+    case "invitation_declined":
+      return UserPlus;
+    case "meeting_reminder":
+      return Video;
+    case "review_reply":
+      return Reply;
     case "system":
       return Sparkles;
     default:
@@ -91,6 +102,8 @@ const typeColor = (type: string) => {
   if (type.startsWith("milestone")) return "text-warning bg-warning-light";
   if (type.startsWith("review")) return "text-warning bg-warning-light";
   if (type.startsWith("dispute")) return "text-destructive bg-destructive/10";
+  if (type.startsWith("invitation")) return "text-primary bg-primary/10";
+  if (type === "meeting_reminder") return "text-primary bg-primary/10";
   return "text-muted-foreground bg-muted";
 };
 
