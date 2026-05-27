@@ -578,24 +578,32 @@ export const ContractViewer = ({
             <div className="border rounded-lg p-6 bg-slate-50">
               <h4 className="font-semibold mb-4 text-center">Signature du client</h4>
               <div className="flex flex-col items-center">
-                {contract.client_signed_at && contract.client_signature_data ? (
+                {contract.client_signed_at ? (
                   <>
-                    <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
-                      <img 
-                        src={(contract.client_signature_data as SignatureData).signature_image} 
-                        alt="Signature client"
-                        className="max-h-20 mx-auto object-contain"
-                      />
-                    </div>
+                    {contract.client_signature_data ? (
+                      <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
+                        <img
+                          src={(contract.client_signature_data as SignatureData).signature_image}
+                          alt="Signature client"
+                          className="max-h-20 mx-auto object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-3">
+                        <CheckCircle2 className="h-10 w-10 text-success" />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-success mb-2">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="font-medium">Signé</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{contract.client_name}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(contract.client_signed_at)}</p>
-                    <p className="text-xs font-mono text-muted-foreground/70 mt-1">
-                      Code: {(contract.client_signature_data as SignatureData).verification_code}
-                    </p>
+                    {contract.client_signature_data && (
+                      <p className="text-xs font-mono text-muted-foreground/70 mt-1">
+                        Code: {(contract.client_signature_data as SignatureData).verification_code}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>
@@ -613,24 +621,32 @@ export const ContractViewer = ({
             <div className="border rounded-lg p-6 bg-slate-50">
               <h4 className="font-semibold mb-4 text-center">Signature de l'entrepreneur</h4>
               <div className="flex flex-col items-center">
-                {contract.professional_signed_at && contract.professional_signature_data ? (
+                {contract.professional_signed_at ? (
                   <>
-                    <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
-                      <img 
-                        src={(contract.professional_signature_data as SignatureData).signature_image} 
-                        alt="Signature professionnel"
-                        className="max-h-20 mx-auto object-contain"
-                      />
-                    </div>
+                    {contract.professional_signature_data ? (
+                      <div className="bg-white border rounded-lg p-4 mb-3 w-full max-w-xs">
+                        <img
+                          src={(contract.professional_signature_data as SignatureData).signature_image}
+                          alt="Signature professionnel"
+                          className="max-h-20 mx-auto object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-success/10 flex items-center justify-center mb-3">
+                        <CheckCircle2 className="h-10 w-10 text-success" />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 text-success mb-2">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="font-medium">Signé</span>
                     </div>
                     <p className="text-sm text-muted-foreground">{contract.professional_name}</p>
                     <p className="text-xs text-muted-foreground">{formatDate(contract.professional_signed_at)}</p>
-                    <p className="text-xs font-mono text-muted-foreground/70 mt-1">
-                      Code: {(contract.professional_signature_data as SignatureData).verification_code}
-                    </p>
+                    {contract.professional_signature_data && (
+                      <p className="text-xs font-mono text-muted-foreground/70 mt-1">
+                        Code: {(contract.professional_signature_data as SignatureData).verification_code}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>

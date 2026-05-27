@@ -448,6 +448,12 @@
     "title": "Projects Marketplace",
     "search": "Search for a project by title, description or category...",
     "loading": "Loading projects...",
+    "status": {
+      "open": "Open",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
     "hero": {
       "title": "Discover Available Projects",
       "subtitle": "Find construction and renovation project opportunities near you"

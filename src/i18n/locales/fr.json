@@ -448,6 +448,12 @@
     "title": "Marketplace des Projets",
     "search": "Rechercher un projet par titre, description ou catégorie...",
     "loading": "Chargement des projets...",
+    "status": {
+      "open": "Ouvert",
+      "in_progress": "En cours",
+      "completed": "Complété",
+      "cancelled": "Annulé"
+    },
     "hero": {
       "title": "Découvrez les projets disponibles",
       "subtitle": "Trouvez des opportunités de projets de construction et rénovation près de chez vous"

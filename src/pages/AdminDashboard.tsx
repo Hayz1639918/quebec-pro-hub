@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -149,6 +149,8 @@ interface AdminDispute {
 const AdminDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "pending";
   const { toast } = useToast();
 
   // Security state
@@ -696,7 +698,11 @@ const AdminDashboard = () => {
         )}
 
         {/* Main Tabs */}
-        <Tabs defaultValue="pending" className="space-y-6">
+        <Tabs
+          value={initialTab}
+          onValueChange={(value) => setSearchParams({ tab: value })}
+          className="space-y-6"
+        >
           <TabsList>
             <TabsTrigger value="pending" className="flex items-center gap-2">
               <FileCheck className="h-4 w-4" />

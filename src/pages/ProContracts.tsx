@@ -113,7 +113,7 @@ const ProContracts = () => {
         .select(`
           *,
           profiles!contracts_client_id_fkey(full_name),
-          projects(title)
+          projects!project_id(title)
         `)
         .eq('professional_id', uid)
         .order('created_at', { ascending: false });

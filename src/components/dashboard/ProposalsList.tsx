@@ -234,8 +234,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                       <div className="max-w-xs truncate">{proposal.project?.title}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1 text-sm">
-                        <DollarSign className="h-3 w-3" />
+                      <div className="text-sm font-medium">
                         {formatCurrency(proposal.estimated_budget)}
                       </div>
                     </TableCell>
@@ -333,8 +332,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <div className="text-muted-foreground mb-1">Budget</div>
-                        <div className="font-medium flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
+                        <div className="font-medium">
                           {formatCurrency(proposal.estimated_budget)}
                         </div>
                       </div>
