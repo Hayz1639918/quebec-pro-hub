@@ -536,14 +536,15 @@ const CompleteProfile = () => {
                 <Label htmlFor="postalCode" className="flex items-center gap-2">
                   Code postal *
                   {geocoding && (
-                    <span className="text-xs text-muted-foreground">
-                      🔄 Géolocalisation en cours...
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Géolocalisation en cours...
                     </span>
                   )}
                   {!geocoding && latitude && longitude && (
                     <span className="text-xs text-green-600 flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      Position détectée ✓
+                      Position détectée
                     </span>
                   )}
                 </Label>
@@ -556,8 +557,9 @@ const CompleteProfile = () => {
                   maxLength={7}
                   required
                 />
-                <p className="text-xs text-muted-foreground">
-                  📍 Votre code postal permet aux clients de vous trouver sur la carte
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  Votre code postal permet aux clients de vous trouver sur la carte
                 </p>
               </div>
             </div>

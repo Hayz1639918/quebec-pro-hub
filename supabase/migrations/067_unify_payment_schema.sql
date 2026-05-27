@@ -5,14 +5,23 @@
 -- Drop the duplicate `payments` table created by migration 064 (it was empty).
 
 -- ============================================
--- PART 1: DROP the parallel `payments` table from migration 064
+-- PART 1: DROP the parallel `payments` table from migration 064 (if it exists)
 -- ============================================
 -- This table was created as a parallel Stripe-oriented schema. We consolidate on
--- contractor_payments instead. Triggers and policies on it are removed cascading.
+-- contractor_payments instead. Safe to skip if the table was never created.
 
-DROP TRIGGER IF EXISTS trigger_payment_status_change ON payments;
+DO $drop_payments$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'payments'
+  ) THEN
+    DROP TRIGGER IF EXISTS trigger_payment_status_change ON payments;
+    DROP TABLE payments CASCADE;
+  END IF;
+END $drop_payments$;
+
 DROP FUNCTION IF EXISTS on_payment_status_change();
-DROP TABLE IF EXISTS payments CASCADE;
 
 -- ============================================
 -- PART 2: EXTEND contractor_payments with FK + Stripe + bilateral fields

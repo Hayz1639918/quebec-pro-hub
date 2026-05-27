@@ -6,7 +6,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle2, FileText, Shield, Loader2, LogOut, RefreshCw } from "lucide-react";
+import { Clock, CheckCircle2, FileText, Shield, Loader2, LogOut, RefreshCw, Lightbulb } from "lucide-react";
 
 const PendingVerification = () => {
   const { t } = useTranslation();
@@ -210,7 +210,7 @@ const PendingVerification = () => {
 
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-blue-900 mb-1">💡 Délai estimé</h4>
+            <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" />Délai estimé</h4>
             <p className="text-sm text-blue-800">
               Notre équipe vérifie généralement les certifications RBQ sous 24 à 48 heures ouvrables. 
               Vous recevrez un email dès que votre compte sera activé.

@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, User, Briefcase, Shield, Award, TrendingUp, DollarSign, Settings } from "lucide-react";
+import { MapPin, User, Briefcase, Shield, Award, TrendingUp, DollarSign, Settings, Loader2 } from "lucide-react";
 import { geocodePostalCode } from "@/lib/geolocation";
 
 // Lazy-load Epic 30 components to avoid large initial bundle
@@ -311,7 +311,7 @@ const ProProfile = () => {
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2">
                         Code postal
-                        {geocoding && <span className="text-xs text-muted-foreground">🔄</span>}
+                        {geocoding && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                         {!geocoding && latitude && longitude && (
                           <span className="text-xs text-green-600 flex items-center gap-1">
                             <MapPin className="h-3 w-3" /> Localisé

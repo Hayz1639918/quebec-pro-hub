@@ -14,7 +14,8 @@ import {
   Star,
   DollarSign,
   Eye,
-  MousePointerClick
+  MousePointerClick,
+  CheckCircle2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { calculateDistance } from '@/lib/geolocation';
@@ -486,7 +487,10 @@ export const InteractiveMap = ({
                 >
                   <Popup>
                     <div className="text-center">
-                      <strong>📍 {t('professionals.map.my_location')}</strong>
+                      <strong className="flex items-center justify-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {t('professionals.map.my_location')}
+                      </strong>
                       <p className="text-xs text-muted-foreground mt-1">
                         {t('professionals.map.drag_to_move')}
                       </p>
@@ -549,8 +553,9 @@ export const InteractiveMap = ({
                           {formatBudget(project.budget_min, project.budget_max)}
                         </div>
                         {distance !== undefined && (
-                          <div className={`font-medium ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
-                            📍 {distance.toFixed(1)} km
+                          <div className={`font-medium flex items-center gap-1 ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <MapPin className="h-3 w-3" />
+                            {distance.toFixed(1)} km
                           </div>
                         )}
                       </div>
@@ -601,8 +606,9 @@ export const InteractiveMap = ({
                         )}
                       </div>
                       {pro.is_rbq_verified && (
-                        <Badge variant="default" className="mb-2 text-xs bg-green-600">
-                          ✓ {t('professionals.card.verified')}
+                        <Badge variant="default" className="mb-2 text-xs bg-green-600 inline-flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {t('professionals.card.verified')}
                         </Badge>
                       )}
                       <div className="space-y-1 text-xs text-gray-600">
@@ -618,8 +624,9 @@ export const InteractiveMap = ({
                           <div>{pro.years_experience} {t('professionals.card.years_exp')}</div>
                         )}
                         {distance !== undefined && (
-                          <div className={`font-medium ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
-                            📍 {distance.toFixed(1)} {t('professionals.map.km')}
+                          <div className={`font-medium flex items-center gap-1 ${isInRadius ? 'text-primary' : 'text-muted-foreground'}`}>
+                            <MapPin className="h-3 w-3" />
+                            {distance.toFixed(1)} {t('professionals.map.km')}
                           </div>
                         )}
                       </div>

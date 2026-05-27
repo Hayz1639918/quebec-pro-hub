@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle } from "lucide-react";
+import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle, Lightbulb } from "lucide-react";
 
 // Password validation helpers
 const PASSWORD_RULES = {
@@ -430,7 +430,7 @@ const ClientProfile = () => {
 
           {/* Info box */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h4 className="font-medium text-blue-900 mb-1">💡 Pourquoi remplir ces informations ?</h4>
+            <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" />Pourquoi remplir ces informations ?</h4>
             <p className="text-sm text-blue-800">
               Vos informations seront automatiquement insérées dans les contrats que vous recevrez des entrepreneurs.
               Plus votre profil est complet, moins vous aurez de champs à remplir lors de la signature.

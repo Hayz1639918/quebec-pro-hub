@@ -28,7 +28,25 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X, MapPin, Plus, Trash2, HardHat } from "lucide-react";
+import {
+  CalendarIcon,
+  Upload,
+  X,
+  MapPin,
+  Plus,
+  Trash2,
+  HardHat,
+  FileText,
+  Wallet,
+  CalendarDays,
+  Scale,
+  FileCheck,
+  ShieldCheck,
+  Settings,
+  Paperclip,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -520,7 +538,7 @@ const NewProject = () => {
             {/* SECTION 1: Informations de base */}
             <Card>
               <CardHeader>
-                <CardTitle>📋 Informations de base</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />Informations de base</CardTitle>
                 <CardDescription>
                   Décrivez votre projet de manière générale
                 </CardDescription>
@@ -610,7 +628,7 @@ const NewProject = () => {
             {/* SECTION 2: Budget */}
             <Card>
               <CardHeader>
-                <CardTitle>💰 Budget</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5 text-primary" />Budget</CardTitle>
                 <CardDescription>
                   Indiquez votre fourchette budgétaire et votre mode de paiement préféré
                 </CardDescription>
@@ -720,7 +738,7 @@ const NewProject = () => {
             {/* SECTION 3: Localisation */}
             <Card>
               <CardHeader>
-                <CardTitle>📍 Localisation</CardTitle>
+                <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" />Localisation</CardTitle>
                 <CardDescription>
                   Où se situe le projet ?
                 </CardDescription>
@@ -765,8 +783,9 @@ const NewProject = () => {
                   <Label htmlFor="postalCode" className="flex items-center gap-2">
                     {t('new_project.form.postal_code')}
                     {geocoding && (
-                      <span className="text-xs text-muted-foreground">
-                        🔄 Géolocalisation en cours...
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Géolocalisation en cours...
                       </span>
                     )}
                     {!geocoding && latitude && longitude && (
@@ -790,7 +809,7 @@ const NewProject = () => {
             {/* SECTION 4: Dates importantes */}
             <Card>
               <CardHeader>
-                <CardTitle>📅 Dates importantes</CardTitle>
+                <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />Dates importantes</CardTitle>
                 <CardDescription>
                   Définissez l'échéancier de votre projet
                 </CardDescription>
@@ -841,7 +860,7 @@ const NewProject = () => {
             {/* SECTION 5: Critères d'évaluation */}
             <Card>
               <CardHeader>
-                <CardTitle>⚖️ Critères d'évaluation</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5 text-primary" />Critères d'évaluation</CardTitle>
                 <CardDescription>
                   Définissez l'importance de chaque critère pour évaluer les soumissions (total: {totalCriteriaWeight}%)
                 </CardDescription>
@@ -863,8 +882,9 @@ const NewProject = () => {
                   </div>
                 ))}
                 {totalCriteriaWeight !== 100 && (
-                  <p className="text-sm text-amber-600">
-                    ⚠️ Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
+                  <p className="text-sm text-amber-600 flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4" />
+                    Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
                   </p>
                 )}
               </CardContent>
@@ -941,7 +961,7 @@ const NewProject = () => {
             {/* SECTION 6: Documents requis */}
             <Card>
               <CardHeader>
-                <CardTitle>📄 Documents requis</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileCheck className="h-5 w-5 text-primary" />Documents requis</CardTitle>
                 <CardDescription>
                   Sélectionnez les documents que les soumissionnaires doivent fournir
                 </CardDescription>
@@ -965,7 +985,7 @@ const NewProject = () => {
             {/* SECTION 7: Exigences d'assurance */}
             <Card>
               <CardHeader>
-                <CardTitle>🛡️ Exigences d'assurance</CardTitle>
+                <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Exigences d'assurance</CardTitle>
                 <CardDescription>
                   Définissez les montants minimums d'assurance requis (optionnel)
                 </CardDescription>
@@ -1003,7 +1023,7 @@ const NewProject = () => {
               <AccordionItem value="advanced" className="border rounded-lg">
                 <AccordionTrigger className="px-6 hover:no-underline">
                   <div className="flex items-center gap-2">
-                    <span>⚙️</span>
+                    <Settings className="h-4 w-4 text-primary" />
                     <span className="font-semibold">Options avancées</span>
                     <span className="text-sm text-muted-foreground font-normal">(optionnel)</span>
                   </div>
@@ -1070,7 +1090,7 @@ const NewProject = () => {
             {/* SECTION 9: Fichiers */}
             <Card>
               <CardHeader>
-                <CardTitle>📎 Documents et photos</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Paperclip className="h-5 w-5 text-primary" />Documents et photos</CardTitle>
                 <CardDescription>
                   Ajoutez des photos ou documents pour mieux illustrer votre projet
                 </CardDescription>

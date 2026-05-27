@@ -4,7 +4,7 @@
 -- receives a notification. The notification deep-links to /admin/dashboard.
 
 CREATE OR REPLACE FUNCTION on_dispute_created()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $fn$
 DECLARE
   v_admin RECORD;
   v_opener_name TEXT;
@@ -42,7 +42,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$fn$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_dispute_created ON disputes;
 CREATE TRIGGER trigger_dispute_created

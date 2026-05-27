@@ -43,7 +43,7 @@
     "subtitle": "Secure international platform for your construction and renovation projects",
     "cta_client": "Post a Project",
     "cta_pro": "Become a Professional",
-    "badge": "🌍 Trusted International Platform",
+    "badge": "Trusted International Platform",
     "features": {
       "verified": "Verified and certified contractors",
       "payments": "Secure milestone-based payments",
@@ -194,7 +194,7 @@
       "button_loading": "Saving..."
     },
     "messages": {
-      "success": "Registration successful! 🎉",
+      "success": "Registration successful!",
       "success_client": "Your account has been created successfully!",
       "success_pro": "Your professional account has been created. We will verify your RBQ certification shortly.",
       "login_success": "Login successful",
@@ -220,7 +220,7 @@
     }
   },
   "dashboard": {
-    "welcome": "Hello, {{name}} 👋",
+    "welcome": "Hello, {{name}}",
     "subtitle": "Welcome to your BâtirNet dashboard",
     "tabs": {
       "overview": "Overview",
@@ -356,7 +356,7 @@
       "no_contracts": "No contracts",
       "coming_soon": "Coming Soon",
       "features": {
-        "title": "🚀 Coming Soon",
+        "title": "Coming Soon",
         "esign": "Electronic contract signing",
         "templates": "Customizable contract templates",
         "milestones": "Milestone and payment tracking",
@@ -369,7 +369,7 @@
       "no_invoices": "No invoices",
       "coming_soon": "Coming Soon",
       "features": {
-        "title": "💳 Coming Soon",
+        "title": "Coming Soon",
         "auto_billing": "Automatic milestone billing",
         "pdf_export": "PDF invoice export",
         "history": "Payment history",
@@ -797,7 +797,7 @@
       "fill_required_fields": "Please fill in all required fields",
       "invalid_budget": "Invalid Budget",
       "invalid_budget_desc": "Maximum budget must be greater than minimum",
-      "success_title": "Project Created! 🎉",
+      "success_title": "Project Created",
       "success_desc": "Your project has been successfully published",
       "creation_error": "Error creating project"
     }
@@ -938,7 +938,7 @@
       "new_proposal": "New Proposal Received",
       "proposal_received_desc": "{{name}} sent you a proposal",
       "a_professional": "A professional",
-      "proposal_accepted": "Proposal Accepted! 🎉",
+      "proposal_accepted": "Proposal Accepted",
       "proposal_rejected": "Proposal Not Selected",
       "project_update": "Project Updated",
       "project_updated_desc": "The project \"{{title}}\" was modified",
@@ -1194,7 +1194,7 @@
   },
   "footer": {
     "tagline": "The trusted Canadian platform to connect clients and construction contractors.",
-    "made_with_love": "Made with ❤️ in Canada 🇨🇦",
+    "made_with_love": "Designed and operated in Canada",
     "rights": "All rights reserved.",
     "company": {
       "title": "Company",

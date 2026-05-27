@@ -945,7 +945,7 @@ const Dashboard = () => {
           {/* Header */}
           <div className="mb-4 sm:mb-6 md:mb-8">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2">
-              Bonjour, {profile?.full_name || 'Client'} 👋
+              Bonjour, {profile?.full_name || 'Client'}
             </h1>
             <p className="text-xs sm:text-sm md:text-base text-muted-foreground">
               {t('dashboard.subtitle')}
@@ -1455,7 +1455,7 @@ const Dashboard = () => {
                                 {needsClientSignature ? (
                                   <Badge className="bg-warning">À signer</Badge>
                                 ) : isFullySigned ? (
-                                  <Badge className="bg-success">Signé ✓</Badge>
+                                  <Badge className="bg-success inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />Signé</Badge>
                                 ) : needsProSignature ? (
                                   <Badge variant="outline" className="text-warning border-warning">
                                     En attente signature entrepreneur

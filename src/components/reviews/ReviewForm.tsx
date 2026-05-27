@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -68,8 +68,9 @@ export default function ReviewForm({ projectId, professionalId, onSubmitted }: R
     return (
       <Card>
         <CardContent className="pt-6 text-center">
-          <div className="text-success text-lg font-semibold mb-2">
-            ✓ Avis envoyé avec succès
+          <div className="text-success text-lg font-semibold mb-2 flex items-center justify-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Avis envoyé avec succès
           </div>
           <p className="text-muted-foreground text-sm">
             Merci d'avoir partagé votre expérience.

@@ -24,6 +24,7 @@ import {
   ArrowLeft,
   Flag,
   Image as ImageIcon,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -340,8 +341,9 @@ const ProfessionalProfile = () => {
 
         {isOwnProfile && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800 text-center">
-              👁️ <strong>Aperçu</strong> : Ceci est la vue que les clients voient de votre profil
+            <p className="text-blue-800 text-center flex items-center justify-center gap-2">
+              <Eye className="h-4 w-4" />
+              <strong>Aperçu</strong> : Ceci est la vue que les clients voient de votre profil
             </p>
           </div>
         )}

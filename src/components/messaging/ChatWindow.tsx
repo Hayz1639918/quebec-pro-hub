@@ -758,8 +758,9 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                     
                     {/* Message Content */}
                     {isDeleted ? (
-                      <p className="text-sm text-muted-foreground">
-                        🗑️ Message supprimé
+                      <p className="text-sm text-muted-foreground italic flex items-center gap-1.5">
+                        <Trash2 className="h-3 w-3" />
+                        Message supprimé
                       </p>
                     ) : (
                       <>

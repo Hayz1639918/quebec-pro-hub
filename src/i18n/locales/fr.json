@@ -43,7 +43,7 @@
     "subtitle": "Plateforme internationale sécurisée pour vos projets de construction et rénovation",
     "cta_client": "Publier un projet",
     "cta_pro": "Devenir professionnel",
-    "badge": "🌍 Plateforme internationale de confiance",
+    "badge": "Plateforme internationale de confiance",
     "features": {
       "verified": "Entrepreneurs vérifiés et certifiés",
       "payments": "Paiements sécurisés par jalons",
@@ -194,7 +194,7 @@
       "button_loading": "Enregistrement..."
     },
     "messages": {
-      "success": "Inscription réussie ! 🎉",
+      "success": "Inscription réussie !",
       "success_client": "Votre compte a été créé avec succès !",
       "success_pro": "Votre compte professionnel a été créé. Nous vérifierons votre certification RBQ sous peu.",
       "login_success": "Connexion réussie",
@@ -220,7 +220,7 @@
     }
   },
   "dashboard": {
-    "welcome": "Bonjour, {{name}} 👋",
+    "welcome": "Bonjour, {{name}}",
     "subtitle": "Bienvenue sur votre tableau de bord BâtirNet",
     "tabs": {
       "overview": "Vue d'ensemble",
@@ -356,7 +356,7 @@
       "no_contracts": "Aucun contrat",
       "coming_soon": "Fonctionnalité à venir",
       "features": {
-        "title": "🚀 Fonctionnalité à venir",
+        "title": "Fonctionnalité à venir",
         "esign": "Signature électronique des contrats",
         "templates": "Modèles de contrats personnalisables",
         "milestones": "Suivi des jalons et paiements",
@@ -369,7 +369,7 @@
       "no_invoices": "Aucune facture",
       "coming_soon": "Fonctionnalité à venir",
       "features": {
-        "title": "💳 Fonctionnalité à venir",
+        "title": "Fonctionnalité à venir",
         "auto_billing": "Facturation automatique par jalon",
         "pdf_export": "Export PDF des factures",
         "history": "Historique des paiements",
@@ -799,7 +799,7 @@
       "fill_required_fields": "Veuillez remplir tous les champs obligatoires",
       "invalid_budget": "Budget invalide",
       "invalid_budget_desc": "Le budget maximum doit être supérieur au minimum",
-      "success_title": "Projet créé ! 🎉",
+      "success_title": "Projet créé",
       "success_desc": "Votre projet a été publié avec succès",
       "creation_error": "Erreur lors de la création du projet"
     }
@@ -940,7 +940,7 @@
       "new_proposal": "Nouvelle proposition reçue",
       "proposal_received_desc": "{{name}} vous a envoyé une proposition",
       "a_professional": "Un professionnel",
-      "proposal_accepted": "Proposition acceptée ! 🎉",
+      "proposal_accepted": "Proposition acceptée",
       "proposal_rejected": "Proposition non retenue",
       "project_update": "Projet mis à jour",
       "project_updated_desc": "Le projet \"{{title}}\" a été modifié",
@@ -1194,7 +1194,7 @@
   },
   "footer": {
     "tagline": "La plateforme canadienne de confiance pour connecter clients et entrepreneurs du bâtiment.",
-    "made_with_love": "Fait avec ❤️ au Canada 🇨🇦",
+    "made_with_love": "Conçu et opéré au Canada",
     "rights": "Tous droits réservés.",
     "company": {
       "title": "Entreprise",

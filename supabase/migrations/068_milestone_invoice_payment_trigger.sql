@@ -8,7 +8,7 @@
 -- Idempotent: skips if a payment already exists for the milestone.
 
 CREATE OR REPLACE FUNCTION on_milestone_approved()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $fn$
 DECLARE
   v_contract RECORD;
   v_client_name TEXT;
@@ -138,7 +138,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$fn$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_milestone_approved ON contract_milestones;
 CREATE TRIGGER trigger_milestone_approved

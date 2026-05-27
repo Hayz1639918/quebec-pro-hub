@@ -19,7 +19,8 @@ import {
   Users,
   Shield,
   CheckCircle2,
-  XCircle
+  XCircle,
+  HardHat,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -330,8 +331,9 @@ const ProposalView = () => {
                   {professional.phone && <p className="text-gray-600">{professional.phone}</p>}
                   {professional.email && <p className="text-gray-600">{professional.email}</p>}
                   {proposal.rbq_license_number && (
-                    <p className="text-gray-600 font-medium mt-2">
-                      🏗️ Licence RBQ : {proposal.rbq_license_number}
+                    <p className="text-gray-600 font-medium mt-2 flex items-center gap-1.5">
+                      <HardHat className="h-4 w-4" />
+                      Licence RBQ : {proposal.rbq_license_number}
                     </p>
                   )}
                 </div>

@@ -28,7 +28,24 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Upload, X, MapPin, Plus, Trash2, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  CalendarIcon,
+  Upload,
+  X,
+  MapPin,
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Loader2,
+  FileText,
+  Wallet,
+  CalendarDays,
+  Scale,
+  FileCheck,
+  ShieldCheck,
+  Settings,
+  AlertTriangle,
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { geocodePostalCode } from "@/lib/geolocation";
@@ -492,7 +509,7 @@ const EditProject = () => {
               <ArrowLeft className="h-4 w-4" />
               Retour
             </Button>
-            <h1 className="text-3xl font-bold mb-2">✏️ Modifier le projet</h1>
+            <h1 className="text-3xl font-bold mb-2">Modifier le projet</h1>
             <p className="text-muted-foreground">
               Modifiez les informations de votre projet
             </p>
@@ -502,7 +519,7 @@ const EditProject = () => {
             {/* SECTION 1: Informations de base */}
             <Card>
               <CardHeader>
-                <CardTitle>📋 Informations de base</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />Informations de base</CardTitle>
                 <CardDescription>
                   Décrivez votre projet de manière générale
                 </CardDescription>
@@ -589,7 +606,7 @@ const EditProject = () => {
             {/* SECTION 2: Budget */}
             <Card>
               <CardHeader>
-                <CardTitle>💰 Budget</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Wallet className="h-5 w-5 text-primary" />Budget</CardTitle>
                 <CardDescription>
                   Indiquez votre fourchette budgétaire
                 </CardDescription>
@@ -625,7 +642,7 @@ const EditProject = () => {
             {/* SECTION 3: Localisation */}
             <Card>
               <CardHeader>
-                <CardTitle>📍 Localisation</CardTitle>
+                <CardTitle className="flex items-center gap-2"><MapPin className="h-5 w-5 text-primary" />Localisation</CardTitle>
                 <CardDescription>
                   Où se situe le projet ?
                 </CardDescription>
@@ -670,8 +687,9 @@ const EditProject = () => {
                   <Label htmlFor="postalCode" className="flex items-center gap-2">
                     Code postal
                     {geocoding && (
-                      <span className="text-xs text-muted-foreground">
-                        🔄 Géolocalisation en cours...
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Géolocalisation en cours...
                       </span>
                     )}
                     {!geocoding && latitude && longitude && (
@@ -695,7 +713,7 @@ const EditProject = () => {
             {/* SECTION 4: Dates importantes */}
             <Card>
               <CardHeader>
-                <CardTitle>📅 Dates importantes</CardTitle>
+                <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5 text-primary" />Dates importantes</CardTitle>
                 <CardDescription>
                   Définissez l'échéancier de votre projet
                 </CardDescription>
@@ -746,7 +764,7 @@ const EditProject = () => {
             {/* SECTION 5: Critères d'évaluation */}
             <Card>
               <CardHeader>
-                <CardTitle>⚖️ Critères d'évaluation</CardTitle>
+                <CardTitle className="flex items-center gap-2"><Scale className="h-5 w-5 text-primary" />Critères d'évaluation</CardTitle>
                 <CardDescription>
                   Définissez l'importance de chaque critère (total: {totalCriteriaWeight}%)
                 </CardDescription>
@@ -768,8 +786,9 @@ const EditProject = () => {
                   </div>
                 ))}
                 {totalCriteriaWeight !== 100 && (
-                  <p className="text-sm text-amber-600">
-                    ⚠️ Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
+                  <p className="text-sm text-amber-600 flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4" />
+                    Le total des pondérations devrait être de 100% (actuellement {totalCriteriaWeight}%)
                   </p>
                 )}
               </CardContent>
@@ -778,7 +797,7 @@ const EditProject = () => {
             {/* SECTION 6: Documents requis */}
             <Card>
               <CardHeader>
-                <CardTitle>📄 Documents requis</CardTitle>
+                <CardTitle className="flex items-center gap-2"><FileCheck className="h-5 w-5 text-primary" />Documents requis</CardTitle>
                 <CardDescription>
                   Sélectionnez les documents que les soumissionnaires doivent fournir
                 </CardDescription>
@@ -802,7 +821,7 @@ const EditProject = () => {
             {/* SECTION 7: Exigences d'assurance */}
             <Card>
               <CardHeader>
-                <CardTitle>🛡️ Exigences d'assurance</CardTitle>
+                <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" />Exigences d'assurance</CardTitle>
                 <CardDescription>
                   Définissez les montants minimums d'assurance requis (optionnel)
                 </CardDescription>
@@ -840,7 +859,7 @@ const EditProject = () => {
               <AccordionItem value="advanced" className="border rounded-lg">
                 <AccordionTrigger className="px-6 hover:no-underline">
                   <div className="flex items-center gap-2">
-                    <span>⚙️</span>
+                    <Settings className="h-4 w-4 text-primary" />
                     <span className="font-semibold">Options avancées</span>
                     <span className="text-sm text-muted-foreground font-normal">(optionnel)</span>
                   </div>
