@@ -43,6 +43,8 @@ const CompleteProfileEntrepreneur = () => {
   // Documents
   const [docLicence, setDocLicence] = useState<File | null>(null);
   const [docAssurance, setDocAssurance] = useState<File | null>(null);
+  const [docIdentity, setDocIdentity] = useState<File | null>(null);
+  const [identityType, setIdentityType] = useState<string>("passport");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [customServiceInput, setCustomServiceInput] = useState("");
 
@@ -134,6 +136,10 @@ const CompleteProfileEntrepreneur = () => {
       toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
       return;
     }
+    if (!docIdentity) {
+      toast({ variant: "destructive", title: "Pièce d'identité obligatoire", description: "Veuillez uploader une pièce d'identité (passeport, permis de conduire, RAMQ, etc.)." });
+      return;
+    }
     if (selectedServices.length === 0) {
       toast({ variant: "destructive", title: "Sélectionnez au moins un service" });
       return;
@@ -143,6 +149,7 @@ const CompleteProfileEntrepreneur = () => {
     try {
       const licenceUrl = await uploadFile(docLicence, "rbq");
       const assuranceUrl = await uploadFile(docAssurance, "assurance");
+      const identityUrl = await uploadFile(docIdentity, "identity");
 
       const finalRegion = region === "Autre" ? customRegion : region;
       const { error } = await supabase.from("profiles").update({
@@ -150,6 +157,8 @@ const CompleteProfileEntrepreneur = () => {
         rbq_number: rbqNumber.trim() || null,
         rbq_certification_url: licenceUrl,
         insurance_info: assuranceUrl,
+        id_document_url: identityUrl,
+        id_document_type: identityType,
         bio: bio.trim() || null,
         services_offered: JSON.stringify(selectedServices),
         city: city.trim() || null,
@@ -159,7 +168,7 @@ const CompleteProfileEntrepreneur = () => {
         longitude: longitude,
         professional_type: "entrepreneur",
         profile_completed: true,
-      }).eq("id", userId);
+      } as any).eq("id", userId);
 
       if (error) throw error;
 
@@ -282,10 +291,44 @@ const CompleteProfileEntrepreneur = () => {
                   <input id="ent-doc-assurance" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocAssurance(e.target.files?.[0] ?? null)} />
                 </div>
 
+                {/* Pièce d'identité */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-normal flex items-center gap-1">
+                    Pièce d'identité
+                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                  </Label>
+                  <Select value={identityType} onValueChange={setIdentityType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Type de pièce d'identité" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="passport">Passeport</SelectItem>
+                      <SelectItem value="driver_license">Permis de conduire</SelectItem>
+                      <SelectItem value="ramq">Carte RAMQ</SelectItem>
+                      <SelectItem value="other">Autre pièce avec photo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <label
+                    htmlFor="ent-doc-identity"
+                    className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                      docIdentity ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
+                    }`}
+                  >
+                    <Upload className={`h-4 w-4 ${docIdentity ? "text-green-600" : "text-red-400"}`} />
+                    <span className="text-sm text-muted-foreground truncate">{docIdentity ? docIdentity.name : "Cliquez pour choisir un fichier"}</span>
+                    {docIdentity && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
+                  </label>
+                  <input id="ent-doc-identity" type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => setDocIdentity(e.target.files?.[0] ?? null)} />
+                  <p className="text-xs text-muted-foreground">
+                    Toute pièce officielle avec photo est acceptée. Votre document est confidentiel et examiné par notre équipe.
+                  </p>
+                </div>
+
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
                   <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
                   <p>• La licence RBQ est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
                   <p>• L'assurance responsabilité civile protège le client et l'entrepreneur en cas de dommages.</p>
+                  <p>• La pièce d'identité confirme l'identité du représentant légal de l'entreprise.</p>
                 </div>
               </div>
             </CardContent>

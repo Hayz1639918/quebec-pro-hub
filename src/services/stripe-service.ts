@@ -69,7 +69,7 @@ export async function getConnectOnboardingStatus(professionalId: string): Promis
 
 export async function getPaymentsByContract(contractId: string) {
   const { data, error } = await supabase
-    .from('payments')
+    .from('contractor_payments')
     .select('*')
     .eq('contract_id', contractId)
     .order('created_at', { ascending: false });
@@ -83,7 +83,7 @@ export async function getInvoicesByContract(contractId: string) {
     .from('invoices')
     .select('*')
     .eq('contract_id', contractId)
-    .order('created_at', { ascending: false });
+    .order('issued_at', { ascending: false });
 
   if (error) throw error;
   return data ?? [];

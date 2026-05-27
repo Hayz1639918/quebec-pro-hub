@@ -58,6 +58,15 @@ interface ProjectReport {
   is_read_by_client: boolean;
 }
 
+interface Milestone {
+  id: string;
+  title: string;
+  amount: number;
+  status: string;
+  due_date: string | null;
+  requested_at: string | null;
+}
+
 const PHASES = [
   'Préparation du chantier',
   'Fondations',
@@ -95,7 +104,7 @@ const ProjectProgress = () => {
 
   // US-060 — Payment milestone request
   const [requestingPayment, setRequestingPayment] = useState(false);
-  const [paymentRequestSent, setPaymentRequestSent] = useState(false);
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -185,6 +194,16 @@ const ProjectProgress = () => {
         .order('created_at', { ascending: false });
 
       setReports(reportsData || []);
+
+      // Fetch milestones for this contract
+      if (formattedProject.contract_id) {
+        const { data: msData } = await supabase
+          .from('contract_milestones')
+          .select('id, title, amount, status, due_date, requested_at')
+          .eq('contract_id', formattedProject.contract_id)
+          .order('due_date', { ascending: true, nullsFirst: false });
+        setMilestones((msData as unknown as Milestone[]) || []);
+      }
     } catch (error) {
       console.error('Error fetching project:', error);
       toast.error('Erreur lors du chargement du projet');
@@ -272,18 +291,32 @@ const ProjectProgress = () => {
     }
   };
 
-  // US-060 — Request payment milestone
-  const handleRequestPayment = async () => {
-    if (progressPercentage < 25) {
-      toast.error("Avancement insuffisant — au moins 25% requis pour demander un paiement.");
-      return;
-    }
+  // US-060 — Request payment milestone (calls real RPC)
+  const handleRequestPayment = async (milestoneId: string) => {
     setRequestingPayment(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setRequestingPayment(false);
-    setPaymentRequestSent(true);
-    toast.success("Demande de paiement envoyée au client pour validation.");
+    try {
+      const { error } = await supabase.rpc('request_milestone_validation', {
+        p_milestone: milestoneId,
+      });
+      if (error) throw error;
+
+      setMilestones(prev => prev.map(m =>
+        m.id === milestoneId
+          ? { ...m, status: 'requested', requested_at: new Date().toISOString() }
+          : m
+      ));
+      toast.success('Demande de validation envoyée au client.');
+    } catch (err: unknown) {
+      console.error('Milestone request error:', err);
+      const msg = err instanceof Error ? err.message : 'Erreur lors de la demande';
+      toast.error(msg);
+    } finally {
+      setRequestingPayment(false);
+    }
   };
+
+  const pendingMilestones = milestones.filter(m => m.status === 'pending');
+  const requestedMilestones = milestones.filter(m => m.status === 'requested');
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -514,39 +547,70 @@ const ProjectProgress = () => {
             </Card>
 
             {/* US-060 — Demande de paiement de jalon */}
-            <Card className="mt-6 border-green-200 bg-green-50/30">
+            <Card className="mt-6 border-success/30 bg-success-light/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                  Demander le déblocage d'un paiement
+                  <DollarSign className="h-5 w-5 text-success" />
+                  Jalons de paiement
                 </CardTitle>
                 <CardDescription>
-                  Soumettez une demande de paiement de jalon au client pour validation
+                  Demandez la validation d'un jalon une fois les travaux correspondants achevés
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {paymentRequestSent ? (
-                  <div className="flex items-center gap-3 p-4 bg-green-100 border border-green-300 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-                    <div>
-                      <p className="font-medium text-green-900">Demande envoyée au client</p>
-                      <p className="text-sm text-green-700">Le client recevra une notification et devra valider le paiement.</p>
-                    </div>
+              <CardContent className="space-y-3">
+                {milestones.length === 0 ? (
+                  <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg text-center">
+                    Aucun jalon défini sur ce contrat.
                   </div>
                 ) : (
                   <>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Avancement actuel : <strong>{progressPercentage}%</strong> — Phase : <strong>{currentPhase || 'Non définie'}</strong></p>
-                      <p className="text-xs">La demande sera associée au jalon en cours et notifiée au client.</p>
-                    </div>
-                    <Button
-                      onClick={handleRequestPayment}
-                      disabled={requestingPayment}
-                      className="w-full bg-green-600 hover:bg-green-700 gap-2"
-                    >
-                      <DollarSign className="h-4 w-4" />
-                      {requestingPayment ? 'Envoi en cours...' : 'Demander le paiement de ce jalon'}
-                    </Button>
+                    {pendingMilestones.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">À demander</p>
+                        {pendingMilestones.map(ms => (
+                          <div key={ms.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">{ms.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {Number(ms.amount).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                                {ms.due_date && ` • Échéance ${format(new Date(ms.due_date), 'dd MMM yyyy', { locale: fr })}`}
+                              </p>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleRequestPayment(ms.id)}
+                              disabled={requestingPayment}
+                              className="ml-3 shrink-0 gap-1"
+                            >
+                              <DollarSign className="h-3.5 w-3.5" />
+                              Demander
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {requestedMilestones.length > 0 && (
+                      <div className="space-y-2 pt-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">En attente de validation client</p>
+                        {requestedMilestones.map(ms => (
+                          <div key={ms.id} className="flex items-center justify-between p-3 border rounded-lg bg-warning-light/30">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">{ms.title}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {Number(ms.amount).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
+                                {ms.requested_at && ` • Demandé ${format(new Date(ms.requested_at), 'dd MMM yyyy', { locale: fr })}`}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="ml-3 shrink-0">En attente</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {pendingMilestones.length === 0 && requestedMilestones.length === 0 && (
+                      <div className="text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg text-center">
+                        Tous les jalons ont été validés ou approuvés.
+                      </div>
+                    )}
                   </>
                 )}
               </CardContent>

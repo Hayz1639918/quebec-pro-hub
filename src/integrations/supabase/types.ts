@@ -368,92 +368,106 @@ export type Database = {
           updated_at?: string
         }
       }
-      payments: {
+      contractor_payments: {
         Row: {
           id: string
-          contract_id: string
+          contractor_id: string
+          contract_id: string | null
           milestone_id: string | null
-          payer_id: string
-          payee_id: string
+          client_id: string | null
+          project_id: string | null
+          project_title: string
+          client_name: string
+          milestone: string
           amount: number
-          platform_fee: number
+          fee: number
+          net_amount: number
           currency: string
-          status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
+          status: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
+          payment_method: 'transfer' | 'card' | 'crypto' | null
           stripe_payment_intent_id: string | null
           stripe_transfer_id: string | null
           stripe_charge_id: string | null
-          description: string | null
-          paid_at: string | null
-          failed_at: string | null
-          refunded_at: string | null
-          failure_reason: string | null
+          dispute_reason: string | null
+          dispute_details: string | null
+          released_at: string | null
           metadata: Record<string, unknown>
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          contract_id: string
+          contractor_id: string
+          contract_id?: string | null
           milestone_id?: string | null
-          payer_id: string
-          payee_id: string
+          client_id?: string | null
+          project_id?: string | null
+          project_title: string
+          client_name: string
+          milestone: string
           amount: number
-          platform_fee?: number
+          fee?: number
+          net_amount: number
           currency?: string
-          description?: string | null
+          status?: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
+          payment_method?: 'transfer' | 'card' | 'crypto' | null
         }
         Update: {
-          status?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
+          status?: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
           stripe_payment_intent_id?: string | null
           stripe_transfer_id?: string | null
-          paid_at?: string | null
+          released_at?: string | null
+          dispute_reason?: string | null
+          dispute_details?: string | null
           updated_at?: string
         }
       }
       invoices: {
         Row: {
           id: string
-          contract_id: string
+          contractor_id: string
+          contract_id: string | null
           milestone_id: string | null
+          client_id: string | null
           payment_id: string | null
           invoice_number: string
-          issuer_id: string
-          recipient_id: string
-          amount_ht: number
-          tax_rate: number
-          tax_amount: number
-          amount_ttc: number
+          client_name: string
+          client_address: string | null
+          project_title: string
+          milestone: string
+          amount: number
+          tax: number
+          total: number
           currency: string
-          status: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
-          issued_at: string | null
-          paid_at: string | null
-          due_date: string | null
+          status: 'pending' | 'paid' | 'overdue'
+          payment_method: string | null
           pdf_url: string | null
-          notes: string | null
+          issued_at: string
+          due_at: string | null
+          paid_at: string | null
           metadata: Record<string, unknown>
-          created_at: string
-          updated_at: string
         }
         Insert: {
           id?: string
-          contract_id: string
+          contractor_id: string
+          contract_id?: string | null
           milestone_id?: string | null
+          client_id?: string | null
           payment_id?: string | null
           invoice_number: string
-          issuer_id: string
-          recipient_id: string
-          amount_ht: number
-          tax_rate?: number
+          client_name: string
+          project_title: string
+          milestone: string
+          amount: number
+          tax?: number
+          total: number
           currency?: string
-          status?: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
-          due_date?: string | null
-          notes?: string | null
+          status?: 'pending' | 'paid' | 'overdue'
         }
         Update: {
-          status?: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
+          status?: 'pending' | 'paid' | 'overdue'
           pdf_url?: string | null
           paid_at?: string | null
-          updated_at?: string
         }
       }
       notifications: {
@@ -582,8 +596,6 @@ export type Database = {
       project_status: 'open' | 'in_progress' | 'completed' | 'cancelled'
       contract_status: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired'
       milestone_status: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid'
-      payment_status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
-      invoice_status: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
       mediation_status: 'open' | 'in_review' | 'resolved' | 'rejected'
       proposal_status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
     }
