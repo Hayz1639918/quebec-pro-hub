@@ -114,11 +114,12 @@ const ProDashboard = () => {
   const [assignedProjects, setAssignedProjects] = useState<AssignedProject[]>([]);
   const [pendingContractsList, setPendingContractsList] = useState<PendingContract[]>([]);
 
-  // US-052 — Revenue summary
+  // US-052 — Revenue summary (real data from contractor_payments + contracts)
   const [revenue, setRevenue] = useState({
-    total: 0,
-    pending: 0,
-    paid: 0,
+    total: 0,        // Sum of active contracts.total_amount
+    pending: 0,      // Sum of contractor_payments.net_amount where status pending/in_escrow
+    paid: 0,         // Sum of contractor_payments.net_amount where status released
+    paidThisMonth: 0,
   });
   const [activeTab, setActiveTab] = useState("apercu");
 
@@ -268,6 +269,42 @@ const ProDashboard = () => {
         unreadMessages: unreadMessages || 0,
         pendingContracts: pendingContracts || 0,
       });
+
+      // US-052 — Revenue stats from contractor_payments + active contracts
+      try {
+        const { data: paymentRows } = await supabase
+          .from('contractor_payments')
+          .select('status, net_amount, released_at, created_at')
+          .eq('contractor_id', uid);
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        let paid = 0, pending = 0, paidThisMonth = 0;
+        (paymentRows || []).forEach((r: { status: string; net_amount: number; released_at: string | null }) => {
+          const amount = Number(r.net_amount || 0);
+          if (r.status === 'released' || r.status === 'succeeded') {
+            paid += amount;
+            if (r.released_at && new Date(r.released_at) >= startOfMonth) paidThisMonth += amount;
+          } else if (r.status === 'pending' || r.status === 'in_escrow' || r.status === 'processing') {
+            pending += amount;
+          }
+        });
+
+        const { data: contractRows } = await supabase
+          .from('contracts')
+          .select('total_amount, status')
+          .eq('professional_id', uid)
+          .in('status', ['signed', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures']);
+        const totalActive = (contractRows || []).reduce(
+          (sum: number, c: { total_amount: number | null }) => sum + Number(c.total_amount || 0),
+          0,
+        );
+
+        setRevenue({ total: totalActive, pending, paid, paidThisMonth });
+      } catch (revErr) {
+        console.warn('Revenue fetch failed:', revErr);
+      }
 
       // Fetch assigned projects (where this professional was accepted)
       // Note: This requires migration 031_project_workflow_notifications.sql to be applied
@@ -473,42 +510,46 @@ const ProDashboard = () => {
           </Card>
         )}
 
-        {/* US-052 — Revenue Summary */}
+        {/* US-052 — Revenue Summary (real data) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <Card className="bg-green-50 border-green-200">
+          <Card className="border-success/30 bg-success-light/40">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm text-green-700">Total encaissé</p>
-                <DollarSign className="h-4 w-4 text-green-600" />
+                <p className="text-xs font-medium uppercase tracking-wide text-success">Total encaissé</p>
+                <DollarSign className="h-4 w-4 text-success" />
               </div>
-              <p className="text-2xl font-bold text-green-900">
+              <p className="text-2xl font-bold">
                 {revenue.paid.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
               </p>
-              <p className="text-xs text-green-600 mt-1">Versements reçus</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {revenue.paidThisMonth > 0
+                  ? `${revenue.paidThisMonth.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })} ce mois-ci`
+                  : 'Aucun versement ce mois-ci'}
+              </p>
             </CardContent>
           </Card>
-          <Card className="bg-amber-50 border-amber-200">
+          <Card className="border-warning/30 bg-warning-light/40">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm text-amber-700">En attente</p>
-                <Clock className="h-4 w-4 text-amber-600" />
+                <p className="text-xs font-medium uppercase tracking-wide text-warning">En attente</p>
+                <Clock className="h-4 w-4 text-warning" />
               </div>
-              <p className="text-2xl font-bold text-amber-900">
+              <p className="text-2xl font-bold">
                 {revenue.pending.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
               </p>
-              <p className="text-xs text-amber-600 mt-1">Jalons à valider</p>
+              <p className="text-xs text-muted-foreground mt-1">Jalons à valider</p>
             </CardContent>
           </Card>
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="border-primary/30 bg-primary/5">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-sm text-blue-700">Total contrats actifs</p>
-                <TrendingUp className="h-4 w-4 text-blue-600" />
+                <p className="text-xs font-medium uppercase tracking-wide text-primary">Contrats actifs</p>
+                <TrendingUp className="h-4 w-4 text-primary" />
               </div>
-              <p className="text-2xl font-bold text-blue-900">
+              <p className="text-2xl font-bold">
                 {revenue.total.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
               </p>
-              <p className="text-xs text-blue-600 mt-1">Valeur contractuelle</p>
+              <p className="text-xs text-muted-foreground mt-1">Valeur contractuelle totale</p>
             </CardContent>
           </Card>
         </div>
@@ -712,15 +753,20 @@ const ProDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+                <div className="flex items-center justify-between p-4 bg-success-light/30 border border-success/30 rounded-lg mb-4">
                   <div>
-                    <p className="font-semibold">Plan Gratuit</p>
-                    <p className="text-sm text-muted-foreground">3 soumissions / mois · Visibilité standard</p>
+                    <p className="font-semibold flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-success" />
+                      Plan Gratuit — accès complet
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Toutes les fonctionnalités essentielles sont activées pendant la phase de lancement.
+                    </p>
                   </div>
-                  <Badge variant="outline">Actif</Badge>
+                  <Badge variant="default" className="bg-success">Actif</Badge>
                 </div>
-                <Button className="w-full" onClick={() => navigate('/pro/subscription')}>
-                  Passer au Plan Premium
+                <Button variant="outline" className="w-full" onClick={() => navigate('/pro/subscription')}>
+                  Détails de l'abonnement
                 </Button>
               </CardContent>
             </Card>
@@ -849,10 +895,10 @@ const ProDashboard = () => {
           <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/subscription')}>
             <CardContent className="p-3 sm:p-4 md:pt-6">
               <div className="flex items-center gap-2 sm:gap-3">
-                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
+                <CreditCard className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">Améliorer mon abonnement</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Boostez votre visibilité</p>
+                  <p className="font-semibold text-sm sm:text-base truncate">Mon abonnement</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Plan Gratuit · accès complet</p>
                 </div>
               </div>
             </CardContent>

@@ -53,7 +53,7 @@ function generateContractHTML(
         </div>
         <div class="contract-info">
           <div class="info-badge ${isSigned ? 'signed' : 'pending'}">
-            ${isSigned ? '✓ CONTRAT SIGNÉ' : '⏳ EN ATTENTE DE SIGNATURE'}
+            ${isSigned ? 'CONTRAT SIGNÉ' : 'EN ATTENTE DE SIGNATURE'}
           </div>
           <p><strong>Contrat #:</strong> ${contract.id.substring(0, 8).toUpperCase()}</p>
           <p><strong>Date de création:</strong> ${format(new Date(contract.created_at), 'd MMMM yyyy', { locale: fr })}</p>

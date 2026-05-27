@@ -467,7 +467,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
 
       const isImage = file.type.startsWith("image/");
-      const content = isImage ? `📷 Image partagée : ${file.name}` : `📎 Fichier partagé : ${file.name}`;
+      const content = isImage ? `Image partagée : ${file.name}` : `Fichier partagé : ${file.name}`;
 
       await supabase.from("messages").insert({
         conversation_id: conversation.id,
@@ -503,7 +503,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       async ({ coords }) => {
         const { latitude, longitude } = coords;
         const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
-        const content = `📍 Ma position actuelle : ${mapsUrl}`;
+        const content = `Ma position actuelle : ${mapsUrl}`;
         try {
           await supabase.from("messages").insert({
             conversation_id: conversation.id,
@@ -530,8 +530,8 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
 
     setSendingQuote(true);
     try {
-      let content = `💰 **Demande de devis**\n📋 Projet : ${quoteProjectName.trim()}`;
-      if (quoteDetails.trim()) content += `\n📝 Détails : ${quoteDetails.trim()}`;
+      let content = `**Demande de devis**\nProjet : ${quoteProjectName.trim()}`;
+      if (quoteDetails.trim()) content += `\nDétails : ${quoteDetails.trim()}`;
       content += `\n\nMerci de me faire parvenir une soumission détaillée pour ce projet.`;
 
       await supabase.from("messages").insert({

@@ -194,14 +194,14 @@ const NewProject = () => {
             setLatitude(coords.latitude);
             setLongitude(coords.longitude);
             toast({
-              title: "📍 Localisation détectée",
+              title: "Localisation détectée",
               description: "Votre projet sera visible sur la carte",
             });
           } else {
             setLatitude(null);
             setLongitude(null);
             toast({
-              title: "⚠️ Localisation approximative",
+              title: "Localisation approximative",
               description: "Code postal non trouvé, position approximative utilisée",
               variant: "default",
             });

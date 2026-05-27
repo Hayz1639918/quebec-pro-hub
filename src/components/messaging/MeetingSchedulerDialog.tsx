@@ -89,9 +89,9 @@ export function MeetingSchedulerDialog({
         hour: "2-digit", minute: "2-digit",
       });
 
-      let msgContent = `📅 **Réunion planifiée : ${title}**\n📆 ${formattedDate} à ${formattedTime}\n⏱ Durée : ${duration} min`;
-      if (meetingUrl) msgContent += `\n🔗 Lien : ${meetingUrl}`;
-      if (notes) msgContent += `\n📝 Notes : ${notes}`;
+      let msgContent = `**Réunion planifiée : ${title}**\nDate : ${formattedDate} à ${formattedTime}\nDurée : ${duration} min`;
+      if (meetingUrl) msgContent += `\nLien : ${meetingUrl}`;
+      if (notes) msgContent += `\nNotes : ${notes}`;
 
       await supabase.from("messages").insert({
         conversation_id: conversationId,

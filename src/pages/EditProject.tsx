@@ -404,7 +404,7 @@ const EditProject = () => {
       if (updateError) throw updateError;
 
       toast({
-        title: "✅ Projet modifié",
+        title: "Projet modifié",
         description: "Vos modifications ont été enregistrées",
       });
 
@@ -922,7 +922,7 @@ const EditProject = () => {
                     Enregistrement...
                   </>
                 ) : (
-                  "💾 Enregistrer les modifications"
+                  "Enregistrer les modifications"
                 )}
               </Button>
             </div>

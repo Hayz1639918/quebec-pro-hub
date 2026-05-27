@@ -721,9 +721,9 @@ const Auth = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      {tradeSpecialty === 'electricien' && "⚡ Licence délivrée par la CMEQ (Corporation des maîtres électriciens du Québec)"}
-                      {tradeSpecialty === 'plombier' && "🔧 Licence délivrée par la CMMTQ (Corporation des maîtres mécaniciens en tuyauterie du Québec)"}
-                      {tradeSpecialty && tradeSpecialty !== 'electricien' && tradeSpecialty !== 'plombier' && "📋 Carte de compétence CCQ obligatoire pour tous les travailleurs de la construction au Québec"}
+                      {tradeSpecialty === 'electricien' && "Licence délivrée par la CMEQ (Corporation des maîtres électriciens du Québec)"}
+                      {tradeSpecialty === 'plombier' && "Licence délivrée par la CMMTQ (Corporation des maîtres mécaniciens en tuyauterie du Québec)"}
+                      {tradeSpecialty && tradeSpecialty !== 'electricien' && tradeSpecialty !== 'plombier' && "Carte de compétence CCQ obligatoire pour tous les travailleurs de la construction au Québec"}
                     </p>
                   </div>
 

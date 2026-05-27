@@ -582,17 +582,17 @@ const ProjectDetails = () => {
       }
 
       // Envoyer un message pour notifier le client
-      let messageContent = `📋 **Nouvelle proposition pour: ${project?.title}**\n\n${proposalMessage}`;
+      let messageContent = `**Nouvelle proposition pour : ${project?.title}**\n\n${proposalMessage}`;
       
       if (proposalBudget) {
-        messageContent += `\n\n💰 **Budget proposé:** ${proposalBudget} $`;
+        messageContent += `\n\n**Budget proposé :** ${proposalBudget} $`;
       }
       
       if (proposalDelay) {
         messageContent += `\n⏱️ **Délai estimé:** ${proposalDelay} jours`;
       }
 
-      messageContent += `\n\n✨ Consultez la proposition complète dans votre espace "Propositions"`;
+      messageContent += `\n\nConsultez la proposition complète dans votre espace "Propositions".`;
 
       await supabase
         .from('messages')

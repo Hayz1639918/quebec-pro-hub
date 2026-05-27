@@ -99,7 +99,7 @@ const ProProfile = () => {
         if (coords) {
           setLatitude(coords.latitude);
           setLongitude(coords.longitude);
-          toast({ title: "📍 Localisation détectée", description: "Votre profil sera visible sur la carte" });
+          toast({ title: "Localisation détectée", description: "Votre profil sera visible sur la carte" });
         } else {
           setLatitude(null);
           setLongitude(null);

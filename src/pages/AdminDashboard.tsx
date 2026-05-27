@@ -423,7 +423,7 @@ const AdminDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "✓ Licence RBQ vérifiée",
+        title: "Licence RBQ vérifiée",
         description: `${professional.company_name} peut maintenant recevoir des projets.`,
       });
 

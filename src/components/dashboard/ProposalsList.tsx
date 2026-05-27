@@ -144,7 +144,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         }
 
         toast.success(
-          "Proposition acceptée ! 🎉", 
+          "Proposition acceptée", 
           { description: "Le projet passe en cours. Vous pouvez maintenant le suivre dans l'onglet Projets." }
         );
         console.log("🎉 Acceptation terminée avec succès!");

@@ -14,12 +14,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Briefcase, Clock, HardHat, Search } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { NotificationBell } from "@/components/NotificationBell";
 import logo from "/logo-batirnet.png";
 
 const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
@@ -163,23 +164,7 @@ const Navigation = () => {
 
               {user ? (
                 <>
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full h-9 w-9 text-foreground/40 hover:text-foreground hover:bg-foreground/5 transition-all"
-                      onClick={() => navigate("/notifications")}
-                    >
-                      <Bell className={`h-4 w-4 ${unreadNotifications > 0 ? 'text-primary' : ''}`} />
-                    </Button>
-                    {unreadNotifications > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-0.5 bg-primary rounded-full flex items-center justify-center pointer-events-none">
-                        <span className="text-[9px] font-ui font-bold text-primary-foreground leading-none">
-                          {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                        </span>
-                      </span>
-                    )}
-                  </div>
+                  <NotificationBell />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

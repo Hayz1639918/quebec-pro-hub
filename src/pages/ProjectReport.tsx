@@ -186,7 +186,7 @@ const ProjectReport = () => {
       await supabase.from('notifications').insert({
         user_id: project.client_id,
         type: 'project_report',
-        title: '📊 Nouveau rapport de projet',
+        title: 'Nouveau rapport de projet',
         message: `${professionalName} a envoyé un rapport pour "${project.title}": ${title}`,
         related_project_id: project.id,
         action_url: `/dashboard?project=${project.id}`,

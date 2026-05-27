@@ -147,7 +147,7 @@ const ProMeetings = () => {
     setScheduleOpen(false);
     setNewTitle(""); setNewClient(""); setNewProject(""); setNewDate(""); setNewTime("");
     setNewMeetingUrl(""); setNewPreQuestions("");
-    toast({ title: "✅ Réunion planifiée", description: `Réunion avec ${newClient} créée avec succès.` });
+    toast({ title: "Réunion planifiée", description: `Réunion avec ${newClient} créée avec succès.` });
   };
 
   const handleCancel = async (id: string) => {

@@ -303,7 +303,7 @@ const CompleteProfile = () => {
       }
 
       toast({
-        title: "Profil soumis ! 📋",
+        title: "Profil soumis",
         description: "Votre profil est en attente de validation. Notre équipe vérifiera votre certification RBQ.",
       });
 
