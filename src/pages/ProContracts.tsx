@@ -26,7 +26,7 @@ import { fr } from 'date-fns/locale';
 interface Contract {
   id: string;
   title: string;
-  status: 'draft' | 'pending_signature' | 'signed' | 'active' | 'completed' | 'cancelled';
+  status: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired';
   total_amount: number;
   deposit_percentage: number;
   currency: string;
@@ -41,11 +41,12 @@ interface Milestone {
   id: string;
   contract_id: string;
   title: string;
-  description: string | null;
   amount: number;
   due_date: string | null;
-  status: 'pending' | 'in_progress' | 'completed' | 'approved' | 'paid';
-  payment_status: 'unpaid' | 'processing' | 'paid' | 'failed';
+  status: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid';
+  requested_by: string | null;
+  requested_at: string | null;
+  validated_at: string | null;
   created_at: string;
 }
 
@@ -59,26 +60,20 @@ const ProContracts = () => {
 
   const statusConfig = {
     draft: { label: 'Brouillon', variant: 'secondary' as const, icon: Edit },
-    pending_signature: { label: 'En attente de signature', variant: 'default' as const, icon: Clock },
+    pending_client_signature: { label: 'Attente signature client', variant: 'default' as const, icon: Clock },
+    pending_professional_signature: { label: 'Attente votre signature', variant: 'default' as const, icon: Clock },
+    pending_both_signatures: { label: 'Attente signatures', variant: 'default' as const, icon: Clock },
     signed: { label: 'Signé', variant: 'default' as const, icon: CheckCircle },
-    active: { label: 'En cours', variant: 'default' as const, icon: FileText },
-    completed: { label: 'Terminé', variant: 'default' as const, icon: CheckCircle },
     cancelled: { label: 'Annulé', variant: 'destructive' as const, icon: AlertCircle },
+    expired: { label: 'Expiré', variant: 'secondary' as const, icon: AlertCircle },
   };
 
-  const milestoneStatusConfig = {
-    pending: { label: 'En attente', color: 'bg-gray-500' },
-    in_progress: { label: 'En cours', color: 'bg-blue-500' },
-    completed: { label: 'Complété', color: 'bg-green-500' },
-    approved: { label: 'Approuvé', color: 'bg-green-600' },
-    paid: { label: 'Payé', color: 'bg-emerald-600' },
-  };
-
-  const paymentStatusConfig = {
-    unpaid: { label: 'Non payé', variant: 'secondary' as const },
-    processing: { label: 'En traitement', variant: 'default' as const },
-    paid: { label: 'Payé', variant: 'default' as const },
-    failed: { label: 'Échec', variant: 'destructive' as const },
+  const milestoneStatusConfig: Record<Milestone['status'], { label: string; color: string }> = {
+    pending: { label: 'En attente', color: 'bg-muted-foreground' },
+    requested: { label: 'Validation demandée', color: 'bg-warning' },
+    approved: { label: 'Approuvé', color: 'bg-success' },
+    rejected: { label: 'Rejeté', color: 'bg-destructive' },
+    paid: { label: 'Payé', color: 'bg-success' },
   };
 
   useEffect(() => {
@@ -170,25 +165,25 @@ const ProContracts = () => {
   const calculateTotalPaid = (contractMilestones: Milestone[]) => {
     if (!contractMilestones) return 0;
     return contractMilestones
-      .filter((m) => m.payment_status === 'paid')
+      .filter((m) => m.status === 'paid')
       .reduce((sum, m) => sum + m.amount, 0);
   };
 
   const calculateTotalPending = (contractMilestones: Milestone[]) => {
     if (!contractMilestones) return 0;
     return contractMilestones
-      .filter((m) => m.payment_status !== 'paid')
+      .filter((m) => m.status !== 'paid')
       .reduce((sum, m) => sum + m.amount, 0);
   };
 
   const filterContracts = (status: string) => {
     switch (status) {
       case 'active':
-        return contracts.filter((c) => ['active', 'signed'].includes(c.status));
+        return contracts.filter((c) => c.status === 'signed');
       case 'pending':
-        return contracts.filter((c) => ['draft', 'pending_signature'].includes(c.status));
+        return contracts.filter((c) => ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures'].includes(c.status));
       case 'completed':
-        return contracts.filter((c) => ['completed', 'cancelled'].includes(c.status));
+        return contracts.filter((c) => ['cancelled', 'expired'].includes(c.status));
       default:
         return contracts;
     }
@@ -237,7 +232,7 @@ const ProContracts = () => {
                   <p className="text-sm text-muted-foreground">Contrats actifs</p>
                   <p className="text-3xl font-bold">{activeContracts.length}</p>
                 </div>
-                <FileText className="h-8 w-8 text-blue-500" />
+                <FileText className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -249,7 +244,7 @@ const ProContracts = () => {
                   <p className="text-sm text-muted-foreground">En attente</p>
                   <p className="text-3xl font-bold">{pendingContracts.length}</p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-500" />
+                <Clock className="h-8 w-8 text-warning" />
               </div>
             </CardContent>
           </Card>
@@ -261,7 +256,7 @@ const ProContracts = () => {
                   <p className="text-sm text-muted-foreground">Terminés</p>
                   <p className="text-3xl font-bold">{completedContracts.length}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
+                <CheckCircle className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -277,7 +272,7 @@ const ProContracts = () => {
                     )}
                   </p>
                 </div>
-                <DollarSign className="h-8 w-8 text-emerald-500" />
+                <DollarSign className="h-8 w-8 text-success" />
               </div>
             </CardContent>
           </Card>
@@ -347,13 +342,13 @@ const ProContracts = () => {
                             </div>
                             <div>
                               <p className="text-muted-foreground">Payé</p>
-                              <p className="font-semibold text-lg text-green-600">
+                              <p className="font-semibold text-lg text-success">
                                 {formatCurrency(totalPaid, contract.currency)}
                               </p>
                             </div>
                             <div>
                               <p className="text-muted-foreground">En attente</p>
-                              <p className="font-semibold text-lg text-yellow-600">
+                              <p className="font-semibold text-lg text-warning">
                                 {formatCurrency(totalPending, contract.currency)}
                               </p>
                             </div>
@@ -416,10 +411,8 @@ const ProContracts = () => {
                                         <span className="font-semibold">
                                           {formatCurrency(milestone.amount, contract.currency)}
                                         </span>
-                                        <Badge
-                                          variant={paymentStatusConfig[milestone.payment_status].variant}
-                                        >
-                                          {paymentStatusConfig[milestone.payment_status].label}
+                                        <Badge variant={milestone.status === 'rejected' ? 'destructive' : 'secondary'}>
+                                          {milestoneStatusConfig[milestone.status].label}
                                         </Badge>
                                       </div>
                                     </div>
@@ -549,7 +542,7 @@ const ProContracts = () => {
                               </div>
                               <div>
                                 <p className="text-xs text-muted-foreground">Payé</p>
-                                <p className="font-semibold text-lg text-green-600">
+                                <p className="font-semibold text-lg text-success">
                                   {formatCurrency(totalPaid, contract.currency)}
                                 </p>
                               </div>

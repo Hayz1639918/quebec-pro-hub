@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   FileText, 
   Calendar, 
@@ -19,7 +21,8 @@ import {
   Pen,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  RotateCcw
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +33,9 @@ import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { ESignature } from "./ESignature";
 import { Button as UIButton } from "@/components/ui/button";
+import { DisputeForm } from "@/components/disputes/DisputeForm";
+import { DisputesList } from "@/components/disputes/DisputesList";
+import { AlertTriangle } from "lucide-react";
 
 interface ContractViewerProps {
   contractId: string;
@@ -50,6 +56,9 @@ export const ContractViewer = ({
   const [loading, setLoading] = useState(true);
   const [signing, setSigning] = useState(false);
   const [milestones, setMilestones] = useState<Array<{ id: string; title: string; amount: number; due_date: string | null; status: string }>>([]);
+  const [rejectingMilestone, setRejectingMilestone] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
 
   useEffect(() => {
     if (contractId) {
@@ -199,19 +208,19 @@ export const ContractViewer = ({
   const getStatusColor = (status: ContractStatus) => {
     switch (status) {
       case 'signed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-light text-success';
       case 'pending_client_signature':
       case 'pending_professional_signature':
       case 'pending_both_signatures':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning-light text-warning';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive';
       case 'expired':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-warning-light text-warning';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -227,9 +236,25 @@ export const ContractViewer = ({
   const approveMilestone = async (milestoneId: string) => {
     try {
       await supabase.rpc('approve_milestone', { p_milestone: milestoneId });
+      toast({ title: 'Jalon approuvé', description: 'Le jalon a été approuvé avec succès.' });
       await fetchMilestones();
     } catch (e) {
       console.error('Error approving milestone:', e);
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible d'approuver le jalon." });
+    }
+  };
+
+  const rejectMilestone = async () => {
+    if (!rejectingMilestone) return;
+    try {
+      await supabase.rpc('reject_milestone', { p_milestone: rejectingMilestone, p_reason: rejectReason || null });
+      toast({ title: 'Jalon rejeté', description: 'Le jalon a été rejeté.' });
+      setRejectingMilestone(null);
+      setRejectReason("");
+      await fetchMilestones();
+    } catch (e) {
+      console.error('Error rejecting milestone:', e);
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de rejeter le jalon." });
     }
   };
 
@@ -562,7 +587,7 @@ export const ContractViewer = ({
                         className="max-h-20 mx-auto object-contain"
                       />
                     </div>
-                    <div className="flex items-center gap-2 text-green-600 mb-2">
+                    <div className="flex items-center gap-2 text-success mb-2">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="font-medium">Signé</span>
                     </div>
@@ -597,7 +622,7 @@ export const ContractViewer = ({
                         className="max-h-20 mx-auto object-contain"
                       />
                     </div>
-                    <div className="flex items-center gap-2 text-green-600 mb-2">
+                    <div className="flex items-center gap-2 text-success mb-2">
                       <CheckCircle2 className="h-5 w-5" />
                       <span className="font-medium">Signé</span>
                     </div>
@@ -630,28 +655,118 @@ export const ContractViewer = ({
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              {t('contracts.milestones') || 'Jalons de paiement'}
+              <DollarSign className="h-5 w-5" />
+              Jalons de paiement ({milestones.length})
             </CardTitle>
+            <CardDescription>
+              Total: {formatCurrency(milestones.reduce((s, m) => s + m.amount, 0), contract?.currency || 'CAD')}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {milestones.map(m => (
-              <div key={m.id} className="flex items-center justify-between border rounded p-3">
-                <div>
-                  <div className="font-medium">{m.title} — {formatCurrency(m.amount, contract?.currency || 'CAD')}</div>
-                  {m.due_date && <div className="text-xs text-muted-foreground">Échéance: {formatDate(m.due_date)}</div>}
-                  <div className="text-xs text-muted-foreground">Statut: {m.status}</div>
+            {milestones.map(m => {
+              const statusConfig: Record<string, { label: string; className: string }> = {
+                pending: { label: 'En attente', className: 'bg-muted text-muted-foreground' },
+                requested: { label: 'Validation demandée', className: 'bg-warning-light text-warning' },
+                approved: { label: 'Approuvé', className: 'bg-success-light text-success' },
+                rejected: { label: 'Rejeté', className: 'bg-destructive/10 text-destructive' },
+                paid: { label: 'Payé', className: 'bg-success-light text-success' },
+              };
+              const cfg = statusConfig[m.status] || statusConfig.pending;
+              return (
+                <div key={m.id} className="flex items-center justify-between border rounded-lg p-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">{m.title}</span>
+                      <Badge className={cfg.className}>{cfg.label}</Badge>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="font-semibold text-foreground">{formatCurrency(m.amount, contract?.currency || 'CAD')}</span>
+                      {m.due_date && <span>Échéance: {formatDate(m.due_date)}</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {currentUserId === contract?.professional_id && (m.status === 'pending' || m.status === 'rejected') && (
+                      <Button size="sm" onClick={() => requestValidation(m.id)}>
+                        <RotateCcw className="h-3 w-3 mr-1" />
+                        {m.status === 'rejected' ? 'Resoumettre' : 'Demander validation'}
+                      </Button>
+                    )}
+                    {currentUserId === contract?.client_id && m.status === 'requested' && (
+                      <>
+                        <Button size="sm" onClick={() => approveMilestone(m.id)}>
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          Approuver
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => setRejectingMilestone(m.id)}>
+                          <XCircle className="h-3 w-3 mr-1" />
+                          Rejeter
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                {currentUserId === contract?.professional_id && m.status === 'pending' && (
-                  <UIButton size="sm" onClick={() => requestValidation(m.id)}>Demander validation</UIButton>
-                )}
-                {currentUserId === contract?.client_id && m.status === 'requested' && (
-                  <UIButton size="sm" onClick={() => approveMilestone(m.id)}>Valider</UIButton>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
+      )}
+
+      {/* Reject Milestone Dialog */}
+      <Dialog open={!!rejectingMilestone} onOpenChange={(open) => { if (!open) { setRejectingMilestone(null); setRejectReason(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeter le jalon</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Veuillez indiquer le motif du rejet. L'entrepreneur sera notifié et pourra resoumettre le jalon.
+            </p>
+            <Textarea
+              placeholder="Motif du rejet (optionnel)..."
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setRejectingMilestone(null); setRejectReason(""); }}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={rejectMilestone}>
+              Confirmer le rejet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Disputes Section */}
+      {contract.status === 'signed' && currentUserId && (
+        <>
+          <div className="flex justify-end">
+            <Button
+              variant="destructive"
+              onClick={() => setDisputeDialogOpen(true)}
+            >
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Signaler un litige
+            </Button>
+          </div>
+
+          <Dialog open={disputeDialogOpen} onOpenChange={setDisputeDialogOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Signaler un litige</DialogTitle>
+              </DialogHeader>
+              <DisputeForm
+                contractId={contractId}
+                userId={currentUserId}
+                onSubmitted={() => setDisputeDialogOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+
+          <DisputesList contractId={contractId} userId={currentUserId} />
+        </>
       )}
 
       {/* Sign Button - Outside the PDF view */}

@@ -49,11 +49,26 @@ interface CompareDialogProps {
 }
 
 const CompareDialog = ({ open, onOpenChange, professionals }: CompareDialogProps) => {
+  if (!professionals || professionals.length === 0) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Comparaison impossible</DialogTitle>
+            <DialogDescription>
+              Veuillez sélectionner au moins un professionnel à comparer.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   const getAvailabilityColor = (status: string | null) => {
     switch (status) {
-      case 'available': return 'text-green-600';
-      case 'busy': return 'text-orange-600';
-      case 'unavailable': return 'text-red-600';
+      case 'available': return 'text-success';
+      case 'busy': return 'text-warning';
+      case 'unavailable': return 'text-destructive';
       default: return 'text-muted-foreground';
     }
   };

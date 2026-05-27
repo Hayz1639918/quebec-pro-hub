@@ -49,6 +49,7 @@ import {
   FileCheck,
   User,
 } from "lucide-react";
+import ProjectCompleteButton from "@/components/dashboard/ProjectCompleteButton";
 
 interface Project {
   id: string;
@@ -71,6 +72,7 @@ interface Project {
   contract_signed?: boolean;
   client_signed_at?: string | null;
   professional_signed_at?: string | null;
+  professional_name?: string | null;
 }
 
 interface ProjectListProps {
@@ -78,6 +80,7 @@ interface ProjectListProps {
   onDelete?: (id: string) => void;
   onEdit?: (id: string) => void;
   onView?: (id: string) => void;
+  onProjectCompleted?: () => void;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -94,7 +97,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-destructive/10 text-destructive border-destructive/30",
 };
 
-export default function ProjectList({ projects, onDelete, onEdit, onView }: ProjectListProps) {
+export default function ProjectList({ projects, onDelete, onEdit, onView, onProjectCompleted }: ProjectListProps) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -208,6 +211,14 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                           <span className="text-xs text-muted-foreground">
                             Avancement: {project.progress_percentage}%
                           </span>
+                        )}
+                        {isInProgress && hasSignedContract && project.assigned_professional_id && (
+                          <ProjectCompleteButton
+                            projectId={project.id}
+                            professionalId={project.assigned_professional_id}
+                            professionalName={project.professional_name || "le professionnel"}
+                            onCompleted={onProjectCompleted}
+                          />
                         )}
                       </div>
                     </div>
@@ -448,6 +459,17 @@ export default function ProjectList({ projects, onDelete, onEdit, onView }: Proj
                       <span>{project.views_count} vue(s)</span>
                     </div>
                   </div>
+
+                  {isInProgress && hasSignedContract && project.assigned_professional_id && (
+                    <div className="pt-2 border-t">
+                      <ProjectCompleteButton
+                        projectId={project.id}
+                        professionalId={project.assigned_professional_id}
+                        professionalName={project.professional_name || "le professionnel"}
+                        onCompleted={onProjectCompleted}
+                      />
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t">
                     <div className="flex items-center gap-1">

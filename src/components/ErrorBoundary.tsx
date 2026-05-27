@@ -38,23 +38,23 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 via-background to-orange-50 p-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-destructive/5 via-background to-warning/5 p-4">
+          <div className="max-w-md w-full bg-card rounded-lg shadow-lg p-6 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center">
+              <AlertTriangle className="h-8 w-8 text-destructive" />
             </div>
             
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-foreground">
               Oups ! Quelque chose s'est mal passé
             </h1>
             
-            <p className="text-gray-600 text-sm">
+            <p className="text-muted-foreground text-sm">
               Une erreur inattendue s'est produite. Veuillez réessayer ou retourner à l'accueil.
             </p>
             
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-left">
-                <p className="text-xs font-mono text-red-800 break-all">
+              <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 text-left">
+                <p className="text-xs font-mono text-destructive break-all">
                   {this.state.error.message}
                 </p>
                 {this.state.errorInfo && (

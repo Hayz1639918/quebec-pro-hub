@@ -355,19 +355,19 @@ const Contracts = () => {
   const getStatusColor = (status: ContractStatus) => {
     switch (status) {
       case 'signed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-light text-success';
       case 'pending_client_signature':
       case 'pending_professional_signature':
       case 'pending_both_signatures':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning-light text-warning';
       case 'draft':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-destructive/10 text-destructive';
       case 'expired':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-warning-light text-warning';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-muted-foreground';
     }
   };
 
@@ -576,19 +576,19 @@ const Contracts = () => {
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('contracts.stats.signed_contracts')}</CardTitle>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <CheckCircle2 className="h-4 w-4 text-success" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-600">{stats.signed_contracts}</div>
+                    <div className="text-2xl font-bold text-success">{stats.signed_contracts}</div>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{t('contracts.stats.pending_signatures')}</CardTitle>
-                    <Clock className="h-4 w-4 text-yellow-600" />
+                    <Clock className="h-4 w-4 text-warning" />
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-yellow-600">{stats.pending_signatures}</div>
+                    <div className="text-2xl font-bold text-warning">{stats.pending_signatures}</div>
                   </CardContent>
                 </Card>
                 <Card>
@@ -606,7 +606,7 @@ const Contracts = () => {
             {/* Filters */}
             <Card>
               <CardContent className="pt-6">
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -616,32 +616,34 @@ const Contracts = () => {
                       className="pl-9"
                     />
                   </div>
-                  <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
-                    <SelectTrigger className="w-48">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder={t('contracts.filter_status')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">{t('contracts.all_statuses')}</SelectItem>
-                      <SelectItem value="signed">{t('contracts.status.signed')}</SelectItem>
-                      <SelectItem value="pending_client_signature">{t('contracts.status.pending_client_signature')}</SelectItem>
-                      <SelectItem value="pending_professional_signature">{t('contracts.status.pending_professional_signature')}</SelectItem>
-                      <SelectItem value="pending_both_signatures">{t('contracts.status.pending_both_signatures')}</SelectItem>
-                      <SelectItem value="draft">{t('contracts.status.draft')}</SelectItem>
-                      <SelectItem value="cancelled">{t('contracts.status.cancelled')}</SelectItem>
-                      <SelectItem value="expired">{t('contracts.status.expired')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={sortBy} onValueChange={(value) => setSortBy(value as "created_at" | "title" | "total_amount")}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue placeholder={t('contracts.sort_by')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="created_at">{t('contracts.sort.created_at')}</SelectItem>
-                      <SelectItem value="title">{t('contracts.sort.title')}</SelectItem>
-                      <SelectItem value="total_amount">{t('contracts.sort.amount')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2 sm:gap-4">
+                    <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <SelectValue placeholder={t('contracts.filter_status')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">{t('contracts.all_statuses')}</SelectItem>
+                        <SelectItem value="signed">{t('contracts.status.signed')}</SelectItem>
+                        <SelectItem value="pending_client_signature">{t('contracts.status.pending_client_signature')}</SelectItem>
+                        <SelectItem value="pending_professional_signature">{t('contracts.status.pending_professional_signature')}</SelectItem>
+                        <SelectItem value="pending_both_signatures">{t('contracts.status.pending_both_signatures')}</SelectItem>
+                        <SelectItem value="draft">{t('contracts.status.draft')}</SelectItem>
+                        <SelectItem value="cancelled">{t('contracts.status.cancelled')}</SelectItem>
+                        <SelectItem value="expired">{t('contracts.status.expired')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as "created_at" | "title" | "total_amount")}>
+                      <SelectTrigger className="w-full sm:w-48">
+                        <SelectValue placeholder={t('contracts.sort_by')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="created_at">{t('contracts.sort.created_at')}</SelectItem>
+                        <SelectItem value="title">{t('contracts.sort.title')}</SelectItem>
+                        <SelectItem value="total_amount">{t('contracts.sort.amount')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </CardContent>
             </Card>

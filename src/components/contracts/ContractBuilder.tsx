@@ -17,7 +17,10 @@ import {
   ArrowLeft,
   Save,
   Send,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Trash2,
+  Milestone as MilestoneIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +48,13 @@ interface Project {
   title: string;
   description: string;
   address: string;
+}
+
+interface MilestoneRow {
+  id: string;
+  title: string;
+  amount: string;
+  due_date: string;
 }
 
 export const ContractBuilder = ({
@@ -80,6 +90,39 @@ export const ContractBuilder = ({
     warranty_period_months: '12',
     special_conditions: ''
   });
+
+  // Milestones
+  const [milestones, setMilestones] = useState<MilestoneRow[]>([]);
+
+  const milestonesTotal = milestones.reduce(
+    (sum, m) => sum + (parseFloat(m.amount) || 0),
+    0
+  );
+
+  const contractTotal = parseFloat(formData.total_amount) || 0;
+  const milestonesExceedTotal = milestonesTotal > contractTotal && contractTotal > 0;
+  const milestonesTotalMismatch =
+    milestones.length > 0 &&
+    contractTotal > 0 &&
+    Math.abs(milestonesTotal - contractTotal) > 0.01 &&
+    !milestonesExceedTotal;
+
+  const addMilestone = () => {
+    setMilestones(prev => [
+      ...prev,
+      { id: crypto.randomUUID(), title: '', amount: '', due_date: '' }
+    ]);
+  };
+
+  const removeMilestone = (id: string) => {
+    setMilestones(prev => prev.filter(m => m.id !== id));
+  };
+
+  const updateMilestone = (id: string, field: keyof Omit<MilestoneRow, 'id'>, value: string) => {
+    setMilestones(prev =>
+      prev.map(m => (m.id === id ? { ...m, [field]: value } : m))
+    );
+  };
 
   useEffect(() => {
     fetchClientProfile();
@@ -204,6 +247,27 @@ export const ContractBuilder = ({
       return;
     }
 
+    if (milestonesExceedTotal) {
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: "Le total des jalons ne peut pas dépasser le montant du contrat.",
+      });
+      return;
+    }
+
+    const invalidMilestones = milestones.filter(
+      m => !m.title.trim() || !m.amount || parseFloat(m.amount) <= 0
+    );
+    if (invalidMilestones.length > 0) {
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: "Chaque jalon doit avoir un titre et un montant valide.",
+      });
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -245,6 +309,23 @@ export const ContractBuilder = ({
         .single();
 
       if (error) throw error;
+
+      // Insérer les jalons
+      if (milestones.length > 0) {
+        const milestoneRows = milestones.map(m => ({
+          contract_id: contract.id,
+          title: m.title.trim(),
+          amount: parseFloat(m.amount),
+          due_date: m.due_date || null,
+          status: 'pending' as const,
+        }));
+
+        const { error: milestoneError } = await supabase
+          .from('contract_milestones')
+          .insert(milestoneRows);
+
+        if (milestoneError) throw milestoneError;
+      }
 
       toast({
         title: t('contracts.contract_created'),
@@ -475,6 +556,120 @@ export const ContractBuilder = ({
             placeholder={t('contracts.builder.special_conditions_placeholder')}
             rows={5}
           />
+        </CardContent>
+      </Card>
+
+      {/* Milestones */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MilestoneIcon className="h-5 w-5" />
+            Jalons de paiement
+          </CardTitle>
+          <CardDescription>
+            Définissez les étapes de paiement liées à l'avancement des travaux.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {milestones.length > 0 && (
+            <div className="space-y-3">
+              {milestones.map((milestone, index) => (
+                <div
+                  key={milestone.id}
+                  className="grid grid-cols-[1fr_150px_150px_40px] gap-3 items-end"
+                >
+                  <div className="space-y-1">
+                    {index === 0 && (
+                      <Label className="text-xs text-muted-foreground">Titre</Label>
+                    )}
+                    <Input
+                      value={milestone.title}
+                      onChange={(e) => updateMilestone(milestone.id, 'title', e.target.value)}
+                      placeholder="Ex: Fondations terminées"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    {index === 0 && (
+                      <Label className="text-xs text-muted-foreground">Montant ($)</Label>
+                    )}
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={milestone.amount}
+                      onChange={(e) => updateMilestone(milestone.id, 'amount', e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    {index === 0 && (
+                      <Label className="text-xs text-muted-foreground">Échéance</Label>
+                    )}
+                    <Input
+                      type="date"
+                      value={milestone.due_date}
+                      onChange={(e) => updateMilestone(milestone.id, 'due_date', e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeMilestone(milestone.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <Button type="button" variant="outline" size="sm" onClick={addMilestone}>
+            <Plus className="h-4 w-4 mr-2" />
+            Ajouter un jalon
+          </Button>
+
+          {milestones.length > 0 && (
+            <>
+              <Separator />
+              <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <span className="text-sm font-medium">
+                  Total des jalons
+                </span>
+                <span
+                  className={`text-sm font-semibold ${
+                    milestonesExceedTotal
+                      ? 'text-destructive'
+                      : milestonesTotalMismatch
+                        ? 'text-warning'
+                        : 'text-success'
+                  }`}
+                >
+                  {milestonesTotal.toFixed(2)} $ / {contractTotal.toFixed(2)} $
+                </span>
+              </div>
+
+              {milestonesExceedTotal && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Le total des jalons dépasse le montant du contrat.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {milestonesTotalMismatch && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Le total des jalons ne correspond pas au montant total du contrat.
+                    Différence&nbsp;: {Math.abs(milestonesTotal - contractTotal).toFixed(2)} $
+                  </AlertDescription>
+                </Alert>
+              )}
+            </>
+          )}
         </CardContent>
       </Card>
 

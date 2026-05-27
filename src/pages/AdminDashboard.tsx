@@ -41,6 +41,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Shield,
   ShieldCheck,
   ShieldX,
@@ -60,6 +67,7 @@ import {
   TrendingUp,
   FileText,
   Briefcase,
+  Gavel,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -121,6 +129,23 @@ interface AuditLog {
   admin_name?: string;
 }
 
+interface AdminDispute {
+  id: string;
+  contract_id: string;
+  opened_by: string;
+  category: string;
+  description: string;
+  status: string;
+  resolution: string | null;
+  resolved_by: string | null;
+  resolved_at: string | null;
+  created_at: string;
+  contract_title?: string;
+  client_name?: string;
+  professional_name?: string;
+  opener_name?: string;
+}
+
 const AdminDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -137,6 +162,13 @@ const AdminDashboard = () => {
   const [rejectedProfessionals, setRejectedProfessionals] = useState<RejectedProfessional[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Disputes state
+  const [disputes, setDisputes] = useState<AdminDispute[]>([]);
+  const [selectedDispute, setSelectedDispute] = useState<AdminDispute | null>(null);
+  const [disputeResolution, setDisputeResolution] = useState("");
+  const [disputeNewStatus, setDisputeNewStatus] = useState("");
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
 
   // Dialog state
   const [selectedProfessional, setSelectedProfessional] = useState<PendingVerification | null>(null);
@@ -243,6 +275,119 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  // Fetch disputes with related data
+  const fetchDisputes = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('disputes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const disputesWithDetails: AdminDispute[] = await Promise.all(
+        (data || []).map(async (dispute) => {
+          let contractTitle = '';
+          let clientName = '';
+          let professionalName = '';
+          let openerName = '';
+
+          const { data: contractData } = await supabase
+            .from('contracts')
+            .select('title, client_id, professional_id')
+            .eq('id', dispute.contract_id)
+            .single();
+
+          if (contractData) {
+            contractTitle = contractData.title || '';
+
+            const { data: clientData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', contractData.client_id)
+              .single();
+            clientName = clientData?.full_name || '';
+
+            const { data: proData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', contractData.professional_id)
+              .single();
+            professionalName = proData?.full_name || '';
+          }
+
+          const { data: openerData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', dispute.opened_by)
+            .single();
+          openerName = openerData?.full_name || '';
+
+          return {
+            ...dispute,
+            contract_title: contractTitle,
+            client_name: clientName,
+            professional_name: professionalName,
+            opener_name: openerName,
+          };
+        })
+      );
+
+      setDisputes(disputesWithDetails);
+    } catch (error) {
+      console.error('Error fetching disputes:', error);
+    }
+  }, []);
+
+  // Handle dispute resolution
+  const handleUpdateDispute = async () => {
+    if (!selectedDispute || !disputeNewStatus) return;
+
+    setActionLoading(selectedDispute.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const updateData: Record<string, unknown> = {
+        status: disputeNewStatus,
+      };
+
+      if (disputeResolution.trim()) {
+        updateData.resolution = disputeResolution.trim();
+      }
+
+      if (disputeNewStatus === 'resolved' || disputeNewStatus === 'closed') {
+        updateData.resolved_by = session?.user?.id;
+        updateData.resolved_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from('disputes')
+        .update(updateData)
+        .eq('id', selectedDispute.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Litige mis à jour",
+        description: `Le statut a été changé en "${disputeNewStatus}".`,
+      });
+
+      setDisputeDialogOpen(false);
+      setSelectedDispute(null);
+      setDisputeResolution("");
+      setDisputeNewStatus("");
+      await fetchDisputes();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erreur lors de la mise à jour";
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: message,
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Initialize
   useEffect(() => {
     const init = async () => {
@@ -254,7 +399,8 @@ const AdminDashboard = () => {
           fetchStats(),
           fetchPendingVerifications(),
           fetchRejectedProfessionals(),
-          fetchAuditLogs()
+          fetchAuditLogs(),
+          fetchDisputes()
         ]);
       }
       
@@ -262,7 +408,7 @@ const AdminDashboard = () => {
     };
 
     init();
-  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchRejectedProfessionals, fetchAuditLogs]);
+  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchRejectedProfessionals, fetchAuditLogs, fetchDisputes]);
 
   // Handle RBQ verification
   const handleVerifyRBQ = async (professional: PendingVerification) => {
@@ -473,6 +619,7 @@ const AdminDashboard = () => {
               fetchPendingVerifications();
               fetchRejectedProfessionals();
               fetchAuditLogs();
+              fetchDisputes();
             }}
           >
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -566,6 +713,15 @@ const AdminDashboard = () => {
               {rejectedProfessionals.length > 0 && (
                 <Badge variant="destructive" className="ml-1">
                   {rejectedProfessionals.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="disputes" className="flex items-center gap-2">
+              <Gavel className="h-4 w-4" />
+              Litiges
+              {disputes.filter(d => d.status === 'open' || d.status === 'investigating').length > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {disputes.filter(d => d.status === 'open' || d.status === 'investigating').length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -758,6 +914,105 @@ const AdminDashboard = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Disputes Tab */}
+          <TabsContent value="disputes" className="space-y-4">
+            {disputes.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Gavel className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
+                  <h3 className="text-lg font-medium">Aucun litige</h3>
+                  <p className="text-muted-foreground">
+                    Il n'y a aucun litige enregistré pour le moment.
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Gavel className="h-5 w-5" />
+                    Gestion des litiges
+                  </CardTitle>
+                  <CardDescription>
+                    {disputes.filter(d => d.status === 'open').length} ouvert(s), {disputes.filter(d => d.status === 'investigating').length} en examen
+                  </CardDescription>
+                </CardHeader>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Contrat</TableHead>
+                      <TableHead>Parties</TableHead>
+                      <TableHead>Catégorie</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {disputes.map((dispute) => {
+                      const categoryLabels: Record<string, string> = {
+                        quality: "Qualité",
+                        delay: "Retard",
+                        payment: "Paiement",
+                        communication: "Communication",
+                        other: "Autre",
+                      };
+                      const statusLabels: Record<string, { label: string; className: string }> = {
+                        open: { label: "Ouvert", className: "bg-destructive/10 text-destructive" },
+                        investigating: { label: "En examen", className: "bg-primary/10 text-primary" },
+                        resolved: { label: "Résolu", className: "bg-green-100 text-green-700" },
+                        closed: { label: "Fermé", className: "bg-muted text-muted-foreground" },
+                      };
+                      const statusCfg = statusLabels[dispute.status] || statusLabels.open;
+
+                      return (
+                        <TableRow key={dispute.id}>
+                          <TableCell>
+                            <p className="font-medium text-sm">{dispute.contract_title || 'Sans titre'}</p>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <p>{dispute.client_name}</p>
+                              <p className="text-muted-foreground">{dispute.professional_name}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {categoryLabels[dispute.category] || dispute.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {format(new Date(dispute.created_at), "d MMM yyyy", { locale: fr })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={statusCfg.className}>
+                              {statusCfg.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedDispute(dispute);
+                                setDisputeNewStatus(dispute.status);
+                                setDisputeResolution(dispute.resolution || "");
+                                setDisputeDialogOpen(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              Gérer
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </Card>
@@ -1074,6 +1329,100 @@ const AdminDashboard = () => {
                 <XCircle className="h-4 w-4 mr-2" />
               )}
               Confirmer le refus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dispute Management Dialog */}
+      <Dialog open={disputeDialogOpen} onOpenChange={setDisputeDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gavel className="h-5 w-5" />
+              Gestion du litige
+            </DialogTitle>
+            <DialogDescription>
+              {selectedDispute?.contract_title && (
+                <>Contrat : <strong>{selectedDispute.contract_title}</strong></>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDispute && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Ouvert par</Label>
+                  <p className="font-medium">{selectedDispute.opener_name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Date</Label>
+                  <p>{format(new Date(selectedDispute.created_at), "d MMMM yyyy", { locale: fr })}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Client</Label>
+                  <p>{selectedDispute.client_name}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Professionnel</Label>
+                  <p>{selectedDispute.professional_name}</p>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label className="text-muted-foreground">Description du litige</Label>
+                <p className="mt-1 text-sm bg-muted/50 rounded-lg p-3">{selectedDispute.description}</p>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="dispute-status">Statut</Label>
+                  <Select value={disputeNewStatus} onValueChange={setDisputeNewStatus}>
+                    <SelectTrigger id="dispute-status">
+                      <SelectValue placeholder="Choisir un statut" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Ouvert</SelectItem>
+                      <SelectItem value="investigating">En examen</SelectItem>
+                      <SelectItem value="resolved">Résolu</SelectItem>
+                      <SelectItem value="closed">Fermé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="dispute-resolution">Résolution / Notes</Label>
+                  <Textarea
+                    id="dispute-resolution"
+                    placeholder="Décrivez la résolution ou ajoutez des notes..."
+                    value={disputeResolution}
+                    onChange={(e) => setDisputeResolution(e.target.value)}
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDisputeDialogOpen(false)}>
+              Annuler
+            </Button>
+            <Button
+              onClick={handleUpdateDispute}
+              disabled={!disputeNewStatus || actionLoading === selectedDispute?.id}
+            >
+              {actionLoading === selectedDispute?.id ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+              )}
+              Mettre à jour
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -264,6 +264,286 @@ export type Database = {
           updated_at?: string
         }
       }
+      contracts: {
+        Row: {
+          id: string
+          project_id: string
+          template_id: string | null
+          client_id: string
+          professional_id: string
+          title: string
+          description: string | null
+          contract_content: string
+          variables: Record<string, unknown>
+          total_amount: number
+          currency: string
+          payment_schedule: unknown[] | null
+          deposit_percentage: number
+          start_date: string | null
+          end_date: string | null
+          estimated_duration_days: number | null
+          status: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired'
+          client_signed_at: string | null
+          professional_signed_at: string | null
+          client_signature_data: Record<string, unknown> | null
+          professional_signature_data: Record<string, unknown> | null
+          terms_and_conditions: string | null
+          special_conditions: string | null
+          warranty_period_months: number
+          created_at: string
+          updated_at: string
+          expires_at: string | null
+          signed_at: string | null
+          version: number
+          parent_contract_id: string | null
+          contract_pdf_url: string | null
+          attachments: string[]
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          template_id?: string | null
+          client_id: string
+          professional_id: string
+          title: string
+          description?: string | null
+          contract_content: string
+          variables?: Record<string, unknown>
+          total_amount: number
+          currency?: string
+          payment_schedule?: unknown[] | null
+          deposit_percentage?: number
+          start_date?: string | null
+          end_date?: string | null
+          estimated_duration_days?: number | null
+          status?: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired'
+          terms_and_conditions?: string | null
+          special_conditions?: string | null
+          warranty_period_months?: number
+          expires_at?: string | null
+          contract_pdf_url?: string | null
+          attachments?: string[]
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          contract_content?: string
+          total_amount?: number
+          status?: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired'
+          client_signed_at?: string | null
+          professional_signed_at?: string | null
+          client_signature_data?: Record<string, unknown> | null
+          professional_signature_data?: Record<string, unknown> | null
+          contract_pdf_url?: string | null
+          updated_at?: string
+        }
+      }
+      contract_milestones: {
+        Row: {
+          id: string
+          contract_id: string
+          title: string
+          amount: number
+          due_date: string | null
+          status: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid'
+          requested_by: string | null
+          requested_at: string | null
+          validated_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contract_id: string
+          title: string
+          amount: number
+          due_date?: string | null
+          status?: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid'
+        }
+        Update: {
+          title?: string
+          amount?: number
+          due_date?: string | null
+          status?: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid'
+          updated_at?: string
+        }
+      }
+      payments: {
+        Row: {
+          id: string
+          contract_id: string
+          milestone_id: string | null
+          payer_id: string
+          payee_id: string
+          amount: number
+          platform_fee: number
+          currency: string
+          status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+          stripe_charge_id: string | null
+          description: string | null
+          paid_at: string | null
+          failed_at: string | null
+          refunded_at: string | null
+          failure_reason: string | null
+          metadata: Record<string, unknown>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contract_id: string
+          milestone_id?: string | null
+          payer_id: string
+          payee_id: string
+          amount: number
+          platform_fee?: number
+          currency?: string
+          description?: string | null
+        }
+        Update: {
+          status?: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+      }
+      invoices: {
+        Row: {
+          id: string
+          contract_id: string
+          milestone_id: string | null
+          payment_id: string | null
+          invoice_number: string
+          issuer_id: string
+          recipient_id: string
+          amount_ht: number
+          tax_rate: number
+          tax_amount: number
+          amount_ttc: number
+          currency: string
+          status: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
+          issued_at: string | null
+          paid_at: string | null
+          due_date: string | null
+          pdf_url: string | null
+          notes: string | null
+          metadata: Record<string, unknown>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          contract_id: string
+          milestone_id?: string | null
+          payment_id?: string | null
+          invoice_number: string
+          issuer_id: string
+          recipient_id: string
+          amount_ht: number
+          tax_rate?: number
+          currency?: string
+          status?: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
+          due_date?: string | null
+          notes?: string | null
+        }
+        Update: {
+          status?: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
+          pdf_url?: string | null
+          paid_at?: string | null
+          updated_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          is_read: boolean
+          related_user_id: string | null
+          related_project_id: string | null
+          action_url: string | null
+          metadata: Record<string, unknown> | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message: string
+          is_read?: boolean
+          related_user_id?: string | null
+          related_project_id?: string | null
+          action_url?: string | null
+          metadata?: Record<string, unknown> | null
+        }
+        Update: {
+          is_read?: boolean
+        }
+      }
+      favorites: {
+        Row: {
+          id: string
+          client_id: string
+          professional_id: string
+          notes: string | null
+          priority: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          professional_id: string
+          notes?: string | null
+          priority?: number
+        }
+        Update: {
+          notes?: string | null
+          priority?: number
+        }
+      }
+      conversations: {
+        Row: {
+          id: string
+          participant_1: string
+          participant_2: string
+          last_message_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_1: string
+          participant_2: string
+        }
+        Update: {
+          last_message_at?: string | null
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          sender_id: string
+          content: string
+          is_read?: boolean
+        }
+        Update: {
+          is_read?: boolean
+        }
+      }
       project_images: {
         Row: {
           id: string
@@ -300,6 +580,12 @@ export type Database = {
     Enums: {
       user_type: 'client' | 'professional'
       project_status: 'open' | 'in_progress' | 'completed' | 'cancelled'
+      contract_status: 'draft' | 'pending_client_signature' | 'pending_professional_signature' | 'pending_both_signatures' | 'signed' | 'cancelled' | 'expired'
+      milestone_status: 'pending' | 'requested' | 'approved' | 'rejected' | 'paid'
+      payment_status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded' | 'cancelled'
+      invoice_status: 'draft' | 'issued' | 'paid' | 'void' | 'overdue'
+      mediation_status: 'open' | 'in_review' | 'resolved' | 'rejected'
+      proposal_status: 'pending' | 'accepted' | 'rejected' | 'withdrawn'
     }
     CompositeTypes: {
       [_ in never]: never

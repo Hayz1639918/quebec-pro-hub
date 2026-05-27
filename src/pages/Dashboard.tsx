@@ -92,6 +92,7 @@ interface Project {
   contract_signed?: boolean;
   client_signed_at?: string | null;
   professional_signed_at?: string | null;
+  professional_name?: string | null;
 }
 
 interface ActiveProject {
@@ -284,7 +285,8 @@ const Dashboard = () => {
             id,
             client_signed_at,
             professional_signed_at
-          )
+          ),
+          profiles:assigned_professional_id (full_name, company_name)
         `)
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
@@ -297,6 +299,7 @@ const Dashboard = () => {
         contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
         client_signed_at: p.contracts?.client_signed_at || null,
         professional_signed_at: p.contracts?.professional_signed_at || null,
+        professional_name: p.profiles?.company_name || p.profiles?.full_name || null,
       }));
 
       setProjects(transformedProjects);
@@ -868,8 +871,7 @@ const Dashboard = () => {
   };
 
   const handleViewProject = (projectId: string) => {
-    // Navigate to project details (to be implemented)
-    navigate(`/projects`);
+    navigate(`/project/${projectId}`);
   };
 
   const handleExportProjectsPDF = () => {
@@ -908,8 +910,28 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <Navigation />
+        <div className="flex-1 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-8 md:pb-12">
+          <div className="container mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+            <div className="mb-4 sm:mb-6 md:mb-8 space-y-2">
+              <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-64 bg-muted animate-pulse rounded" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6 mb-4 sm:mb-6 md:mb-8">
+              {[1, 2, 3, 4].map(i => (
+                <Card key={i} className="overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+                    <div className="h-7 w-10 bg-muted animate-pulse rounded" />
+                    <div className="h-2 w-16 bg-muted animate-pulse rounded" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="h-64 bg-muted animate-pulse rounded-lg" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -977,7 +999,7 @@ const Dashboard = () => {
                 <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
               <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
-                <div className="text-lg sm:text-xl md:text-2xl font-bold">0</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{allContracts.length}</div>
                 <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   en cours
                 </p>
@@ -1341,6 +1363,12 @@ const Dashboard = () => {
                       onDelete={handleDeleteProject}
                       onEdit={handleEditProject}
                       onView={handleViewProject}
+                      onProjectCompleted={() => {
+                        if (user?.id) {
+                          fetchStats(user.id);
+                          fetchActiveProjectsAndReports(user.id);
+                        }
+                      }}
                     />
                   )}
                 </CardContent>
