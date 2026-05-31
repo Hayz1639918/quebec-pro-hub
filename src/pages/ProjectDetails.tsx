@@ -133,7 +133,6 @@ const ProjectDetails = () => {
   const [client, setClient] = useState<Profile | null>(null);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [projectContract, setProjectContract] = useState<ProjectContract | null>(null);
   const [acceptedProposal, setAcceptedProposal] = useState<AcceptedProposal | null>(null);
@@ -164,12 +163,6 @@ const ProjectDetails = () => {
     average_rating: number;
     total_reviews: number;
   }[]>([]);
-  
-  // Formulaire de proposition (ancien - à garder pour compatibilité)
-  const [proposalMessage, setProposalMessage] = useState('');
-  const [proposalBudget, setProposalBudget] = useState('');
-  const [proposalDelay, setProposalDelay] = useState('');
-
   const handleMarkAsComplete = async () => {
     if (!project) return;
     setMarkingComplete(true);
@@ -498,142 +491,6 @@ const ProjectDetails = () => {
     } catch (error) {
       console.error('Erreur lors de la création de la conversation:', error);
       toast.error(t('project_details.error_conversation'));
-    }
-  };
-
-  const handleSubmitProposal = async () => {
-    if (!currentUser || currentUser.user_type !== 'professional') {
-      toast.error(t('project_details.error_pro_submit'));
-      return;
-    }
-
-    if (!proposalMessage.trim()) {
-      toast.error(t('project_details.error_message_required'));
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (!project?.client_id) return;
-
-      // Vérifier si une proposition existe déjà pour ce projet et ce professionnel
-      const { data: existingProposal } = await supabase
-        .from('proposals')
-        .select('id')
-        .eq('project_id', id)
-        .eq('professional_id', currentUser.id)
-        .maybeSingle();
-
-      if (existingProposal) {
-        toast.error(t('project_details.error_already_submitted'));
-        setSubmitting(false);
-        return;
-      }
-
-      // Créer la proposition dans la table proposals
-      const { data: proposalData, error: proposalError } = await supabase
-        .from('proposals')
-        .insert({
-          project_id: id,
-          professional_id: currentUser.id,
-          message: proposalMessage.trim(),
-          estimated_budget: proposalBudget ? parseFloat(proposalBudget) : null,
-          estimated_duration_days: proposalDelay ? parseInt(proposalDelay) : null,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (proposalError) throw proposalError;
-
-      // Incrémenter le compteur de propositions
-      await supabase
-        .from('projects')
-        .update({ proposals_count: (project?.proposals_count || 0) + 1 })
-        .eq('id', id);
-
-      // Déterminer l'ordre des participants pour la conversation
-      const participant1 = currentUser.id < project.client_id ? currentUser.id : project.client_id;
-      const participant2 = currentUser.id < project.client_id ? project.client_id : currentUser.id;
-
-      // Créer une conversation si elle n'existe pas
-      const { data: existingConversation } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('participant_1_id', participant1)
-        .eq('participant_2_id', participant2)
-        .maybeSingle();
-
-      let conversationId = existingConversation?.id;
-
-      if (!conversationId) {
-        const { data: newConversation, error: convError } = await supabase
-          .from('conversations')
-          .insert({
-            participant_1_id: participant1,
-            participant_2_id: participant2,
-          })
-          .select()
-          .single();
-
-        if (convError) throw convError;
-        conversationId = newConversation.id;
-      }
-
-      // Envoyer un message pour notifier le client
-      let messageContent = `**Nouvelle proposition pour : ${project?.title}**\n\n${proposalMessage}`;
-      
-      if (proposalBudget) {
-        messageContent += `\n\n**Budget proposé :** ${proposalBudget} $`;
-      }
-      
-      if (proposalDelay) {
-        messageContent += `\n⏱️ **Délai estimé:** ${proposalDelay} jours`;
-      }
-
-      messageContent += `\n\nConsultez la proposition complète dans votre espace "Propositions".`;
-
-      await supabase
-        .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: currentUser.id,
-          receiver_id: project.client_id,
-          content: messageContent,
-          project_id: id,
-        });
-
-      // Créer une notification pour le client
-      await supabase
-        .from('notifications')
-        .insert({
-          user_id: project?.client_id,
-          type: 'proposal',
-          title: 'Nouvelle proposition reçue',
-          message: `${currentUser.company_name || currentUser.full_name} a soumis une proposition pour votre projet "${project?.title}"`,
-          action_url: `/proposal/${proposalData.id}?showPDF=true`,
-          metadata: { 
-            project_id: id, 
-            proposal_id: proposalData.id,
-            conversation_id: conversationId 
-          },
-        });
-
-      toast.success(t('project_details.success_submitted'));
-      setProposalMessage('');
-      setProposalBudget('');
-      setProposalDelay('');
-      
-      // Rediriger vers le dashboard pour voir les propositions
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 1500);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi de la proposition:', error);
-      toast.error(t('project_details.error_sending'));
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -1365,7 +1222,7 @@ const ProjectDetails = () => {
                     </div>
                   )}
                 </div>
-                <Button size="sm" variant="outline" onClick={() => { setShowRecommendations(false); navigate(`/professionals/${pro.id}`); }}>
+                <Button size="sm" variant="outline" onClick={() => { setShowRecommendations(false); navigate(`/professional/${pro.id}`); }}>
                   Voir le profil
                 </Button>
               </div>

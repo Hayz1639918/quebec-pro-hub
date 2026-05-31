@@ -168,7 +168,7 @@ BEGIN
         || '" et préparera une proposition.',
       NEW.professional_id,
       NEW.project_id,
-      '/projects/' || NEW.project_id::text
+      '/project/' || NEW.project_id::text
     );
   ELSE
     INSERT INTO notifications (
@@ -183,7 +183,7 @@ BEGIN
         || COALESCE(v_project_title, 'sans titre') || '".',
       NEW.professional_id,
       NEW.project_id,
-      '/projects/' || NEW.project_id::text
+      '/project/' || NEW.project_id::text
     );
   END IF;
 
@@ -272,7 +272,7 @@ BEGIN
       || ' a répondu à votre avis.',
     NEW.author_id,
     v_review.project_id,
-    '/professionals/' || NEW.author_id::text
+    '/professional/' || NEW.author_id::text
   );
 
   RETURN NEW;

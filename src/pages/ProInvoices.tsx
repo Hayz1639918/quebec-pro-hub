@@ -121,7 +121,7 @@ const ProInvoices = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 pt-24 max-w-4xl">
         <div className="mb-6">
           <Button variant="ghost" onClick={() => navigate("/pro/payments")} className="gap-2">
             <ArrowLeft className="h-4 w-4" />

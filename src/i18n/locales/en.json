@@ -319,6 +319,13 @@
       "step4_title": "Sign and Start",
       "step4_desc": "Formalize the agreement and track progress"
     },
+    "export": {
+      "export_pdf": "Export PDF",
+      "in_progress": "Export in progress",
+      "pdf_generating": "Your PDF is being generated…",
+      "no_projects_to_export": "No projects to export yet.",
+      "no_activity_to_export": "No activity to export yet."
+    },
     "projects": {
       "title": "My Projects",
       "description": "Manage all your construction and renovation projects",

@@ -224,7 +224,7 @@ const FavoritesList = ({ favorites, loading, onRemove, onCompare }: FavoritesLis
                   <Button
                     size="icon"
                     variant="ghost"
-                    onClick={() => navigate(`/professionals/${fav.professional_id}`)}
+                    onClick={() => navigate(`/professional/${fav.professional_id}`)}
                     title="Voir le profil"
                   >
                     <Eye className="h-4 w-4" />

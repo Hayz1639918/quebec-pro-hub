@@ -27,9 +27,12 @@ const Messages = () => {
   useEffect(() => {
     // Check if there's a conversation ID in the URL
     const conversationId = searchParams.get('conversation');
+    const otherUserId = searchParams.get('user');
     if (conversationId && userId) {
       loadConversation(conversationId);
       setShowChat(true); // Show chat on mobile when URL has conversation
+    } else if (otherUserId && userId) {
+      loadConversationByUser(otherUserId);
     }
   }, [searchParams, userId]);
 
@@ -77,6 +80,37 @@ const Messages = () => {
       }
     } catch (error) {
       console.error('Error loading conversation:', error);
+    }
+  };
+
+  const loadConversationByUser = async (otherUserId: string) => {
+    if (!userId) return;
+    try {
+      const { data, error } = await supabase
+        .from('conversations_with_details')
+        .select('*')
+        .or(
+          `and(participant_1_id.eq.${userId},participant_2_id.eq.${otherUserId}),` +
+          `and(participant_1_id.eq.${otherUserId},participant_2_id.eq.${userId})`
+        )
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        const isParticipant1 = data.participant_1_id === userId;
+        setSelectedConversation({
+          ...data,
+          other_participant_id: isParticipant1 ? data.participant_2_id : data.participant_1_id,
+          other_participant_name: isParticipant1 ? data.participant_2_name : data.participant_1_name,
+          other_participant_avatar: isParticipant1 ? data.participant_2_avatar : data.participant_1_avatar,
+          other_participant_type: isParticipant1 ? data.participant_2_type : data.participant_1_type,
+        });
+        setShowChat(true);
+      }
+    } catch (err) {
+      console.error('Error loading conversation by user:', err);
     }
   };
 

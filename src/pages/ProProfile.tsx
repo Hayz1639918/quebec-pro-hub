@@ -2,7 +2,7 @@
 // Intègre Epic 30 (US-106 à US-111) : Profil Métier et Spécialisation
 
 import { useEffect, useState, lazy, Suspense } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -69,7 +69,12 @@ const ProProfile = () => {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
-  const [activeTab, setActiveTab] = useState("infos");
+  const [searchParams] = useSearchParams();
+  const VALID_TABS = ["infos", "metiers", "licences", "certifications", "experience", "tarifs"];
+  const initialTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState(
+    initialTab && VALID_TABS.includes(initialTab) ? initialTab : "infos"
+  );
 
   useEffect(() => {
     (async () => {

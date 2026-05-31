@@ -6,7 +6,6 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -140,10 +139,6 @@ const Projects = () => {
   const [sortBy, setSortBy] = useState("recent");
   const [userId, setUserId] = useState<string | null>(null);
   const [isProfessional, setIsProfessional] = useState<boolean>(false);
-  const [proposalFor, setProposalFor] = useState<string | null>(null);
-  const [proposalMessage, setProposalMessage] = useState("");
-  const [proposalBudget, setProposalBudget] = useState("");
-  const [proposalDuration, setProposalDuration] = useState("");
   const [showMap, setShowMap] = useState(true);
   const [mapRadius, setMapRadius] = useState(50);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -301,26 +296,6 @@ const Projects = () => {
     if (diffDays < 7) return t('new_project.form.days_ago', { count: diffDays });
     if (diffDays < 30) return t('new_project.form.weeks_ago', { count: Math.floor(diffDays / 7) });
     return date.toLocaleDateString('fr-CA');
-  };
-
-  const submitProposal = async () => {
-    if (!userId || !proposalFor || !proposalMessage) return;
-    try {
-      const { error } = await supabase.from('proposals').insert({
-        project_id: proposalFor,
-        professional_id: userId,
-        message: proposalMessage,
-        estimated_budget: proposalBudget ? Number(proposalBudget) : null,
-        estimated_duration_days: proposalDuration ? Number(proposalDuration) : null,
-      });
-      if (error) throw error;
-      setProposalFor(null);
-      setProposalMessage("");
-      setProposalBudget("");
-      setProposalDuration("");
-    } catch (e) {
-      console.error('Error submitting proposal:', e);
-    }
   };
 
   const contactClient = async (clientId: string) => {
@@ -672,33 +647,11 @@ const Projects = () => {
                             {t('projects.card.view_details')}
                           </Button>
                           {isProfessional && (
-                            <Button variant="outline" onClick={() => setProposalFor(project.id)}>
+                            <Button variant="outline" onClick={() => navigate(`/project/${project.id}`)}>
                               {t('projects.card.submit_proposal')}
                             </Button>
                           )}
                         </div>
-                        {proposalFor === project.id && (
-                          <div className="mt-3 border rounded-lg p-3 space-y-3">
-                            <div>
-                              <Label>{t('proposals.form.message')}</Label>
-                              <Textarea rows={3} value={proposalMessage} onChange={e => setProposalMessage(e.target.value)} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label>{t('proposals.form.budget')}</Label>
-                                <Input type="number" value={proposalBudget} onChange={e => setProposalBudget(e.target.value)} />
-                              </div>
-                              <div>
-                                <Label>{t('proposals.form.duration')}</Label>
-                                <Input type="number" value={proposalDuration} onChange={e => setProposalDuration(e.target.value)} />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setProposalFor(null)}>{t('proposals.form.cancel')}</Button>
-                              <Button onClick={submitProposal} disabled={!proposalMessage}>{t('proposals.form.send')}</Button>
-                            </div>
-                          </div>
-                        )}
                       </CardContent>
                     </Card>
                   ))}

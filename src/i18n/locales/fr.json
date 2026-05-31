@@ -319,6 +319,13 @@
       "step4_title": "Signez et démarrez",
       "step4_desc": "Formalisez l'accord et suivez l'avancement"
     },
+    "export": {
+      "export_pdf": "Export PDF",
+      "in_progress": "Export en cours",
+      "pdf_generating": "Votre PDF est en cours de génération…",
+      "no_projects_to_export": "Aucun projet à exporter pour le moment.",
+      "no_activity_to_export": "Aucune activité à exporter pour le moment."
+    },
     "projects": {
       "title": "Mes Projets",
       "description": "Gérez tous vos projets de construction et rénovation",

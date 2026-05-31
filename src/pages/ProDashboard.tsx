@@ -122,6 +122,13 @@ const ProDashboard = () => {
     created_at: string;
   }>>([]);
   const [respondingInvitation, setRespondingInvitation] = useState<string | null>(null);
+  const [upcomingMeetings, setUpcomingMeetings] = useState<Array<{
+    id: string;
+    client_name: string;
+    project_name: string | null;
+    scheduled_at: string;
+    meeting_url: string | null;
+  }>>([]);
 
   // US-052 — Revenue summary (real data from contractor_payments + contracts)
   const [revenue, setRevenue] = useState({
@@ -187,6 +194,7 @@ const ProDashboard = () => {
       await fetchDashboardData(session.user.id);
       await fetchPendingContractsList(session.user.id);
       await fetchPendingInvitations(session.user.id);
+      await fetchUpcomingMeetings(session.user.id);
       setLoading(false);
     })();
   }, []);
@@ -212,6 +220,23 @@ const ProDashboard = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
+
+  const fetchUpcomingMeetings = async (uid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('pro_meetings')
+        .select('id, client_name, project_name, scheduled_at, meeting_url, status')
+        .eq('organizer_id', uid)
+        .eq('status', 'upcoming')
+        .gte('scheduled_at', new Date().toISOString())
+        .order('scheduled_at', { ascending: true })
+        .limit(5);
+      if (error) throw error;
+      setUpcomingMeetings(data || []);
+    } catch (e) {
+      console.error('Error fetching upcoming meetings:', e);
+    }
+  };
 
   const fetchPendingInvitations = async (uid: string) => {
     try {
@@ -258,8 +283,8 @@ const ProDashboard = () => {
       });
       if (error) throw error;
       if (response === 'accepted' && projectId) {
-        // Take the pro straight to the proposal form
-        navigate(`/projects/${projectId}`);
+        // Take the pro straight to the project page where they submit a proposal
+        navigate(`/project/${projectId}`);
       } else {
         setPendingInvitations((prev) => prev.filter((i) => i.id !== invitationId));
       }
@@ -745,7 +770,7 @@ const ProDashboard = () => {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => navigate(`/projects/${inv.project_id}`)}
+                            onClick={() => navigate(`/project/${inv.project_id}`)}
                           >
                             <Eye className="h-3.5 w-3.5 mr-1.5" />
                             Voir le projet
@@ -820,14 +845,41 @@ const ProDashboard = () => {
                 <CardDescription>Vos prochaines réunions avec les clients</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8 space-y-4">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto" />
-                  <p className="text-muted-foreground">Aucune réunion planifiée pour le moment.</p>
-                  <Button onClick={() => navigate('/pro/meetings')} className="gap-2">
-                    <Video className="h-4 w-4" />
-                    Gérer mes réunions
-                  </Button>
-                </div>
+                {upcomingMeetings.length === 0 ? (
+                  <div className="text-center py-8 space-y-4">
+                    <Calendar className="h-12 w-12 text-muted-foreground mx-auto" />
+                    <p className="text-muted-foreground">Aucune réunion planifiée pour le moment.</p>
+                    <Button onClick={() => navigate('/pro/meetings')} className="gap-2">
+                      <Video className="h-4 w-4" />
+                      Planifier une réunion
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingMeetings.map((m) => (
+                      <div key={m.id} className="flex items-center justify-between gap-3 border rounded-lg p-4">
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate">{m.client_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {m.project_name || 'Réunion'} · {format(new Date(m.scheduled_at), "d MMM yyyy 'à' HH:mm", { locale: fr })}
+                          </p>
+                        </div>
+                        {m.meeting_url ? (
+                          <Button asChild size="sm" variant="outline" className="gap-2 flex-shrink-0">
+                            <a href={m.meeting_url} target="_blank" rel="noopener noreferrer">
+                              <Video className="h-4 w-4" />
+                              Rejoindre
+                            </a>
+                          </Button>
+                        ) : null}
+                      </div>
+                    ))}
+                    <Button onClick={() => navigate('/pro/meetings')} className="w-full gap-2">
+                      <Video className="h-4 w-4" />
+                      Gérer mes réunions
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -854,7 +906,10 @@ const ProDashboard = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {assignedProjects.map(project => (
+                    <p className="text-sm text-muted-foreground">
+                      {assignedProjects.length} mission{assignedProjects.length > 1 ? 's' : ''} en cours.
+                    </p>
+                    {assignedProjects.slice(0, 3).map(project => (
                       <div key={project.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/pro/project/${project.id}/progress`)}>
                         <div className="flex items-start justify-between mb-2">
                           <div>
@@ -872,6 +927,10 @@ const ProDashboard = () => {
                         </div>
                       </div>
                     ))}
+                    <Button onClick={() => navigate('/pro/my-projects')} className="w-full gap-2">
+                      <Hammer className="h-4 w-4" />
+                      Voir toutes mes missions
+                    </Button>
                   </div>
                 )}
               </CardContent>
@@ -908,12 +967,12 @@ const ProDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/kpis')}>
+              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/pro/profile?tab=tarifs')}>
                 <CardContent className="p-4 flex items-center gap-3">
                   <Award className="h-8 w-8 text-green-600 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold">Grille de tarifs & KPIs</p>
-                    <p className="text-xs text-muted-foreground">Tarifs horaires, forfaits, stats</p>
+                    <p className="font-semibold">Grille de tarifs</p>
+                    <p className="text-xs text-muted-foreground">Tarifs horaires et forfaits</p>
                   </div>
                 </CardContent>
               </Card>
@@ -967,6 +1026,8 @@ const ProDashboard = () => {
                 <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />
                 <ActionBtn icon={CreditCard} label="Compte bancaire" onClick={() => navigate('/pro/bank-account')} />
                 <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
+                <ActionBtn icon={Calendar} label="Disponibilités" onClick={() => navigate('/pro/calendar')} />
+                <ActionBtn icon={Star} label="Mes avis" onClick={() => navigate('/pro/reviews')} iconColor="text-amber-500" />
                 <ActionBtn icon={Users} label="Sous-traitants" onClick={() => navigate('/pro/subcontractors')} />
               </div>
             ) : (
@@ -984,8 +1045,12 @@ const ProDashboard = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                   <ActionBtn icon={Star} label="Mes évaluations" onClick={() => navigate('/pro/reviews')} iconColor="text-amber-500" />
-                  <ActionBtn icon={Award} label="Grille de tarifs" onClick={() => navigate('/pro/kpis')} iconColor="text-green-600" />
+                  <ActionBtn icon={Award} label="Grille de tarifs" onClick={() => navigate('/pro/profile?tab=tarifs')} iconColor="text-green-600" />
                   <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} />
+                  <ActionBtn icon={Calendar} label="Disponibilités" onClick={() => navigate('/pro/calendar')} />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                  <ActionBtn icon={Video} label="Réunions Zoom" onClick={() => navigate('/pro/meetings')} iconColor="text-blue-600" />
                 </div>
               </div>
             )}
@@ -1052,74 +1117,9 @@ const ProDashboard = () => {
                     </div>
                   </div>
                 </div>
-
-                <Separator />
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => navigate('/pro/kpis')}
-                >
-                  Voir les KPIs détaillés
-                </Button>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Quick Links — context-aware */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/subscription')}>
-            <CardContent className="p-3 sm:p-4 md:pt-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <CreditCard className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">Mon abonnement</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Plan Gratuit · accès complet</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98]" onClick={() => navigate('/pro/reviews')}>
-            <CardContent className="p-3 sm:p-4 md:pt-6">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Star className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-warning flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">Mes évaluations</p>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer ma réputation</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {professionalType === 'entrepreneur' ? (
-            /* Entrepreneur: sous-traitants */
-            <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/subcontractors')}>
-              <CardContent className="p-3 sm:p-4 md:pt-6">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <Users className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-primary flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm sm:text-base truncate">Mes sous-traitants</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Gérer mon équipe</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            /* Trade professional: profil métier */
-            <Card className="cursor-pointer hover:shadow-md transition-shadow active:scale-[0.98] sm:col-span-2 md:col-span-1" onClick={() => navigate('/pro/profile')}>
-              <CardContent className="p-3 sm:p-4 md:pt-6">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <HardHat className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-amber-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm sm:text-base truncate">Mon profil métier</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">RBQ, CCQ, tarifs</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </main>
       <Footer />

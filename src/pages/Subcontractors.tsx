@@ -46,9 +46,14 @@ const Subcontractors = () => {
       <Navigation />
       <main className='container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1'>
         <Card>
-          <CardHeader>
-            <CardTitle>Mes sous-traitants</CardTitle>
-            <CardDescription>Invitez et gérez vos sous-traitants</CardDescription>
+          <CardHeader className='flex flex-row items-start justify-between gap-3'>
+            <div>
+              <CardTitle>Mes sous-traitants</CardTitle>
+              <CardDescription>Invitez et gérez vos sous-traitants</CardDescription>
+            </div>
+            <Button variant='outline' onClick={() => navigate('/pro/subcontractor-tasks')}>
+              Gérer les tâches
+            </Button>
           </CardHeader>
           <CardContent className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-3'>

@@ -38,7 +38,11 @@ interface ClientProject {
   alreadyInvited?: boolean;
 }
 
-const ELIGIBLE_STATUSES = ['draft', 'open', 'in_review'];
+// A client can invite a professional as long as the project is still
+// accepting bids. We keep this list permissive (open is the only status
+// where the marketplace lets pros submit proposals) but easy to extend
+// if we later introduce a "draft" or "in_review" status.
+const ELIGIBLE_STATUSES = ['open'];
 
 export const InviteProfessionalDialog = ({
   open,

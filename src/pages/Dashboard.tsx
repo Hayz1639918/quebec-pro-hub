@@ -312,11 +312,13 @@ const Dashboard = () => {
       // Fetch proposals with details
       await fetchProposals(projectIds);
 
-      // Count proposals
+      // Count proposals still awaiting the client's decision (matches the
+      // "à examiner" label and the Offres tab, which both show pending only)
       const { count: proposalsCount } = await supabase
         .from('proposals')
         .select('id', { count: 'exact', head: true })
-        .in('project_id', projectIds);
+        .in('project_id', projectIds)
+        .eq('status', 'pending');
 
       // Get favorites count (if table exists)
       let favoritesCount = 0;

@@ -209,7 +209,7 @@ const Navigation = () => {
                                 <LayoutDashboard className="mr-2 h-4 w-4 text-primary/60" />
                                 Dashboard Pro
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate("/pro/profile")} className="cursor-pointer font-ui text-sm">
+                              <DropdownMenuItem onClick={() => navigate(profile.professional_type === 'entrepreneur' ? "/pro/entrepreneur-profile" : "/pro/profile")} className="cursor-pointer font-ui text-sm">
                                 <User className="mr-2 h-4 w-4 text-primary/60" />
                                 Mon profil
                               </DropdownMenuItem>

@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedProRoute from "@/components/ProtectedProRoute";
 import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
@@ -25,14 +25,12 @@ const VerifySignature = lazy(() => import("./pages/VerifySignature"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const ProProfile = lazy(() => import("./pages/ProProfile"));
 const ProSubscription = lazy(() => import("./pages/ProSubscription"));
-const ProKpis = lazy(() => import("./pages/ProKpis"));
 const Subcontractors = lazy(() => import("./pages/Subcontractors"));
 const SubcontractorTasks = lazy(() => import("./pages/SubcontractorTasks"));
 const ProposeContract = lazy(() => import("./pages/ProposeContract"));
 const ReviewContractProposals = lazy(() => import("./pages/ReviewContractProposals"));
 const ProReviews = lazy(() => import("./pages/ProReviews"));
 const ProDashboard = lazy(() => import("./pages/ProDashboard"));
-const ProContracts = lazy(() => import("./pages/ProContracts"));
 const ProPortfolio = lazy(() => import("./pages/ProPortfolio"));
 const ProCalendar = lazy(() => import("./pages/ProCalendar"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
@@ -92,13 +90,12 @@ const App = () => (
                 <Route path="/pro/dashboard" element={<ProDashboard />} />
                 <Route path="/pro/profile" element={<ProProfile />} />
                 <Route path="/pro/subscription" element={<ProSubscription />} />
-                <Route path="/pro/kpis" element={<ProKpis />} />
                 <Route path="/pro/subcontractors" element={<Subcontractors />} />
                 <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
                 <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
                 <Route path="/proposals/review" element={<ReviewContractProposals />} />
                 <Route path="/pro/reviews" element={<ProReviews />} />
-                <Route path="/pro/contracts" element={<ProContracts />} />
+                <Route path="/pro/contracts" element={<Navigate to="/contracts" replace />} />
                 <Route path="/pro/portfolio" element={<ProPortfolio />} />
                 <Route path="/pro/calendar" element={<ProCalendar />} />
                 <Route path="/pro/project/:id/progress" element={<ProjectProgress />} />
