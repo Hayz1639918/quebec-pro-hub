@@ -29,6 +29,6 @@ describe('Hero', () => {
     expect(screen.getByRole('button', { name: /devenir professionnel/i })).toBeInTheDocument();
     expect(screen.getByText(/2 500\+/i)).toBeInTheDocument();
     expect(screen.getByText(/15K\+/i)).toBeInTheDocument();
-    expect(screen.getByText(/4\.8★/i)).toBeInTheDocument();
+    expect(screen.getByText(/4\.8\/5/i)).toBeInTheDocument();
   });
 });

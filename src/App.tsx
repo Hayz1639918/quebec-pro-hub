@@ -52,7 +52,6 @@ const ProMeetings = lazy(() => import("./pages/ProMeetings"));
 const ProPayments = lazy(() => import("./pages/ProPayments"));
 const ProInvoices = lazy(() => import("./pages/ProInvoices"));
 const ClientPayments = lazy(() => import("./pages/ClientPayments"));
-const ClientPayments = lazy(() => import("./pages/ClientPayments"));
 
 const queryClient = new QueryClient();
 

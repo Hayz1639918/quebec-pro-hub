@@ -191,6 +191,7 @@ export type Database = {
           updated_at: string
           proposals_count: number
           views_count: number
+          payment_handling_preference: 'platform' | 'offline' | 'negotiable'
         }
         Insert: {
           id?: string
@@ -209,6 +210,7 @@ export type Database = {
           updated_at?: string
           proposals_count?: number
           views_count?: number
+          payment_handling_preference?: 'platform' | 'offline' | 'negotiable'
         }
         Update: {
           id?: string
@@ -227,6 +229,7 @@ export type Database = {
           updated_at?: string
           proposals_count?: number
           views_count?: number
+          payment_handling_preference?: 'platform' | 'offline' | 'negotiable'
         }
       }
       proposals: {
@@ -298,6 +301,7 @@ export type Database = {
           parent_contract_id: string | null
           contract_pdf_url: string | null
           attachments: string[]
+          payment_handling: 'platform' | 'offline'
         }
         Insert: {
           id?: string
@@ -323,6 +327,7 @@ export type Database = {
           expires_at?: string | null
           contract_pdf_url?: string | null
           attachments?: string[]
+          payment_handling?: 'platform' | 'offline'
         }
         Update: {
           title?: string
@@ -336,6 +341,7 @@ export type Database = {
           professional_signature_data?: Record<string, unknown> | null
           contract_pdf_url?: string | null
           updated_at?: string
+          payment_handling?: 'platform' | 'offline'
         }
       }
       contract_milestones: {
@@ -384,7 +390,7 @@ export type Database = {
           net_amount: number
           currency: string
           status: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
-          payment_method: 'transfer' | 'card' | 'crypto' | null
+          payment_method: 'transfer' | 'card' | 'crypto' | 'cheque' | 'cash' | null
           stripe_payment_intent_id: string | null
           stripe_transfer_id: string | null
           stripe_charge_id: string | null
@@ -410,15 +416,17 @@ export type Database = {
           net_amount: number
           currency?: string
           status?: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
-          payment_method?: 'transfer' | 'card' | 'crypto' | null
+          payment_method?: 'transfer' | 'card' | 'crypto' | 'cheque' | 'cash' | null
         }
         Update: {
           status?: 'pending' | 'in_escrow' | 'processing' | 'succeeded' | 'released' | 'failed' | 'refunded' | 'disputed' | 'cancelled'
+          payment_method?: 'transfer' | 'card' | 'crypto' | 'cheque' | 'cash' | null
           stripe_payment_intent_id?: string | null
           stripe_transfer_id?: string | null
           released_at?: string | null
           dispute_reason?: string | null
           dispute_details?: string | null
+          metadata?: Record<string, unknown>
           updated_at?: string
         }
       }

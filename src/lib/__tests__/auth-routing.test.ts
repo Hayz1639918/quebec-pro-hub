@@ -35,7 +35,7 @@ describe('getPostAuthRoute', () => {
         is_rbq_verified: false,
         professional_type: 'trade_professional',
       }),
-    ).toBe('/complete-profile');
+    ).toBe('/complete-profile-trade');
   });
 
   it('redirects incomplete entrepreneurs to the entrepreneur completion flow', () => {
