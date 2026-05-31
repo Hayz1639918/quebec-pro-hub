@@ -27,6 +27,12 @@ import { useToast } from "@/hooks/use-toast";
 import type { ContractTemplate } from "@/types/contracts";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
+import {
+  PAYMENT_HANDLING_SELECT_OPTIONS,
+  PaymentHandlingHint,
+  PaymentHandlingPreferenceNotice,
+  type PaymentHandlingMode,
+} from "@/components/payments/PaymentHandlingDisplay";
 
 interface ContractBuilderProps {
   template: ContractTemplate;
@@ -511,24 +517,27 @@ export const ContractBuilder = ({
             )}
 
             <div className="space-y-2">
+              <PaymentHandlingPreferenceNotice
+                preference={projects.find(p => p.id === formData.project_id)?.payment_handling_preference as PaymentHandlingMode | "negotiable" | null | undefined}
+              />
               <Label htmlFor="payment_handling">Modalité de règlement</Label>
               <Select
                 value={formData.payment_handling}
                 onValueChange={(v) => handleInputChange('payment_handling', v)}
               >
-                <SelectTrigger id="payment_handling">
+                <SelectTrigger id="payment_handling" aria-describedby="payment-handling-hint">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="platform">Via la plateforme (paiement en ligne sécurisé)</SelectItem>
-                  <SelectItem value="offline">Hors plateforme (virement / chèque / comptant)</SelectItem>
+                  <SelectItem value="platform">{PAYMENT_HANDLING_SELECT_OPTIONS.platform}</SelectItem>
+                  <SelectItem value="offline">{PAYMENT_HANDLING_SELECT_OPTIONS.offline}</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {formData.payment_handling === 'offline'
-                  ? "Le client règle l'entrepreneur directement ; l'entrepreneur marque chaque paiement comme reçu dans l'app."
-                  : "Les paiements transitent par la plateforme (escrow) et sont libérés à la validation des jalons."}
-              </p>
+              <PaymentHandlingHint
+                id="payment-handling-hint"
+                mode={formData.payment_handling as PaymentHandlingMode}
+                audience="client"
+              />
             </div>
           </CardContent>
         </Card>

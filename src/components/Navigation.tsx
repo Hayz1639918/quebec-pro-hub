@@ -14,7 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search, Banknote } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -329,6 +329,7 @@ const Navigation = () => {
                             <>
                               <MobileNavItem icon={LayoutDashboard} label={t('navigation.dashboard')} onClick={() => navigateTo("/dashboard")} />
                               <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/dashboard/profile")} />
+                              <MobileNavItem icon={Banknote} label="Mes paiements" onClick={() => navigateTo("/dashboard/payments")} />
                             </>
                           )}
                           {profile?.user_type === 'professional' && (

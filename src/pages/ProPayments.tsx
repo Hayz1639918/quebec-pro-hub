@@ -29,9 +29,11 @@ import {
   Inbox,
   TrendingUp,
   Loader2,
+  Info,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
 type PaymentMethod = "card" | "transfer" | "crypto" | "cheque" | "cash";
@@ -54,6 +56,7 @@ interface Payment {
   dispute_details: string | null;
   released_at: string | null;
   created_at: string;
+  contract?: { payment_handling: "platform" | "offline" } | null;
 }
 
 const statusConfig: Record<PaymentStatus, { label: string; tone: string; icon: React.ElementType }> = {
@@ -115,7 +118,7 @@ const ProPayments = () => {
   const fetchPayments = async (uid: string) => {
     const { data, error } = await supabase
       .from("contractor_payments")
-      .select("*")
+      .select("*, contract:contracts!contract_id(payment_handling)")
       .eq("contractor_id", uid)
       .order("created_at", { ascending: false });
     if (error) {
@@ -208,22 +211,17 @@ const ProPayments = () => {
     if (!settlePayment) return;
     setSubmittingSettle(true);
     try {
-      const nowIso = new Date().toISOString();
-      const { error } = await supabase
-        .from("contractor_payments")
-        .update({
-          status: "released",
-          payment_method: settleMethod,
-          released_at: nowIso,
-          metadata: {
-            settled_offline: true,
-            settlement_note: settleNote.trim() || null,
-            settled_at: nowIso,
-          },
-        })
-        .eq("id", settlePayment.id);
+      // La validation (propriétaire, statut 'pending', contrat 'offline') est faite
+      // côté serveur par la RPC SECURITY DEFINER. On ne fait jamais d'UPDATE direct :
+      // la RLS interdit aux entrepreneurs de marquer un paiement 'released' eux-mêmes.
+      const { error } = await supabase.rpc("settle_offline_payment", {
+        payment_id: settlePayment.id,
+        method: settleMethod,
+        note: settleNote.trim() || null,
+      });
       if (error) throw error;
 
+      const nowIso = new Date().toISOString();
       setPayments(prev => prev.map(p =>
         p.id === settlePayment.id
           ? { ...p, status: "released", payment_method: settleMethod, released_at: nowIso }
@@ -284,6 +282,15 @@ const ProPayments = () => {
             Mes factures
           </Button>
         </div>
+
+        <Alert className="mb-6 border-primary/20 bg-primary/5">
+          <Info className="h-4 w-4 text-primary" aria-hidden="true" />
+          <AlertDescription className="text-sm text-foreground">
+            <strong className="font-medium">Via la plateforme :</strong> le client paie en ligne, fonds en escrow jusqu'à validation du jalon.
+            {" "}
+            <strong className="font-medium">Hors plateforme :</strong> le client vous paie directement — utilisez « Marquer comme reçu » une fois le règlement effectué.
+          </AlertDescription>
+        </Alert>
 
         {/* Summary */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
@@ -403,10 +410,10 @@ const ProPayments = () => {
                               )}
                             </div>
                             <div className="flex gap-2">
-                              {payment.status === "pending" && (
+                              {payment.status === "pending" && payment.contract?.payment_handling === "offline" && (
                                 <Button
                                   size="sm"
-                                  className="gap-1"
+                                  className="gap-1 cursor-pointer"
                                   onClick={() => openSettle(payment)}
                                 >
                                   <CheckCircle2 className="h-3 w-3" />
@@ -440,10 +447,16 @@ const ProPayments = () => {
                             </div>
                           )}
 
-                          {payment.status === "pending" && (
+                          {payment.status === "pending" && payment.contract?.payment_handling === "offline" && (
                             <div className="mt-3 p-2 bg-muted border border-border rounded text-xs text-muted-foreground flex items-center gap-2">
-                              <Banknote className="h-3 w-3 shrink-0" />
-                              Réglé directement avec le client (virement, chèque, comptant) ? Cliquez « Marquer comme reçu ».
+                              <Banknote className="h-3 w-3 shrink-0" aria-hidden="true" />
+                              Contrat hors plateforme — enregistrez le règlement une fois reçu du client (virement, chèque, comptant).
+                            </div>
+                          )}
+                          {payment.status === "pending" && payment.contract?.payment_handling === "platform" && (
+                            <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded text-xs text-primary flex items-center gap-2">
+                              <Shield className="h-3 w-3 shrink-0" aria-hidden="true" />
+                              En attente du paiement en ligne du client via BâtirNet.
                             </div>
                           )}
 
@@ -496,9 +509,9 @@ const ProPayments = () => {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Raison de la contestation *</Label>
+              <Label htmlFor="dispute-reason">Raison de la contestation *</Label>
               <Select value={disputeReason} onValueChange={(v) => setDisputeReason(v as DisputeReason)}>
-                <SelectTrigger>
+                <SelectTrigger id="dispute-reason">
                   <SelectValue placeholder="Sélectionnez une raison" />
                 </SelectTrigger>
                 <SelectContent>
@@ -511,13 +524,17 @@ const ProPayments = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Description détaillée * <span className="text-xs text-muted-foreground">(20 caractères minimum)</span></Label>
+              <Label htmlFor="dispute-details">
+                Description détaillée * <span className="text-xs text-muted-foreground">(20 caractères minimum)</span>
+              </Label>
               <Textarea
+                id="dispute-details"
                 value={disputeDetails}
                 onChange={e => setDisputeDetails(e.target.value)}
                 placeholder="Décrivez le problème en détail, dates, échanges, preuves..."
                 rows={4}
                 maxLength={2000}
+                aria-required="true"
               />
               <p className="text-xs text-muted-foreground text-right">{disputeDetails.length} / 2000</p>
             </div>
@@ -553,9 +570,9 @@ const ProPayments = () => {
               Stripe. BâtirNet enregistre le règlement et marque la facture comme payée.
             </div>
             <div className="space-y-2">
-              <Label>Mode de règlement *</Label>
+              <Label htmlFor="settle-method">Mode de règlement *</Label>
               <Select value={settleMethod} onValueChange={(v) => setSettleMethod(v as OfflineMethod)}>
-                <SelectTrigger>
+                <SelectTrigger id="settle-method">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -566,8 +583,11 @@ const ProPayments = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Note (facultatif) <span className="text-xs text-muted-foreground">— n° de chèque, référence virement…</span></Label>
+              <Label htmlFor="settle-note">
+                Note (facultatif) <span className="text-xs text-muted-foreground">— n° de chèque, référence virement…</span>
+              </Label>
               <Textarea
+                id="settle-note"
                 value={settleNote}
                 onChange={e => setSettleNote(e.target.value)}
                 placeholder="Ex. Chèque n°142, encaissé le 12 juin"

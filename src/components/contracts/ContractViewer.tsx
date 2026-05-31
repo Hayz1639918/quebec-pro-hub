@@ -36,6 +36,11 @@ import { Button as UIButton } from "@/components/ui/button";
 import { DisputeForm } from "@/components/disputes/DisputeForm";
 import { DisputesList } from "@/components/disputes/DisputesList";
 import { AlertTriangle } from "lucide-react";
+import {
+  PaymentHandlingBadge,
+  PaymentHandlingHint,
+  type PaymentHandlingMode,
+} from "@/components/payments/PaymentHandlingDisplay";
 
 interface ContractViewerProps {
   contractId: string;
@@ -671,24 +676,18 @@ export const ContractViewer = ({
         <CardContent className="py-4">
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-primary" />
+              <DollarSign className="h-5 w-5 text-primary" aria-hidden="true" />
               <span className="font-medium">Modalité de règlement</span>
             </div>
-            {contract.payment_handling === 'offline' ? (
-              <Badge className="bg-muted text-foreground">
-                Hors plateforme — virement / chèque / comptant
-              </Badge>
-            ) : (
-              <Badge className="bg-primary/10 text-primary">
-                Via la plateforme — paiement en ligne sécurisé
-              </Badge>
-            )}
+            <PaymentHandlingBadge
+              mode={(contract.payment_handling === "offline" ? "offline" : "platform") as PaymentHandlingMode}
+            />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {contract.payment_handling === 'offline'
-              ? "Le client règle l'entrepreneur directement. L'entrepreneur confirme chaque paiement reçu dans l'espace Paiements."
-              : "Les paiements transitent par la plateforme et sont libérés à la validation des jalons."}
-          </p>
+          <PaymentHandlingHint
+            className="mt-2"
+            mode={(contract.payment_handling === "offline" ? "offline" : "platform") as PaymentHandlingMode}
+            audience="neutral"
+          />
         </CardContent>
       </Card>
 

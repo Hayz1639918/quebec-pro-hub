@@ -42,6 +42,8 @@ import {
   Scale,
   FileCheck,
   ShieldCheck,
+  Shield,
+  Banknote,
   Settings,
   Paperclip,
   AlertTriangle,
@@ -736,35 +738,64 @@ const NewProject = () => {
                 </div>
 
                 {/* Modalité de règlement préférée */}
-                <div className="space-y-3">
-                  <Label>Modalité de règlement préférée</Label>
-                  <p className="text-xs text-muted-foreground">
+                <fieldset className="space-y-3">
+                  <legend className="text-sm font-medium leading-none">Modalité de règlement préférée</legend>
+                  <p id="ph-help" className="text-xs text-muted-foreground">
                     Comment souhaitez-vous régler l'entrepreneur ? Ce choix sera confirmé dans le contrat signé par les deux parties.
                   </p>
-                  <RadioGroup value={paymentHandling} onValueChange={(v) => setPaymentHandling(v as typeof paymentHandling)} className="space-y-2">
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                  <RadioGroup
+                    value={paymentHandling}
+                    onValueChange={(v) => setPaymentHandling(v as typeof paymentHandling)}
+                    className="space-y-2"
+                    aria-describedby="ph-help"
+                  >
+                    <div
+                      className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors duration-200 ${
+                        paymentHandling === "platform" ? "border-primary/50 bg-primary/5" : "border-border"
+                      }`}
+                    >
                       <RadioGroupItem value="platform" id="ph-platform" />
                       <Label htmlFor="ph-platform" className="cursor-pointer font-normal flex-1">
-                        <span className="font-medium">Via la plateforme</span>
-                        <span className="block text-xs text-muted-foreground">Paiement en ligne sécurisé, fonds protégés jusqu'à validation</span>
+                        <span className="font-medium flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary shrink-0" aria-hidden="true" />
+                          Via la plateforme
+                        </span>
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          Paiement en ligne sécurisé, fonds protégés jusqu'à validation
+                        </span>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div
+                      className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors duration-200 ${
+                        paymentHandling === "offline" ? "border-primary/50 bg-primary/5" : "border-border"
+                      }`}
+                    >
                       <RadioGroupItem value="offline" id="ph-offline" />
                       <Label htmlFor="ph-offline" className="cursor-pointer font-normal flex-1">
-                        <span className="font-medium">Hors plateforme</span>
-                        <span className="block text-xs text-muted-foreground">Virement, chèque ou comptant directement avec l'entrepreneur</span>
+                        <span className="font-medium flex items-center gap-2">
+                          <Banknote className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden="true" />
+                          Hors plateforme
+                        </span>
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          Virement, chèque ou comptant directement avec l'entrepreneur
+                        </span>
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                    <div
+                      className={`flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors duration-200 ${
+                        paymentHandling === "negotiable" ? "border-primary/50 bg-primary/5" : "border-border"
+                      }`}
+                    >
                       <RadioGroupItem value="negotiable" id="ph-negotiable" />
                       <Label htmlFor="ph-negotiable" className="cursor-pointer font-normal flex-1">
                         <span className="font-medium">À discuter</span>
-                        <span className="block text-xs text-muted-foreground">À convenir avec l'entrepreneur retenu</span>
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          À convenir avec l'entrepreneur retenu
+                        </span>
                       </Label>
                     </div>
                   </RadioGroup>
-                </div>
+                </fieldset>
               </CardContent>
             </Card>
 

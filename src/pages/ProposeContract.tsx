@@ -15,6 +15,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { Loader2, FileText, User, Building2, Calendar, DollarSign, Eye } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import {
+  PAYMENT_HANDLING_SELECT_OPTIONS,
+  PaymentHandlingHint,
+  PaymentHandlingPreferenceNotice,
+  type PaymentHandlingMode,
+  type PaymentHandlingPreference,
+} from '@/components/payments/PaymentHandlingDisplay';
 
 type Template = { id: string; name: string; description: string | null; template_content: string; variables?: Record<string, unknown> };
 type Project = { id: string; title: string; description: string; client_id: string; assigned_professional_id?: string | null; payment_handling_preference?: string | null };
@@ -886,22 +893,25 @@ const ProposeContract = () => {
                           </p>
                         )}
                       </div>
-                      <div className="space-y-2">
-                        <Label>Modalité de règlement</Label>
+                      <div className="space-y-2 md:col-span-1">
+                        <PaymentHandlingPreferenceNotice
+                          preference={selectedProject?.payment_handling_preference as PaymentHandlingPreference | null | undefined}
+                        />
+                        <Label htmlFor="proposal-payment-handling">Modalité de règlement</Label>
                         <Select value={form.payment_handling} onValueChange={v => updateForm('payment_handling', v)}>
-                          <SelectTrigger>
+                          <SelectTrigger id="proposal-payment-handling" aria-describedby="proposal-payment-handling-hint">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="platform">Via la plateforme (en ligne)</SelectItem>
-                            <SelectItem value="offline">Hors plateforme (virement/chèque/comptant)</SelectItem>
+                            <SelectItem value="platform">{PAYMENT_HANDLING_SELECT_OPTIONS.platform}</SelectItem>
+                            <SelectItem value="offline">{PAYMENT_HANDLING_SELECT_OPTIONS.offline}</SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground">
-                          {form.payment_handling === 'offline'
-                            ? "Vous marquerez chaque paiement reçu dans l'app."
-                            : "Paiements via la plateforme (escrow sécurisé)."}
-                        </p>
+                        <PaymentHandlingHint
+                          id="proposal-payment-handling-hint"
+                          mode={form.payment_handling as PaymentHandlingMode}
+                          audience="pro"
+                        />
                       </div>
                     </div>
                     

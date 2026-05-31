@@ -51,6 +51,8 @@ const ProBankAccount = lazy(() => import("./pages/ProBankAccount"));
 const ProMeetings = lazy(() => import("./pages/ProMeetings"));
 const ProPayments = lazy(() => import("./pages/ProPayments"));
 const ProInvoices = lazy(() => import("./pages/ProInvoices"));
+const ClientPayments = lazy(() => import("./pages/ClientPayments"));
+const ClientPayments = lazy(() => import("./pages/ClientPayments"));
 
 const queryClient = new QueryClient();
 
@@ -108,6 +110,7 @@ const App = () => (
                 <Route path="/pro/invoices" element={<ProInvoices />} />
               </Route>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/payments" element={<ClientPayments />} />
               <Route path="/dashboard/profile" element={<ClientProfile />} />
               <Route path="/dashboard/new-project" element={<NewProject />} />
               <Route path="/edit-project/:id" element={<EditProject />} />
