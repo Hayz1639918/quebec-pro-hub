@@ -666,6 +666,32 @@ export const ContractViewer = ({
         </CardContent>
       </Card>
 
+      {/* Modalité de règlement */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-primary" />
+              <span className="font-medium">Modalité de règlement</span>
+            </div>
+            {contract.payment_handling === 'offline' ? (
+              <Badge className="bg-muted text-foreground">
+                Hors plateforme — virement / chèque / comptant
+              </Badge>
+            ) : (
+              <Badge className="bg-primary/10 text-primary">
+                Via la plateforme — paiement en ligne sécurisé
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {contract.payment_handling === 'offline'
+              ? "Le client règle l'entrepreneur directement. L'entrepreneur confirme chaque paiement reçu dans l'espace Paiements."
+              : "Les paiements transitent par la plateforme et sont libérés à la validation des jalons."}
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Milestones */}
       {milestones.length > 0 && (
         <Card>

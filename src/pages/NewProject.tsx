@@ -180,6 +180,7 @@ const NewProject = () => {
 
   // Mode de paiement (US-014)
   const [paymentMode, setPaymentMode] = useState<"full" | "milestones" | "negotiable">("negotiable");
+  const [paymentHandling, setPaymentHandling] = useState<"platform" | "offline" | "negotiable">("negotiable");
   const [budgetRange, setBudgetRange] = useState<[number, number]>([0, 100000]);
   const [useBudgetSlider, setUseBudgetSlider] = useState(false);
 
@@ -439,6 +440,7 @@ const NewProject = () => {
           required_certifications: Object.entries(requiredCertifications).filter(([, v]) => v).map(([k]) => k),
           // Mode de paiement (US-014)
           payment_mode: paymentMode,
+          payment_handling_preference: paymentHandling,
           status: 'open',
         })
         .select()
@@ -728,6 +730,37 @@ const NewProject = () => {
                       <Label htmlFor="pm-negotiable" className="cursor-pointer font-normal flex-1">
                         <span className="font-medium">Négociable</span>
                         <span className="block text-xs text-muted-foreground">À définir avec l'entrepreneur retenu</span>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {/* Modalité de règlement préférée */}
+                <div className="space-y-3">
+                  <Label>Modalité de règlement préférée</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Comment souhaitez-vous régler l'entrepreneur ? Ce choix sera confirmé dans le contrat signé par les deux parties.
+                  </p>
+                  <RadioGroup value={paymentHandling} onValueChange={(v) => setPaymentHandling(v as typeof paymentHandling)} className="space-y-2">
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="platform" id="ph-platform" />
+                      <Label htmlFor="ph-platform" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Via la plateforme</span>
+                        <span className="block text-xs text-muted-foreground">Paiement en ligne sécurisé, fonds protégés jusqu'à validation</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="offline" id="ph-offline" />
+                      <Label htmlFor="ph-offline" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">Hors plateforme</span>
+                        <span className="block text-xs text-muted-foreground">Virement, chèque ou comptant directement avec l'entrepreneur</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer">
+                      <RadioGroupItem value="negotiable" id="ph-negotiable" />
+                      <Label htmlFor="ph-negotiable" className="cursor-pointer font-normal flex-1">
+                        <span className="font-medium">À discuter</span>
+                        <span className="block text-xs text-muted-foreground">À convenir avec l'entrepreneur retenu</span>
                       </Label>
                     </div>
                   </RadioGroup>

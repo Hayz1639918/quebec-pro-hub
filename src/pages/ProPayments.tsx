@@ -34,7 +34,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
 type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
-type PaymentMethod = "card" | "transfer" | "crypto";
+type PaymentMethod = "card" | "transfer" | "crypto" | "cheque" | "cash";
+type OfflineMethod = "transfer" | "cheque" | "cash";
 type DisputeReason = "non_payment" | "partial" | "wrong_amount" | "milestone_rejected" | "other";
 
 interface Payment {
@@ -67,7 +68,15 @@ const methodMeta: Record<PaymentMethod, { label: string; icon: React.ElementType
   card:     { label: "Carte",    icon: CreditCard },
   transfer: { label: "Virement", icon: Building2 },
   crypto:   { label: "Crypto",   icon: Banknote },
+  cheque:   { label: "Chèque",   icon: FileText },
+  cash:     { label: "Comptant", icon: Banknote },
 };
+
+const offlineMethodOptions: { value: OfflineMethod; label: string }[] = [
+  { value: "transfer", label: "Virement bancaire" },
+  { value: "cheque",   label: "Chèque" },
+  { value: "cash",     label: "Comptant" },
+];
 
 // Maps a payment dispute reason to a dispute category (matches enum in 065)
 const reasonToCategory: Record<DisputeReason, "payment" | "quality" | "delay" | "communication" | "other"> = {
@@ -88,6 +97,11 @@ const ProPayments = () => {
   const [disputeReason, setDisputeReason] = useState<DisputeReason | "">("");
   const [disputeDetails, setDisputeDetails] = useState("");
   const [submittingDispute, setSubmittingDispute] = useState(false);
+  const [settleOpen, setSettleOpen] = useState(false);
+  const [settlePayment, setSettlePayment] = useState<Payment | null>(null);
+  const [settleMethod, setSettleMethod] = useState<OfflineMethod>("transfer");
+  const [settleNote, setSettleNote] = useState("");
+  const [submittingSettle, setSubmittingSettle] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -178,6 +192,54 @@ const ProPayments = () => {
   const openDispute = (p: Payment) => {
     setDisputePayment(p);
     setDisputeOpen(true);
+  };
+
+  const openSettle = (p: Payment) => {
+    setSettlePayment(p);
+    setSettleMethod("transfer");
+    setSettleNote("");
+    setSettleOpen(true);
+  };
+
+  // Règlement hors plateforme : le client a payé directement (virement, chèque,
+  // comptant). On enregistre le règlement sans passer par Stripe. Le trigger
+  // 078 marque la facture liée comme payée.
+  const handleSettleOffline = async () => {
+    if (!settlePayment) return;
+    setSubmittingSettle(true);
+    try {
+      const nowIso = new Date().toISOString();
+      const { error } = await supabase
+        .from("contractor_payments")
+        .update({
+          status: "released",
+          payment_method: settleMethod,
+          released_at: nowIso,
+          metadata: {
+            settled_offline: true,
+            settlement_note: settleNote.trim() || null,
+            settled_at: nowIso,
+          },
+        })
+        .eq("id", settlePayment.id);
+      if (error) throw error;
+
+      setPayments(prev => prev.map(p =>
+        p.id === settlePayment.id
+          ? { ...p, status: "released", payment_method: settleMethod, released_at: nowIso }
+          : p
+      ));
+      setSettleOpen(false);
+      toast({
+        title: "Paiement enregistré",
+        description: `Règlement « ${methodMeta[settleMethod].label} » enregistré hors plateforme. La facture est marquée payée.`,
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Impossible d'enregistrer le règlement";
+      toast({ variant: "destructive", title: "Erreur", description: msg });
+    } finally {
+      setSubmittingSettle(false);
+    }
   };
 
   if (loading) {
@@ -341,6 +403,16 @@ const ProPayments = () => {
                               )}
                             </div>
                             <div className="flex gap-2">
+                              {payment.status === "pending" && (
+                                <Button
+                                  size="sm"
+                                  className="gap-1"
+                                  onClick={() => openSettle(payment)}
+                                >
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Marquer comme reçu
+                                </Button>
+                              )}
                               {payment.status === "in_escrow" && (
                                 <Button
                                   size="sm"
@@ -365,6 +437,13 @@ const ProPayments = () => {
                             <div className="mt-3 p-2 bg-primary/5 border border-primary/20 rounded text-xs text-primary flex items-center gap-2">
                               <Shield className="h-3 w-3 shrink-0" />
                               Fonds sécurisés en escrow — en attente de validation par {payment.client_name}
+                            </div>
+                          )}
+
+                          {payment.status === "pending" && (
+                            <div className="mt-3 p-2 bg-muted border border-border rounded text-xs text-muted-foreground flex items-center gap-2">
+                              <Banknote className="h-3 w-3 shrink-0" />
+                              Réglé directement avec le client (virement, chèque, comptant) ? Cliquez « Marquer comme reçu ».
                             </div>
                           )}
 
@@ -452,6 +531,56 @@ const ProPayments = () => {
             <Button variant="destructive" onClick={handleDispute} disabled={submittingDispute} className="gap-2">
               {submittingDispute ? <Loader2 className="h-4 w-4 animate-spin" /> : <Flag className="h-4 w-4" />}
               Soumettre la contestation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={settleOpen} onOpenChange={setSettleOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-success">
+              <CheckCircle2 className="h-5 w-5" />
+              Marquer comme reçu (hors plateforme)
+            </DialogTitle>
+            <DialogDescription>
+              {settlePayment && `Jalon « ${settlePayment.milestone} » — ${Number(settlePayment.amount).toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="p-3 bg-muted border border-border rounded text-xs text-muted-foreground">
+              Utilisez ceci si le client vous a payé directement, sans passer par
+              Stripe. BâtirNet enregistre le règlement et marque la facture comme payée.
+            </div>
+            <div className="space-y-2">
+              <Label>Mode de règlement *</Label>
+              <Select value={settleMethod} onValueChange={(v) => setSettleMethod(v as OfflineMethod)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {offlineMethodOptions.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Note (facultatif) <span className="text-xs text-muted-foreground">— n° de chèque, référence virement…</span></Label>
+              <Textarea
+                value={settleNote}
+                onChange={e => setSettleNote(e.target.value)}
+                placeholder="Ex. Chèque n°142, encaissé le 12 juin"
+                rows={2}
+                maxLength={500}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettleOpen(false)}>Annuler</Button>
+            <Button onClick={handleSettleOffline} disabled={submittingSettle} className="gap-2">
+              {submittingSettle ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              Confirmer le règlement
             </Button>
           </DialogFooter>
         </DialogContent>

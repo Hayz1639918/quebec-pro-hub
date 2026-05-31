@@ -48,6 +48,7 @@ interface Project {
   title: string;
   description: string;
   address: string;
+  payment_handling_preference?: string | null;
 }
 
 interface MilestoneRow {
@@ -88,7 +89,8 @@ export const ContractBuilder = ({
     start_date: '',
     end_date: '',
     warranty_period_months: '12',
-    special_conditions: ''
+    special_conditions: '',
+    payment_handling: 'platform'
   });
 
   // Milestones
@@ -130,6 +132,15 @@ export const ContractBuilder = ({
     fetchProjects();
   }, [userId]);
 
+  // Pré-remplir la modalité de règlement à partir de la préférence du projet
+  useEffect(() => {
+    if (!formData.project_id) return;
+    const pref = projects.find(p => p.id === formData.project_id)?.payment_handling_preference;
+    if (pref === 'platform' || pref === 'offline') {
+      setFormData(prev => ({ ...prev, payment_handling: pref }));
+    }
+  }, [formData.project_id, projects]);
+
   const fetchClientProfile = async () => {
     try {
       const { data, error } = await supabase
@@ -164,7 +175,7 @@ export const ContractBuilder = ({
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, description, address')
+        .select('id, title, description, address, payment_handling_preference')
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
@@ -210,7 +221,9 @@ export const ContractBuilder = ({
       total_amount: formData.total_amount || '0',
       deposit_percentage: formData.deposit_percentage || '0',
       deposit_amount: (parseFloat(formData.total_amount || '0') * parseFloat(formData.deposit_percentage || '0') / 100).toFixed(2),
-      payment_terms: 'Paiement par jalons selon avancement des travaux',
+      payment_terms: formData.payment_handling === 'offline'
+        ? 'Règlement hors plateforme (virement, chèque ou comptant) directement entre le client et l\'entrepreneur, selon l\'avancement des travaux'
+        : 'Paiement via la plateforme (escrow sécurisé), libéré selon l\'avancement des travaux et la validation des jalons',
       warranty_period: formData.warranty_period_months || '12',
       special_conditions: formData.special_conditions || 'Aucune condition spéciale',
       signature_date: format(new Date(), 'yyyy-MM-dd'),
@@ -303,6 +316,7 @@ export const ContractBuilder = ({
           end_date: formData.end_date || null,
           warranty_period_months: parseInt(formData.warranty_period_months),
           special_conditions: formData.special_conditions || null,
+          payment_handling: formData.payment_handling,
           status: 'draft'
         })
         .select()
@@ -495,6 +509,27 @@ export const ContractBuilder = ({
                 </p>
               </div>
             )}
+
+            <div className="space-y-2">
+              <Label htmlFor="payment_handling">Modalité de règlement</Label>
+              <Select
+                value={formData.payment_handling}
+                onValueChange={(v) => handleInputChange('payment_handling', v)}
+              >
+                <SelectTrigger id="payment_handling">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="platform">Via la plateforme (paiement en ligne sécurisé)</SelectItem>
+                  <SelectItem value="offline">Hors plateforme (virement / chèque / comptant)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {formData.payment_handling === 'offline'
+                  ? "Le client règle l'entrepreneur directement ; l'entrepreneur marque chaque paiement comme reçu dans l'app."
+                  : "Les paiements transitent par la plateforme (escrow) et sont libérés à la validation des jalons."}
+              </p>
+            </div>
           </CardContent>
         </Card>
 

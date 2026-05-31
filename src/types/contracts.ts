@@ -65,6 +65,7 @@ export interface Contract {
   currency: string;
   payment_schedule: PaymentMilestone[];
   deposit_percentage: number;
+  payment_handling?: 'platform' | 'offline';
   
   // Timeline
   start_date: string | null;

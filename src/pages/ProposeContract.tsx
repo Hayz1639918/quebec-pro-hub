@@ -17,7 +17,7 @@ import { Loader2, FileText, User, Building2, Calendar, DollarSign, Eye } from 'l
 import DOMPurify from 'dompurify';
 
 type Template = { id: string; name: string; description: string | null; template_content: string; variables?: Record<string, unknown> };
-type Project = { id: string; title: string; description: string; client_id: string; assigned_professional_id?: string | null };
+type Project = { id: string; title: string; description: string; client_id: string; assigned_professional_id?: string | null; payment_handling_preference?: string | null };
 
 const ProposeContract = () => {
   const navigate = useNavigate();
@@ -63,6 +63,7 @@ const ProposeContract = () => {
     // Financial
     total_amount: '',
     deposit_percentage: '10',
+    payment_handling: 'platform',
     
     // Dates
     start_date: '',
@@ -142,11 +143,13 @@ const ProposeContract = () => {
   useEffect(() => {
     if (selectedProject) {
       loadClientInfo(selectedProject.client_id);
+      const pref = selectedProject.payment_handling_preference;
       setForm(f => ({
         ...f,
         project_title: selectedProject.title,
         project_description: selectedProject.description || '',
         title: `Contrat - ${selectedProject.title}`,
+        payment_handling: pref === 'platform' || pref === 'offline' ? pref : f.payment_handling,
       }));
     }
   }, [selectedProject]);
@@ -183,7 +186,7 @@ const ProposeContract = () => {
   const fetchProjects = async (uid: string) => {
     const { data } = await supabase
       .from('projects')
-      .select('id,title,description,client_id,assigned_professional_id')
+      .select('id,title,description,client_id,assigned_professional_id,payment_handling_preference')
       .or(`status.eq.open,and(status.eq.in_progress,assigned_professional_id.eq.${uid})`)
       .order('created_at', { ascending: false });
     setProjects(data || []);
@@ -356,6 +359,7 @@ const ProposeContract = () => {
             deposit_percentage: Number(form.deposit_percentage || '0'),
             start_date: form.start_date || null,
             end_date: form.end_date || null,
+            payment_handling: form.payment_handling,
             status: 'draft',
           })
           .select()
@@ -385,6 +389,7 @@ const ProposeContract = () => {
           deposit_percentage: Number(form.deposit_percentage || '0'),
           start_date: form.start_date || null,
           end_date: form.end_date || null,
+          payment_handling: form.payment_handling,
           status: 'pending',
         });
         
@@ -880,6 +885,23 @@ const ProposeContract = () => {
                             = {(parseFloat(form.total_amount) * parseFloat(form.deposit_percentage) / 100).toLocaleString('fr-CA', { minimumFractionDigits: 2 })} $
                           </p>
                         )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Modalité de règlement</Label>
+                        <Select value={form.payment_handling} onValueChange={v => updateForm('payment_handling', v)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="platform">Via la plateforme (en ligne)</SelectItem>
+                            <SelectItem value="offline">Hors plateforme (virement/chèque/comptant)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground">
+                          {form.payment_handling === 'offline'
+                            ? "Vous marquerez chaque paiement reçu dans l'app."
+                            : "Paiements via la plateforme (escrow sécurisé)."}
+                        </p>
                       </div>
                     </div>
                     
