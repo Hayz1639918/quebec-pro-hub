@@ -47,9 +47,10 @@ interface ProfessionalProfile {
   insurance_info: string | null;
   is_rbq_verified: boolean;
   created_at: string;
-  bio?: string;
+  bio?: string | null;
   city?: string;
   region?: string;
+  profile_picture_url?: string | null;
 }
 
 interface PortfolioItem {
@@ -67,10 +68,21 @@ interface Review {
   rating: number;
   comment: string | null;
   created_at: string;
+  quality_rating?: number | null;
+  punctuality_rating?: number | null;
+  communication_rating?: number | null;
+  value_rating?: number | null;
   client_name?: string;
   project_title?: string;
   pro_reply?: { content: string; created_at: string } | null;
 }
+
+const REVIEW_CRITERIA: { key: keyof Review; label: string }[] = [
+  { key: "quality_rating", label: "Qualité" },
+  { key: "punctuality_rating", label: "Ponctualité" },
+  { key: "communication_rating", label: "Communication" },
+  { key: "value_rating", label: "Rapport qualité-prix" },
+];
 
 interface PublicCertification {
   id: string;
@@ -209,7 +221,7 @@ const ProfessionalProfile = () => {
     try {
       const { data } = await supabase
         .from('reviews')
-        .select('id, client_id, rating, comment, created_at, project_id')
+        .select('id, client_id, rating, comment, created_at, project_id, quality_rating, punctuality_rating, communication_rating, value_rating')
         .eq('professional_id', id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -280,15 +292,21 @@ const ProfessionalProfile = () => {
     if (!reportingReview || !currentUserId) return;
     setSubmittingReport(true);
     try {
-      // Store report as a notification to admin (fallback mechanism)
-      await supabase.from('notifications').insert({
-        user_id: currentUserId,
-        type: 'review_report',
-        title: 'Avis signalé',
-        message: `Avis #${reportingReview.id} signalé : ${reportReason}${reportDetail ? ` — ${reportDetail}` : ''}`,
-        metadata: { review_id: reportingReview.id, reason: reportReason, detail: reportDetail },
+      const { error } = await (supabase as any).from('review_reports').insert({
+        review_id: reportingReview.id,
+        reporter_id: currentUserId,
+        reason: reportReason,
+        detail: reportDetail.trim() || null,
       });
-      toast.success('Avis signalé. Notre équipe de modération va l\'examiner.');
+      if (error) {
+        if (error.code === '23505') {
+          toast.info('Vous avez déjà signalé cet avis. Notre équipe l\'examine.');
+        } else {
+          throw error;
+        }
+      } else {
+        toast.success('Avis signalé. Notre équipe de modération va l\'examiner.');
+      }
       setReportDialogOpen(false);
       setReportDetail('');
     } catch {
@@ -418,7 +436,7 @@ const ProfessionalProfile = () => {
               {/* Avatar */}
               <div className="flex-shrink-0">
                 <Avatar className="h-32 w-32">
-                  <AvatarImage src="" alt={profile.full_name} />
+                  <AvatarImage src={profile.profile_picture_url || undefined} alt={profile.full_name} />
                   <AvatarFallback className="text-3xl bg-blue-100 text-blue-600">
                     {getInitials(profile.full_name)}
                   </AvatarFallback>
@@ -498,6 +516,21 @@ const ProfessionalProfile = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Colonne principale */}
           <div className="lg:col-span-2 space-y-6">
+            {/* À propos (bio) */}
+            {profile.bio && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    À propos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Services offerts */}
             {profile.services_offered && (
               <Card>
@@ -697,6 +730,23 @@ const ProfessionalProfile = () => {
                             </div>
                             {review.comment && (
                               <p className="text-sm text-gray-700">{review.comment}</p>
+                            )}
+                            {REVIEW_CRITERIA.some((c) => review[c.key]) && (
+                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                {REVIEW_CRITERIA.map((c) => {
+                                  const val = review[c.key] as number | null | undefined;
+                                  if (!val) return null;
+                                  return (
+                                    <span key={String(c.key)} className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      {c.label}
+                                      <span className="flex items-center gap-0.5 font-medium text-foreground">
+                                        <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
+                                        {val}
+                                      </span>
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             )}
                             {review.pro_reply && (
                               <div className="mt-3 pl-3 border-l-2 border-primary/40 bg-primary/5 rounded-r-md py-2 pr-3">

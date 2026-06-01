@@ -333,6 +333,12 @@
       "export_pdf": "Export PDF",
       "no_projects": "Aucun projet",
       "create_first": "Créez votre premier projet pour commencer",
+      "search_placeholder": "Rechercher par titre ou catégorie...",
+      "filter_all": "Tous",
+      "filter_open": "Ouverts",
+      "filter_in_progress": "En cours",
+      "filter_completed": "Terminés",
+      "no_results": "Aucun projet ne correspond à votre recherche.",
       "status": {
         "open": "Ouvert",
         "in_progress": "En cours",

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -149,6 +150,39 @@ const ProjectDetails = () => {
     company_name: string | null;
   }>>([]);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [milestones, setMilestones] = useState<Array<{
+    id: string;
+    title: string;
+    amount: number;
+    status: string;
+    due_date: string | null;
+  }>>([]);
+
+  // US-044: accepter / refuser une proposition directement depuis la fiche projet
+  const [processingProposalId, setProcessingProposalId] = useState<string | null>(null);
+
+  const handleProposalAction = async (proposalId: string, action: 'accept' | 'reject') => {
+    setProcessingProposalId(proposalId);
+    try {
+      const { error } = await supabase.rpc(
+        action === 'accept' ? 'accept_proposal' : 'reject_proposal',
+        { proposal_uuid: proposalId }
+      );
+      if (error) throw error;
+      if (action === 'accept') {
+        toast.success('Proposition acceptée', {
+          description: "Le projet passe en cours. L'entrepreneur peut maintenant préparer le contrat.",
+        });
+      } else {
+        toast.success('Proposition refusée');
+      }
+      await Promise.all([fetchProjectDetails(), fetchProjectDocuments()]);
+    } catch (err: any) {
+      toast.error("Erreur lors de la mise à jour", { description: err?.message || 'Erreur inconnue' });
+    } finally {
+      setProcessingProposalId(null);
+    }
+  };
 
   // US-038 + US-039: Marquer comme terminé + recommandations
   const [markingComplete, setMarkingComplete] = useState(false);
@@ -290,6 +324,14 @@ const ProjectDetails = () => {
             company_name: (contractData.profiles as any)?.company_name || null,
           });
         }
+
+        // US-045 — jalons pour la timeline d'avancement
+        const { data: msData } = await supabase
+          .from('contract_milestones')
+          .select('id, title, amount, status, due_date')
+          .eq('contract_id', project.contract_id)
+          .order('created_at', { ascending: true });
+        if (msData) setMilestones(msData);
       }
 
       // Fetch all proposals (for project owner's Documents tab)
@@ -648,6 +690,74 @@ const ProjectDetails = () => {
                   </div>
                 </div>
 
+                {/* US-045 — Avancement global + timeline des jalons */}
+                {(project.status === 'in_progress' || project.status === 'completed') && (
+                  (() => {
+                    const paidLike = milestones.filter(m => m.status === 'approved' || m.status === 'paid').length;
+                    const derived = milestones.length > 0
+                      ? Math.round((paidLike / milestones.length) * 100)
+                      : 0;
+                    const pct = project.status === 'completed'
+                      ? 100
+                      : (typeof project.progress_percentage === 'number' && project.progress_percentage > 0
+                          ? project.progress_percentage
+                          : derived);
+                    const msMeta: Record<string, { label: string; dot: string; text: string }> = {
+                      pending:   { label: 'À venir',    dot: 'bg-gray-300',   text: 'text-muted-foreground' },
+                      requested: { label: 'Demandé',    dot: 'bg-yellow-400', text: 'text-yellow-700' },
+                      approved:  { label: 'Approuvé',   dot: 'bg-green-500',  text: 'text-green-700' },
+                      paid:      { label: 'Payé',       dot: 'bg-green-600',  text: 'text-green-700' },
+                      rejected:  { label: 'À revoir',   dot: 'bg-red-400',    text: 'text-red-700' },
+                    };
+                    return (
+                      <>
+                        <Separator />
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold flex items-center gap-2">
+                              <ClipboardList className="h-4 w-4" />
+                              Avancement
+                            </h3>
+                            <span className="text-sm font-medium">{pct}%</span>
+                          </div>
+                          <Progress value={pct} className="h-2" />
+                          {project.current_phase && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Phase actuelle : <span className="font-medium text-foreground">{project.current_phase}</span>
+                            </p>
+                          )}
+
+                          {milestones.length > 0 && (
+                            <div className="mt-4 relative pl-4">
+                              <div className="absolute left-[7px] top-1 bottom-1 w-px bg-border" />
+                              <div className="space-y-3">
+                                {milestones.map((m) => {
+                                  const meta = msMeta[m.status] || msMeta.pending;
+                                  return (
+                                    <div key={m.id} className="relative flex items-start gap-3">
+                                      <span className={`relative z-10 mt-1 h-2.5 w-2.5 rounded-full ${meta.dot} ring-2 ring-background shrink-0`} />
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                          <p className="text-sm font-medium">{m.title}</p>
+                                          <span className={`text-xs font-medium ${meta.text}`}>{meta.label}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                          <span>{Number(m.amount).toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</span>
+                                          {m.due_date && <span>· échéance {format(new Date(m.due_date), 'dd MMM yyyy', { locale: fr })}</span>}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()
+                )}
+
                 {/* Section Pièces jointes */}
                 {projectImages.length > 0 && (
                   <>
@@ -892,6 +1002,29 @@ const ProjectDetails = () => {
                                   <Eye className="h-3.5 w-3.5 mr-1.5" />
                                   Voir les détails
                                 </Button>
+                                {proposal.status === 'pending' && project.status === 'open' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      disabled={processingProposalId === proposal.id}
+                                      onClick={() => handleProposalAction(proposal.id, 'accept')}
+                                    >
+                                      <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                                      Accepter
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-destructive border-destructive/40 hover:bg-destructive/10"
+                                      disabled={processingProposalId === proposal.id}
+                                      onClick={() => handleProposalAction(proposal.id, 'reject')}
+                                    >
+                                      <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                                      Refuser
+                                    </Button>
+                                  </>
+                                )}
                                 {proposal.status === 'accepted' && (
                                   <Button
                                     size="sm"
@@ -1200,6 +1333,58 @@ const ProjectDetails = () => {
               Merci d'avoir utilisé BâtirNet. Voici quelques professionnels recommandés pour votre prochain projet dans la même catégorie.
             </DialogDescription>
           </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 py-1">
+            {(project.assigned_professional_id || acceptedProposal) && (
+              <Button
+                variant="outline"
+                className="h-auto py-3 flex-col gap-1.5"
+                onClick={() => {
+                  setShowRecommendations(false);
+                  if (project.assigned_professional_id) navigate(`/professional/${project.assigned_professional_id}`);
+                }}
+              >
+                <ThumbsUp className="h-5 w-5 text-green-600" />
+                <span className="text-xs font-medium">Réembaucher</span>
+                <span className="text-[10px] text-muted-foreground line-clamp-1">
+                  {acceptedProposal?.company_name || acceptedProposal?.professional_name || 'cet entrepreneur'}
+                </span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex-col gap-1.5"
+              onClick={async () => {
+                const shareUrl = `${window.location.origin}/`;
+                const shareData = {
+                  title: 'BâtirNet',
+                  text: 'Je te recommande BâtirNet pour tes projets de construction et rénovation au Québec.',
+                  url: shareUrl,
+                };
+                try {
+                  if (navigator.share) await navigator.share(shareData);
+                  else {
+                    await navigator.clipboard.writeText(shareUrl);
+                    toast.success('Lien copié — partagez-le avec un ami !');
+                  }
+                } catch { /* user cancelled share */ }
+              }}
+            >
+              <User className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Parrainer un ami</span>
+              <span className="text-[10px] text-muted-foreground">Partager BâtirNet</span>
+            </Button>
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex-col gap-1.5"
+              onClick={() => { setShowRecommendations(false); navigate('/dashboard/new-project'); }}
+            >
+              <FileText className="h-5 w-5 text-primary" />
+              <span className="text-xs font-medium">Nouveau projet</span>
+              <span className="text-[10px] text-muted-foreground">Publier une demande</span>
+            </Button>
+          </div>
+          <Separator />
+          <p className="text-xs font-medium text-muted-foreground">Professionnels recommandés</p>
           <div className="space-y-3 py-2">
             {recommendedPros.length === 0 ? (
               <p className="text-muted-foreground text-sm text-center py-4">Aucune recommandation disponible pour le moment.</p>

@@ -26,8 +26,11 @@ import {
   HardHat,
   Info,
 } from "lucide-react";
+import { Download } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { pdf } from "@react-pdf/renderer";
+import { InvoicePDF, type InvoiceData } from "@/components/InvoicePDF";
 import { createCheckoutSession, isStripeConfigured } from "@/services/stripe-service";
 
 type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
@@ -53,6 +56,7 @@ interface EnrichedPayment extends ClientPaymentRow {
   professional_name: string;
   payment_handling: PaymentHandling;
   invoice_number: string | null;
+  invoice: InvoiceData | null;
 }
 
 const statusConfig: Record<PaymentStatus, { label: string; tone: string; icon: React.ElementType }> = {
@@ -82,6 +86,7 @@ const ClientPayments = () => {
   const [payments, setPayments] = useState<EnrichedPayment[]>([]);
   const [loading, setLoading] = useState(true);
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -119,7 +124,7 @@ const ClientPayments = () => {
         ? supabase.from("contracts").select("id, payment_handling").in("id", contractIds)
         : Promise.resolve({ data: [] as { id: string; payment_handling: string }[] }),
       supabase.from("profiles").select("id, full_name, company_name").in("id", contractorIds),
-      supabase.from("invoices").select("milestone_id, invoice_number").eq("client_id", uid),
+      supabase.from("invoices").select("*").eq("client_id", uid),
     ]);
 
     const contractMap = new Map(
@@ -128,16 +133,42 @@ const ClientPayments = () => {
     const profileMap = new Map(
       (profilesRes.data || []).map(p => [p.id, p.company_name || p.full_name || "Entrepreneur"])
     );
-    const invoiceMap = new Map(
-      (invoicesRes.data || []).map(i => [i.milestone_id, i.invoice_number])
-    );
+    const invoiceMap = new Map<string, InvoiceData>();
+    ((invoicesRes.data || []) as Array<InvoiceData & { milestone_id?: string | null }>).forEach((i) => {
+      if (i.milestone_id) invoiceMap.set(i.milestone_id, i);
+    });
 
-    setPayments(raw.map(p => ({
-      ...p,
-      professional_name: profileMap.get(p.contractor_id) || "Entrepreneur",
-      payment_handling: p.contract_id ? (contractMap.get(p.contract_id) || "platform") : "platform",
-      invoice_number: p.milestone_id ? (invoiceMap.get(p.milestone_id) ?? null) : null,
-    })));
+    setPayments(raw.map(p => {
+      const invoice = p.milestone_id ? (invoiceMap.get(p.milestone_id) ?? null) : null;
+      return {
+        ...p,
+        professional_name: profileMap.get(p.contractor_id) || "Entrepreneur",
+        payment_handling: p.contract_id ? (contractMap.get(p.contract_id) || "platform") : "platform",
+        invoice_number: invoice?.invoice_number ?? null,
+        invoice,
+      };
+    }));
+  };
+
+  const handleDownloadInvoice = async (payment: EnrichedPayment) => {
+    if (!payment.invoice) return;
+    setDownloadingId(payment.id);
+    try {
+      const blob = await pdf(
+        <InvoicePDF invoice={payment.invoice} contractorName={payment.professional_name} />
+      ).toBlob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${payment.invoice.invoice_number}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("PDF generation failed", e);
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de générer le PDF" });
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
   const totalPaid = payments
@@ -360,6 +391,22 @@ const ClientPayments = () => {
                               )}
                             </div>
                             <div className="flex gap-2 flex-wrap">
+                              {payment.invoice && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="gap-1"
+                                  disabled={downloadingId === payment.id}
+                                  onClick={() => handleDownloadInvoice(payment)}
+                                >
+                                  {downloadingId === payment.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Download className="h-3 w-3" />
+                                  )}
+                                  Facture PDF
+                                </Button>
+                              )}
                               {payment.contract_id && (
                                 <Button
                                   size="sm"

@@ -31,7 +31,9 @@ import {
   Hammer,
   ClipboardList,
   Eye,
+  Search,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -183,6 +185,8 @@ const Dashboard = () => {
     created_at: string;
   }[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
+  const [projectSearch, setProjectSearch] = useState("");
+  const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | "open" | "in_progress" | "completed">("all");
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [compareDialogOpen, setCompareDialogOpen] = useState(false);
@@ -1337,8 +1341,58 @@ const Dashboard = () => {
                       </Button>
                     </div>
                   ) : (
+                    <>
+                      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            className="pl-9"
+                            placeholder={t('dashboard.projects.search_placeholder')}
+                            value={projectSearch}
+                            onChange={(e) => setProjectSearch(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-1 flex-wrap">
+                          {([
+                            { value: 'all', label: t('dashboard.projects.filter_all') },
+                            { value: 'open', label: t('dashboard.projects.filter_open') },
+                            { value: 'in_progress', label: t('dashboard.projects.filter_in_progress') },
+                            { value: 'completed', label: t('dashboard.projects.filter_completed') },
+                          ] as const).map((opt) => (
+                            <Button
+                              key={opt.value}
+                              type="button"
+                              size="sm"
+                              variant={projectStatusFilter === opt.value ? 'default' : 'outline'}
+                              onClick={() => setProjectStatusFilter(opt.value)}
+                            >
+                              {opt.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      {(() => {
+                        const term = projectSearch.trim().toLowerCase();
+                        const filteredProjects = projects.filter((p) => {
+                          const matchesStatus =
+                            projectStatusFilter === 'all' ? true : p.status === projectStatusFilter;
+                          const matchesTerm =
+                            term === '' ||
+                            p.title.toLowerCase().includes(term) ||
+                            (p.category || '').toLowerCase().includes(term);
+                          return matchesStatus && matchesTerm;
+                        });
+                        if (filteredProjects.length === 0) {
+                          return (
+                            <div className="text-center py-10 text-muted-foreground">
+                              <Search className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                              <p>{t('dashboard.projects.no_results')}</p>
+                            </div>
+                          );
+                        }
+                        return (
                     <ProjectList
-                      projects={[...projects].sort((a, b) => {
+                      projects={[...filteredProjects].sort((a, b) => {
                         // Projects with signed contracts first
                         const aSigned = a.contract_signed === true;
                         const bSigned = b.contract_signed === true;
@@ -1372,6 +1426,9 @@ const Dashboard = () => {
                         }
                       }}
                     />
+                        );
+                      })()}
+                    </>
                   )}
                 </CardContent>
               </Card>

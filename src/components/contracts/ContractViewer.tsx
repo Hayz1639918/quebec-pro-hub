@@ -373,7 +373,11 @@ export const ContractViewer = ({
             <span className="ml-1">{getStatusLabel(contract.status)}</span>
           </Badge>
           {contract.contract_pdf_url && (
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.open(contract.contract_pdf_url!, '_blank', 'noopener,noreferrer')}
+            >
               <Download className="h-4 w-4 mr-2" />
               {t('contracts.download_pdf')}
             </Button>

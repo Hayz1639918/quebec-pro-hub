@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle, Lightbulb } from "lucide-react";
+import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle, Lightbulb, Camera } from "lucide-react";
 
 // Password validation helpers
 const PASSWORD_RULES = {
@@ -38,6 +39,7 @@ type ClientProfileFields = {
   city?: string | null;
   region?: string | null;
   postal_code?: string | null;
+  profile_picture_url?: string | null;
   user_type?: string;
 };
 
@@ -57,6 +59,45 @@ const ClientProfile = () => {
   const [savingPw, setSavingPw] = useState(false);
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "Fichier trop volumineux", description: "La photo doit faire moins de 5 Mo." });
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${userId}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("profiles")
+        .update({ profile_picture_url: publicUrl })
+        .eq("id", userId);
+      if (updErr) throw updErr;
+      setProfile((p) => ({ ...p, profile_picture_url: publicUrl }));
+      toast({ title: "Photo mise à jour", description: "Votre photo de profil a été enregistrée." });
+    } catch (err) {
+      console.error(err);
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible de téléverser la photo." });
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = "";
+    }
+  };
+
+  const initials = (profile.full_name || "")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   useEffect(() => {
     (async () => {
@@ -209,6 +250,39 @@ const ClientProfile = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Profile photo (US-006) */}
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20">
+                  <AvatarImage src={profile.profile_picture_url || undefined} alt={profile.full_name || "Photo de profil"} />
+                  <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                    {initials || <User className="h-8 w-8" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <input
+                    id="avatar-input"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    className="hidden"
+                    onChange={handlePhotoUpload}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadingPhoto}
+                    onClick={() => document.getElementById("avatar-input")?.click()}
+                  >
+                    {uploadingPhoto ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Téléversement...</>
+                    ) : (
+                      <><Camera className="h-4 w-4 mr-2" />Changer la photo</>
+                    )}
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-1">JPG, PNG ou WebP — max 5 Mo</p>
+                </div>
+              </div>
+
               {/* Identity */}
               <div className="space-y-4">
                 <div className="space-y-2">

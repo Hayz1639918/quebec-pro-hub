@@ -19,6 +19,9 @@ import {
   FileText,
   Image as ImageIcon,
   X,
+  Ban,
+  Flag,
+  ShieldCheck,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -84,6 +87,14 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
   const [quoteDetails, setQuoteDetails] = useState("");
   const [sendingQuote, setSendingQuote] = useState(false);
 
+  // US-029: block & report
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [blockProcessing, setBlockProcessing] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("inappropriate");
+  const [reportDetail, setReportDetail] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
+
   // ✅ Phase 2: IntersectionObserver for reliable read receipts
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -96,10 +107,75 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       setHasMore(true);
       fetchMessages(true);
       markConversationAsRead();
+      checkBlockStatus();
       const cleanup = subscribeToMessages();
       return cleanup;
     }
   }, [conversation?.id]);
+
+  const checkBlockStatus = async () => {
+    const otherId = conversation?.other_participant_id;
+    if (!otherId) return;
+    const { data } = await (supabase as any)
+      .from("user_blocks")
+      .select("id")
+      .eq("blocker_id", userId)
+      .eq("blocked_id", otherId)
+      .maybeSingle();
+    setIsBlocked(!!data);
+  };
+
+  const handleBlockToggle = async () => {
+    const otherId = conversation?.other_participant_id;
+    if (!otherId) return;
+    setBlockProcessing(true);
+    try {
+      if (isBlocked) {
+        const { error } = await (supabase as any)
+          .from("user_blocks")
+          .delete()
+          .eq("blocker_id", userId)
+          .eq("blocked_id", otherId);
+        if (error) throw error;
+        setIsBlocked(false);
+        toast({ title: "Déblocage", description: "Vous pouvez de nouveau échanger avec cette personne." });
+      } else {
+        const { error } = await (supabase as any)
+          .from("user_blocks")
+          .insert({ blocker_id: userId, blocked_id: otherId });
+        if (error) throw error;
+        setIsBlocked(true);
+        toast({ title: "Utilisateur bloqué", description: "Cette personne ne peut plus vous écrire." });
+      }
+    } catch {
+      toast({ variant: "destructive", title: "Erreur", description: "Action impossible pour le moment." });
+    } finally {
+      setBlockProcessing(false);
+    }
+  };
+
+  const handleReportUser = async () => {
+    const otherId = conversation?.other_participant_id;
+    if (!otherId) return;
+    setSubmittingReport(true);
+    try {
+      const { error } = await (supabase as any).from("user_reports").insert({
+        reporter_id: userId,
+        reported_user_id: otherId,
+        conversation_id: conversation?.id ?? null,
+        reason: reportReason,
+        detail: reportDetail.trim() || null,
+      });
+      if (error) throw error;
+      toast({ title: "Signalement envoyé", description: "Notre équipe de modération va l'examiner." });
+      setReportDialogOpen(false);
+      setReportDetail("");
+    } catch {
+      toast({ variant: "destructive", title: "Erreur", description: "Impossible d'envoyer le signalement." });
+    } finally {
+      setSubmittingReport(false);
+    }
+  };
 
   useEffect(() => {
     // Only scroll to bottom on new messages, not when loading more
@@ -641,8 +717,41 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
             >
               <DollarSign className="h-4 w-4" />
             </Button>
+            {/* US-029: block / report */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" title="Plus d'options">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleBlockToggle} disabled={blockProcessing}>
+                  {isBlocked ? (
+                    <>
+                      <ShieldCheck className="h-4 w-4 mr-2 text-green-600" />
+                      Débloquer
+                    </>
+                  ) : (
+                    <>
+                      <Ban className="h-4 w-4 mr-2 text-destructive" />
+                      Bloquer
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setReportDialogOpen(true)} className="text-destructive focus:text-destructive">
+                  <Flag className="h-4 w-4 mr-2" />
+                  Signaler
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+        {isBlocked && (
+          <div className="mt-2 text-xs text-destructive flex items-center gap-1.5">
+            <Ban className="h-3.5 w-3.5" />
+            Conversation bloquée — vous ne recevrez plus de messages de cette personne.
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -942,6 +1051,54 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                 disabled={sendingQuote || !quoteProjectName.trim()}
               >
                 {sendingQuote ? "Envoi..." : "Envoyer la demande"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* US-029: Report user dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Flag className="h-5 w-5 text-destructive" />
+              Signaler {conversation.other_participant_name}
+            </DialogTitle>
+            <DialogDescription>
+              Notre équipe de modération examinera votre signalement sous 48h.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1">
+              <Label htmlFor="report-reason">Motif</Label>
+              <select
+                id="report-reason"
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+              >
+                <option value="inappropriate">Comportement inapproprié</option>
+                <option value="harassment">Harcèlement ou menaces</option>
+                <option value="scam">Arnaque ou fraude</option>
+                <option value="spam">Spam ou publicité</option>
+                <option value="offensive">Contenu offensant</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label>Détails <span className="text-muted-foreground text-xs">(optionnel)</span></Label>
+              <Textarea
+                value={reportDetail}
+                onChange={(e) => setReportDetail(e.target.value)}
+                placeholder="Décrivez ce qui s'est passé..."
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setReportDialogOpen(false)}>Annuler</Button>
+              <Button variant="destructive" onClick={handleReportUser} disabled={submittingReport}>
+                {submittingReport ? "Envoi..." : "Signaler"}
               </Button>
             </div>
           </div>

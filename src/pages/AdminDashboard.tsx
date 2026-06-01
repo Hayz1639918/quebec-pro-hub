@@ -68,6 +68,8 @@ import {
   FileText,
   Briefcase,
   Gavel,
+  Flag,
+  MessageSquare,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -146,6 +148,32 @@ interface AdminDispute {
   opener_name?: string;
 }
 
+interface ReviewReport {
+  id: string;
+  review_id: string;
+  reporter_id: string;
+  reason: string;
+  detail: string | null;
+  status: string;
+  created_at: string;
+  reporter_name?: string;
+  review_comment?: string | null;
+  review_rating?: number | null;
+}
+
+interface UserReport {
+  id: string;
+  reporter_id: string;
+  reported_user_id: string;
+  conversation_id: string | null;
+  reason: string;
+  detail: string | null;
+  status: string;
+  created_at: string;
+  reporter_name?: string;
+  reported_name?: string;
+}
+
 const AdminDashboard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -166,6 +194,8 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Disputes state
+  const [reviewReports, setReviewReports] = useState<ReviewReport[]>([]);
+  const [userReports, setUserReports] = useState<UserReport[]>([]);
   const [disputes, setDisputes] = useState<AdminDispute[]>([]);
   const [selectedDispute, setSelectedDispute] = useState<AdminDispute | null>(null);
   const [disputeResolution, setDisputeResolution] = useState("");
@@ -390,6 +420,71 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchReviewReports = useCallback(async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from("review_reports")
+        .select("id, review_id, reporter_id, reason, detail, status, created_at")
+        .order("created_at", { ascending: false });
+      const rows = (data || []) as ReviewReport[];
+      const reporterIds = [...new Set(rows.map((r) => r.reporter_id))];
+      const reviewIds = [...new Set(rows.map((r) => r.review_id))];
+      const [reporters, reviews] = await Promise.all([
+        reporterIds.length ? supabase.from("profiles").select("id, full_name").in("id", reporterIds) : Promise.resolve({ data: [] }),
+        reviewIds.length ? supabase.from("reviews").select("id, comment, rating").in("id", reviewIds) : Promise.resolve({ data: [] }),
+      ]);
+      const rmap = new Map((reporters.data || []).map((p: any) => [p.id, p.full_name]));
+      const vmap = new Map((reviews.data || []).map((v: any) => [v.id, v]));
+      setReviewReports(rows.map((r) => ({
+        ...r,
+        reporter_name: rmap.get(r.reporter_id) || "Utilisateur",
+        review_comment: vmap.get(r.review_id)?.comment ?? null,
+        review_rating: vmap.get(r.review_id)?.rating ?? null,
+      })));
+    } catch (e) {
+      console.error("Error fetching review reports:", e);
+    }
+  }, []);
+
+  const fetchUserReports = useCallback(async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from("user_reports")
+        .select("id, reporter_id, reported_user_id, conversation_id, reason, detail, status, created_at")
+        .order("created_at", { ascending: false });
+      const rows = (data || []) as UserReport[];
+      const ids = [...new Set([...rows.map((r) => r.reporter_id), ...rows.map((r) => r.reported_user_id)])];
+      const profiles = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] };
+      const pmap = new Map((profiles.data || []).map((p: any) => [p.id, p.full_name]));
+      setUserReports(rows.map((r) => ({
+        ...r,
+        reporter_name: pmap.get(r.reporter_id) || "Utilisateur",
+        reported_name: pmap.get(r.reported_user_id) || "Utilisateur",
+      })));
+    } catch (e) {
+      console.error("Error fetching user reports:", e);
+    }
+  }, []);
+
+  const handleModerationStatus = async (
+    table: "review_reports" | "user_reports",
+    id: string,
+    status: "resolved" | "dismissed",
+  ) => {
+    setActionLoading(id);
+    try {
+      const { error } = await (supabase as any).from(table).update({ status }).eq("id", id);
+      if (error) throw error;
+      toast({ title: "Signalement traité", description: status === "resolved" ? "Marqué comme résolu." : "Signalement rejeté." });
+      if (table === "review_reports") await fetchReviewReports();
+      else await fetchUserReports();
+    } catch {
+      toast({ variant: "destructive", title: "Erreur", description: "Action impossible." });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Initialize
   useEffect(() => {
     const init = async () => {
@@ -402,7 +497,9 @@ const AdminDashboard = () => {
           fetchPendingVerifications(),
           fetchRejectedProfessionals(),
           fetchAuditLogs(),
-          fetchDisputes()
+          fetchDisputes(),
+          fetchReviewReports(),
+          fetchUserReports()
         ]);
       }
       
@@ -410,7 +507,7 @@ const AdminDashboard = () => {
     };
 
     init();
-  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchRejectedProfessionals, fetchAuditLogs, fetchDisputes]);
+  }, [verifyAdminAccess, fetchStats, fetchPendingVerifications, fetchRejectedProfessionals, fetchAuditLogs, fetchDisputes, fetchReviewReports, fetchUserReports]);
 
   // Handle RBQ verification
   const handleVerifyRBQ = async (professional: PendingVerification) => {
@@ -731,6 +828,15 @@ const AdminDashboard = () => {
                 </Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="moderation" className="flex items-center gap-2">
+              <Flag className="h-4 w-4" />
+              Modération
+              {(reviewReports.filter(r => r.status === 'pending').length + userReports.filter(r => r.status === 'pending').length) > 0 && (
+                <Badge variant="destructive" className="ml-1">
+                  {reviewReports.filter(r => r.status === 'pending').length + userReports.filter(r => r.status === 'pending').length}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="logs" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Journal d'audit
@@ -1026,6 +1132,114 @@ const AdminDashboard = () => {
           </TabsContent>
 
           {/* Audit Logs Tab */}
+          <TabsContent value="moderation" className="space-y-6">
+            {/* Review reports (US-040) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Flag className="h-5 w-5 text-destructive" />
+                  Avis signalés ({reviewReports.filter(r => r.status === 'pending').length} en attente)
+                </CardTitle>
+                <CardDescription>Signalements d'avis inappropriés à examiner</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {reviewReports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">Aucun avis signalé.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {reviewReports.map((r) => (
+                      <div key={r.id} className="border rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline">{r.reason}</Badge>
+                              <Badge className={r.status === 'pending' ? 'bg-amber-100 text-amber-800' : r.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
+                                {r.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                par {r.reporter_name} · {format(new Date(r.created_at), 'dd MMM yyyy', { locale: fr })}
+                              </span>
+                            </div>
+                            {r.detail && <p className="text-sm mt-1">{r.detail}</p>}
+                            {r.review_comment && (
+                              <p className="text-xs text-muted-foreground mt-1 italic">
+                                Avis ({r.review_rating}/5) : « {r.review_comment} »
+                              </p>
+                            )}
+                          </div>
+                          {r.status === 'pending' && (
+                            <div className="flex gap-2 shrink-0">
+                              <Button size="sm" variant="outline" disabled={actionLoading === r.id}
+                                onClick={() => handleModerationStatus('review_reports', r.id, 'dismissed')}>
+                                Rejeter
+                              </Button>
+                              <Button size="sm" disabled={actionLoading === r.id}
+                                onClick={() => handleModerationStatus('review_reports', r.id, 'resolved')}>
+                                Résoudre
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* User reports (US-029) */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MessageSquare className="h-5 w-5 text-destructive" />
+                  Utilisateurs signalés ({userReports.filter(r => r.status === 'pending').length} en attente)
+                </CardTitle>
+                <CardDescription>Signalements depuis la messagerie</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userReports.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">Aucun utilisateur signalé.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {userReports.map((r) => (
+                      <div key={r.id} className="border rounded-lg p-3">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Badge variant="outline">{r.reason}</Badge>
+                              <Badge className={r.status === 'pending' ? 'bg-amber-100 text-amber-800' : r.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
+                                {r.status}
+                              </Badge>
+                              <span className="text-xs text-muted-foreground">
+                                {format(new Date(r.created_at), 'dd MMM yyyy', { locale: fr })}
+                              </span>
+                            </div>
+                            <p className="text-sm mt-1">
+                              <strong>{r.reporter_name}</strong> a signalé <strong>{r.reported_name}</strong>
+                            </p>
+                            {r.detail && <p className="text-xs text-muted-foreground mt-1">{r.detail}</p>}
+                          </div>
+                          {r.status === 'pending' && (
+                            <div className="flex gap-2 shrink-0">
+                              <Button size="sm" variant="outline" disabled={actionLoading === r.id}
+                                onClick={() => handleModerationStatus('user_reports', r.id, 'dismissed')}>
+                                Rejeter
+                              </Button>
+                              <Button size="sm" disabled={actionLoading === r.id}
+                                onClick={() => handleModerationStatus('user_reports', r.id, 'resolved')}>
+                                Résoudre
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="logs" className="space-y-4">
             <Card>
               <CardHeader>
