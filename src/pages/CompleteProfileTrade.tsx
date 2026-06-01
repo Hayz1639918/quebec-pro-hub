@@ -145,14 +145,9 @@ const CompleteProfileTrade = () => {
     e.preventDefault();
     if (!userId) return;
 
-    if (!docCCQ) {
-      toast({ variant: "destructive", title: "Carte de compétence CCQ obligatoire", description: "Veuillez uploader votre carte de compétence CCQ." });
-      return;
-    }
-
     setLoading(true);
     try {
-      const ccqUrl = await uploadFile(docCCQ, "ccq");
+      const ccqUrl = docCCQ ? await uploadFile(docCCQ, "ccq") : null;
       const assuranceUrl = docAssurance ? await uploadFile(docAssurance, "assurance") : null;
 
       const finalRegion = region === "Autre" ? customRegion : region;
@@ -173,8 +168,8 @@ const CompleteProfileTrade = () => {
 
       if (error) throw error;
 
-      toast({ title: "Profil soumis !", description: "Votre dossier est en attente de validation sous 24-48h." });
-      navigate("/pending-verification");
+      toast({ title: "Profil créé !", description: "Bienvenue sur BâtirNet. Vous avez accès à toutes les fonctionnalités." });
+      navigate("/pro/dashboard");
     } catch (err) {
       console.error(err);
       toast({ variant: "destructive", title: "Erreur", description: "Impossible de sauvegarder votre profil." });
@@ -247,15 +242,15 @@ const CompleteProfileTrade = () => {
                     : tradeSpecialty === "plombier"
                     ? "Carte de compétence / apprenti CMMTQ"
                     : "Carte de compétence CCQ"}
-                  <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                  <span className="text-muted-foreground text-xs font-medium ml-1">(recommandé)</span>
                 </Label>
                 <label
                   htmlFor="doc-ccq"
                   className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                    docCCQ ? "border-green-400 bg-green-50" : "border-amber-400 hover:border-amber-500 hover:bg-amber-50/30"
+                    docCCQ ? "border-green-400 bg-green-50" : "border-border hover:border-amber-400/50 hover:bg-amber-50/30"
                   }`}
                 >
-                  <Upload className={`h-4 w-4 ${docCCQ ? "text-green-600" : "text-amber-600"}`} />
+                  <Upload className={`h-4 w-4 ${docCCQ ? "text-green-600" : "text-muted-foreground"}`} />
                   <span className="text-sm text-muted-foreground truncate">
                     {docCCQ ? docCCQ.name : "Cliquez pour choisir un fichier"}
                   </span>
@@ -295,8 +290,8 @@ const CompleteProfileTrade = () => {
               </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 space-y-1">
-                <p className="font-medium">Exigences légales au Québec :</p>
-                <p>• La carte de compétence CCQ est obligatoire pour tout travailleur de la construction.</p>
+                <p className="font-medium">Bon à savoir :</p>
+                <p>• Ajouter votre carte de compétence CCQ renforce la confiance des clients (badge « Vérifié »), mais ce n'est pas obligatoire pour utiliser la plateforme.</p>
                 {tradeSpecialty === "electricien" && <p>• Les électriciens sont réglementés par la CMEQ.</p>}
                 {tradeSpecialty === "plombier" && <p>• Les plombiers sont réglementés par la CMMTQ.</p>}
               </div>

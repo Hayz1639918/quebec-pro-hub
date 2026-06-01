@@ -183,10 +183,12 @@ const ProDashboard = () => {
       }
 
       // Set professional sub-type (default to entrepreneur for backward compat)
-      setProfessionalType((prof.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur');
+      const subType = (prof.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur';
+      setProfessionalType(subType);
 
-      // Only verified professionals can access the dashboard
-      if (!prof.is_rbq_verified) {
+      // Trade professionals have full access (RBQ/CCQ verification is optional).
+      // Entrepreneurs still require RBQ verification before accessing the dashboard.
+      if (subType !== 'trade_professional' && !prof.is_rbq_verified) {
         navigate('/pending-verification', { replace: true });
         return;
       }

@@ -150,10 +150,15 @@ const Projects = () => {
         setUserId(session.user.id);
         const { data: prof } = await supabase
           .from('profiles')
-          .select('user_type,is_rbq_verified')
+          .select('user_type,is_rbq_verified,professional_type')
           .eq('id', session.user.id)
           .single();
-        setIsProfessional(prof?.user_type === 'professional' && prof?.is_rbq_verified === true);
+        // Trade professionals can submit proposals without RBQ verification
+        // (license optional); entrepreneurs still require verification.
+        const canBid =
+          prof?.user_type === 'professional' &&
+          (prof?.professional_type === 'trade_professional' || prof?.is_rbq_verified === true);
+        setIsProfessional(!!canBid);
       }
       fetchProjects();
     })();
@@ -271,6 +276,14 @@ const Projects = () => {
         break;
       case "proposals":
         filtered.sort((a, b) => b.proposals_count - a.proposals_count);
+        break;
+      case "deadline":
+        filtered.sort((a, b) => {
+          // Projects with a deadline first, soonest deadline at the top
+          const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+          const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+          return da - db;
+        });
         break;
     }
 

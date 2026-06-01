@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import AdminLicensePanel from "@/components/admin/AdminLicensePanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1425,6 +1426,10 @@ const AdminDashboard = () => {
                     </Button>
                   </div>
                 )}
+
+                {/* US-112: per-license status management */}
+                <Separator />
+                <AdminLicensePanel professionalId={selectedProfessional.id} />
               </div>
 
               <Separator />

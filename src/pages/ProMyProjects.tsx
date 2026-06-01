@@ -55,7 +55,7 @@ const ProMyProjects = () => {
       // Ensure professional
       const { data: prof } = await supabase
         .from('profiles')
-        .select('user_type, is_rbq_verified')
+        .select('user_type, is_rbq_verified, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -64,7 +64,9 @@ const ProMyProjects = () => {
         return;
       }
 
-      if (!prof?.is_rbq_verified) {
+      // Trade professionals have full access (license optional); entrepreneurs
+      // still require RBQ verification.
+      if (prof?.professional_type !== 'trade_professional' && !prof?.is_rbq_verified) {
         navigate('/pending-verification');
         return;
       }

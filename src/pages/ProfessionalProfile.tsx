@@ -23,6 +23,7 @@ import {
   Calendar,
   ArrowLeft,
   Flag,
+  Share2,
   Image as ImageIcon,
   Eye,
 } from 'lucide-react';
@@ -228,13 +229,19 @@ const ProfessionalProfile = () => {
       if (data && data.length > 0) {
         const reviewIds = data.map((r: any) => r.id);
         const clientIds = Array.from(new Set(data.map((r: any) => r.client_id)));
+        const projectIds = Array.from(
+          new Set(data.map((r: any) => r.project_id).filter(Boolean))
+        );
 
-        const [clientsRes, repliesRes] = await Promise.all([
+        const [clientsRes, repliesRes, projectsRes] = await Promise.all([
           supabase.from('profiles').select('id, full_name').in('id', clientIds),
           (supabase as any)
             .from('review_replies')
             .select('review_id, content, created_at')
             .in('review_id', reviewIds),
+          projectIds.length > 0
+            ? supabase.from('projects').select('id, title').in('id', projectIds)
+            : Promise.resolve({ data: [] as { id: string; title: string }[] }),
         ]);
 
         const clientMap = new Map<string, string>();
@@ -245,10 +252,15 @@ const ProfessionalProfile = () => {
         (repliesRes.data || []).forEach((r: any) =>
           replyMap.set(r.review_id, { content: r.content, created_at: r.created_at })
         );
+        const projectMap = new Map<string, string>();
+        ((projectsRes as any).data || []).forEach((p: any) =>
+          projectMap.set(p.id, p.title)
+        );
 
         const enriched: Review[] = (data as any[]).map((r) => ({
           ...r,
           client_name: clientMap.get(r.client_id) || 'Client anonyme',
+          project_title: r.project_id ? projectMap.get(r.project_id) : undefined,
           pro_reply: replyMap.get(r.id) || null,
         }));
         setReviews(enriched);
@@ -313,6 +325,29 @@ const ProfessionalProfile = () => {
       toast.error('Erreur lors du signalement');
     } finally {
       setSubmittingReport(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const url = `${window.location.origin}/professional/${id}`;
+    const shareData = {
+      title: profile?.company_name || profile?.full_name || 'Profil professionnel',
+      text: `Découvrez le profil de ${profile?.full_name ?? 'ce professionnel'} sur BâtirNet`,
+      url,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+    } catch {
+      // User cancelled the native share sheet — fall through to clipboard copy
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Lien du profil copié dans le presse-papiers');
+    } catch {
+      toast.error('Impossible de copier le lien');
     }
   };
 
@@ -470,20 +505,26 @@ const ProfessionalProfile = () => {
                     </div>
                   </div>
 
-                  {!isOwnProfile && (
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <Button onClick={handleContact} className="gap-2" variant="outline">
-                        <MessageSquare className="h-4 w-4" />
-                        Contacter
-                      </Button>
-                      {currentUserType === 'client' && profile && (
-                        <Button onClick={() => setInviteOpen(true)} className="gap-2">
-                          <Briefcase className="h-4 w-4" />
-                          Inviter à soumissionner
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button onClick={handleShare} className="gap-2" variant="outline">
+                      <Share2 className="h-4 w-4" />
+                      Partager
+                    </Button>
+                    {!isOwnProfile && (
+                      <>
+                        <Button onClick={handleContact} className="gap-2" variant="outline">
+                          <MessageSquare className="h-4 w-4" />
+                          Contacter
                         </Button>
-                      )}
-                    </div>
-                  )}
+                        {currentUserType === 'client' && profile && (
+                          <Button onClick={() => setInviteOpen(true)} className="gap-2">
+                            <Briefcase className="h-4 w-4" />
+                            Inviter à soumissionner
+                          </Button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Statistiques */}
@@ -724,10 +765,21 @@ const ProfessionalProfile = () => {
                                 ))}
                               </div>
                               <span className="text-sm font-medium">{review.client_name}</span>
+                              {review.project_title && (
+                                <Badge variant="outline" className="text-green-700 border-green-300 gap-1 text-[10px] px-1.5 py-0">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Vérifié
+                                </Badge>
+                              )}
                               <span className="text-xs text-muted-foreground">
                                 {format(new Date(review.created_at), 'PPP', { locale: fr })}
                               </span>
                             </div>
+                            {review.project_title && (
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Projet : {review.project_title}
+                              </p>
+                            )}
                             {review.comment && (
                               <p className="text-sm text-gray-700">{review.comment}</p>
                             )}

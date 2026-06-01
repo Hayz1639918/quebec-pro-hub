@@ -54,6 +54,13 @@ const PendingVerification = () => {
         return;
       }
 
+      // Trade professionals don't require verification (license optional) — they
+      // should never be stranded on this page.
+      if (profileData.professional_type === 'trade_professional') {
+        navigate("/pro/dashboard");
+        return;
+      }
+
       // If already verified, redirect to pro dashboard
       if (profileData.is_rbq_verified) {
         navigate("/pro/dashboard");

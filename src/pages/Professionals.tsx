@@ -254,7 +254,8 @@ const Professionals = () => {
 
   const fetchProfessionals = async () => {
     try {
-      // Afficher uniquement les professionnels vérifiés RBQ
+      // Show RBQ-verified professionals AND all trade professionals (whose
+      // RBQ/CCQ verification is optional — they get full visibility).
       let query = supabase
         .from('profiles')
         .select(`
@@ -295,7 +296,7 @@ const Professionals = () => {
           professional_type
         `)
         .eq('user_type', 'professional')
-        .eq('is_rbq_verified', true);
+        .or('is_rbq_verified.eq.true,professional_type.eq.trade_professional');
 
       // Only restrict at DB level for trade_professional (exclusive filter).
       // For entrepreneur we filter client-side so old accounts (professional_type=NULL)
@@ -848,11 +849,15 @@ const Professionals = () => {
                           <div className="flex-1">
                             <CardTitle className="flex items-center gap-2 flex-wrap">
                               <Building2 className="h-5 w-5 text-primary" />
-                              {pro.company_name}
+                              {pro.company_name || pro.full_name}
                               {pro.is_rbq_verified ? (
                                 <Badge variant="default" className="ml-2 bg-green-600">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   {t('professionals.card.verified')}
+                                </Badge>
+                              ) : pro.professional_type === 'trade_professional' ? (
+                                <Badge variant="outline" className="ml-2 text-muted-foreground border-border">
+                                  Non vérifié
                                 </Badge>
                               ) : (
                                 <Badge variant="outline" className="ml-2 text-orange-600 border-orange-300">
