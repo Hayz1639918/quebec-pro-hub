@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import RouteLoader from "@/components/RouteLoader";
 
 /**
  * Route guard for /pro/* paths.
@@ -17,40 +18,61 @@ export default function ProtectedProRoute() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
+    // Safety net: never strand the user on a blank screen if the auth calls
+    // hang for any reason — fall back to the auth page.
+    const timeout = setTimeout(() => {
+      if (!cancelled) navigate("/auth", { replace: true });
+    }, 10000);
+
     const checkAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
 
-      if (!session) {
-        navigate("/auth", { replace: true });
-        return;
-      }
+        if (!session) {
+          navigate("/auth", { replace: true });
+          return;
+        }
 
-      // Fast path: trust user_metadata when present
-      const userTypeFromMeta = session.user.user_metadata?.user_type;
-      if (userTypeFromMeta === "professional") {
+        // Fast path: trust user_metadata when present
+        const userTypeFromMeta = session.user.user_metadata?.user_type;
+        if (userTypeFromMeta === "professional") {
+          setChecking(false);
+          return;
+        }
+
+        // Fallback: verify against profiles table (handles stale/missing metadata)
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("user_type")
+          .eq("id", session.user.id)
+          .single();
+        if (cancelled) return;
+
+        if (!profile || profile.user_type !== "professional") {
+          navigate("/dashboard", { replace: true });
+          return;
+        }
+
         setChecking(false);
-        return;
+      } catch {
+        if (!cancelled) navigate("/auth", { replace: true });
+      } finally {
+        clearTimeout(timeout);
       }
-
-      // Fallback: verify against profiles table (handles stale/missing metadata)
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", session.user.id)
-        .single();
-
-      if (!profile || profile.user_type !== "professional") {
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-
-      setChecking(false);
     };
 
-    checkAccess();
+    void checkAccess();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, [navigate]);
 
-  if (checking) return null;
+  if (checking) return <RouteLoader />;
 
   return <Outlet />;
 }

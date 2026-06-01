@@ -47,7 +47,10 @@ const Navigation = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        // Defer Supabase calls out of the auth callback to avoid deadlocking
+        // the Supabase auth lock (which would hang the whole app).
+        const uid = session.user.id;
+        setTimeout(() => fetchProfile(uid), 0);
       } else {
         setProfile(null);
         setUnreadNotifications(0);

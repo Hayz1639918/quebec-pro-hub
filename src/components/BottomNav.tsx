@@ -24,7 +24,12 @@ const BottomNav = () => {
     };
 
     supabase.auth.getSession().then(({ data }) => load(data.session?.user.id));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => load(session?.user.id));
+    // Defer Supabase calls out of the auth callback: running them synchronously
+    // here can deadlock the Supabase auth lock and hang the whole app.
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      const uid = session?.user.id;
+      setTimeout(() => load(uid), 0);
+    });
     return () => { active = false; sub.subscription.unsubscribe(); };
   }, []);
 

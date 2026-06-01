@@ -155,7 +155,7 @@ const Auth = () => {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         // User clicked password reset link — show the new-password form
         setIsPasswordRecovery(true);
@@ -164,16 +164,20 @@ const Auth = () => {
         return;
       }
       if (session && event === 'SIGNED_IN' && !isPasswordRecovery) {
-        // Fetch user profile to determine where to redirect
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type, profile_completed, is_rbq_verified, professional_type')
-          .eq('id', session.user.id)
-          .single();
+        // Defer Supabase calls out of the auth callback: awaiting a query here
+        // can deadlock the Supabase auth lock and hang the whole app.
+        const uid = session.user.id;
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('user_type, profile_completed, is_rbq_verified, professional_type')
+            .eq('id', uid)
+            .single();
 
-        if (!profile) return;
+          if (!profile) return;
 
-        redirectBasedOnProfile(profile as AppProfile);
+          redirectBasedOnProfile(profile as AppProfile);
+        }, 0);
       }
     });
 
