@@ -565,7 +565,7 @@ const NewProject = () => {
                   <div className="space-y-2">
                     <Label htmlFor="category">{t('new_project.form.category')} *</Label>
                     <Select value={category} onValueChange={setCategory} required>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('new_project.form.category')}>
                         <SelectValue placeholder={t('new_project.form.category_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -584,7 +584,7 @@ const NewProject = () => {
                       onValueChange={setProjectType}
                       disabled={!category}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Type de travaux">
                         <SelectValue placeholder={category ? "Sélectionnez le type" : "Choisissez d'abord une catégorie"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -690,6 +690,7 @@ const NewProject = () => {
                         <span>{budgetRange[1].toLocaleString('fr-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 })}</span>
                       </div>
                       <Slider
+                        aria-label={t('new_project.form.budget')}
                         value={budgetRange}
                         onValueChange={(v) => {
                           setBudgetRange(v as [number, number]);
@@ -821,7 +822,7 @@ const NewProject = () => {
                   <div className="space-y-2">
                     <Label htmlFor="region">{t('new_project.form.region')}</Label>
                     <Select value={region} onValueChange={setRegion}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('new_project.form.region')}>
                         <SelectValue placeholder={t('new_project.form.region_placeholder')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -937,6 +938,7 @@ const NewProject = () => {
                       <span className="text-sm font-medium text-primary">{criteria.weight}%</span>
                     </div>
                     <Slider
+                      aria-label={criteria.label}
                       value={[criteria.weight]}
                       onValueChange={(value) => updateCriteriaWeight(criteria.id, value[0])}
                       max={100}

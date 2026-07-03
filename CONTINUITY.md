@@ -88,7 +88,11 @@ Voir §2 baseline.
 - **Batch 5 (2026-07-03)** : axe-core via Playwright sur 7 routes publiques (/, /auth, /auth?mode=login, /professionals, /projects, /privacy-policy, 404) → **0 violation** après correctifs.
 - Corrigé : bouton œil mot de passe (aria-label + focusable, était tabIndex=-1) ; 10 SelectTrigger de filtres sans nom accessible (aria-label depuis le label visible) ; Slider (ui/slider.tsx transmet désormais aria-label au Thumb, + label sur le rayon de recherche de la carte) ; landmarks <main> sur Index/Auth/Professionals/Projects/PrivacyPolicy/NotFound ; heading h1 sur Auth (role=heading aria-level=1) ; h2 sr-only sur PrivacyPolicy (heading-order) ; ~15 classes de contraste insuffisant relevées (text-white/45–65 → /70–80, text-foreground/20–55 → /50–70) dans Footer, Hero, CTA, Features, HowItWorks — design vérifié visuellement intact.
 - Navigation clavier testée sur /auth : ordre de tabulation logique, tous les contrôles atteignables.
-- Limite : pages privées non auditées en live (pas de .env) — à refaire sur staging.
+- **Batch 5bis : pages privées auditées en live via Supabase mocké** (session factice injectée en localStorage `sb-stub-auth-token` + interception réseau Playwright renvoyant profils canned / listes vides). 10 routes × 2 rôles (client + pro) : /dashboard (+tabs), /dashboard/payments, /messages, /contracts, /dashboard/new-project, /pro/dashboard, /pro/payments, /pro/my-projects, /pro/subscription.
+  - Résultat final : **0 violation axe critique/sérieuse, 0 overflow (320/390/768/1280), 0 erreur JS** sur les 10 routes.
+  - Corrigé : bouton menu compte Navigation (aria-label) ; liens nav text-foreground/50→/70 ; `--muted-foreground` clair 45%→38% et sombre 55%→65% ; `.tech-label` opacité 0.5→0.7 ; `--success` 36%→30% (libellés paiements) ; text-orange-600→700 (PendingVerification) ; 4 sliders NewProject + slider budget (aria-label) ; 4 selects NewProject + 2 selects Contracts (aria-label).
+  - Guards vérifiés en conditions réelles : pro non vérifié → redirection /pending-verification ✅.
+  - Limite restante : audit lecteur d'écran humain recommandé pour viser WCAG 2.1 AA complet (axe ne couvre ~30-40% des critères).
 
 ## 20. Security / production-readiness risks
 - ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.

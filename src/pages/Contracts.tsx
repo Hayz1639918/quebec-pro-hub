@@ -624,7 +624,7 @@ const Contracts = () => {
                   </div>
                   <div className="flex gap-2 sm:gap-4">
                     <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
-                      <SelectTrigger className="w-full sm:w-48">
+                      <SelectTrigger className="w-full sm:w-48" aria-label={t('contracts.filter_status')}>
                         <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
                         <SelectValue placeholder={t('contracts.filter_status')} />
                       </SelectTrigger>
@@ -640,7 +640,7 @@ const Contracts = () => {
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as "created_at" | "title" | "total_amount")}>
-                      <SelectTrigger className="w-full sm:w-48">
+                      <SelectTrigger className="w-full sm:w-48" aria-label="Trier les contrats">
                         <SelectValue placeholder={t('contracts.sort_by')} />
                       </SelectTrigger>
                       <SelectContent>
