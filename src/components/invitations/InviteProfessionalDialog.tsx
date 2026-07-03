@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { db } from '@/integrations/supabase/untyped';
 import {
   Dialog,
   DialogContent,
@@ -137,7 +136,7 @@ export const InviteProfessionalDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
-      const { error } = await db.from('project_invitations').insert({
+      const { error } = await supabase.from('project_invitations').insert({
         project_id: selectedProject,
         client_id: user.id,
         professional_id: professionalId,

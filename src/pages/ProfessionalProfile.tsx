@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { db } from '@/integrations/supabase/untyped';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -305,7 +304,7 @@ const ProfessionalProfile = () => {
     if (!reportingReview || !currentUserId) return;
     setSubmittingReport(true);
     try {
-      const { error } = await db.from('review_reports').insert({
+      const { error } = await supabase.from('review_reports').insert({
         review_id: reportingReview.id,
         reporter_id: currentUserId,
         reason: reportReason,

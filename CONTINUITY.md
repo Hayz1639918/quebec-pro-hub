@@ -30,7 +30,7 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 ## 5. Important decisions made
 - Ordre du plan d'audit : (1) lint errors bloquants, (2) sécurité deps, (3) flows critiques par rôle, (4) responsive, (5) accessibilité, (6) duplication/gros fichiers.
 - Réponses utilisateur (2026-07-03) : US-118 arabe/RTL **reporté** ; crypto (US-034) **hors scope** ; Supabase prod existe mais **pas de staging** → validations via code/build/tests, pas de tests destructifs sur la base réelle.
-- Les types générés Supabase (`src/integrations/supabase/types.ts`) sont obsolètes → TODO : `supabase gen types` quand accès CLI dispo, puis supprimer `untyped.ts`.
+- ✅ **RÉSOLU (2026-07-03)** : types Supabase régénérés via l'API de gestion (access token utilisateur, `api.supabase.com` — domaine différent de la base `*.supabase.co`, a nécessité l'ouverture d'un 2e domaine dans la politique réseau). 737 → 7701 lignes, 4 → toutes les tables du schéma réel (admin_audit_logs, project_invitations, review_reports, user_reports, etc.). `src/integrations/supabase/untyped.ts` (client `db` non typé, 14 casts contournés au Batch 1) **supprimé** ; les 5 fichiers qui l'utilisaient (ChatWindow, InviteProfessionalDialog, ProfessionalProfile, AdminDashboard, ProDashboard) basculés sur le client `supabase` typé normal. `src/types/tender.ts` conservé : complémentaire (typage métier au-dessus des colonnes JSON brutes), pas de doublon avec le schéma généré. Le token d'accès n'a pas été stocké dans le repo (utilisé en variable d'environnement shell éphémère puis effacé).
 
 ## 6. Constraints to respect
 - Pas de changements destructifs sans confirmation. Petits lots + validation après chaque lot. Push uniquement sur `claude/claude-md-working-rules-tayepf`.

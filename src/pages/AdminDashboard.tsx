@@ -13,7 +13,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { db } from '@/integrations/supabase/untyped';
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -427,7 +426,7 @@ const AdminDashboard = () => {
   ) => {
     setActionLoading(id);
     try {
-      const { error } = await db.from(table).update({ status }).eq("id", id);
+      const { error } = await supabase.from(table).update({ status }).eq("id", id);
       if (error) throw error;
       toast({ title: "Signalement traité", description: status === "resolved" ? "Marqué comme résolu." : "Signalement rejeté." });
       if (table === "review_reports") await fetchReviewReports();

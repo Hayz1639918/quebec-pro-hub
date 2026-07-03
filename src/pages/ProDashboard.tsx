@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-import { db } from '@/integrations/supabase/untyped';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -280,7 +279,7 @@ const ProDashboard = () => {
   ) => {
     setRespondingInvitation(invitationId);
     try {
-      const { error } = await db.rpc('respond_to_invitation', {
+      const { error } = await supabase.rpc('respond_to_invitation', {
         p_invitation_id: invitationId,
         p_response: response,
       });

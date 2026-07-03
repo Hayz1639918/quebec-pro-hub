@@ -39,7 +39,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { db } from '@/integrations/supabase/untyped';
 import { useToast } from "@/hooks/use-toast";
 import type { Conversation, Message } from "@/types/messaging";
 import { formatDistanceToNow, format } from "date-fns";
@@ -160,7 +159,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     if (!otherId) return;
     setSubmittingReport(true);
     try {
-      const { error } = await db.from("user_reports").insert({
+      const { error } = await supabase.from("user_reports").insert({
         reporter_id: userId,
         reported_user_id: otherId,
         conversation_id: conversation?.id ?? null,
