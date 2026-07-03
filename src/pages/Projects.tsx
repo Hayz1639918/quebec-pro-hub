@@ -328,7 +328,8 @@ const Projects = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      
+
+      <main>
       {/* Hero Section */}
       <section className="pt-24 sm:pt-32 pb-8 sm:pb-12 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -468,7 +469,7 @@ const Projects = () => {
                   <div className="space-y-2">
                     <Label>{t('new_project.form.category')}</Label>
                     <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('new_project.form.category')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -485,7 +486,7 @@ const Projects = () => {
                   <div className="space-y-2">
                     <Label>{t('new_project.form.region')}</Label>
                     <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('new_project.form.region')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -502,7 +503,7 @@ const Projects = () => {
                   <div className="space-y-2">
                     <Label>{t('new_project.form.budget')}</Label>
                     <Select value={selectedBudget} onValueChange={setSelectedBudget}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('new_project.form.budget')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -519,7 +520,7 @@ const Projects = () => {
                   <div className="space-y-2">
                     <Label>{t('professionals.sort.sort_by')}</Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.sort.sort_by')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -675,6 +676,7 @@ const Projects = () => {
         </div>
       </section>
 
+      </main>
       <Footer />
     </div>
   );

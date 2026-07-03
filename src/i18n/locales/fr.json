@@ -234,10 +234,11 @@
       "favorites": "Favoris"
     },
     "export": {
+      "export_pdf": "Export PDF",
       "in_progress": "Export en cours",
-      "pdf_generating": "Votre PDF est en cours de génération",
-      "no_projects_to_export": "Vous n'avez aucun projet à exporter",
-      "no_activity_to_export": "Vous n'avez aucune activité à exporter"
+      "pdf_generating": "Votre PDF est en cours de génération…",
+      "no_projects_to_export": "Aucun projet à exporter pour le moment.",
+      "no_activity_to_export": "Aucune activité à exporter pour le moment."
     },
     "stats": {
       "active_projects": "Projets actifs",
@@ -282,91 +283,6 @@
       "title": "Mes Contrats",
       "description": "Gérez vos contrats avec les professionnels",
       "no_contracts": "Aucun contrat",
-      "no_contracts_desc": "Les contrats signés avec les professionnels apparaîtront ici"
-    },
-    "invoices": {
-      "title": "Mes Factures",
-      "description": "Consultez et téléchargez vos factures",
-      "no_invoices": "Aucune facture",
-      "no_invoices_desc": "Vos factures de paiements et transactions apparaîtront ici"
-    },
-    "favorites": {
-      "title": "Professionnels favoris",
-      "description": "Votre shortlist de professionnels sélectionnés pour comparaison"
-    },
-    "activity_timeline": {
-      "title": "Historique d'activité",
-      "description": "Toutes vos actions et interactions sur la plateforme",
-      "no_activity": "Aucune activité récente",
-      "no_activity_desc": "Votre historique d'activité apparaîtra ici"
-    },
-    "recent_activity": {
-      "title": "Activité récente",
-      "description": "Dernières mises à jour sur vos projets",
-      "no_activity": "Aucune activité récente",
-      "create_first": "Créez votre premier projet pour commencer",
-      "account_created": "Compte créé avec succès"
-    },
-    "getting_started": {
-      "title": "Guide de démarrage",
-      "description": "Suivez ces étapes pour démarrer votre premier projet",
-      "step1_title": "Créez votre projet",
-      "step1_desc": "Décrivez votre projet, budget et délais",
-      "step2_title": "Recevez des propositions",
-      "step2_desc": "Les professionnels qualifiés vous enverront leurs offres",
-      "step3_title": "Comparez et choisissez",
-      "step3_desc": "Évaluez les offres et sélectionnez le meilleur professionnel",
-      "step4_title": "Signez et démarrez",
-      "step4_desc": "Formalisez l'accord et suivez l'avancement"
-    },
-    "export": {
-      "export_pdf": "Export PDF",
-      "in_progress": "Export en cours",
-      "pdf_generating": "Votre PDF est en cours de génération…",
-      "no_projects_to_export": "Aucun projet à exporter pour le moment.",
-      "no_activity_to_export": "Aucune activité à exporter pour le moment."
-    },
-    "projects": {
-      "title": "Mes Projets",
-      "description": "Gérez tous vos projets de construction et rénovation",
-      "new_project": "Nouveau projet",
-      "export_pdf": "Export PDF",
-      "no_projects": "Aucun projet",
-      "create_first": "Créez votre premier projet pour commencer",
-      "search_placeholder": "Rechercher par titre ou catégorie...",
-      "filter_all": "Tous",
-      "filter_open": "Ouverts",
-      "filter_in_progress": "En cours",
-      "filter_completed": "Terminés",
-      "no_results": "Aucun projet ne correspond à votre recherche.",
-      "status": {
-        "open": "Ouvert",
-        "in_progress": "En cours",
-        "completed": "Complété",
-        "cancelled": "Annulé"
-      },
-      "actions": {
-        "view": "Voir les détails",
-        "edit": "Modifier",
-        "delete": "Supprimer"
-      },
-      "delete_confirm": {
-        "title": "Supprimer le projet ?",
-        "description": "Cette action est irréversible. Le projet et toutes les propositions associées seront définitivement supprimés.",
-        "cancel": "Annuler",
-        "confirm": "Supprimer"
-      },
-      "delete_success": {
-        "title": "Projet supprimé",
-        "description": "Le projet a été supprimé avec succès"
-      },
-      "delete_error": "Impossible de supprimer le projet",
-      "edit_coming_soon": "L'édition de projet sera bientôt disponible"
-    },
-    "contracts": {
-      "title": "Mes Contrats",
-      "description": "Gérez vos contrats avec les professionnels",
-      "no_contracts": "Aucun contrat",
       "coming_soon": "Fonctionnalité à venir",
       "features": {
         "title": "Fonctionnalité à venir",
@@ -387,18 +303,6 @@
         "pdf_export": "Export PDF des factures",
         "history": "Historique des paiements",
         "receipts": "Reçus fiscaux disponibles"
-      }
-    },
-    "activity": {
-      "title": "Historique d'activité",
-      "description": "Toutes vos actions et interactions sur la plateforme",
-      "export_pdf": "Export PDF",
-      "no_activity": "Aucune activité récente",
-      "types": {
-        "project_created": "Projet créé",
-        "project_updated": "Projet mis à jour",
-        "project_deleted": "Projet supprimé",
-        "proposal_received": "Nouvelle proposition reçue"
       }
     },
     "favorites": {
@@ -455,6 +359,141 @@
         "services": "Services",
         "not_specified": "Non renseigné"
       }
+    },
+    "activity_timeline": {
+      "title": "Historique d'activité",
+      "description": "Toutes vos actions et interactions sur la plateforme",
+      "no_activity": "Aucune activité récente",
+      "no_activity_desc": "Votre historique d'activité apparaîtra ici"
+    },
+    "recent_activity": {
+      "title": "Activité récente",
+      "description": "Dernières mises à jour sur vos projets",
+      "no_activity": "Aucune activité récente",
+      "create_first": "Créez votre premier projet pour commencer",
+      "account_created": "Compte créé avec succès"
+    },
+    "getting_started": {
+      "title": "Guide de démarrage",
+      "description": "Suivez ces étapes pour démarrer votre premier projet",
+      "step1_title": "Créez votre projet",
+      "step1_desc": "Décrivez votre projet, budget et délais",
+      "step2_title": "Recevez des propositions",
+      "step2_desc": "Les professionnels qualifiés vous enverront leurs offres",
+      "step3_title": "Comparez et choisissez",
+      "step3_desc": "Évaluez les offres et sélectionnez le meilleur professionnel",
+      "step4_title": "Signez et démarrez",
+      "step4_desc": "Formalisez l'accord et suivez l'avancement"
+    },
+    "projects": {
+      "title": "Mes Projets",
+      "description": "Gérez tous vos projets de construction et rénovation",
+      "new_project": "Nouveau projet",
+      "export_pdf": "Export PDF",
+      "no_projects": "Aucun projet",
+      "create_first": "Créez votre premier projet pour commencer",
+      "search_placeholder": "Rechercher par titre ou catégorie...",
+      "filter_all": "Tous",
+      "filter_open": "Ouverts",
+      "filter_in_progress": "En cours",
+      "filter_completed": "Terminés",
+      "no_results": "Aucun projet ne correspond à votre recherche.",
+      "status": {
+        "open": "Ouvert",
+        "in_progress": "En cours",
+        "completed": "Complété",
+        "cancelled": "Annulé"
+      },
+      "actions": {
+        "view": "Voir les détails",
+        "edit": "Modifier",
+        "delete": "Supprimer"
+      },
+      "delete_confirm": {
+        "title": "Supprimer le projet ?",
+        "description": "Cette action est irréversible. Le projet et toutes les propositions associées seront définitivement supprimés.",
+        "cancel": "Annuler",
+        "confirm": "Supprimer"
+      },
+      "delete_success": {
+        "title": "Projet supprimé",
+        "description": "Le projet a été supprimé avec succès"
+      },
+      "delete_error": "Impossible de supprimer le projet",
+      "edit_coming_soon": "L'édition de projet sera bientôt disponible"
+    },
+    "activity": {
+      "title": "Historique d'activité",
+      "description": "Toutes vos actions et interactions sur la plateforme",
+      "export_pdf": "Export PDF",
+      "no_activity": "Aucune activité récente",
+      "types": {
+        "project_created": "Projet créé",
+        "project_updated": "Projet mis à jour",
+        "project_deleted": "Projet supprimé",
+        "proposal_received": "Nouvelle proposition reçue"
+      }
+    },
+    "contracts_tab": {
+      "description": "Contrats reçus des entrepreneurs",
+      "empty_title": "Aucun contrat",
+      "empty_description": "Vous recevrez les contrats des entrepreneurs une fois vos soumissions acceptées",
+      "project_label": "Projet : {{title}}",
+      "from_label": "De : {{name}}",
+      "to_sign": "À signer",
+      "signed": "Signé",
+      "awaiting_pro_signature": "En attente signature entrepreneur",
+      "received_on": "Reçu le {{date}}",
+      "view_and_sign": "Voir et signer",
+      "view_contract": "Voir le contrat"
+    },
+    "invoices_tab": {
+      "title": "Historique des transactions",
+      "description": "Tous vos contrats et paiements de jalons",
+      "empty": "Aucun contrat enregistré pour le moment.",
+      "status_completed": "Complété",
+      "status_in_progress": "En cours",
+      "status_pending": "En attente",
+      "download_invoice": "Télécharger la facture",
+      "milestones_title": "Jalons de paiement",
+      "milestones_description": "Détail des versements par jalon",
+      "validated_on": "Validé le {{date}}",
+      "milestone_paid": "Payé",
+      "milestone_requested": "Demandé",
+      "milestone_pending": "En attente"
+    },
+    "proposals_list": {
+      "status_pending": "En attente",
+      "status_accepted": "Acceptée",
+      "status_rejected": "Refusée",
+      "status_withdrawn": "Retirée",
+      "reject_error": "Erreur lors du refus de la proposition",
+      "accept_error": "Erreur lors de l'acceptation de la proposition",
+      "rejected_toast": "Proposition refusée",
+      "accepted_toast": "Proposition acceptée",
+      "accepted_toast_description": "Le projet passe en cours. Vous pouvez maintenant le suivre dans l'onglet Projets.",
+      "update_error": "Erreur lors de la mise à jour",
+      "unknown_error": "Erreur inconnue",
+      "not_specified": "Non spécifié",
+      "empty": "Aucune proposition reçue pour le moment",
+      "col_professional": "Professionnel",
+      "col_project": "Projet",
+      "col_budget": "Budget proposé",
+      "col_duration": "Délai",
+      "col_status": "Statut",
+      "col_date": "Date",
+      "col_actions": "Actions",
+      "budget": "Budget",
+      "duration": "Délai",
+      "confirm_accept_title": "Accepter la proposition ?",
+      "confirm_reject_title": "Refuser la proposition ?",
+      "confirm_accept_description": "Vous êtes sur le point d'accepter cette proposition. Le professionnel sera notifié.",
+      "confirm_reject_description": "Vous êtes sur le point de refuser cette proposition. Le professionnel sera notifié.",
+      "cancel": "Annuler",
+      "processing": "En cours...",
+      "accept": "Accepter",
+      "reject": "Refuser",
+      "days": "{{count}} jours"
     }
   },
   "projects": {
@@ -1122,7 +1161,8 @@
       "signed": "Signé",
       "signed_description": "Le contrat a été signé par {{signer}}",
       "canvas_signature": "Signature Canvas"
-    }},
+    }
+  },
   "admin": {
     "title": "Panneau d'administration",
     "description": "Gestion des vérifications RBQ",
@@ -1300,7 +1340,9 @@
         "per_sqft": "Au pied carré"
       }
     }
+  },
+  "not_found": {
+    "message": "Oups ! Cette page est introuvable.",
+    "back_home": "Retour à l'accueil"
   }
 }
-
-

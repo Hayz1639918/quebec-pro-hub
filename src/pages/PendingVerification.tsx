@@ -144,7 +144,7 @@ const PendingVerification = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-              <Clock className="h-10 w-10 text-orange-600 animate-pulse" />
+              <Clock className="h-10 w-10 text-orange-700 animate-pulse" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
               Vérification en cours
@@ -200,9 +200,9 @@ const PendingVerification = () => {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
-                      <Clock className="h-5 w-5 text-orange-600 animate-pulse" />
+                      <Clock className="h-5 w-5 text-orange-700 animate-pulse" />
                     </div>
-                    <span className="text-sm font-medium text-orange-600">Validation RBQ en cours...</span>
+                    <span className="text-sm font-medium text-orange-700">Validation RBQ en cours...</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">

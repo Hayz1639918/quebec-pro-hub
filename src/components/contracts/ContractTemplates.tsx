@@ -44,7 +44,6 @@ export const ContractTemplates = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user?.id) {
         setCurrentUserId(session.user.id);
-        console.log('User ID chargé:', session.user.id);
         return session.user.id;
       }
       return null;
@@ -76,16 +75,6 @@ export const ContractTemplates = ({
 
       const templatesData = data || [];
       setTemplates(templatesData);
-      
-      // Log pour déboguer
-      if (templatesData.length > 0) {
-        console.log('Templates chargés:', templatesData.map(t => ({
-          id: t.id,
-          name: t.name,
-          created_by: t.created_by,
-          is_custom: !!t.created_by
-        })));
-      }
     } catch (error) {
       console.error('Error fetching contract templates:', error);
       toast({
@@ -175,13 +164,6 @@ export const ContractTemplates = ({
 
   const handleDeleteTemplate = async (template: ContractTemplate) => {
     // Log pour déboguer
-    console.log('=== SUPPRESSION DE TEMPLATE ===');
-    console.log('Template:', {
-      id: template.id,
-      name: template.name,
-      created_by: template.created_by,
-    });
-    console.log('Utilisateur actuel:', currentUserId);
 
     // Attendre que l'utilisateur soit chargé si nécessaire
     let userId = currentUserId;
@@ -203,13 +185,11 @@ export const ContractTemplates = ({
     }
 
     try {
-      console.log('Appel de la fonction RPC delete_custom_template...');
       
       // Utiliser directement la fonction RPC qui gère toutes les vérifications
       const { data, error } = await supabase
         .rpc('delete_custom_template', { template_id: template.id });
 
-      console.log('Réponse RPC:', { data, error });
 
       if (error) {
         console.error('Erreur RPC:', error);
@@ -256,7 +236,7 @@ export const ContractTemplates = ({
         description: 'Réponse inattendue du serveur',
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur lors de la suppression:', error);
       
       let errorMessage = 'Erreur lors de la suppression du contrat';
@@ -408,17 +388,6 @@ export const ContractTemplates = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTemplates.map((template) => {
             const isCustom = isCustomTemplate(template);
-            // Log pour déboguer
-            if (isCustom) {
-              console.log('Template personnalisé détecté:', {
-                id: template.id,
-                name: template.name,
-                created_by: template.created_by,
-                currentUserId: currentUserId,
-                canDelete: canDeleteTemplate(template)
-              });
-            }
-            
             return (
             <Card key={template.id} className="hover:shadow-lg transition-shadow relative">
               {/* Bouton de suppression pour les templates personnalisés */}

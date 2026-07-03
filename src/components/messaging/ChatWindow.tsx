@@ -116,7 +116,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
   const checkBlockStatus = async () => {
     const otherId = conversation?.other_participant_id;
     if (!otherId) return;
-    const { data } = await (supabase as any)
+    const { data } = await db
       .from("user_blocks")
       .select("id")
       .eq("blocker_id", userId)
@@ -131,7 +131,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     setBlockProcessing(true);
     try {
       if (isBlocked) {
-        const { error } = await (supabase as any)
+        const { error } = await db
           .from("user_blocks")
           .delete()
           .eq("blocker_id", userId)
@@ -140,7 +140,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
         setIsBlocked(false);
         toast({ title: "Déblocage", description: "Vous pouvez de nouveau échanger avec cette personne." });
       } else {
-        const { error } = await (supabase as any)
+        const { error } = await db
           .from("user_blocks")
           .insert({ blocker_id: userId, blocked_id: otherId });
         if (error) throw error;
@@ -159,7 +159,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     if (!otherId) return;
     setSubmittingReport(true);
     try {
-      const { error } = await (supabase as any).from("user_reports").insert({
+      const { error } = await supabase.from("user_reports").insert({
         reporter_id: userId,
         reported_user_id: otherId,
         conversation_id: conversation?.id ?? null,
@@ -189,7 +189,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     if (!conversation || (!isInitial && !hasMore)) return;
 
     try {
-      isInitial ? setLoading(true) : setLoadingMore(true);
+      if (isInitial) setLoading(true); else setLoadingMore(true);
       
       const currentOffset = isInitial ? 0 : offset;
 
@@ -516,7 +516,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
     // Remove failed message
     setMessages((prev) => prev.filter(msg => msg.tempId !== failedMsg.tempId));
     // Retry sending
-    sendMessage(e as any, failedMsg.content);
+    sendMessage(e as unknown as React.FormEvent, failedMsg.content);
   }, []);
 
   // Upload a file and send as message attachment

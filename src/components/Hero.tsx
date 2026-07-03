@@ -24,7 +24,7 @@ const Hero = () => {
 
         {/* ── Top mono label ── */}
         <div className="animate-reveal-up mb-8 sm:mb-12">
-          <span className="font-mono text-[11px] sm:text-xs text-foreground/35 uppercase tracking-[0.15em]">
+          <span className="font-mono text-[11px] sm:text-xs text-foreground/60 uppercase tracking-[0.15em]">
             Plateforme canadienne pour entrepreneurs du bâtiment
           </span>
         </div>
@@ -80,7 +80,7 @@ const Hero = () => {
           ].map(({ value, label }) => (
             <div key={label}>
               <div className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground leading-none mb-1">{value}</div>
-              <div className="font-mono text-[11px] text-foreground/30 uppercase tracking-[0.1em]">{label}</div>
+              <div className="font-mono text-[11px] text-foreground/70 uppercase tracking-[0.1em]">{label}</div>
             </div>
           ))}
         </div>

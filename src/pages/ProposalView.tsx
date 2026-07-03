@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge, type BadgeProps } from '@/components/ui/badge';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { PDFDownloadLink, PDFViewer } from '@react-pdf/renderer';
@@ -21,10 +21,13 @@ import {
   CheckCircle2,
   XCircle,
   HardHat,
+  type LucideIcon,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import type { ProposalRecord, TenderProject, PartyInfo } from '@/types/tender';
+import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
 
 const ProposalView = () => {
   const { t } = useTranslation();
@@ -32,11 +35,11 @@ const ProposalView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const [proposal, setProposal] = useState<any>(null);
-  const [project, setProject] = useState<any>(null);
-  const [professional, setProfessional] = useState<any>(null);
-  const [client, setClient] = useState<any>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [proposal, setProposal] = useState<ProposalRecord | null>(null);
+  const [project, setProject] = useState<TenderProject | null>(null);
+  const [professional, setProfessional] = useState<PartyInfo | null>(null);
+  const [client, setClient] = useState<PartyInfo | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPDFViewer, setShowPDFViewer] = useState(false);
 
@@ -115,7 +118,7 @@ const ProposalView = () => {
           rbq_license: professional_rbq,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching proposal:', error);
       toast.error('Erreur lors du chargement de la soumission');
     } finally {
@@ -140,27 +143,18 @@ const ProposalView = () => {
       
       // Refresh data
       fetchProposalDetails();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error updating proposal:', error);
       toast.error('Erreur lors de la mise à jour du statut');
     }
   };
 
-  const formatDate = (date: string | null) => {
-    if (!date) return 'Non spécifiée';
-    return format(new Date(date), 'dd MMMM yyyy', { locale: fr });
-  };
 
-  const formatCurrency = (amount: number | null) => {
-    if (!amount) return 'Non spécifié';
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
-    }).format(amount);
-  };
+
+
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: any; icon: any; label: string }> = {
+    const variants: Record<string, { variant: BadgeProps['variant']; icon: LucideIcon; label: string }> = {
       pending: { variant: 'secondary', icon: Calendar, label: 'En attente' },
       accepted: { variant: 'default', icon: CheckCircle2, label: 'Acceptée' },
       rejected: { variant: 'destructive', icon: XCircle, label: 'Refusée' },
@@ -430,7 +424,7 @@ const ProposalView = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {proposal.team_composition.map((member: any, index: number) => (
+                {proposal.team_composition.map((member, index) => (
                   <div key={index} className="border-l-4 border-green-500 pl-4 py-2">
                     <p className="font-semibold">{member.name}</p>
                     <p className="text-sm text-gray-600">{member.role}</p>
@@ -450,7 +444,7 @@ const ProposalView = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {proposal.timeline_details.map((phase: any, index: number) => (
+                {proposal.timeline_details.map((phase, index) => (
                   <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
                     <div>
                       <p className="font-medium">{phase.name || phase.phase}</p>
@@ -474,7 +468,7 @@ const ProposalView = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {Object.entries(proposal.budget_breakdown).map(([key, value]: [string, any]) => (
+                {Object.entries(proposal.budget_breakdown).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center py-2 border-b last:border-0">
                     <span className="text-gray-700">{key}</span>
                     <span className="font-semibold">{formatCurrency(value)}</span>
@@ -525,7 +519,7 @@ const ProposalView = () => {
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 gap-4">
-                {proposal.references.map((ref: any, index: number) => (
+                {proposal.references.map((ref, index) => (
                   <div key={index} className="border rounded-lg p-4">
                     <p className="font-semibold">{ref.project_name || `Référence ${index + 1}`}</p>
                     <p className="text-sm text-gray-600">Client : {ref.client_name}</p>

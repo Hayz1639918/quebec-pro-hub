@@ -173,9 +173,9 @@ const ProjectProgress = () => {
         current_phase: projectData.current_phase,
         contract_id: projectData.contract_id,
         client_id: projectData.client_id,
-        client_name: (projectData.profiles as any)?.company_name || (projectData.profiles as any)?.full_name || 'Client',
-        start_date: (projectData.contracts as any)?.start_date || null,
-        end_date: (projectData.contracts as any)?.end_date || null,
+        client_name: (projectData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.company_name || (projectData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.full_name || 'Client',
+        start_date: (projectData.contracts as { start_date?: string | null; end_date?: string | null } | null)?.start_date || null,
+        end_date: (projectData.contracts as { start_date?: string | null; end_date?: string | null } | null)?.end_date || null,
       };
 
       setProject(formattedProject);
@@ -183,7 +183,7 @@ const ProjectProgress = () => {
       setCurrentPhase(formattedProject.current_phase || '');
       setProgressStatus(formattedProject.progress_status);
       // Load existing media
-      const existingMedia = (projectData as any).media_urls;
+      const existingMedia = (projectData as { media_urls?: unknown }).media_urls;
       if (Array.isArray(existingMedia)) setSavedMediaUrls(existingMedia);
 
       // Fetch reports
@@ -237,7 +237,7 @@ const ProjectProgress = () => {
       } : null);
 
       toast.success('Avancement mis à jour avec succès');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving progress:', error);
       toast.error('Erreur lors de la sauvegarde');
     } finally {
@@ -283,7 +283,7 @@ const ProjectProgress = () => {
       setSavedMediaUrls(combined);
       setMediaFiles([]);
       toast.success(`${newUrls.length} fichier(s) uploadé(s) avec succès`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Upload error:', err);
       toast.error('Erreur lors de l\'upload des médias');
     } finally {

@@ -57,7 +57,7 @@ export default function ProjectCompleteButton({
 
       setConfirmOpen(false);
       setReviewOpen(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Erreur",
         description: err.message || "Impossible de mettre à jour le statut du projet.",

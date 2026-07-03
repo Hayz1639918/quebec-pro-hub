@@ -490,7 +490,8 @@ const Professionals = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation />
-      
+
+      <main>
       {/* Hero Section */}
       <section className="pt-24 sm:pt-32 pb-8 sm:pb-12 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -639,7 +640,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label>{t('professionals.filters.all_services')}</Label>
                     <Select value={selectedService} onValueChange={setSelectedService}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.filters.all_services')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -656,7 +657,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label>{t('professionals.filters.all_regions')}</Label>
                     <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.filters.all_regions')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -678,7 +679,7 @@ const Professionals = () => {
                       {t('professionals.filters.budget_label')}
                     </Label>
                     <Select value={selectedBudget} onValueChange={setSelectedBudget}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.filters.budget_label')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -698,7 +699,7 @@ const Professionals = () => {
                       {t('professionals.filters.availability_label')}
                     </Label>
                     <Select value={selectedAvailability} onValueChange={setSelectedAvailability}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.filters.availability_label')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -718,7 +719,7 @@ const Professionals = () => {
                       {t('professionals.filters.response_time_label')}
                     </Label>
                     <Select value={selectedResponseTime} onValueChange={setSelectedResponseTime}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.filters.response_time_label')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -737,7 +738,7 @@ const Professionals = () => {
                   <div className="space-y-2">
                     <Label>{t('professionals.sort.sort_by')}</Label>
                     <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label={t('professionals.sort.sort_by')}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1063,6 +1064,7 @@ const Professionals = () => {
         </div>
       </section>
 
+      </main>
       <Footer />
 
       {inviteTarget && (

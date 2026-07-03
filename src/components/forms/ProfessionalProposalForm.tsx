@@ -252,7 +252,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
       } else {
         navigate('/pro/dashboard');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting proposal:', error);
       if (error.code === '23505') {
         toast.error('Vous avez déjà soumis une proposition pour ce projet');

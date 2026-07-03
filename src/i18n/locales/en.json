@@ -234,10 +234,11 @@
       "favorites": "Favorites"
     },
     "export": {
-      "in_progress": "Export in Progress",
-      "pdf_generating": "Your PDF is being generated",
-      "no_projects_to_export": "You have no projects to export",
-      "no_activity_to_export": "You have no activity to export"
+      "export_pdf": "Export PDF",
+      "in_progress": "Export in progress",
+      "pdf_generating": "Your PDF is being generated…",
+      "no_projects_to_export": "No projects to export yet.",
+      "no_activity_to_export": "No activity to export yet."
     },
     "stats": {
       "active_projects": "Active Projects",
@@ -282,91 +283,6 @@
       "title": "My Contracts",
       "description": "Manage your contracts with professionals",
       "no_contracts": "No contracts",
-      "no_contracts_desc": "Signed contracts with professionals will appear here"
-    },
-    "invoices": {
-      "title": "My Invoices",
-      "description": "View and download your invoices",
-      "no_invoices": "No invoices",
-      "no_invoices_desc": "Your payment invoices and transactions will appear here"
-    },
-    "favorites": {
-      "title": "Favorite Professionals",
-      "description": "Your shortlist of selected professionals for comparison"
-    },
-    "activity_timeline": {
-      "title": "Activity History",
-      "description": "All your actions and interactions on the platform",
-      "no_activity": "No recent activity",
-      "no_activity_desc": "Your activity history will appear here"
-    },
-    "recent_activity": {
-      "title": "Recent Activity",
-      "description": "Latest updates on your projects",
-      "no_activity": "No recent activity",
-      "create_first": "Create your first project to get started",
-      "account_created": "Account created successfully"
-    },
-    "getting_started": {
-      "title": "Getting Started Guide",
-      "description": "Follow these steps to start your first project",
-      "step1_title": "Create Your Project",
-      "step1_desc": "Describe your project, budget, and timeline",
-      "step2_title": "Receive Proposals",
-      "step2_desc": "Qualified professionals will send you their offers",
-      "step3_title": "Compare and Choose",
-      "step3_desc": "Evaluate offers and select the best professional",
-      "step4_title": "Sign and Start",
-      "step4_desc": "Formalize the agreement and track progress"
-    },
-    "export": {
-      "export_pdf": "Export PDF",
-      "in_progress": "Export in progress",
-      "pdf_generating": "Your PDF is being generated…",
-      "no_projects_to_export": "No projects to export yet.",
-      "no_activity_to_export": "No activity to export yet."
-    },
-    "projects": {
-      "title": "My Projects",
-      "description": "Manage all your construction and renovation projects",
-      "new_project": "New Project",
-      "export_pdf": "Export PDF",
-      "no_projects": "No projects",
-      "create_first": "Create your first project to get started",
-      "search_placeholder": "Search by title or category...",
-      "filter_all": "All",
-      "filter_open": "Open",
-      "filter_in_progress": "In progress",
-      "filter_completed": "Completed",
-      "no_results": "No project matches your search.",
-      "status": {
-        "open": "Open",
-        "in_progress": "In Progress",
-        "completed": "Completed",
-        "cancelled": "Cancelled"
-      },
-      "actions": {
-        "view": "View Details",
-        "edit": "Edit",
-        "delete": "Delete"
-      },
-      "delete_confirm": {
-        "title": "Delete project?",
-        "description": "This action is irreversible. The project and all associated proposals will be permanently deleted.",
-        "cancel": "Cancel",
-        "confirm": "Delete"
-      },
-      "delete_success": {
-        "title": "Project Deleted",
-        "description": "The project was successfully deleted"
-      },
-      "delete_error": "Unable to delete project",
-      "edit_coming_soon": "Project editing will be available soon"
-    },
-    "contracts": {
-      "title": "My Contracts",
-      "description": "Manage your contracts with professionals",
-      "no_contracts": "No contracts",
       "coming_soon": "Coming Soon",
       "features": {
         "title": "Coming Soon",
@@ -387,18 +303,6 @@
         "pdf_export": "PDF invoice export",
         "history": "Payment history",
         "receipts": "Tax receipts available"
-      }
-    },
-    "activity": {
-      "title": "Activity History",
-      "description": "All your actions and interactions on the platform",
-      "export_pdf": "Export PDF",
-      "no_activity": "No recent activity",
-      "types": {
-        "project_created": "Project Created",
-        "project_updated": "Project Updated",
-        "project_deleted": "Project Deleted",
-        "proposal_received": "New Proposal Received"
       }
     },
     "favorites": {
@@ -455,6 +359,141 @@
         "services": "Services",
         "not_specified": "Not specified"
       }
+    },
+    "activity_timeline": {
+      "title": "Activity History",
+      "description": "All your actions and interactions on the platform",
+      "no_activity": "No recent activity",
+      "no_activity_desc": "Your activity history will appear here"
+    },
+    "recent_activity": {
+      "title": "Recent Activity",
+      "description": "Latest updates on your projects",
+      "no_activity": "No recent activity",
+      "create_first": "Create your first project to get started",
+      "account_created": "Account created successfully"
+    },
+    "getting_started": {
+      "title": "Getting Started Guide",
+      "description": "Follow these steps to start your first project",
+      "step1_title": "Create Your Project",
+      "step1_desc": "Describe your project, budget, and timeline",
+      "step2_title": "Receive Proposals",
+      "step2_desc": "Qualified professionals will send you their offers",
+      "step3_title": "Compare and Choose",
+      "step3_desc": "Evaluate offers and select the best professional",
+      "step4_title": "Sign and Start",
+      "step4_desc": "Formalize the agreement and track progress"
+    },
+    "projects": {
+      "title": "My Projects",
+      "description": "Manage all your construction and renovation projects",
+      "new_project": "New Project",
+      "export_pdf": "Export PDF",
+      "no_projects": "No projects",
+      "create_first": "Create your first project to get started",
+      "search_placeholder": "Search by title or category...",
+      "filter_all": "All",
+      "filter_open": "Open",
+      "filter_in_progress": "In progress",
+      "filter_completed": "Completed",
+      "no_results": "No project matches your search.",
+      "status": {
+        "open": "Open",
+        "in_progress": "In Progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "view": "View Details",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "delete_confirm": {
+        "title": "Delete project?",
+        "description": "This action is irreversible. The project and all associated proposals will be permanently deleted.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      },
+      "delete_success": {
+        "title": "Project Deleted",
+        "description": "The project was successfully deleted"
+      },
+      "delete_error": "Unable to delete project",
+      "edit_coming_soon": "Project editing will be available soon"
+    },
+    "activity": {
+      "title": "Activity History",
+      "description": "All your actions and interactions on the platform",
+      "export_pdf": "Export PDF",
+      "no_activity": "No recent activity",
+      "types": {
+        "project_created": "Project Created",
+        "project_updated": "Project Updated",
+        "project_deleted": "Project Deleted",
+        "proposal_received": "New Proposal Received"
+      }
+    },
+    "contracts_tab": {
+      "description": "Contracts received from contractors",
+      "empty_title": "No contracts",
+      "empty_description": "You will receive contractors' contracts once your submissions are accepted",
+      "project_label": "Project: {{title}}",
+      "from_label": "From: {{name}}",
+      "to_sign": "To sign",
+      "signed": "Signed",
+      "awaiting_pro_signature": "Awaiting contractor signature",
+      "received_on": "Received on {{date}}",
+      "view_and_sign": "View and sign",
+      "view_contract": "View contract"
+    },
+    "invoices_tab": {
+      "title": "Transaction history",
+      "description": "All your contracts and milestone payments",
+      "empty": "No contracts recorded yet.",
+      "status_completed": "Completed",
+      "status_in_progress": "In progress",
+      "status_pending": "Pending",
+      "download_invoice": "Download invoice",
+      "milestones_title": "Payment milestones",
+      "milestones_description": "Breakdown of payments per milestone",
+      "validated_on": "Validated on {{date}}",
+      "milestone_paid": "Paid",
+      "milestone_requested": "Requested",
+      "milestone_pending": "Pending"
+    },
+    "proposals_list": {
+      "status_pending": "Pending",
+      "status_accepted": "Accepted",
+      "status_rejected": "Rejected",
+      "status_withdrawn": "Withdrawn",
+      "reject_error": "Error while rejecting the proposal",
+      "accept_error": "Error while accepting the proposal",
+      "rejected_toast": "Proposal rejected",
+      "accepted_toast": "Proposal accepted",
+      "accepted_toast_description": "The project is now in progress. You can follow it in the Projects tab.",
+      "update_error": "Error while updating",
+      "unknown_error": "Unknown error",
+      "not_specified": "Not specified",
+      "empty": "No proposals received yet",
+      "col_professional": "Professional",
+      "col_project": "Project",
+      "col_budget": "Proposed budget",
+      "col_duration": "Timeline",
+      "col_status": "Status",
+      "col_date": "Date",
+      "col_actions": "Actions",
+      "budget": "Budget",
+      "duration": "Timeline",
+      "confirm_accept_title": "Accept this proposal?",
+      "confirm_reject_title": "Reject this proposal?",
+      "confirm_accept_description": "You are about to accept this proposal. The professional will be notified.",
+      "confirm_reject_description": "You are about to reject this proposal. The professional will be notified.",
+      "cancel": "Cancel",
+      "processing": "Processing...",
+      "accept": "Accept",
+      "reject": "Reject",
+      "days": "{{count}} days"
     }
   },
   "projects": {
@@ -1121,7 +1160,6 @@
       "signed_description": "The contract has been signed by {{signer}}",
       "canvas_signature": "Canvas Signature"
     }
-    
   },
   "admin": {
     "title": "Admin Panel",
@@ -1300,7 +1338,9 @@
         "per_sqft": "Per square foot"
       }
     }
+  },
+  "not_found": {
+    "message": "Oops! Page not found.",
+    "back_home": "Back to home"
   }
 }
-
-

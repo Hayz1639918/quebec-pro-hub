@@ -32,7 +32,7 @@
     --secondary-foreground: 214 75% 9%;
 
     --muted: 210 20% 93%;
-    --muted-foreground: 214 15% 45%;
+    --muted-foreground: 214 16% 38%;
 
     --accent: 210 100% 40%;
     --accent-foreground: 0 0% 100%;
@@ -49,7 +49,7 @@
     --radius: 0.25rem;
 
     /* ─── Sémantique ─── */
-    --success: 145 55% 36%;
+    --success: 145 60% 30%;
     --success-foreground: 0 0% 100%;
     --success-light: 145 55% 94%;
 
@@ -88,7 +88,7 @@
     --secondary: 214 40% 14%;
     --secondary-foreground: 210 20% 90%;
     --muted: 214 35% 13%;
-    --muted-foreground: 30 8% 55%;
+    --muted-foreground: 30 8% 65%;
     --accent: 214 60% 55%;
     --accent-foreground: 0 0% 100%;
     --accent-hover: 214 60% 63%;
@@ -475,7 +475,7 @@ img { max-width: 100%; height: auto; }
 .corner-mark { position: relative; }
 .corner-mark::before, .corner-mark::after { display: none; }
 .corner-mark-dark::before, .corner-mark-dark::after { display: none; }
-.tech-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.5; }
+.tech-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
 .tech-label-blue { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--primary)); }
 .tech-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border: 1px solid hsl(var(--border)); background: hsl(var(--muted)); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--foreground)); }
 .tech-badge-dark { border-color: hsl(220 12% 25%); background: hsl(220 15% 15%); color: hsl(30 15% 80%); }

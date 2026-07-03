@@ -196,7 +196,6 @@ const CompleteProfile = () => {
       const fileName = `rbq-${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
 
-      console.log('Uploading file:', { fileName, filePath, fileType: rbqFile.type });
 
       const { data, error: uploadError } = await supabase.storage
         .from('certifications')
@@ -210,7 +209,6 @@ const CompleteProfile = () => {
         throw uploadError;
       }
 
-      console.log('Upload successful:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -218,7 +216,7 @@ const CompleteProfile = () => {
         .getPublicUrl(filePath);
 
       return publicUrl;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading RBQ certification:', error);
       toast({
         variant: "destructive",

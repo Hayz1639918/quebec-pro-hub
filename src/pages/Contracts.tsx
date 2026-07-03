@@ -36,6 +36,7 @@ import { ContractBuilder } from "@/components/contracts/ContractBuilder";
 import { UploadContract } from "@/components/contracts/UploadContract";
 import type { ContractTemplate } from "@/types/contracts";
 import Navigation from "@/components/Navigation";
+import { formatAmount, formatDateLong } from '@/lib/format';
 
 const Contracts = () => {
   const { t, i18n } = useTranslation();
@@ -150,7 +151,7 @@ const Contracts = () => {
                 return prev;
               });
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('Error fetching contract:', error);
             toast({
               variant: "destructive",
@@ -244,7 +245,9 @@ const Contracts = () => {
                 .single();
               clientName = clientData?.full_name;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           try {
             if (contract.professional_id) {
@@ -256,7 +259,9 @@ const Contracts = () => {
               professionalName = proData?.full_name;
               companyName = proData?.company_name;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           try {
             if (contract.project_id) {
@@ -267,7 +272,9 @@ const Contracts = () => {
                 .single();
               projectTitle = projectData?.title;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           return {
             ...contract,
@@ -409,18 +416,11 @@ const Contracts = () => {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('common.not_specified');
-    const locale = i18n.language === 'fr' ? fr : enUS;
-    return format(new Date(dateString), 'PP', { locale });
-  };
+  const formatDate = (dateString: string | null) =>
+    formatDateLong(dateString, { lang: i18n.language, fallback: t('common.not_specified'), pattern: 'PP' });
 
-  const formatCurrency = (amount: number, currency: string = 'CAD') => {
-    return new Intl.NumberFormat(i18n.language === 'fr' ? 'fr-CA' : 'en-CA', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string = 'CAD') =>
+    formatAmount(amount, { lang: i18n.language, currency });
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -618,7 +618,7 @@ const Contracts = () => {
                   </div>
                   <div className="flex gap-2 sm:gap-4">
                     <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ContractStatus | "all")}>
-                      <SelectTrigger className="w-full sm:w-48">
+                      <SelectTrigger className="w-full sm:w-48" aria-label={t('contracts.filter_status')}>
                         <Filter className="h-4 w-4 mr-2 flex-shrink-0" />
                         <SelectValue placeholder={t('contracts.filter_status')} />
                       </SelectTrigger>
@@ -634,7 +634,7 @@ const Contracts = () => {
                       </SelectContent>
                     </Select>
                     <Select value={sortBy} onValueChange={(value) => setSortBy(value as "created_at" | "title" | "total_amount")}>
-                      <SelectTrigger className="w-full sm:w-48">
+                      <SelectTrigger className="w-full sm:w-48" aria-label="Trier les contrats">
                         <SelectValue placeholder={t('contracts.sort_by')} />
                       </SelectTrigger>
                       <SelectContent>

@@ -379,6 +379,7 @@ export const InteractiveMap = ({
             <span className="text-sm font-medium">{t('professionals.map.radius')}: {radius} {t('professionals.map.km')}</span>
           </div>
           <Slider
+            aria-label="Rayon de recherche (km)"
             value={[radius]}
             onValueChange={handleRadiusChange}
             min={5}

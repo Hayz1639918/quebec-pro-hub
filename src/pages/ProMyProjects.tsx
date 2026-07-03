@@ -103,7 +103,7 @@ const ProMyProjects = () => {
       }
 
       if (assignedProjectsData) {
-        const formatted: AssignedProject[] = assignedProjectsData.map((p: any) => ({
+        const formatted: AssignedProject[] = assignedProjectsData.map((p) => ({
           id: p.id,
           title: p.title,
           category: p.category,

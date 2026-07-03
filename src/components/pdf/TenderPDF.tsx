@@ -9,6 +9,8 @@ import {
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import type { TenderProject, PartyInfo } from '@/types/tender';
+import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
 
 // Register fonts for better rendering
 Font.register({
@@ -250,8 +252,8 @@ const styles = StyleSheet.create({
 });
 
 interface TenderPDFProps {
-  project: any;
-  client: any;
+  project: TenderProject;
+  client: PartyInfo;
 }
 
 export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
@@ -411,7 +413,7 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
               <Text style={styles.sectionHeaderText}>SPÉCIFICATIONS TECHNIQUES</Text>
             </View>
             <View style={styles.sectionContent}>
-              {project.technical_specifications.map((spec: any, index: number) => (
+              {project.technical_specifications.map((spec, index) => (
                 <View key={index} style={styles.listItem}>
                   <Text style={styles.listBullet}>•</Text>
                   <Text style={styles.listText}>
@@ -435,7 +437,7 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
                 <Text style={styles.tableCellHeader}>Date prévue</Text>
                 <Text style={styles.tableCellHeaderLast}>Livrables</Text>
               </View>
-              {project.milestones.map((milestone: any, index: number) => (
+              {project.milestones.map((milestone, index) => (
                 <View key={index} style={index === project.milestones.length - 1 ? styles.tableRowLast : styles.tableRow}>
                   <Text style={styles.tableCell}>{milestone.name || milestone.title}</Text>
                   <Text style={styles.tableCell}>
@@ -514,7 +516,7 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
               <Text style={[styles.tableCellHeader, { flex: 3 }]}>Critère</Text>
               <Text style={styles.tableCellHeaderLast}>Pondération</Text>
             </View>
-            {Object.entries(project.evaluation_criteria).map(([key, value]: [string, any], index: number) => (
+            {Object.entries(project.evaluation_criteria).map(([key, value], index) => (
               <View key={key} style={index === Object.entries(project.evaluation_criteria).length - 1 ? styles.tableRowLast : styles.tableRow}>
                 <Text style={[styles.tableCell, { flex: 3 }]}>{key}</Text>
                 <Text style={styles.tableCellLast}>{value}%</Text>

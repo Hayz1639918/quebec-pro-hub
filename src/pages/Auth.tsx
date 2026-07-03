@@ -84,8 +84,8 @@ function PasswordField({
         <button
           type="button"
           onClick={onToggleShow}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          tabIndex={-1}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+          aria-label={show ? "Masquer le mot de passe" : "Afficher le mot de passe"}
         >
           {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -391,7 +391,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3 sm:p-4 py-6 sm:py-8 pt-safe pb-safe">
+    <main className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-3 sm:p-4 py-6 sm:py-8 pt-safe pb-safe">
       <Card className="w-full max-w-2xl mx-auto shadow-lg">
         <CardHeader className="space-y-2 sm:space-y-3 md:space-y-4 text-center px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <div className="flex justify-center">
@@ -402,7 +402,7 @@ const Auth = () => {
             />
           </div>
           <div>
-            <CardTitle className="text-lg sm:text-xl md:text-2xl">
+            <CardTitle className="text-lg sm:text-xl md:text-2xl" role="heading" aria-level={1}>
               {isPasswordRecovery
                 ? "Nouveau mot de passe"
                 : forgotPassword
@@ -533,8 +533,8 @@ const Auth = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    tabIndex={-1}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                    aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -794,7 +794,7 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 

@@ -121,7 +121,7 @@ const ProjectReport = () => {
         city: projectData.city,
         progress_percentage: projectData.progress_percentage || 0,
         client_id: projectData.client_id,
-        client_name: (projectData.profiles as any)?.company_name || (projectData.profiles as any)?.full_name || 'Client',
+        client_name: (projectData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.company_name || (projectData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.full_name || 'Client',
       };
 
       setProject(formattedProject);
@@ -199,7 +199,7 @@ const ProjectReport = () => {
 
       toast.success('Rapport envoyé avec succès !');
       navigate(`/pro/project/${project.id}/progress`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending report:', error);
       toast.error('Erreur lors de l\'envoi du rapport');
     } finally {

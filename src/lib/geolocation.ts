@@ -379,7 +379,6 @@ export async function geocodePostalCode(
     if (geocodeCache.has(cacheKey)) {
       const cached = geocodeCache.get(cacheKey);
       if (cached) {
-        console.log('✅ Found in cache:', cleanedPostalCode);
         return cached;
       }
     }
@@ -407,7 +406,6 @@ export async function geocodePostalCode(
     // ============================================
     const zippopotamResult = await tryZippopotam(cleanedPostalCode);
     if (zippopotamResult) {
-      console.log('✅ Found via Zippopotam.us:', formattedPostalCode);
       geocodeCache.set(cacheKey, zippopotamResult);
       return zippopotamResult;
     }
@@ -417,7 +415,6 @@ export async function geocodePostalCode(
     // ============================================
     const localEntry = POSTAL_CODES_DB.postalCodes[fsa];
     if (localEntry) {
-      console.log('✅ Found in local database:', fsa, '-', localEntry.name);
       
       // Calculate deterministic offset based on LDU for precision
       const lduOffset = ldu ? getLDUOffset(ldu) : { lat: 0, lng: 0 };
@@ -438,7 +435,6 @@ export async function geocodePostalCode(
     if (city) {
       const result = await tryOpenCage(formattedPostalCode, city);
       if (result) {
-        console.log('✅ Found via Nominatim (with city):', formattedPostalCode);
         geocodeCache.set(cacheKey, result);
         return result;
       }
@@ -447,7 +443,6 @@ export async function geocodePostalCode(
     // Try with postal code only
     const result2 = await tryGeocode(`${formattedPostalCode}, Quebec, Canada`);
     if (result2) {
-      console.log('✅ Found via Nominatim (Quebec):', formattedPostalCode);
       geocodeCache.set(cacheKey, result2);
       return result2;
     }
@@ -457,7 +452,6 @@ export async function geocodePostalCode(
     // ============================================
     const result3 = await tryNominatimPostalCode(formattedPostalCode, country);
     if (result3) {
-      console.log('✅ Found via Nominatim postalcode param:', formattedPostalCode);
       geocodeCache.set(cacheKey, result3);
       return result3;
     }
@@ -467,7 +461,6 @@ export async function geocodePostalCode(
     // ============================================
     const prefix = cleanedPostalCode.charAt(0);
     if (POSTAL_CODE_PREFIXES[prefix]) {
-      console.log('⚠️ Using province prefix fallback for:', cleanedPostalCode);
       
       // Use LDU-based offset if available, otherwise random
       const offset = ldu 

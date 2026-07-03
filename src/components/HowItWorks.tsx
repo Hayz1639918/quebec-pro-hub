@@ -18,14 +18,14 @@ const HowItWorks = () => {
 
         {/* Section header — editorial style */}
         <div className="mb-16 sm:mb-24 max-w-3xl">
-          <span className="font-mono text-[11px] text-foreground/30 uppercase tracking-[0.15em] block mb-6">
+          <span className="font-mono text-[11px] text-foreground/70 uppercase tracking-[0.15em] block mb-6">
             Comment ça marche
           </span>
           <h2 className="font-display text-foreground leading-[1.02] mb-6">
             {t("how_it_works.title")}
           </h2>
           <div className="h-px w-16 bg-foreground/12 mb-6" />
-          <p className="font-body text-lg text-foreground/40 leading-relaxed max-w-xl">
+          <p className="font-body text-lg text-foreground/60 leading-relaxed max-w-xl">
             {t("how_it_works.subtitle")}
           </p>
         </div>
@@ -41,7 +41,7 @@ const HowItWorks = () => {
               >
                 {/* Number + icon row */}
                 <div className="flex items-start justify-between mb-8">
-                  <span className="font-mono text-[11px] text-foreground/20 tracking-[0.1em]">
+                  <span className="font-mono text-[11px] text-foreground/70 tracking-[0.1em]">
                     {step.num}
                   </span>
                   <div className="p-2.5 border border-foreground/8 bg-foreground/[0.02] group-hover:border-primary/20 group-hover:bg-primary/5 transition-all duration-500">
@@ -53,7 +53,7 @@ const HowItWorks = () => {
                 <h3 className="font-ui font-medium text-lg text-foreground mb-3">
                   {step.title}
                 </h3>
-                <p className="font-body text-sm text-foreground/35 leading-relaxed">
+                <p className="font-body text-sm text-foreground/60 leading-relaxed">
                   {step.description}
                 </p>
               </div>

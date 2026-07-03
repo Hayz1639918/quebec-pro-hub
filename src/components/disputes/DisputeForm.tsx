@@ -62,7 +62,7 @@ export const DisputeForm = ({ contractId, userId, onSubmitted }: DisputeFormProp
       setCategory("");
       setDescription("");
       onSubmitted?.();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Erreur",
