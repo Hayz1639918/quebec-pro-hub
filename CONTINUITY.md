@@ -50,6 +50,7 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 ## 10. Commands executed and results
 - Baseline : `npm install` OK ; `type-check` OK ; `build` OK (warn chunk PDF 1.49MB) ; `test` 18/18 OK ; `lint` 116 errors/66 warnings.
 - Après Batch 1 : `lint` 0 errors / 66 warnings ; `type-check` OK ; `test` 18/18 OK ; `build` OK.
+- Connexion Supabase PROD établie via .env.local (clé publishable) après ouverture de la politique réseau de l'environnement. Audit REST anon : profiles/projects fuient (voir §20). Navigateur de test NE peut PAS atteindre Supabase (ERR_CONNECTION_RESET via proxy : cert MITM non fiable) → audit visuel des pages privées peuplées toujours impossible ici ; curl fonctionne.
 - Batch 2 : `npm audit` 6 vulns → `npm audit fix` → 2 restantes (esbuild/vite dev-only). Re-validation complète OK (tsc, 18/18 tests, build, lint 0 err).
 
 ## 11. Tests/build/lint/typecheck performed
@@ -95,6 +96,12 @@ Voir §2 baseline.
   - Limite restante : audit lecteur d'écran humain recommandé pour viser WCAG 2.1 AA complet (axe ne couvre ~30-40% des critères).
 
 ## 20. Security / production-readiness risks
+- 🔴 **CRITIQUE — Fuite de PII confirmée sur la base de PROD (2026-07-03, testé avec la clé publishable anonyme réelle)** :
+  - Table `profiles` lisible intégralement par le rôle `anon` : **7 profils CLIENTS avec emails et 3 téléphones** exposés à tout visiteur non authentifié via l'API REST (`/rest/v1/profiles?user_type=eq.client`). Viole Loi 25 / GDPR (US-120/121).
+  - Table `projects` : **9 projets `in_progress`** visibles publiquement (devraient être privés ; seuls les `open` relèvent de la place de marché).
+  - Bonnes nouvelles : toutes les autres tables sensibles (contracts, messages, conversations, contractor_payments, disputes, notifications, reviews, user_reports, proposals) renvoient **0 ligne** à l'anon → RLS correct.
+  - Correctif écrit : `supabase/migrations/088_protect_client_pii.sql` (anon → profils `professional` uniquement + projets `open` uniquement ; authenticated conserve l'accès). **NON APPLIQUÉ** — à exécuter par l'utilisateur (SQL Editor Supabase / `supabase db push`) car touche les politiques RLS de prod sans staging. Procédure de vérification incluse dans le fichier.
+  - Note : je n'ai pas les privilèges (clé anon seulement) pour appliquer ou pousser la migration.
 - ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.
 - Chunk PDF 1.49 MB (perf).
 - Couverture de tests quasi nulle (3 fichiers).
