@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { formatCurrency as formatCurrencyShared } from "@/lib/format";
 
 export interface Proposal {
   id: string;
@@ -173,13 +174,8 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     }
   };
 
-  const formatCurrency = (amount: number | null) => {
-    if (!amount) return t("dashboard.proposals_list.not_specified");
-    return new Intl.NumberFormat("fr-CA", {
-      style: "currency",
-      currency: "CAD",
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number | null) =>
+    formatCurrencyShared(amount, { fallback: t("dashboard.proposals_list.not_specified") });
 
   if (proposals.length === 0) {
     return (

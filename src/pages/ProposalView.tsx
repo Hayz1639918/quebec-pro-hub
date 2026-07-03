@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import type { ProposalRecord, TenderProject, PartyInfo } from '@/types/tender';
+import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
 
 const ProposalView = () => {
   const { t } = useTranslation();
@@ -148,18 +149,9 @@ const ProposalView = () => {
     }
   };
 
-  const formatDate = (date: string | null) => {
-    if (!date) return 'Non spécifiée';
-    return format(new Date(date), 'dd MMMM yyyy', { locale: fr });
-  };
 
-  const formatCurrency = (amount: number | null) => {
-    if (!amount) return 'Non spécifié';
-    return new Intl.NumberFormat('fr-CA', {
-      style: 'currency',
-      currency: 'CAD',
-    }).format(amount);
-  };
+
+
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { variant: BadgeProps['variant']; icon: LucideIcon; label: string }> = {

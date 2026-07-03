@@ -36,6 +36,7 @@ import { ContractBuilder } from "@/components/contracts/ContractBuilder";
 import { UploadContract } from "@/components/contracts/UploadContract";
 import type { ContractTemplate } from "@/types/contracts";
 import Navigation from "@/components/Navigation";
+import { formatAmount, formatDateLong } from '@/lib/format';
 
 const Contracts = () => {
   const { t, i18n } = useTranslation();
@@ -415,18 +416,11 @@ const Contracts = () => {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('common.not_specified');
-    const locale = i18n.language === 'fr' ? fr : enUS;
-    return format(new Date(dateString), 'PP', { locale });
-  };
+  const formatDate = (dateString: string | null) =>
+    formatDateLong(dateString, { lang: i18n.language, fallback: t('common.not_specified'), pattern: 'PP' });
 
-  const formatCurrency = (amount: number, currency: string = 'CAD') => {
-    return new Intl.NumberFormat(i18n.language === 'fr' ? 'fr-CA' : 'en-CA', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string = 'CAD') =>
+    formatAmount(amount, { lang: i18n.language, currency });
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);

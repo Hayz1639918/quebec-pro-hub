@@ -42,6 +42,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import ProjectReportsTab, { type ProjectReport } from '@/components/projects/ProjectReportsTab';
+import ProjectFilesTab, { type ProjectImage } from '@/components/projects/ProjectFilesTab';
 
 interface Project {
   id: string;
@@ -86,15 +88,6 @@ interface AcceptedProposal {
   company_name: string | null;
 }
 
-interface ProjectReport {
-  id: string;
-  title: string;
-  report_type: string;
-  content: string;
-  progress_percentage: number | null;
-  created_at: string;
-  is_read_by_client: boolean;
-}
 
 interface Profile {
   id: string;
@@ -103,14 +96,6 @@ interface Profile {
   company_name?: string;
 }
 
-interface ProjectImage {
-  id: string;
-  project_id: string;
-  image_url: string;
-  caption: string | null;
-  display_order: number;
-  created_at: string;
-}
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-500',
@@ -1114,118 +1099,22 @@ const ProjectDetails = () => {
 
                 {/* Onglet Rapports */}
                 <TabsContent value="rapports" className="mt-4">
-                  {projectReports.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-12 text-center text-muted-foreground">
-                        <ClipboardList className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                        <p>Aucun rapport disponible pour ce projet.</p>
-                        <p className="text-sm mt-1">L'entrepreneur partagera les rapports d'avancement ici.</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {projectReports.map((report) => (
-                        <div
-                          key={report.id}
-                          className={`border rounded-lg p-4 cursor-pointer transition-colors ${!report.is_read_by_client ? 'bg-blue-50 border-blue-300 shadow-sm' : 'hover:bg-muted/30'}`}
-                          onClick={async () => {
-                            if (!report.is_read_by_client) {
-                              try {
-                                await supabase.from('project_reports').update({ is_read_by_client: true }).eq('id', report.id);
-                                setProjectReports(prev => prev.map(r => r.id === report.id ? { ...r, is_read_by_client: true } : r));
-                              } catch (e) {
-                                console.warn('Could not mark report as read');
-                              }
-                            }
-                          }}
-                        >
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold text-lg">{report.title}</h4>
-                                {!report.is_read_by_client && (
-                                  <Badge className="bg-blue-600 text-xs">Nouveau</Badge>
-                                )}
-                              </div>
-                              <p className="text-sm text-muted-foreground capitalize">
-                                Type: {report.report_type.replace(/_/g, ' ')}
-                              </p>
-                            </div>
-                            {report.progress_percentage !== null && (
-                              <div className="text-right">
-                                <p className="text-xs text-muted-foreground mb-1">Avancement</p>
-                                <Badge variant="outline" className="text-lg font-bold">
-                                  {report.progress_percentage}%
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          <div className="bg-white rounded-lg p-3 border mb-3">
-                            <p className="text-sm whitespace-pre-wrap">{report.content}</p>
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{format(new Date(report.created_at), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}</span>
-                            {!report.is_read_by_client && (
-                              <span className="text-blue-600 font-medium">Cliquez pour marquer comme lu</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <ProjectReportsTab
+                    reports={projectReports}
+                    onMarkAsRead={async (reportId) => {
+                      try {
+                        await supabase.from('project_reports').update({ is_read_by_client: true }).eq('id', reportId);
+                        setProjectReports(prev => prev.map(r => r.id === reportId ? { ...r, is_read_by_client: true } : r));
+                      } catch {
+                        console.warn('Could not mark report as read');
+                      }
+                    }}
+                  />
                 </TabsContent>
 
                 {/* Onglet Fichiers joints */}
                 <TabsContent value="fichiers" className="mt-4">
-                  {projectImages.length === 0 ? (
-                    <Card>
-                      <CardContent className="py-12 text-center text-muted-foreground">
-                        <ImageIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                        <p>Aucun fichier joint à ce projet.</p>
-                        <p className="text-sm mt-1">Ajoutez des photos ou documents lors de la création ou modification du projet.</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {projectImages.map((img) => {
-                        const isImage = /\.(jpe?g|png|gif|webp|svg)$/i.test(img.image_url);
-                        return (
-                          <div
-                            key={img.id}
-                            className="border rounded-lg overflow-hidden group cursor-pointer hover:shadow-md transition-shadow"
-                            onClick={() => isImage && setPreviewImage(img.image_url)}
-                          >
-                            {isImage ? (
-                              <img
-                                src={img.image_url}
-                                alt={img.caption || 'Fichier joint'}
-                                className="w-full h-36 object-cover group-hover:scale-105 transition-transform"
-                              />
-                            ) : (
-                              <div className="w-full h-36 bg-muted flex flex-col items-center justify-center gap-2">
-                                <Paperclip className="h-8 w-8 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground text-center px-2 break-all">
-                                  {img.image_url.split('/').pop()}
-                                </span>
-                              </div>
-                            )}
-                            <div className="p-2 flex items-center justify-between gap-1">
-                              <p className="text-xs text-muted-foreground truncate flex-1">{img.caption || 'Sans titre'}</p>
-                              <a
-                                href={img.image_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-primary hover:text-primary/80"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                              </a>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <ProjectFilesTab images={projectImages} onPreview={setPreviewImage} />
                 </TabsContent>
               </Tabs>
             </div>

@@ -36,6 +36,7 @@ import { Button as UIButton } from "@/components/ui/button";
 import { DisputeForm } from "@/components/disputes/DisputeForm";
 import { DisputesList } from "@/components/disputes/DisputesList";
 import { AlertTriangle } from "lucide-react";
+import { formatAmount, formatDateLong } from '@/lib/format';
 import {
   PaymentHandlingBadge,
   PaymentHandlingHint,
@@ -301,18 +302,11 @@ export const ContractViewer = ({
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return t('common.not_specified');
-    const locale = i18n.language === 'fr' ? fr : enUS;
-    return format(new Date(dateString), 'PPP', { locale });
-  };
+  const formatDate = (dateString: string | null) =>
+    formatDateLong(dateString, { lang: i18n.language, fallback: t('common.not_specified'), pattern: 'PPP' });
 
-  const formatCurrency = (amount: number, currency: string = 'CAD') => {
-    return new Intl.NumberFormat(i18n.language === 'fr' ? 'fr-CA' : 'en-CA', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
+  const formatCurrency = (amount: number, currency: string = 'CAD') =>
+    formatAmount(amount, { lang: i18n.language, currency });
 
   const canSign = () => {
     if (!contract || !currentUserId) return false;

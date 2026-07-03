@@ -106,7 +106,12 @@ Voir §2 baseline.
 3. ~~Batch 3 : flows critiques~~ ✅ FAIT (lecture code ; live impossible sans .env). Correctif appliqué : 27 console.log supprimés (fuite de données propositions/IDs utilisateur dans la console + bruit) dans MessagesList, ContractTemplates, ProposalsList, geolocation, CompleteProfile + 2 blocs debug vides retirés.
 4. Batch 4 : responsive 5 breakpoints via Playwright screenshots.
 5. ~~Batch 5 : accessibilité~~ ✅ FAIT (axe 0 violation sur les routes publiques).
-6. Batch 6 : dé-duplication / découpage des pages géantes (proposition avant refactor massif).
+6. ~~Batch 6 : dé-duplication / découpage~~ ✅ FAIT (partiel, sans risque) :
+   - ProjectDetails.tsx 1481 → 1370 lignes : onglets Rapports et Fichiers extraits en `ProjectReportsTab.tsx` / `ProjectFilesTab.tsx` (components/projects/).
+   - Créé `src/lib/format.ts` (formatCurrency/formatAmount/formatDateLong) : 7 implémentations dupliquées de formatCurrency et 6 de formatDate migrées (TenderView, ProposalView, ProposalPDF, TenderPDF, ProposalsList, ContractViewer, Contracts).
+   - Chunk vendor-pdf 1,49 MB : VÉRIFIÉ non bloquant — chargé uniquement sur les pages PDF (lazy routes), absent du chemin critique initial (dist/index.html ne le précharge pas). Amélioration possible plus tard : import dynamique dans les handlers.
+   - Pages restant > 1000 lignes (découpage futur possible, à faire avec tests) : Dashboard 1516, AdminDashboard 1376, ProjectDetails 1370, NewProject ~1240, ProDashboard 1133, Professionals 1081, ProposeContract 1033.
+7. Prochain grand chantier suggéré : i18n des 91 fichiers restants, tests unitaires sur les flows critiques, régénération des types Supabase.
 
 ## 22. What must not be forgotten
 - Ne jamais déclarer « 100% production-ready » ; toujours « selon les validations suivantes ».

@@ -10,6 +10,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { ProposalRecord, TenderProject, PartyInfo } from '@/types/tender';
+import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
 
 // Register fonts
 Font.register({
