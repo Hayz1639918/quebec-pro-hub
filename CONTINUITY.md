@@ -95,6 +95,24 @@ Voir §2 baseline.
   - Guards vérifiés en conditions réelles : pro non vérifié → redirection /pending-verification ✅.
   - Limite restante : audit lecteur d'écran humain recommandé pour viser WCAG 2.1 AA complet (axe ne couvre ~30-40% des critères).
 
+## 19bis. Bug auth « blocage après plusieurs tentatives » (2026-07-03)
+- **Symptôme utilisateur** : après quelques essais (mauvais mdp au login, ou email existant/invalide au signup), l'appareil est « bloqué » même en navigation privée / autre appareil.
+- **Diagnostic (testé sur l'API auth réelle)** :
+  - Login mauvais mdp : 12 tentatives → toujours 400 `invalid_credentials`, JAMAIS de blocage. Ce n'était pas la source.
+  - Signup : dès la 3e tentative → **HTTP 429 `over_email_send_rate_limit`**. CAUSE RACINE = config Supabase `rate_limit_email_sent = 2` (2 emails/h/IP). Blocage côté serveur par IP → d'où la persistance en navigation privée / autre appareil.
+  - Pas de SMTP custom (`smtp_host = None`) + `mailer_autoconfirm = false` → chaque signup envoie un email de confirmation via le SMTP de dev partagé, plafonné.
+- **Correctif CODE appliqué (Auth.tsx)** : `isValidEmail()` valide le format AVANT tout appel Supabase (une faute de frappe ne consomme plus le quota) sur login/signup/forgot-password ; `mapAuthError()` traduit les erreurs brutes (429/invalid_credentials/email_exists/email_invalid/email_not_confirmed) en messages FR/EN clairs adaptés aux personnes âgées. Clés i18n ajoutées.
+- **Config SERVEUR (mise à jour 2026-07-03)** : SMTP Resend configuré côté Supabase (smtp.resend.com:465, user `resend`, sender `onboarding@resend.dev`, name BatirNet) → la limite `rate_limit_email_sent` a été relevée de **2 à 30/h** (impossible sans SMTP, maintenant débloqué). Vérifié : envoi vers l'adresse propriétaire du compte Resend (hayz1639918@gmail.com) fonctionne sans erreur.
+- ⚠️ **RESTE À FAIRE — vérifier un domaine dans Resend** : tant qu'aucun domaine n'est vérifié, Resend (mode test) n'envoie QU'À hayz1639918@gmail.com ; les inscriptions vers toute autre adresse échouent en 500 (SMTP 550 « verify a domain at resend.com/domains »). Étapes : (1) resend.com/domains → ajouter le domaine (ex batirnet.ca) → poser les enregistrements DNS SPF/DKIM → vérifier ; (2) mettre à jour `smtp_admin_email` vers `noreply@<domaine-vérifié>` (via API management ou dashboard Supabase). Clé API Resend et token Supabase non commités (variables shell éphémères).
+- Comptes de test créés pendant le diagnostic : aucun persisté (Supabase annule la création quand l'email échoue) — base vérifiée à 33 profils, propre.
+- **Mode TEST activé puis REVERT (2026-07-03)** : `mailer_autoconfirm = true` a été testé brièvement (inscription→connexion vérifiée OK sans email) puis l'utilisateur a demandé de vrais emails de confirmation vers de vraies boîtes avant l'achat d'un nom de domaine.
+- **État FINAL actuel (2026-07-03)** :
+  - `mailer_autoconfirm = false` (confirmation email RÉACTIVÉE).
+  - SMTP Resend **retiré** (`smtp_host = None`) → retour au service email intégré de Supabase, qui livre à N'IMPORTE QUELLE vraie boîte mail sans domaine (limite ~2-4/h, largement suffisante pour les tests grâce à `isValidEmail()` qui évite de gaspiller le quota).
+  - 🔴 **BLOQUANT restant** : `site_url = http://localhost:3000` et `uri_allow_list` vide. Les liens de confirmation/reset pointent vers localhost → cassés pour un utilisateur réel. **À corriger dès que l'utilisateur fournit son URL Vercel de test** : mettre `site_url` sur l'URL Vercel + ajouter `https://<url-vercel>/**` à `uri_allow_list`.
+  - Plan une fois le domaine acheté : rebrancher le SMTP Resend avec le domaine vérifié (sender `noreply@<domaine>`), remonter `rate_limit_email_sent`, mettre `site_url` sur le domaine final.
+- Compte de test créé pendant les essais supprimé via service_role — base à 33 profils, propre.
+
 ## 20. Security / production-readiness risks
 - 🔴 **CRITIQUE — Fuite de PII confirmée sur la base de PROD (2026-07-03, testé avec la clé publishable anonyme réelle)** :
   - Table `profiles` lisible intégralement par le rôle `anon` : **7 profils CLIENTS avec emails et 3 téléphones** exposés à tout visiteur non authentifié via l'API REST (`/rest/v1/profiles?user_type=eq.client`). Viole Loi 25 / GDPR (US-120/121).
