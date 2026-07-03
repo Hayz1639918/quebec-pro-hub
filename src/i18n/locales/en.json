@@ -1338,5 +1338,9 @@
         "per_sqft": "Per square foot"
       }
     }
+  },
+  "not_found": {
+    "message": "Oops! Page not found.",
+    "back_home": "Back to home"
   }
 }

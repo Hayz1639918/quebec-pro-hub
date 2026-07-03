@@ -56,7 +56,14 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 Voir §2 baseline.
 
 ## 12–13. Responsive checks performed / remaining issues
-- Pas encore. Prévu : audit statique Tailwind + Playwright (Chromium préinstallé) sur 320/390/768/1024/1440.
+- **Batch 4 (2026-07-03)** : build avec env Supabase stub + `vite preview` + Playwright (Chromium /opt/pw-browsers).
+  - Routes testées : /, /auth, /auth?mode=login, /privacy-policy, /professionals, /projects, 404 — largeurs 320/390/768/1024/1440/1920.
+  - **Aucun overflow horizontal détecté** (mesure scrollWidth vs clientWidth + détection des éléments fautifs).
+  - Screenshots vérifiés visuellement à 390px : accueil, auth, professionals, projects, 404 — layouts corrects, nav mobile hamburger OK, formulaires lisibles, états de chargement visibles.
+  - ⚠️ L'overlay IntroExperience (`bn_intro_done_v1`) s'affiche au 1er chargement — normal, mais penser au flag pour les tests E2E.
+  - Limite : pages privées (dashboards, contrats, paiements) non testables en live sans .env réel — audit statique Tailwind seulement (grep responsive OK sur les composants extraits).
+  - Console : seules erreurs = fetch Supabase stub (attendu) + log 404 ; aucune erreur applicative.
+  - Correctif : page 404 était en anglais + `console.error` à chaque 404 → réécrite (i18n fr/en, thème du design system, vrai `<Link>` + Button, console.warn).
 
 ## 14–16. User flows / features / components reviewed
 - **Batch 3 (audit code, pas de navigation live — pas de .env local)** :

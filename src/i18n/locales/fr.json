@@ -1340,5 +1340,9 @@
         "per_sqft": "Au pied carré"
       }
     }
+  },
+  "not_found": {
+    "message": "Oups ! Cette page est introuvable.",
+    "back_home": "Retour à l'accueil"
   }
 }
