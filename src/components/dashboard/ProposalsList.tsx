@@ -110,18 +110,14 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     setProcessing(true);
     const proposal = proposals.find(p => p.id === selectedProposal.id);
     
-    console.log("🔄 Action en cours:", selectedProposal.action, "pour proposition:", selectedProposal.id);
-    console.log("📋 Proposition trouvée:", proposal);
     
     try {
       if (selectedProposal.action === "reject") {
         // REFUSER: Utiliser la fonction SQL sécurisée
-        console.log("🗑️ Refus de la proposition via fonction SQL...");
         const { data, error } = await supabase.rpc("reject_proposal", {
           proposal_uuid: selectedProposal.id
         });
 
-        console.log("🗑️ Résultat refus:", { data, error });
         
         if (error) {
           console.error("Erreur détaillée:", error);
@@ -129,15 +125,12 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         }
 
         toast.success("Proposition refusée");
-        console.log("🗑️ Refus terminé avec succès!");
       } else {
         // ACCEPTER: Utiliser la fonction SQL sécurisée
-        console.log("✅ Acceptation de la proposition via fonction SQL...");
         const { data, error } = await supabase.rpc("accept_proposal", {
           proposal_uuid: selectedProposal.id
         });
 
-        console.log("✅ Résultat acceptation:", { data, error });
         
         if (error) {
           console.error("Erreur détaillée:", error);
@@ -148,7 +141,6 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
           "Proposition acceptée", 
           { description: "Le projet passe en cours. Vous pouvez maintenant le suivre dans l'onglet Projets." }
         );
-        console.log("🎉 Acceptation terminée avec succès!");
       }
 
       // Fermer la boîte de dialogue

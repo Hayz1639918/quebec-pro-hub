@@ -52,7 +52,6 @@ export const MessagesList = ({
     }
     
     // Log for monitoring
-    console.log(`📡 Active messaging channels: ${messagingChannels.length}`);
   }, [userId]);
 
   const fetchConversations = async () => {
@@ -167,7 +166,6 @@ export const MessagesList = ({
 
     // Return cleanup function that properly removes channel
     return () => {
-      console.log(`🧹 Cleaning up channel: ${channelName}`);
       supabase.removeChannel(channel);
     };
   };

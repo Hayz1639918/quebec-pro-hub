@@ -59,7 +59,13 @@ Voir §2 baseline.
 - Pas encore. Prévu : audit statique Tailwind + Playwright (Chromium préinstallé) sur 320/390/768/1024/1440.
 
 ## 14–16. User flows / features / components reviewed
-- Pas encore. Pages géantes identifiées à auditer en priorité : Dashboard (1706 l.), AdminDashboard (1662), ProjectDetails (1481), NewProject (1233), ProDashboard (1133), Professionals (1081), ProposeContract (1033).
+- **Batch 3 (audit code, pas de navigation live — pas de .env local)** :
+  - **Auth (US-001/004/005)** : mot de passe 8+ car./majuscule/chiffre/spécial avec indicateur de force ✅ (l'audit docs/user-stories-client-audit.md de mars est OBSOLÈTE sur ce point). Reset par lien ✅. **OAuth Google/Apple (US-002) toujours absent** ❌.
+  - **Guards** : /pro/* via ProtectedProRoute (metadata + fallback table profiles + timeout anti-écran-blanc) ✅ ; /admin via ProtectedAdminRoute ✅ ; pages client auto-guardées (redirect /auth vérifié sur Dashboard, NewProject, ClientPayments, Messages, Contracts, Notifications, ClientProfile, EditProject) ✅.
+  - **Acceptation/refus de proposition (US-043/044)** : via RPC SQL sécurisées accept_proposal/reject_proposal, toast + redirect ✅.
+  - **Paiements (US-034/035/061)** : Stripe est un STUB (`stripe-service.ts` : toutes les fonctions jettent « not configured ») — l'UI le gère proprement (toast « Stripe bientôt disponible », `isStripeConfigured()`), et le règlement HORS PLATEFORME est le flux fonctionnel (marquer facture payée côté pro). Paiement en ligne = limitation documentée en attente des clés Stripe.
+  - **Signature (US-032/062)** : ESignature dessin/saisie + signatureService + page /contracts/verify/:code ✅ (code lu, pas testé en live).
+  - Pages géantes restantes à auditer : Dashboard (1706 l.), AdminDashboard (1662), ProjectDetails (1481), NewProject (1233), ProDashboard (1133), Professionals (1081), ProposeContract (1033).
 
 ## 17. Unnecessary repetitions detected
 - À investiguer (pages > 1000 lignes suspectes de logique dupliquée).
@@ -74,11 +80,12 @@ Voir §2 baseline.
 - ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.
 - Chunk PDF 1.49 MB (perf).
 - Couverture de tests quasi nulle (3 fichiers).
+- OAuth Google/Apple (US-002) absent ; Stripe stub (paiement en ligne indisponible, hors-plateforme OK) ; i18n incomplet sur certaines pages (textes français en dur, ex. ProposalsList, ProposalView) alors que le site se dit FR/EN.
 
 ## 21. Exact next steps
 1. ~~Batch 1 : lint errors~~ ✅ FAIT (116 → 0).
 2. ~~Batch 2 : sécurité deps~~ ✅ FAIT — `npm audit fix` : 6 vulns → 2. Corrigées : vitest (critical, dev), form-data 4.0.6 (high, via axios), dompurify (moderate, runtime sanitisation), js-yaml (moderate). Restantes : esbuild/vite (dev server uniquement, aucun impact prod ; fix = vite 8 breaking → risque accepté, à traiter dans une mise à jour majeure dédiée).
-3. Batch 3 : audit flows critiques (auth → création projet → proposition → contrat → paiement) via lecture code + Playwright.
+3. ~~Batch 3 : flows critiques~~ ✅ FAIT (lecture code ; live impossible sans .env). Correctif appliqué : 27 console.log supprimés (fuite de données propositions/IDs utilisateur dans la console + bruit) dans MessagesList, ContractTemplates, ProposalsList, geolocation, CompleteProfile + 2 blocs debug vides retirés.
 4. Batch 4 : responsive 5 breakpoints via Playwright screenshots.
 5. Batch 5 : accessibilité de base.
 6. Batch 6 : dé-duplication / découpage des pages géantes (proposition avant refactor massif).
