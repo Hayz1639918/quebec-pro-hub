@@ -45,7 +45,7 @@ const Footer = () => {
               {t("footer.tagline")}
             </p>
 
-            <div className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em] leading-loose">
+            <div className="font-mono text-[10px] text-white/80 uppercase tracking-[0.1em] leading-loose">
               <div>Québec, Canada</div>
               <div>RBQ certifié</div>
             </div>
@@ -66,7 +66,7 @@ const Footer = () => {
                   <li key={label}>
                     <a
                       href={href}
-                      className="group inline-flex items-center gap-1 font-body text-sm text-white/65 hover:text-white transition-colors"
+                      className="group inline-flex items-center gap-1 font-body text-sm text-white/80 hover:text-white transition-colors"
                     >
                       {label}
                       <ArrowUpRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -81,10 +81,10 @@ const Footer = () => {
         {/* Bottom bar */}
         <div className="h-px w-full bg-white/25 mb-6" />
         <div className="pb-safe flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="font-mono text-[10px] text-white/55 uppercase tracking-[0.1em]">
+          <p className="font-mono text-[10px] text-white/80 uppercase tracking-[0.1em]">
             © {currentYear} BâtirNet. {t("footer.rights")}
           </p>
-          <p className="font-mono text-[10px] text-white/45 uppercase tracking-[0.08em]">
+          <p className="font-mono text-[10px] text-white/70 uppercase tracking-[0.08em]">
             {t("footer.made_with_love")}
           </p>
         </div>

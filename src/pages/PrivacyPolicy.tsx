@@ -14,7 +14,7 @@ const PrivacyPolicy = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <main className="container mx-auto px-4 py-12 max-w-4xl">
         {/* En-tête */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
@@ -32,6 +32,7 @@ const PrivacyPolicy = () => {
         </div>
 
         {/* Responsable RP */}
+        <h2 className="sr-only">Contenu de la politique de confidentialité</h2>
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -311,7 +312,7 @@ const PrivacyPolicy = () => {
             <strong>Dernière mise à jour :</strong> 2025-11-03
           </p>
         </div>
-      </div>
+      </main>
 
       <Footer />
     </div>

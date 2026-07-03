@@ -85,7 +85,10 @@ Voir §2 baseline.
 - À venir.
 
 ## 19. Accessibility checks performed
-- Pas encore.
+- **Batch 5 (2026-07-03)** : axe-core via Playwright sur 7 routes publiques (/, /auth, /auth?mode=login, /professionals, /projects, /privacy-policy, 404) → **0 violation** après correctifs.
+- Corrigé : bouton œil mot de passe (aria-label + focusable, était tabIndex=-1) ; 10 SelectTrigger de filtres sans nom accessible (aria-label depuis le label visible) ; Slider (ui/slider.tsx transmet désormais aria-label au Thumb, + label sur le rayon de recherche de la carte) ; landmarks <main> sur Index/Auth/Professionals/Projects/PrivacyPolicy/NotFound ; heading h1 sur Auth (role=heading aria-level=1) ; h2 sr-only sur PrivacyPolicy (heading-order) ; ~15 classes de contraste insuffisant relevées (text-white/45–65 → /70–80, text-foreground/20–55 → /50–70) dans Footer, Hero, CTA, Features, HowItWorks — design vérifié visuellement intact.
+- Navigation clavier testée sur /auth : ordre de tabulation logique, tous les contrôles atteignables.
+- Limite : pages privées non auditées en live (pas de .env) — à refaire sur staging.
 
 ## 20. Security / production-readiness risks
 - ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.
@@ -98,7 +101,7 @@ Voir §2 baseline.
 2. ~~Batch 2 : sécurité deps~~ ✅ FAIT — `npm audit fix` : 6 vulns → 2. Corrigées : vitest (critical, dev), form-data 4.0.6 (high, via axios), dompurify (moderate, runtime sanitisation), js-yaml (moderate). Restantes : esbuild/vite (dev server uniquement, aucun impact prod ; fix = vite 8 breaking → risque accepté, à traiter dans une mise à jour majeure dédiée).
 3. ~~Batch 3 : flows critiques~~ ✅ FAIT (lecture code ; live impossible sans .env). Correctif appliqué : 27 console.log supprimés (fuite de données propositions/IDs utilisateur dans la console + bruit) dans MessagesList, ContractTemplates, ProposalsList, geolocation, CompleteProfile + 2 blocs debug vides retirés.
 4. Batch 4 : responsive 5 breakpoints via Playwright screenshots.
-5. Batch 5 : accessibilité de base.
+5. ~~Batch 5 : accessibilité~~ ✅ FAIT (axe 0 violation sur les routes publiques).
 6. Batch 6 : dé-duplication / découpage des pages géantes (proposition avant refactor massif).
 
 ## 22. What must not be forgotten
