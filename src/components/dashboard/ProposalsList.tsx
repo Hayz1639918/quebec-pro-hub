@@ -71,11 +71,11 @@ interface ProposalsListProps {
   onStatusUpdate?: () => void;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  accepted: "Acceptée",
-  rejected: "Refusée",
-  withdrawn: "Retirée",
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  pending: "dashboard.proposals_list.status_pending",
+  accepted: "dashboard.proposals_list.status_accepted",
+  rejected: "dashboard.proposals_list.status_rejected",
+  withdrawn: "dashboard.proposals_list.status_withdrawn",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -121,10 +121,10 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         
         if (error) {
           console.error("Erreur détaillée:", error);
-          throw new Error(error.message || "Erreur lors du refus de la proposition");
+          throw new Error(error.message || t("dashboard.proposals_list.reject_error"));
         }
 
-        toast.success("Proposition refusée");
+        toast.success(t("dashboard.proposals_list.rejected_toast"));
       } else {
         // ACCEPTER: Utiliser la fonction SQL sécurisée
         const { data, error } = await supabase.rpc("accept_proposal", {
@@ -134,13 +134,12 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         
         if (error) {
           console.error("Erreur détaillée:", error);
-          throw new Error(error.message || "Erreur lors de l'acceptation de la proposition");
+          throw new Error(error.message || t("dashboard.proposals_list.accept_error"));
         }
 
-        toast.success(
-          "Proposition acceptée", 
-          { description: "Le projet passe en cours. Vous pouvez maintenant le suivre dans l'onglet Projets." }
-        );
+        toast.success(t("dashboard.proposals_list.accepted_toast"), {
+          description: t("dashboard.proposals_list.accepted_toast_description"),
+        });
       }
 
       // Fermer la boîte de dialogue
@@ -165,8 +164,8 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
       }
     } catch (error: unknown) {
       console.error("Error updating proposal:", error);
-      const errorMessage = error?.message || "Erreur inconnue";
-      toast.error("Erreur lors de la mise à jour", { 
+      const errorMessage = error instanceof Error ? error.message : t("dashboard.proposals_list.unknown_error");
+      toast.error(t("dashboard.proposals_list.update_error"), { 
         description: errorMessage 
       });
     } finally {
@@ -175,7 +174,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
   };
 
   const formatCurrency = (amount: number | null) => {
-    if (!amount) return "Non spécifié";
+    if (!amount) return t("dashboard.proposals_list.not_specified");
     return new Intl.NumberFormat("fr-CA", {
       style: "currency",
       currency: "CAD",
@@ -186,7 +185,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
     return (
       <div className="text-center py-12">
         <MessageSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-        <p className="text-muted-foreground">Aucune proposition reçue pour le moment</p>
+        <p className="text-muted-foreground">{t("dashboard.proposals_list.empty")}</p>
       </div>
     );
   }
@@ -199,13 +198,13 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Professionnel</TableHead>
-                <TableHead>Projet</TableHead>
-                <TableHead>Budget proposé</TableHead>
-                <TableHead>Délai</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_professional")}</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_project")}</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_budget")}</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_duration")}</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_status")}</TableHead>
+                <TableHead>{t("dashboard.proposals_list.col_date")}</TableHead>
+                <TableHead className="text-right">{t("dashboard.proposals_list.col_actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -234,13 +233,13 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                     <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <Calendar className="h-3 w-3" />
-                        {proposal.estimated_duration_days} jours
+                        {t("dashboard.proposals_list.days", { count: proposal.estimated_duration_days ?? 0 })}
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={STATUS_COLORS[proposal.status]} variant="outline">
                         <StatusIcon className="h-3 w-3 mr-1" />
-                        {STATUS_LABELS[proposal.status]}
+                        {t(STATUS_LABEL_KEYS[proposal.status])}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -256,7 +255,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuLabel>{t("dashboard.proposals_list.col_actions")}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => navigate(`/proposal/${proposal.id}`)}>
                             <Eye className="mr-2 h-4 w-4" />
@@ -316,7 +315,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                     </div>
                     <Badge className={STATUS_COLORS[proposal.status]} variant="outline">
                       <StatusIcon className="h-3 w-3 mr-1" />
-                      {STATUS_LABELS[proposal.status]}
+                      {t(STATUS_LABEL_KEYS[proposal.status])}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -324,16 +323,16 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                   <div className="space-y-3">
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <div className="text-muted-foreground mb-1">Budget</div>
+                        <div className="text-muted-foreground mb-1">{t("dashboard.proposals_list.budget")}</div>
                         <div className="font-medium">
                           {formatCurrency(proposal.estimated_budget)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground mb-1">Délai</div>
+                        <div className="text-muted-foreground mb-1">{t("dashboard.proposals_list.duration")}</div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {proposal.estimated_duration_days} jours
+                          {t("dashboard.proposals_list.days", { count: proposal.estimated_duration_days ?? 0 })}
                         </div>
                       </div>
                     </div>
@@ -393,16 +392,16 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {selectedProposal?.action === "accept" ? "Accepter la proposition ?" : "Refuser la proposition ?"}
+              {selectedProposal?.action === "accept" ? t("dashboard.proposals_list.confirm_accept_title") : t("dashboard.proposals_list.confirm_reject_title")}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {selectedProposal?.action === "accept"
-                ? "Vous êtes sur le point d'accepter cette proposition. Le professionnel sera notifié."
-                : "Vous êtes sur le point de refuser cette proposition. Le professionnel sera notifié."}
+                ? t("dashboard.proposals_list.confirm_accept_description")
+                : t("dashboard.proposals_list.confirm_reject_description")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={processing}>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={processing}>{t("dashboard.proposals_list.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmAction}
               disabled={processing}
@@ -412,7 +411,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
                   : "bg-red-600 hover:bg-red-700"
               }
             >
-              {processing ? "En cours..." : selectedProposal?.action === "accept" ? "Accepter" : "Refuser"}
+              {processing ? t("dashboard.proposals_list.processing") : selectedProposal?.action === "accept" ? t("dashboard.proposals_list.accept") : t("dashboard.proposals_list.reject")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

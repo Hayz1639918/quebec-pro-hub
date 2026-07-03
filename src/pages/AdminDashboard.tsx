@@ -18,6 +18,9 @@ import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AdminLicensePanel from "@/components/admin/AdminLicensePanel";
+import AdminDisputesTab, { type AdminDispute } from "@/components/admin/AdminDisputesTab";
+import AdminModerationTab, { type ReviewReport, type UserReport } from "@/components/admin/AdminModerationTab";
+import AdminAuditLogsTab, { type AuditLog } from "@/components/admin/AdminAuditLogsTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,60 +124,9 @@ interface DashboardStats {
   signed_contracts: number;
 }
 
-interface AuditLog {
-  id: string;
-  admin_id: string;
-  action: string;
-  target_type: string;
-  target_id: string;
-  old_values: Record<string, unknown> | null;
-  new_values: Record<string, unknown> | null;
-  created_at: string;
-  admin_name?: string;
-}
 
-interface AdminDispute {
-  id: string;
-  contract_id: string;
-  opened_by: string;
-  category: string;
-  description: string;
-  status: string;
-  resolution: string | null;
-  resolved_by: string | null;
-  resolved_at: string | null;
-  created_at: string;
-  contract_title?: string;
-  client_name?: string;
-  professional_name?: string;
-  opener_name?: string;
-}
 
-interface ReviewReport {
-  id: string;
-  review_id: string;
-  reporter_id: string;
-  reason: string;
-  detail: string | null;
-  status: string;
-  created_at: string;
-  reporter_name?: string;
-  review_comment?: string | null;
-  review_rating?: number | null;
-}
 
-interface UserReport {
-  id: string;
-  reporter_id: string;
-  reported_user_id: string;
-  conversation_id: string | null;
-  reason: string;
-  detail: string | null;
-  status: string;
-  created_at: string;
-  reporter_name?: string;
-  reported_name?: string;
-}
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
@@ -1036,268 +988,29 @@ const AdminDashboard = () => {
 
           {/* Disputes Tab */}
           <TabsContent value="disputes" className="space-y-4">
-            {disputes.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Gavel className="h-12 w-12 mx-auto text-muted-foreground mb-4 opacity-50" />
-                  <h3 className="text-lg font-medium">Aucun litige</h3>
-                  <p className="text-muted-foreground">
-                    Il n'y a aucun litige enregistré pour le moment.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Gavel className="h-5 w-5" />
-                    Gestion des litiges
-                  </CardTitle>
-                  <CardDescription>
-                    {disputes.filter(d => d.status === 'open').length} ouvert(s), {disputes.filter(d => d.status === 'investigating').length} en examen
-                  </CardDescription>
-                </CardHeader>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Contrat</TableHead>
-                      <TableHead>Parties</TableHead>
-                      <TableHead>Catégorie</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {disputes.map((dispute) => {
-                      const categoryLabels: Record<string, string> = {
-                        quality: "Qualité",
-                        delay: "Retard",
-                        payment: "Paiement",
-                        communication: "Communication",
-                        other: "Autre",
-                      };
-                      const statusLabels: Record<string, { label: string; className: string }> = {
-                        open: { label: "Ouvert", className: "bg-destructive/10 text-destructive" },
-                        investigating: { label: "En examen", className: "bg-primary/10 text-primary" },
-                        resolved: { label: "Résolu", className: "bg-green-100 text-green-700" },
-                        closed: { label: "Fermé", className: "bg-muted text-muted-foreground" },
-                      };
-                      const statusCfg = statusLabels[dispute.status] || statusLabels.open;
-
-                      return (
-                        <TableRow key={dispute.id}>
-                          <TableCell>
-                            <p className="font-medium text-sm">{dispute.contract_title || 'Sans titre'}</p>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <p>{dispute.client_name}</p>
-                              <p className="text-muted-foreground">{dispute.professional_name}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {categoryLabels[dispute.category] || dispute.category}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {format(new Date(dispute.created_at), "d MMM yyyy", { locale: fr })}
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={statusCfg.className}>
-                              {statusCfg.label}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedDispute(dispute);
-                                setDisputeNewStatus(dispute.status);
-                                setDisputeResolution(dispute.resolution || "");
-                                setDisputeDialogOpen(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              Gérer
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </Card>
-            )}
+            <AdminDisputesTab
+              disputes={disputes}
+              onManage={(dispute) => {
+                setSelectedDispute(dispute);
+                setDisputeNewStatus(dispute.status);
+                setDisputeResolution(dispute.resolution || "");
+                setDisputeDialogOpen(true);
+              }}
+            />
           </TabsContent>
 
-          {/* Audit Logs Tab */}
+          {/* Moderation Tab */}
           <TabsContent value="moderation" className="space-y-6">
-            {/* Review reports (US-040) */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Flag className="h-5 w-5 text-destructive" />
-                  Avis signalés ({reviewReports.filter(r => r.status === 'pending').length} en attente)
-                </CardTitle>
-                <CardDescription>Signalements d'avis inappropriés à examiner</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {reviewReports.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Aucun avis signalé.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {reviewReports.map((r) => (
-                      <div key={r.id} className="border rounded-lg p-3">
-                        <div className="flex items-start justify-between gap-3 flex-wrap">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline">{r.reason}</Badge>
-                              <Badge className={r.status === 'pending' ? 'bg-amber-100 text-amber-800' : r.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
-                                {r.status}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                par {r.reporter_name} · {format(new Date(r.created_at), 'dd MMM yyyy', { locale: fr })}
-                              </span>
-                            </div>
-                            {r.detail && <p className="text-sm mt-1">{r.detail}</p>}
-                            {r.review_comment && (
-                              <p className="text-xs text-muted-foreground mt-1 italic">
-                                Avis ({r.review_rating}/5) : « {r.review_comment} »
-                              </p>
-                            )}
-                          </div>
-                          {r.status === 'pending' && (
-                            <div className="flex gap-2 shrink-0">
-                              <Button size="sm" variant="outline" disabled={actionLoading === r.id}
-                                onClick={() => handleModerationStatus('review_reports', r.id, 'dismissed')}>
-                                Rejeter
-                              </Button>
-                              <Button size="sm" disabled={actionLoading === r.id}
-                                onClick={() => handleModerationStatus('review_reports', r.id, 'resolved')}>
-                                Résoudre
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* User reports (US-029) */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <MessageSquare className="h-5 w-5 text-destructive" />
-                  Utilisateurs signalés ({userReports.filter(r => r.status === 'pending').length} en attente)
-                </CardTitle>
-                <CardDescription>Signalements depuis la messagerie</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {userReports.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Aucun utilisateur signalé.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {userReports.map((r) => (
-                      <div key={r.id} className="border rounded-lg p-3">
-                        <div className="flex items-start justify-between gap-3 flex-wrap">
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <Badge variant="outline">{r.reason}</Badge>
-                              <Badge className={r.status === 'pending' ? 'bg-amber-100 text-amber-800' : r.status === 'resolved' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}>
-                                {r.status}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {format(new Date(r.created_at), 'dd MMM yyyy', { locale: fr })}
-                              </span>
-                            </div>
-                            <p className="text-sm mt-1">
-                              <strong>{r.reporter_name}</strong> a signalé <strong>{r.reported_name}</strong>
-                            </p>
-                            {r.detail && <p className="text-xs text-muted-foreground mt-1">{r.detail}</p>}
-                          </div>
-                          {r.status === 'pending' && (
-                            <div className="flex gap-2 shrink-0">
-                              <Button size="sm" variant="outline" disabled={actionLoading === r.id}
-                                onClick={() => handleModerationStatus('user_reports', r.id, 'dismissed')}>
-                                Rejeter
-                              </Button>
-                              <Button size="sm" disabled={actionLoading === r.id}
-                                onClick={() => handleModerationStatus('user_reports', r.id, 'resolved')}>
-                                Résoudre
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <AdminModerationTab
+              reviewReports={reviewReports}
+              userReports={userReports}
+              actionLoading={actionLoading}
+              onModerationStatus={handleModerationStatus}
+            />
           </TabsContent>
 
           <TabsContent value="logs" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Journal des actions administratives</CardTitle>
-                <CardDescription>
-                  Historique des 50 dernières actions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {auditLogs.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Aucune action enregistrée.
-                  </p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Admin</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Détails</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {auditLogs.map((log) => (
-                        <TableRow key={log.id}>
-                          <TableCell className="text-sm">
-                            {format(new Date(log.created_at), "d MMM yyyy HH:mm", { locale: fr })}
-                          </TableCell>
-                          <TableCell>{log.admin_name}</TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={log.action === 'VERIFY_RBQ' ? 'default' : 'destructive'}
-                              className={log.action === 'VERIFY_RBQ' ? 'bg-green-600' : ''}
-                            >
-                              {log.action === 'VERIFY_RBQ' ? (
-                                <><CheckCircle2 className="h-3 w-3 mr-1" /> Vérification</>
-                              ) : (
-                                <><XCircle className="h-3 w-3 mr-1" /> Refus</>
-                              )}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {log.new_values && typeof log.new_values === 'object' && 'notes' in log.new_values 
-                              ? String(log.new_values.notes) 
-                              : log.new_values && typeof log.new_values === 'object' && 'rbq_rejection_reason' in log.new_values
-                              ? String(log.new_values.rbq_rejection_reason)
-                              : '-'}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <AdminAuditLogsTab logs={auditLogs} />
           </TabsContent>
         </Tabs>
       </main>

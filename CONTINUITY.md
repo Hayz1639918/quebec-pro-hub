@@ -68,7 +68,11 @@ Voir §2 baseline.
   - Pages géantes restantes à auditer : Dashboard (1706 l.), AdminDashboard (1662), ProjectDetails (1481), NewProject (1233), ProDashboard (1133), Professionals (1081), ProposeContract (1033).
 
 ## 17. Unnecessary repetitions detected
-- À investiguer (pages > 1000 lignes suspectes de logique dupliquée).
+- **Batch 3bis (découpage + i18n)** :
+  - Dashboard.tsx 1706 → 1516 lignes : onglets Contrats et Factures extraits en `ClientContractsTab.tsx` et `ClientInvoicesTab.tsx` (composants i18n-isés FR/EN, types ClientContract/MilestoneTransaction exportés).
+  - AdminDashboard.tsx 1662 → 1376 lignes : onglets Litiges, Modération, Journal extraits en `AdminDisputesTab.tsx`, `AdminModerationTab.tsx`, `AdminAuditLogsTab.tsx` (FR seul — l'admin est interne, i18n non prioritaire).
+  - ProposalsList.tsx entièrement i18n-isé (~30 chaînes FR en dur → clés `dashboard.proposals_list.*` dans fr.json + en.json).
+- Restant : 91 fichiers sans useTranslation (dont ClientPayments, ProPayments, ProposalView, TenderView, pages Pro) — chantier i18n complet à planifier ; pages encore > 1000 lignes : Dashboard (1516), ProjectDetails (1481), AdminDashboard (1376), NewProject (1233), ProDashboard (1133), Professionals (1081), ProposeContract (1033).
 
 ## 18. UX/UI improvements
 - À venir.

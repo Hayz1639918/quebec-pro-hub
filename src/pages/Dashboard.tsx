@@ -6,6 +6,8 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProjectList from "@/components/dashboard/ProjectList";
 import ProposalsList, { type Proposal } from "@/components/dashboard/ProposalsList";
+import ClientContractsTab, { type ClientContract } from "@/components/dashboard/ClientContractsTab";
+import ClientInvoicesTab, { type MilestoneTransaction } from "@/components/dashboard/ClientInvoicesTab";
 import ActivityTimeline, { ActivityItem } from "@/components/dashboard/ActivityTimeline";
 import FavoritesList from "@/components/dashboard/FavoritesList";
 import CompareDialog from "@/components/dashboard/CompareDialog";
@@ -137,19 +139,7 @@ interface PendingContract {
   professional_signed_at: string | null;
 }
 
-interface ClientContract {
-  id: string;
-  title: string;
-  project_title: string | null;
-  project_id: string | null;
-  professional_name: string;
-  company_name: string | null;
-  total_amount: number;
-  status: string;
-  created_at: string;
-  client_signed_at: string | null;
-  professional_signed_at: string | null;
-}
+
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -172,18 +162,7 @@ const Dashboard = () => {
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   const [pendingContracts, setPendingContracts] = useState<PendingContract[]>([]);
   const [allContracts, setAllContracts] = useState<ClientContract[]>([]);
-  const [milestonesTransactions, setMilestonesTransactions] = useState<{
-    id: string;
-    title: string;
-    contract_title: string;
-    contract_id: string;
-    project_title: string | null;
-    professional_name: string;
-    amount: number;
-    status: string;
-    validated_at: string | null;
-    created_at: string;
-  }[]>([]);
+  const [milestonesTransactions, setMilestonesTransactions] = useState<MilestoneTransaction[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [projectSearch, setProjectSearch] = useState("");
   const [projectStatusFilter, setProjectStatusFilter] = useState<"all" | "open" | "in_progress" | "completed">("all");
@@ -1461,185 +1440,16 @@ const Dashboard = () => {
 
             {/* Contracts Tab */}
             <TabsContent value="contracts">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>{t('dashboard.contracts.title')}</CardTitle>
-                      <CardDescription>
-                        Contrats reçus des entrepreneurs
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {allContracts.length === 0 ? (
-                    <div className="text-center py-12">
-                      <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4 opacity-50" />
-                      <h3 className="text-lg font-semibold mb-2">Aucun contrat</h3>
-                      <p className="text-muted-foreground mb-4">
-                        Vous recevrez les contrats des entrepreneurs une fois vos soumissions acceptées
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {allContracts.map((contract) => {
-                        const isFullySigned = contract.client_signed_at && contract.professional_signed_at;
-                        const needsClientSignature = !contract.client_signed_at;
-                        const needsProSignature = !contract.professional_signed_at;
-                        
-                        return (
-                          <div 
-                            key={contract.id}
-                            className={`border rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${
-                              needsClientSignature ? 'bg-warning-light border-warning/30' : 
-                              isFullySigned ? 'bg-success-light border-success/30' : 'bg-white'
-                            }`}
-                            onClick={() => navigate(`/contracts?contract=${contract.id}`)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-semibold mb-1">{contract.title}</h4>
-                                <div className="text-sm text-muted-foreground space-y-1">
-                                  {contract.project_title && (
-                                    <p>Projet: {contract.project_title}</p>
-                                  )}
-                                  <p>De: {contract.company_name || contract.professional_name}</p>
-                                  <p className="font-medium text-foreground">
-                                    {contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-end gap-2">
-                                {needsClientSignature ? (
-                                  <Badge className="bg-warning">À signer</Badge>
-                                ) : isFullySigned ? (
-                                  <Badge className="bg-success inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" />Signé</Badge>
-                                ) : needsProSignature ? (
-                                  <Badge variant="outline" className="text-warning border-warning">
-                                    En attente signature entrepreneur
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline">{contract.status}</Badge>
-                                )}
-                              </div>
-                            </div>
-                            <div className="mt-3 flex justify-between items-center text-sm">
-                              <span className="text-muted-foreground">
-                                Reçu le {format(new Date(contract.created_at), 'dd MMM yyyy', { locale: fr })}
-                              </span>
-                              {needsClientSignature && (
-                                <Button size="sm" className="bg-warning hover:bg-warning/90 text-warning-foreground">
-                                  Voir et signer
-                                </Button>
-                              )}
-                              {isFullySigned && (
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-4 w-4 mr-1" />
-                                  Voir le contrat
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ClientContractsTab contracts={allContracts} />
             </TabsContent>
 
             {/* Invoices Tab */}
             <TabsContent value="invoices">
-              <div className="space-y-6">
-                {/* Résumé des contrats (Transactions) */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Receipt className="h-5 w-5" />
-                      Historique des transactions
-                    </CardTitle>
-                    <CardDescription>
-                      Tous vos contrats et paiements de jalons
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {allContracts.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Receipt className="h-12 w-12 mx-auto mb-3 opacity-40" />
-                        <p>Aucun contrat enregistré pour le moment.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {allContracts.map((contract) => {
-                          const fullyPaid = contract.status === 'completed';
-                          const signed = contract.client_signed_at && contract.professional_signed_at;
-                          return (
-                            <div key={contract.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/30 transition-colors">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{contract.title}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {contract.professional_name}{contract.company_name ? ` — ${contract.company_name}` : ''}
-                                </p>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  {format(new Date(contract.created_at), 'PPP', { locale: fr })}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-3 ml-4">
-                                <div className="text-right">
-                                  <p className="font-semibold">{contract.total_amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
-                                  <Badge variant={fullyPaid ? 'default' : signed ? 'secondary' : 'outline'} className="text-xs">
-                                    {fullyPaid ? 'Complété' : signed ? 'En cours' : 'En attente'}
-                                  </Badge>
-                                </div>
-                                <Button variant="outline" size="sm" onClick={() => handleDownloadInvoice(contract)}>
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Jalons (paiements échelonnés) */}
-                {milestonesTransactions.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5" />
-                        Jalons de paiement
-                      </CardTitle>
-                      <CardDescription>Détail des versements par jalon</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        {milestonesTransactions.map((m) => (
-                          <div key={m.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div>
-                              <p className="text-sm font-medium">{m.title}</p>
-                              <p className="text-xs text-muted-foreground">{m.contract_title}{m.project_title ? ` — ${m.project_title}` : ''}</p>
-                              {m.validated_at && (
-                                <p className="text-xs text-green-600 mt-0.5">
-                                  Validé le {format(new Date(m.validated_at), 'PPP', { locale: fr })}
-                                </p>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <p className="font-semibold">{m.amount.toLocaleString('fr-CA', { style: 'currency', currency: 'CAD' })}</p>
-                              <Badge variant={m.status === 'completed' ? 'default' : m.status === 'requested' ? 'secondary' : 'outline'} className="text-xs">
-                                {m.status === 'completed' ? 'Payé' : m.status === 'requested' ? 'Demandé' : 'En attente'}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
+              <ClientInvoicesTab
+                contracts={allContracts}
+                milestones={milestonesTransactions}
+                onDownloadInvoice={handleDownloadInvoice}
+              />
             </TabsContent>
 
             {/* Activity Tab */}
