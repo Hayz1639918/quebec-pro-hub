@@ -50,6 +50,7 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 ## 10. Commands executed and results
 - Baseline : `npm install` OK ; `type-check` OK ; `build` OK (warn chunk PDF 1.49MB) ; `test` 18/18 OK ; `lint` 116 errors/66 warnings.
 - Après Batch 1 : `lint` 0 errors / 66 warnings ; `type-check` OK ; `test` 18/18 OK ; `build` OK.
+- Batch 2 : `npm audit` 6 vulns → `npm audit fix` → 2 restantes (esbuild/vite dev-only). Re-validation complète OK (tsc, 18/18 tests, build, lint 0 err).
 
 ## 11. Tests/build/lint/typecheck performed
 Voir §2 baseline.
@@ -70,13 +71,13 @@ Voir §2 baseline.
 - Pas encore.
 
 ## 20. Security / production-readiness risks
-- 40 vulnérabilités Dependabot sur main (1 critique) — vérifier si toujours présentes après le commit sécurité 9d52283.
+- ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.
 - Chunk PDF 1.49 MB (perf).
 - Couverture de tests quasi nulle (3 fichiers).
 
 ## 21. Exact next steps
 1. ~~Batch 1 : lint errors~~ ✅ FAIT (116 → 0).
-2. Batch 2 : `npm run audit:security` + traiter vulnérabilités critiques/high.
+2. ~~Batch 2 : sécurité deps~~ ✅ FAIT — `npm audit fix` : 6 vulns → 2. Corrigées : vitest (critical, dev), form-data 4.0.6 (high, via axios), dompurify (moderate, runtime sanitisation), js-yaml (moderate). Restantes : esbuild/vite (dev server uniquement, aucun impact prod ; fix = vite 8 breaking → risque accepté, à traiter dans une mise à jour majeure dédiée).
 3. Batch 3 : audit flows critiques (auth → création projet → proposition → contrat → paiement) via lecture code + Playwright.
 4. Batch 4 : responsive 5 breakpoints via Playwright screenshots.
 5. Batch 5 : accessibilité de base.
