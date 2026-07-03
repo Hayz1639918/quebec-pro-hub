@@ -1,39 +1,7 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="32" height="32" fill="white"/>
-  <g transform="translate(2, 6)">
-    <!-- B simplifié -->
-    <path d="M 2 0 L 6 0 C 8 0 9 1 9 3 C 9 4 8 5 7 5 C 8.5 5.5 9.5 6.5 9.5 8 C 9.5 10 8 11 6 11 L 2 11 Z M 3.5 2 L 3.5 4.5 L 6 4.5 C 7 4.5 7.5 4 7.5 3.5 C 7.5 3 7 2 6 2 Z M 3.5 6 L 3.5 9.5 L 6 9.5 C 7 9.5 7.5 9 7.5 8 C 7.5 7 7 6 6 6 Z" fill="#0066CC"/>
-    
-    <!-- Bâtiment -->
-    <rect x="12" y="2" width="4" height="9" fill="#0066CC"/>
-    <rect x="12.5" y="3" width="1" height="1" fill="white"/>
-    <rect x="14.5" y="3" width="1" height="1" fill="white"/>
-    <rect x="12.5" y="5" width="1" height="1" fill="white"/>
-    <rect x="14.5" y="5" width="1" height="1" fill="white"/>
-    <rect x="12.5" y="7" width="1" height="1" fill="white"/>
-    <rect x="14.5" y="7" width="1" height="1" fill="white"/>
-    <polygon points="14,0 12,2 16,2" fill="#0066CC"/>
-    
-    <!-- N simplifié -->
-    <path d="M 18 0 L 20 0 L 20 11 L 18 11 Z M 20 0 L 23 11 L 25 11 L 22 0 Z M 23 0 L 25 0 L 25 11 L 23 11 Z" fill="#0066CC"/>
-    <rect x="23.5" y="2" width="0.5" height="1" fill="white"/>
-    <rect x="23.5" y="4" width="0.5" height="1" fill="white"/>
-    <rect x="23.5" y="6" width="0.5" height="1" fill="white"/>
-    <rect x="23.5" y="8" width="0.5" height="1" fill="white"/>
-  </g>
-  
-  <!-- Texte BN simplifié -->
-  <text x="16" y="28" font-family="Arial, sans-serif" font-size="6" font-weight="700" fill="#0066CC" text-anchor="middle">BN</text>
+<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="44" height="44" rx="11" fill="#0066CC"/>
+  <path d="M13 30.5V20C13 19.4477 13.4477 19 14 19H15.8C16.3523 19 16.8 19.4477 16.8 20V30.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20.1 30.5V14.5C20.1 13.9477 20.5477 13.5 21.1 13.5H22.9C23.4523 13.5 23.9 13.9477 23.9 14.5V30.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M27.2 30.5V22C27.2 21.4477 27.6477 21 28.2 21H30C30.5523 21 31 21.4477 31 22V30.5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10.5 30.75H33.5" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
 </svg>
-
-
-
-
-
-
-
-
-
-
-
-

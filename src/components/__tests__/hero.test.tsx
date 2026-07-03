@@ -12,8 +12,7 @@ describe('Hero', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Trouvez les/i)).toBeInTheDocument();
-    expect(screen.getByText(/meilleurs/i)).toBeInTheDocument();
+    expect(screen.getByText(/meilleurs entrepreneurs/i)).toBeInTheDocument();
     expect(screen.getAllByText(/entrepreneurs/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Plateforme internationale sécurisée/i)).toBeInTheDocument();
   });

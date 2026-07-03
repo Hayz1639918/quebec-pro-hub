@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Briefcase, HardHat } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 import { AppProfile, getPostAuthRoute } from "@/lib/auth-routing";
 
 type UserType = "client" | "professional";
@@ -474,11 +474,7 @@ const Auth = () => {
       <Card className="w-full max-w-2xl mx-auto shadow-lg">
         <CardHeader className="space-y-2 sm:space-y-3 md:space-y-4 text-center px-3 sm:px-4 md:px-6 py-4 sm:py-6">
           <div className="flex justify-center">
-            <img
-              src={logo}
-              alt="BâtirNet Logo"
-              className="h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 rounded-lg object-cover"
-            />
+            <Logo size={44} />
           </div>
           <div>
             <CardTitle className="text-lg sm:text-xl md:text-2xl" role="heading" aria-level={1}>

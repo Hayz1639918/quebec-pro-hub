@@ -224,7 +224,7 @@ function generateProjectsHTML(projects: Project[], profile: UserProfile): string
 
       <footer class="footer">
         <p>Document généré par BâtirNet - Plateforme de mise en relation pour projets de construction</p>
-        <p class="contact">Contact: support@batirnet.ca | www.batirnet.ca</p>
+        <p class="contact">Contact: support@batirnet.com | www.batirnet.com</p>
       </footer>
     </div>
   `;

@@ -95,3 +95,7 @@ pnpm-lock.yaml
 
 # Sentry
 .sentryclirc
+
+# Agent skills (outillage local, non versionné)
+.agents/
+skills-lock.json

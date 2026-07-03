@@ -49,8 +49,8 @@ const PrivacyPolicy = () => {
                 <Mail className="w-5 h-5 text-primary mt-0.5" />
                 <div>
                   <p className="font-medium">Email</p>
-                  <a href="mailto:privacy@batirnet.ca" className="text-primary hover:underline">
-                    privacy@batirnet.ca
+                  <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
+                    privacy@batirnet.com
                   </a>
                 </div>
               </div>
@@ -193,8 +193,8 @@ const PrivacyPolicy = () => {
                 </p>
                 <p className="text-sm mt-2">
                   <strong>Pour exercer vos droits :</strong>{" "}
-                  <a href="mailto:privacy@batirnet.ca" className="text-primary hover:underline">
-                    privacy@batirnet.ca
+                  <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
+                    privacy@batirnet.com
                   </a>
                 </p>
               </div>
@@ -291,8 +291,8 @@ const PrivacyPolicy = () => {
             <div className="space-y-2">
               <p>
                 <strong>Email :</strong>{" "}
-                <a href="mailto:privacy@batirnet.ca" className="text-primary hover:underline">
-                  privacy@batirnet.ca
+                <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
+                  privacy@batirnet.com
                 </a>
               </p>
               <p className="text-sm text-gray-500">

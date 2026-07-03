@@ -34,11 +34,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        display:    ['"Instrument Serif"', 'Georgia', 'serif'],
-        body:       ['"Source Serif 4"', 'Georgia', 'serif'],
+        display:    ['Outfit', 'system-ui', 'sans-serif'],
+        body:       ['Outfit', 'system-ui', 'sans-serif'],
         ui:         ['Outfit', 'system-ui', 'sans-serif'],
         sans:       ['Outfit', 'system-ui', 'sans-serif'],
-        serif:      ['"Source Serif 4"', 'Georgia', 'serif'],
+        serif:      ['Outfit', 'system-ui', 'sans-serif'],
         mono:       ['"DM Mono"', '"Courier New"', 'monospace'],
       },
       colors: {

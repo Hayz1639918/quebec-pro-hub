@@ -20,7 +20,7 @@ const PREDEFINED_SERVICES = [
   "Aménagement paysager", "Cuisine et salle de bain", "Extension et agrandissement",
   "Autre",
 ];
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 
 const CompleteProfile = () => {
   const { t } = useTranslation();
@@ -336,11 +336,7 @@ const CompleteProfile = () => {
       <Card className="w-full max-w-2xl mx-auto shadow-lg">
         <CardHeader className="space-y-3 text-center px-6 py-6">
           <div className="flex justify-center">
-            <img 
-              src={logo} 
-              alt="BâtirNet Logo" 
-              className="h-14 w-14 rounded-lg object-cover"
-            />
+            <Logo size={40} />
           </div>
           <div>
             <CardTitle className="text-2xl">

@@ -18,8 +18,8 @@ const HOST = process.env.API_HOST || '0.0.0.0';
 // CORS Configuration (OWASP ASVS V13.2.2)
 // Only allow requests from trusted origins
 const ALLOWED_ORIGINS = [
-  'https://batirnet.ca',
-  'https://www.batirnet.ca',
+  'https://batirnet.com',
+  'https://www.batirnet.com',
   // Development origins (only if NODE_ENV=development)
   ...(process.env.NODE_ENV === 'development' ? [
     'http://localhost:5173',

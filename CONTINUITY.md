@@ -112,6 +112,13 @@ Voir §2 baseline.
   - 🔴 **BLOQUANT restant** : `site_url = http://localhost:3000` et `uri_allow_list` vide. Les liens de confirmation/reset pointent vers localhost → cassés pour un utilisateur réel. **À corriger dès que l'utilisateur fournit son URL Vercel de test** : mettre `site_url` sur l'URL Vercel + ajouter `https://<url-vercel>/**` à `uri_allow_list`.
   - Plan une fois le domaine acheté : rebrancher le SMTP Resend avec le domaine vérifié (sender `noreply@<domaine>`), remonter `rate_limit_email_sent`, mettre `site_url` sur le domaine final.
 - Compte de test créé pendant les essais supprimé via service_role — base à 33 profils, propre.
+- **FINALISATION (2026-07-03) — domaine batirnet.com vérifié dans Resend, branché sur Vercel** :
+  - SMTP Resend rebranché avec `smtp_admin_email = noreply@batirnet.com` (au lieu de `onboarding@resend.dev`). Testé : inscription vers une adresse TIERCE (example.org) → succès, `confirmation_sent_at` rempli, 0 erreur dans auth_logs (avant vérification du domaine, le même test donnait un 500 `550 verify a domain`).
+  - `rate_limit_email_sent` relevé à 30/h (le domaine étant vérifié, la limite Resend par-adresse-propriétaire ne s'applique plus).
+  - `site_url = https://batirnet.com` (était `localhost:3000`) ; `uri_allow_list = https://batirnet.com/**,https://www.batirnet.com/**` — les liens de confirmation/reset redirigent maintenant vers le vrai site.
+  - Template d'email de confirmation personnalisé : `mailer_subjects_confirmation` = "Confirmez votre compte BâtirNet" ; `mailer_templates_confirmation_content` = HTML pro (logo `https://batirnet.com/logo-batirnet.png` dans un bandeau bleu marque #0066cc, bouton CTA, lien de secours, mention de sécurité, pied de page). Testé via un signup réel : envoi confirmé sans erreur.
+  - ⚠️ Templates NON encore personnalisés (toujours le défaut Supabase, à faire si souhaité) : reset password, magic link, changement d'email, invitation. Même approche applicable (dupliquer le gabarit HTML, adapter texte/sujet).
+  - Comptes de test créés pendant la vérification supprimés via service_role — base à 33 profils, propre. Aucun secret (clé Resend / token Supabase) commité, utilisés en variables shell éphémères.
 
 ## 20. Security / production-readiness risks
 - 🔴 **CRITIQUE — Fuite de PII confirmée sur la base de PROD (2026-07-03, testé avec la clé publishable anonyme réelle)** :
@@ -142,3 +149,16 @@ Voir §2 baseline.
 - Ne jamais déclarer « 100% production-ready » ; toujours « selon les validations suivantes ».
 - Mettre à jour ce fichier après chaque batch.
 - docs/user-stories-client-audit.md existe déjà — le lire avant l'audit des flows client pour ne pas dupliquer le travail.
+
+## 23. Refonte UI/UX (2026-07-03) — SaaS moderne épuré
+- **Skills installés** : taste-skill (Leonxlnx) + ui-ux-pro-max (nextlevelbuilder) dans `.agents/skills/` (gitignoré, non versionné).
+- **Décisions utilisateur** : direction = SaaS moderne épuré ; rollout = incrémental + validation ; images = stock Unsplash ; logo = nouveau SVG pro. Thème bleu #0066cc conservé.
+- **Contrainte images** : Unsplash/picsum bloqués par le proxy de l'env (impossible de télécharger pour self-host) ; Google Fonts OK. Les images stock devront être référencées par URL (invisible dans les captures de test, OK en prod) ou l'utilisateur autorise images.unsplash.com dans son env.
+- **Fait (commits sur la branche/PR #96)** :
+  - Design system : typo Instrument/Source Serif → **Outfit** (géométrique) partout ; retrait des 2 serifs ; ombres ultra-diffuses teintées marine ; radius 10px ; utilitaires text-balance/pretty. `index.html`, `index.css`, `tailwind.config.ts`.
+  - **Nouveau logo SVG** : `src/components/Logo.tsx` (monogramme colonnes+poutre dans tuile bleue + wordmark, variante onDark) ; `public/favicon.svg` refait. Ancien `logo-batirnet.png` conservé UNIQUEMENT pour l'email Supabase (à régénérer en PNG un jour).
+  - Pages refondues : **Hero** (grille 2 col, badge, image card + trust badge, stats), **HowItWorks** (cartes bento), **Features** (section claire + panneaux image), **CTA** (carte bleue + carte claire), **Footer** (marine profond), **Auth** (logo + hérite tokens). Logos migrés dans IntroExperience + 3 CompleteProfile.
+  - i18n : nouvelles clés eyebrows/titres (how_it_works.eyebrow, features.eyebrow, cta.*) FR/EN.
+- **Hérité automatiquement** : toutes les pages (dashboards, tables, formulaires) reprennent la nouvelle typo/couleurs/radius/ombres via les tokens — vérifié sur le dashboard client (rendu propre sans retouche).
+- **Reste à faire (si souhaité)** : polish ciblé des layouts bespoke des dashboards (client/pro/admin), pages projet/contrats/paiements ; email Supabase logo PNG ; éventuel self-host images.
+- **Validations** : tsc OK, lint 0 erreur, 18/18 tests, build OK à chaque increment.
