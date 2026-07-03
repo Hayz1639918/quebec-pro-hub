@@ -216,7 +216,15 @@
       "profile_error": "Unable to create user profile",
       "signup_error": "An error occurred during registration",
       "no_user_logged": "No user logged in",
-      "google_error": "Unable to sign in with Google"
+      "google_error": "Unable to sign in with Google",
+      "rate_limited": "Too many attempts",
+      "rate_limited_description": "You've made several attempts in a row. For your security, please wait about an hour before trying again. If you already have an account, try signing in or use \"Forgot password\".",
+      "email_exists": "Account already exists",
+      "email_exists_description": "An account already uses this address. Try signing in, or use \"Forgot password\" if you don't remember it.",
+      "email_invalid": "Invalid email address",
+      "email_invalid_description": "Please check your email address (example: name@example.com).",
+      "email_not_confirmed": "Email not confirmed",
+      "email_not_confirmed_description": "Please confirm your address first by clicking the link sent to your inbox."
     }
   },
   "dashboard": {

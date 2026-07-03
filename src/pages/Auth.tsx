@@ -25,6 +25,63 @@ const PASSWORD_RULES = {
   hasSpecial: /[^A-Za-z0-9]/,
 };
 
+// Basic email format check (RFC-lite) to avoid wasting Supabase's email quota
+// on obvious typos before ever calling the API.
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const isValidEmail = (value: string) => EMAIL_RE.test(value.trim());
+
+type TranslateFn = (key: string, options?: Record<string, unknown>) => string;
+
+/**
+ * Traduit les erreurs d'authentification Supabase (codes/messages bruts, souvent
+ * en anglais) en messages clairs et bilingues pour l'utilisateur. Gère notamment
+ * le rate limiting (429) pour ne pas laisser un message cryptique bloquer les
+ * personnes âgées ou peu à l'aise.
+ */
+function mapAuthError(error: unknown, t: TranslateFn): { title: string; description: string } {
+  const err = error as { code?: string; status?: number; message?: string } | null;
+  const code = err?.code ?? "";
+  const status = err?.status ?? 0;
+  const message = (err?.message ?? "").toLowerCase();
+
+  const is = (needle: string) => code.includes(needle) || message.includes(needle);
+
+  if (status === 429 || is("rate_limit") || is("rate limit") || is("too many") || is("security purposes")) {
+    return {
+      title: t("auth.messages.rate_limited"),
+      description: t("auth.messages.rate_limited_description"),
+    };
+  }
+  if (is("invalid_credentials") || is("invalid login")) {
+    return {
+      title: t("auth.messages.error"),
+      description: t("auth.messages.invalid_credentials"),
+    };
+  }
+  if (is("already") && (is("registered") || is("exists") || code.includes("user_already"))) {
+    return {
+      title: t("auth.messages.email_exists"),
+      description: t("auth.messages.email_exists_description"),
+    };
+  }
+  if (is("email_address_invalid") || is("invalid") && is("email")) {
+    return {
+      title: t("auth.messages.email_invalid"),
+      description: t("auth.messages.email_invalid_description"),
+    };
+  }
+  if (is("email_not_confirmed") || is("not confirmed")) {
+    return {
+      title: t("auth.messages.email_not_confirmed"),
+      description: t("auth.messages.email_not_confirmed_description"),
+    };
+  }
+  return {
+    title: t("auth.messages.error"),
+    description: err?.message || t("auth.messages.invalid_credentials"),
+  };
+}
+
 function getPasswordStrength(password: string) {
   return {
     minLength: password.length >= PASSWORD_RULES.minLength,
@@ -188,6 +245,15 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      if (!isValidEmail(forgotEmail)) {
+        toast({
+          variant: "destructive",
+          title: t("auth.messages.email_invalid"),
+          description: t("auth.messages.email_invalid_description"),
+        });
+        setLoading(false);
+        return;
+      }
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
         redirectTo: `${window.location.origin}/auth?mode=reset`,
       });
@@ -199,8 +265,8 @@ const Auth = () => {
       setForgotPassword(false);
       setIsLogin(true);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Erreur lors de l'envoi.";
-      toast({ variant: "destructive", title: "Erreur", description: msg });
+      const { title, description } = mapAuthError(error, t);
+      toast({ variant: "destructive", title, description });
     } finally {
       setLoading(false);
     }
@@ -244,6 +310,18 @@ const Auth = () => {
           variant: "destructive",
           title: t('auth.messages.missing_fields'),
           description: t('auth.messages.missing_fields_description'),
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate email format BEFORE calling Supabase, so a typo never burns the
+      // limited email-send quota (which otherwise locks the user's IP for ~1h).
+      if (!isValidEmail(email)) {
+        toast({
+          variant: "destructive",
+          title: t('auth.messages.email_invalid'),
+          description: t('auth.messages.email_invalid_description'),
         });
         setLoading(false);
         return;
@@ -335,12 +413,8 @@ const Auth = () => {
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t('auth.messages.signup_error');
-      toast({
-        variant: "destructive",
-        title: t('auth.messages.error'),
-        description: errorMessage,
-      });
+      const { title, description } = mapAuthError(error, t);
+      toast({ variant: "destructive", title, description });
     } finally {
       setLoading(false);
     }
@@ -348,6 +422,15 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidEmail(email)) {
+      toast({
+        variant: "destructive",
+        title: t('auth.messages.email_invalid'),
+        description: t('auth.messages.email_invalid_description'),
+      });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -379,12 +462,8 @@ const Auth = () => {
 
       redirectBasedOnProfile(userProfile);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : t('auth.messages.invalid_credentials');
-      toast({
-        variant: "destructive",
-        title: t('auth.messages.error'),
-        description: errorMessage,
-      });
+      const { title, description } = mapAuthError(error, t);
+      toast({ variant: "destructive", title, description });
     } finally {
       setLoading(false);
     }

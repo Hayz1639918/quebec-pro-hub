@@ -95,6 +95,16 @@ Voir §2 baseline.
   - Guards vérifiés en conditions réelles : pro non vérifié → redirection /pending-verification ✅.
   - Limite restante : audit lecteur d'écran humain recommandé pour viser WCAG 2.1 AA complet (axe ne couvre ~30-40% des critères).
 
+## 19bis. Bug auth « blocage après plusieurs tentatives » (2026-07-03)
+- **Symptôme utilisateur** : après quelques essais (mauvais mdp au login, ou email existant/invalide au signup), l'appareil est « bloqué » même en navigation privée / autre appareil.
+- **Diagnostic (testé sur l'API auth réelle)** :
+  - Login mauvais mdp : 12 tentatives → toujours 400 `invalid_credentials`, JAMAIS de blocage. Ce n'était pas la source.
+  - Signup : dès la 3e tentative → **HTTP 429 `over_email_send_rate_limit`**. CAUSE RACINE = config Supabase `rate_limit_email_sent = 2` (2 emails/h/IP). Blocage côté serveur par IP → d'où la persistance en navigation privée / autre appareil.
+  - Pas de SMTP custom (`smtp_host = None`) + `mailer_autoconfirm = false` → chaque signup envoie un email de confirmation via le SMTP de dev partagé, plafonné.
+- **Correctif CODE appliqué (Auth.tsx)** : `isValidEmail()` valide le format AVANT tout appel Supabase (une faute de frappe ne consomme plus le quota) sur login/signup/forgot-password ; `mapAuthError()` traduit les erreurs brutes (429/invalid_credentials/email_exists/email_invalid/email_not_confirmed) en messages FR/EN clairs adaptés aux personnes âgées. Clés i18n ajoutées.
+- **Config SERVEUR NON modifiable** : PATCH `rate_limit_email_sent=30` → REFUSÉ par Supabase (`Custom SMTP required`). La limite reste 2/h tant qu'aucun SMTP custom n'est branché.
+- **Reste à faire (choix utilisateur)** : (a) brancher un SMTP custom (Resend/SendGrid/Brevo) → seule vraie solution prod, débloque le relèvement de la limite ; ou (b) pour tester vite, désactiver la confirmation email (`mailer_autoconfirm=true`) — moins sécurisé, à valider par l'utilisateur. NON appliqué sans accord.
+
 ## 20. Security / production-readiness risks
 - 🔴 **CRITIQUE — Fuite de PII confirmée sur la base de PROD (2026-07-03, testé avec la clé publishable anonyme réelle)** :
   - Table `profiles` lisible intégralement par le rôle `anon` : **7 profils CLIENTS avec emails et 3 téléphones** exposés à tout visiteur non authentifié via l'API REST (`/rest/v1/profiles?user_type=eq.client`). Viole Loi 25 / GDPR (US-120/121).
