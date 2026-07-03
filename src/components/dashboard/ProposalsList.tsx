@@ -42,11 +42,12 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface Proposal {
+export interface Proposal {
   id: string;
   project_id: string;
   professional_id: string;
@@ -84,7 +85,7 @@ const STATUS_COLORS: Record<string, string> = {
   withdrawn: "bg-gray-100 text-gray-800 border-gray-200",
 };
 
-const STATUS_ICONS: Record<string, any> = {
+const STATUS_ICONS: Record<string, LucideIcon> = {
   pending: Clock,
   accepted: CheckCircle2,
   rejected: XCircle,
@@ -170,7 +171,7 @@ export default function ProposalsList({ proposals, onStatusUpdate }: ProposalsLi
           if (onStatusUpdate) onStatusUpdate();
         }, 500);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating proposal:", error);
       const errorMessage = error?.message || "Erreur inconnue";
       toast.error("Erreur lors de la mise à jour", { 

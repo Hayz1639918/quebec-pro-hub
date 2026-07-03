@@ -110,7 +110,7 @@ const ProReviews = () => {
 
       if (error) throw error;
 
-      const reviewsWithDetails = (data || []).map((r: any) => ({
+      const reviewsWithDetails = (data || []).map((r) => ({
         ...r,
         client_name: r.profiles?.full_name || 'Client',
         project_title: r.projects?.title || 'Projet sans titre',

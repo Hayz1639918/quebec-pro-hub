@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/supabase/untyped';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -172,7 +173,7 @@ const ProfessionalProfile = () => {
       }
 
       setProfile(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching profile:', error);
       toast.error('Erreur lors du chargement du profil');
       navigate('/professionals');
@@ -227,15 +228,15 @@ const ProfessionalProfile = () => {
         .order('created_at', { ascending: false })
         .limit(10);
       if (data && data.length > 0) {
-        const reviewIds = data.map((r: any) => r.id);
-        const clientIds = Array.from(new Set(data.map((r: any) => r.client_id)));
+        const reviewIds = data.map((r) => r.id);
+        const clientIds = Array.from(new Set(data.map((r) => r.client_id)));
         const projectIds = Array.from(
-          new Set(data.map((r: any) => r.project_id).filter(Boolean))
+          new Set(data.map((r) => r.project_id).filter(Boolean))
         );
 
         const [clientsRes, repliesRes, projectsRes] = await Promise.all([
           supabase.from('profiles').select('id, full_name').in('id', clientIds),
-          (supabase as any)
+          db
             .from('review_replies')
             .select('review_id, content, created_at')
             .in('review_id', reviewIds),
@@ -245,19 +246,19 @@ const ProfessionalProfile = () => {
         ]);
 
         const clientMap = new Map<string, string>();
-        (clientsRes.data || []).forEach((c: any) =>
+        (clientsRes.data || []).forEach((c) =>
           clientMap.set(c.id, c.full_name || 'Client anonyme')
         );
         const replyMap = new Map<string, { content: string; created_at: string }>();
-        (repliesRes.data || []).forEach((r: any) =>
+        (repliesRes.data || []).forEach((r) =>
           replyMap.set(r.review_id, { content: r.content, created_at: r.created_at })
         );
         const projectMap = new Map<string, string>();
-        ((projectsRes as any).data || []).forEach((p: any) =>
+        ((projectsRes as { data: { id: string; title: string }[] | null }).data || []).forEach((p) =>
           projectMap.set(p.id, p.title)
         );
 
-        const enriched: Review[] = (data as any[]).map((r) => ({
+        const enriched: Review[] = (data as unknown as Review[]).map((r) => ({
           ...r,
           client_name: clientMap.get(r.client_id) || 'Client anonyme',
           project_title: r.project_id ? projectMap.get(r.project_id) : undefined,
@@ -274,7 +275,7 @@ const ProfessionalProfile = () => {
 
   const fetchCertifications = async () => {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await db
         .from('professional_certifications')
         .select(
           'id, cert_type, cert_name, cert_number, issuer, issued_at, expires_at, certificate_url'
@@ -304,7 +305,7 @@ const ProfessionalProfile = () => {
     if (!reportingReview || !currentUserId) return;
     setSubmittingReport(true);
     try {
-      const { error } = await (supabase as any).from('review_reports').insert({
+      const { error } = await db.from('review_reports').insert({
         review_id: reportingReview.id,
         reporter_id: currentUserId,
         reason: reportReason,
@@ -405,7 +406,7 @@ const ProfessionalProfile = () => {
 
       // Rediriger vers la conversation
       navigate(`/messages?conversation=${conversationId}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating conversation:', error);
       toast.error('Erreur lors de la création de la conversation');
     }

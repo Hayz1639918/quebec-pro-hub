@@ -168,7 +168,7 @@ const CompleteProfileEntrepreneur = () => {
         longitude: longitude,
         professional_type: "entrepreneur",
         profile_completed: true,
-      } as any).eq("id", userId);
+      } as Record<string, unknown>).eq("id", userId);
 
       if (error) throw error;
 

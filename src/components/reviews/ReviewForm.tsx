@@ -127,7 +127,7 @@ export default function ReviewForm({ projectId, professionalId, onSubmitted }: R
         description: "Merci pour votre évaluation détaillée !",
       });
       onSubmitted?.();
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: "Erreur",
         description: err.message || "Impossible d'envoyer l'avis.",

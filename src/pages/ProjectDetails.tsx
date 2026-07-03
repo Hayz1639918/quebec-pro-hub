@@ -177,7 +177,7 @@ const ProjectDetails = () => {
         toast.success('Proposition refusée');
       }
       await Promise.all([fetchProjectDetails(), fetchProjectDocuments()]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Erreur lors de la mise à jour", { description: err?.message || 'Erreur inconnue' });
     } finally {
       setProcessingProposalId(null);
@@ -289,8 +289,8 @@ const ProjectDetails = () => {
           estimated_budget: proposalData.estimated_budget,
           estimated_duration_days: proposalData.estimated_duration_days,
           created_at: proposalData.created_at,
-          professional_name: (proposalData.profiles as any)?.full_name || 'Entrepreneur',
-          company_name: (proposalData.profiles as any)?.company_name || null,
+          professional_name: (proposalData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.full_name || 'Entrepreneur',
+          company_name: (proposalData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.company_name || null,
         });
       }
 
@@ -320,8 +320,8 @@ const ProjectDetails = () => {
             created_at: contractData.created_at,
             client_signed_at: contractData.client_signed_at,
             professional_signed_at: contractData.professional_signed_at,
-            professional_name: (contractData.profiles as any)?.full_name || 'Entrepreneur',
-            company_name: (contractData.profiles as any)?.company_name || null,
+            professional_name: (contractData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.full_name || 'Entrepreneur',
+            company_name: (contractData.profiles as { full_name?: string | null; company_name?: string | null } | null)?.company_name || null,
           });
         }
 
@@ -350,7 +350,7 @@ const ProjectDetails = () => {
         .order('created_at', { ascending: false });
 
       if (allProposalsData) {
-        setAllProposals(allProposalsData.map((p: any) => ({
+        setAllProposals(allProposalsData.map((p) => ({
           id: p.id,
           message: p.message,
           estimated_budget: p.estimated_budget,

@@ -150,7 +150,7 @@ const Contracts = () => {
                 return prev;
               });
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.error('Error fetching contract:', error);
             toast({
               variant: "destructive",
@@ -244,7 +244,9 @@ const Contracts = () => {
                 .single();
               clientName = clientData?.full_name;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           try {
             if (contract.professional_id) {
@@ -256,7 +258,9 @@ const Contracts = () => {
               professionalName = proData?.full_name;
               companyName = proData?.company_name;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           try {
             if (contract.project_id) {
@@ -267,7 +271,9 @@ const Contracts = () => {
                 .single();
               projectTitle = projectData?.title;
             }
-          } catch {}
+          } catch {
+            // Enrichissement optionnel : on garde la valeur par défaut si la requête échoue
+          }
 
           return {
             ...contract,

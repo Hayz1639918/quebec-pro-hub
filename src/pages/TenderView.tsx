@@ -24,6 +24,7 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
+import type { TenderProject, PartyInfo } from '@/types/tender';
 
 const TenderView = () => {
   const { t } = useTranslation();
@@ -31,8 +32,8 @@ const TenderView = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const [project, setProject] = useState<any>(null);
-  const [client, setClient] = useState<any>(null);
+  const [project, setProject] = useState<TenderProject | null>(null);
+  const [client, setClient] = useState<PartyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [pdfReady, setPdfReady] = useState(false);
@@ -87,7 +88,7 @@ const TenderView = () => {
           phone: client_phone,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching tender:', error);
       toast.error('Erreur lors du chargement de l\'appel d\'offres');
     } finally {
@@ -351,7 +352,7 @@ const TenderView = () => {
             </CardHeader>
             <CardContent>
               <ul className="list-disc list-inside space-y-2">
-                {project.technical_specifications.map((spec: any, index: number) => (
+                {project.technical_specifications.map((spec, index) => (
                   <li key={index} className="text-gray-700">
                     {typeof spec === 'string' ? spec : spec.description || spec.name}
                   </li>
@@ -369,7 +370,7 @@ const TenderView = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {project.milestones.map((milestone: any, index: number) => (
+                {project.milestones.map((milestone, index) => (
                   <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
                     <p className="font-semibold">{milestone.name || milestone.title}</p>
                     <p className="text-sm text-gray-600">
@@ -416,7 +417,7 @@ const TenderView = () => {
                 <h4 className="font-semibold mb-2">Licences RBQ</h4>
                 {project.licensing_requirements && Object.keys(project.licensing_requirements).length > 0 ? (
                   <ul className="text-sm space-y-1">
-                    {Object.entries(project.licensing_requirements).map(([key, value]: [string, any]) => (
+                    {Object.entries(project.licensing_requirements).map(([key, value]) => (
                       <li key={key}>{value}</li>
                     ))}
                   </ul>
@@ -438,7 +439,7 @@ const TenderView = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {Object.entries(project.evaluation_criteria).map(([key, value]: [string, any]) => (
+                {Object.entries(project.evaluation_criteria).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center">
                     <span className="text-gray-700">{key}</span>
                     <Badge variant="secondary">{value}%</Badge>

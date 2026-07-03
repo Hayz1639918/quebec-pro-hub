@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProjectList from "@/components/dashboard/ProjectList";
-import ProposalsList from "@/components/dashboard/ProposalsList";
+import ProposalsList, { type Proposal } from "@/components/dashboard/ProposalsList";
 import ActivityTimeline, { ActivityItem } from "@/components/dashboard/ActivityTimeline";
 import FavoritesList from "@/components/dashboard/FavoritesList";
 import CompareDialog from "@/components/dashboard/CompareDialog";
@@ -165,7 +165,7 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [proposals, setProposals] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteProfessional[]>([]);
   const [activeProjects, setActiveProjects] = useState<ActiveProject[]>([]);
@@ -298,7 +298,7 @@ const Dashboard = () => {
       if (projectsError) throw projectsError;
 
       // Transform data to include contract signature info
-      const transformedProjects: Project[] = (projectsData || []).map((p: any) => ({
+      const transformedProjects: Project[] = (projectsData || []).map((p) => ({
         ...p,
         contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
         client_signed_at: p.contracts?.client_signed_at || null,
@@ -426,7 +426,7 @@ const Dashboard = () => {
         const projectIds = assignedProjectsData.map(p => p.id);
         
         // Count unread reports for each project (project_reports table may not exist)
-        let unreadCountByProject: Record<string, number> = {};
+        const unreadCountByProject: Record<string, number> = {};
         try {
           const { data: reportsCount } = await supabase
             .from('project_reports')
@@ -441,7 +441,7 @@ const Dashboard = () => {
           console.warn('project_reports table may not exist yet');
         }
 
-        const formattedProjects: ActiveProject[] = assignedProjectsData.map((p: any) => ({
+        const formattedProjects: ActiveProject[] = assignedProjectsData.map((p) => ({
           id: p.id,
           title: p.title,
           category: p.category,
@@ -478,7 +478,7 @@ const Dashboard = () => {
             .limit(10);
 
           if (reportsData) {
-            const formattedReports: ProjectReport[] = reportsData.map((r: any) => ({
+            const formattedReports: ProjectReport[] = reportsData.map((r) => ({
               id: r.id,
               project_id: r.project_id,
               project_title: r.projects?.title || 'Projet',
@@ -551,7 +551,7 @@ const Dashboard = () => {
       }
 
       if (contractsData) {
-        const formatted: PendingContract[] = contractsData.map((c: any) => ({
+        const formatted: PendingContract[] = contractsData.map((c) => ({
           id: c.id,
           title: c.title,
           project_title: c.projects?.title || null,
@@ -598,7 +598,7 @@ const Dashboard = () => {
       }
 
       if (contractsData) {
-        const formatted: ClientContract[] = contractsData.map((c: any) => ({
+        const formatted: ClientContract[] = contractsData.map((c) => ({
           id: c.id,
           title: c.title,
           project_title: c.projects?.title || null,
@@ -651,8 +651,8 @@ const Dashboard = () => {
 
       if (data) {
         const formatted = data
-          .filter((m: any) => m.contracts)
-          .map((m: any) => ({
+          .filter((m) => m.contracts)
+          .map((m) => ({
             id: m.id,
             title: m.title,
             contract_title: m.contracts?.title || '',

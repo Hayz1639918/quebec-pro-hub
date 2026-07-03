@@ -218,7 +218,7 @@ const CompleteProfile = () => {
         .getPublicUrl(filePath);
 
       return publicUrl;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading RBQ certification:', error);
       toast({
         variant: "destructive",

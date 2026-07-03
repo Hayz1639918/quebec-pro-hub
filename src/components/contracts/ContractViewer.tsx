@@ -153,7 +153,7 @@ export const ContractViewer = ({
         };
         setContract(transformedContract);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching contract:', error);
       toast({
         variant: "destructive",

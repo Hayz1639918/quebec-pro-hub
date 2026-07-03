@@ -9,6 +9,7 @@ import {
 } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import type { ProposalRecord, TenderProject, PartyInfo } from '@/types/tender';
 
 // Register fonts
 Font.register({
@@ -322,10 +323,10 @@ const styles = StyleSheet.create({
 });
 
 interface ProposalPDFProps {
-  proposal: any;
-  project: any;
-  professional: any;
-  client: any;
+  proposal: ProposalRecord;
+  project: TenderProject;
+  professional: PartyInfo;
+  client: PartyInfo;
 }
 
 export const ProposalPDF: React.FC<ProposalPDFProps> = ({ 
@@ -468,7 +469,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
                 <Text style={[styles.tableCellHeader, { flex: 2 }]}>Fonction / Rôle</Text>
                 <Text style={styles.tableCellHeaderLast}>Expérience</Text>
               </View>
-              {proposal.team_composition.map((member: any, index: number) => (
+              {proposal.team_composition.map((member, index) => (
                 <View key={index} style={index === proposal.team_composition.length - 1 ? styles.tableRowLast : styles.tableRow}>
                   <Text style={[styles.tableCell, { flex: 2 }]}>{member.name}</Text>
                   <Text style={[styles.tableCell, { flex: 2 }]}>{member.role}</Text>
@@ -490,7 +491,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={styles.tableCellHeader}>Durée</Text>
               <Text style={styles.tableCellHeaderLast}>Date prévue</Text>
             </View>
-            {proposal.timeline_details.map((phase: any, index: number) => (
+            {proposal.timeline_details.map((phase, index) => (
               <View key={index} style={index === proposal.timeline_details.length - 1 ? styles.tableRowLast : styles.tableRow}>
                 <Text style={[styles.tableCell, { flex: 3 }]}>{phase.name || phase.phase}</Text>
                 <Text style={styles.tableCell}>{phase.duration}</Text>
@@ -520,7 +521,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={[styles.tableCellHeader, { flex: 3 }]}>Poste de dépense</Text>
               <Text style={styles.tableCellHeaderLast}>Montant</Text>
             </View>
-            {Object.entries(proposal.budget_breakdown).map(([key, value]: [string, any], index: number) => (
+            {Object.entries(proposal.budget_breakdown).map(([key, value], index) => (
               <View key={key} style={index === Object.entries(proposal.budget_breakdown).length - 1 ? styles.tableRowLast : styles.tableRow}>
                 <Text style={[styles.tableCell, { flex: 3 }]}>{key}</Text>
                 <Text style={[styles.tableCellLast, { textAlign: 'right' }]}>{formatCurrency(value)}</Text>
@@ -556,7 +557,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={styles.sectionHeaderText}>ÉQUIPEMENT ET OUTILLAGE</Text>
             </View>
             <View style={styles.sectionContent}>
-              {proposal.equipment_list.map((equipment: any, index: number) => (
+              {proposal.equipment_list.map((equipment, index) => (
                 <View key={index} style={styles.listItem}>
                   <Text style={styles.listBullet}>•</Text>
                   <Text style={styles.listText}>
@@ -646,7 +647,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
                 <Text style={styles.tableCellHeader}>Année</Text>
                 <Text style={styles.tableCellHeaderLast}>Valeur</Text>
               </View>
-              {proposal.references.map((ref: any, index: number) => (
+              {proposal.references.map((ref, index) => (
                 <View key={index} style={index === proposal.references.length - 1 ? styles.tableRowLast : styles.tableRow}>
                   <Text style={[styles.tableCell, { flex: 2 }]}>{ref.project_name || `Projet ${index + 1}`}</Text>
                   <Text style={styles.tableCell}>{ref.client_name}</Text>

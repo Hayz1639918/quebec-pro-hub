@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { db } from '@/integrations/supabase/untyped';
 import { useToast } from "@/hooks/use-toast";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -423,7 +424,7 @@ const AdminDashboard = () => {
 
   const fetchReviewReports = useCallback(async () => {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await db
         .from("review_reports")
         .select("id, review_id, reporter_id, reason, detail, status, created_at")
         .order("created_at", { ascending: false });
@@ -434,8 +435,8 @@ const AdminDashboard = () => {
         reporterIds.length ? supabase.from("profiles").select("id, full_name").in("id", reporterIds) : Promise.resolve({ data: [] }),
         reviewIds.length ? supabase.from("reviews").select("id, comment, rating").in("id", reviewIds) : Promise.resolve({ data: [] }),
       ]);
-      const rmap = new Map((reporters.data || []).map((p: any) => [p.id, p.full_name]));
-      const vmap = new Map((reviews.data || []).map((v: any) => [v.id, v]));
+      const rmap = new Map((reporters.data || []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
+      const vmap = new Map((reviews.data || []).map((v: { id: string; comment: string | null; rating: number | null }) => [v.id, v]));
       setReviewReports(rows.map((r) => ({
         ...r,
         reporter_name: rmap.get(r.reporter_id) || "Utilisateur",
@@ -449,14 +450,14 @@ const AdminDashboard = () => {
 
   const fetchUserReports = useCallback(async () => {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await db
         .from("user_reports")
         .select("id, reporter_id, reported_user_id, conversation_id, reason, detail, status, created_at")
         .order("created_at", { ascending: false });
       const rows = (data || []) as UserReport[];
       const ids = [...new Set([...rows.map((r) => r.reporter_id), ...rows.map((r) => r.reported_user_id)])];
       const profiles = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] };
-      const pmap = new Map((profiles.data || []).map((p: any) => [p.id, p.full_name]));
+      const pmap = new Map((profiles.data || []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
       setUserReports(rows.map((r) => ({
         ...r,
         reporter_name: pmap.get(r.reporter_id) || "Utilisateur",
@@ -474,7 +475,7 @@ const AdminDashboard = () => {
   ) => {
     setActionLoading(id);
     try {
-      const { error } = await (supabase as any).from(table).update({ status }).eq("id", id);
+      const { error } = await db.from(table).update({ status }).eq("id", id);
       if (error) throw error;
       toast({ title: "Signalement traité", description: status === "resolved" ? "Marqué comme résolu." : "Signalement rejeté." });
       if (table === "review_reports") await fetchReviewReports();

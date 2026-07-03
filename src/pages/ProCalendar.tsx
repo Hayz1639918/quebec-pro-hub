@@ -144,7 +144,7 @@ const ProCalendar = () => {
 
       if (error) throw error;
 
-      const bookingsWithDetails = (data || []).map((b: any) => ({
+      const bookingsWithDetails = (data || []).map((b) => ({
         ...b,
         client_name: b.profiles?.full_name || 'Client',
         project_title: b.projects?.title || 'Sans titre',

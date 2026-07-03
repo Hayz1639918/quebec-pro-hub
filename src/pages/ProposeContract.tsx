@@ -409,7 +409,7 @@ const ProposeContract = () => {
         toast.success('Proposition de contrat envoyée !');
         navigate('/pro/dashboard');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur:', error);
       toast.error('Une erreur est survenue');
     } finally {

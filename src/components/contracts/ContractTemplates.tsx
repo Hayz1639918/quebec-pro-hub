@@ -256,7 +256,7 @@ export const ContractTemplates = ({
         description: 'Réponse inattendue du serveur',
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erreur lors de la suppression:', error);
       
       let errorMessage = 'Erreur lors de la suppression du contrat';

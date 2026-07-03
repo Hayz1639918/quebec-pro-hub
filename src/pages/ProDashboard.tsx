@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/supabase/untyped';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -242,7 +243,7 @@ const ProDashboard = () => {
 
   const fetchPendingInvitations = async (uid: string) => {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await db
         .from('project_invitations')
         .select('id, project_id, client_id, message, status, created_at, projects:project_id(title), profiles:client_id(full_name, company_name)')
         .eq('professional_id', uid)
@@ -256,7 +257,7 @@ const ProDashboard = () => {
       }
 
       setPendingInvitations(
-        (data || []).map((inv: any) => ({
+        (data || []).map((inv) => ({
           id: inv.id,
           project_id: inv.project_id,
           project_title: inv.projects?.title || 'Projet sans titre',
@@ -279,7 +280,7 @@ const ProDashboard = () => {
   ) => {
     setRespondingInvitation(invitationId);
     try {
-      const { error } = await (supabase as any).rpc('respond_to_invitation', {
+      const { error } = await db.rpc('respond_to_invitation', {
         p_invitation_id: invitationId,
         p_response: response,
       });
@@ -290,7 +291,7 @@ const ProDashboard = () => {
       } else {
         setPendingInvitations((prev) => prev.filter((i) => i.id !== invitationId));
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error responding to invitation:', e);
     } finally {
       setRespondingInvitation(null);
@@ -325,7 +326,7 @@ const ProDashboard = () => {
       }
 
       if (contractsData) {
-        const formatted: PendingContract[] = contractsData.map((c: any) => ({
+        const formatted: PendingContract[] = contractsData.map((c) => ({
           id: c.id,
           title: c.title,
           project_title: c.projects?.title || null,
@@ -465,7 +466,7 @@ const ProDashboard = () => {
           console.warn('Assigned projects query failed (migration 031 may not be applied yet):', assignedError.message);
           setAssignedProjects([]);
         } else if (assignedProjectsData) {
-          const formattedAssignedProjects: AssignedProject[] = assignedProjectsData.map((p: any) => ({
+          const formattedAssignedProjects: AssignedProject[] = assignedProjectsData.map((p) => ({
             id: p.id,
             title: p.title,
             category: p.category,

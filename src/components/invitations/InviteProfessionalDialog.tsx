@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { db } from '@/integrations/supabase/untyped';
 import {
   Dialog,
   DialogContent,
@@ -89,18 +90,18 @@ export const InviteProfessionalDialog = ({
 
       if (projectsError) throw projectsError;
 
-      const projectIds = (projectsData || []).map((p: any) => p.id);
+      const projectIds = (projectsData || []).map((p: { id: string }) => p.id);
       const invitedSet = new Set<string>();
       if (projectIds.length > 0) {
-        const { data: existing } = await (supabase as any)
+        const { data: existing } = await db
           .from('project_invitations')
           .select('project_id')
           .eq('professional_id', professionalId)
           .in('project_id', projectIds);
-        (existing || []).forEach((row: any) => invitedSet.add(row.project_id));
+        (existing || []).forEach((row: { project_id: string }) => invitedSet.add(row.project_id));
       }
 
-      const enriched = (projectsData || []).map((p: any) => ({
+      const enriched = (projectsData || []).map((p: { id: string; [key: string]: unknown }) => ({
         ...p,
         alreadyInvited: invitedSet.has(p.id),
       })) as ClientProject[];
@@ -110,7 +111,7 @@ export const InviteProfessionalDialog = ({
       if (projectId && enriched.some((p) => p.id === projectId)) {
         setSelectedProject(projectId);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error loading projects for invitation:', e);
       toast({
         variant: 'destructive',
@@ -136,7 +137,7 @@ export const InviteProfessionalDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Non authentifié');
 
-      const { error } = await (supabase as any).from('project_invitations').insert({
+      const { error } = await db.from('project_invitations').insert({
         project_id: selectedProject,
         client_id: user.id,
         professional_id: professionalId,
@@ -162,7 +163,7 @@ export const InviteProfessionalDialog = ({
       });
       onOpenChange(false);
       onInvited?.();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error sending invitation:', e);
       toast({
         variant: 'destructive',

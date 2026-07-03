@@ -161,7 +161,7 @@ export const UploadContract = ({
       const fileUrl = filePath;
 
       // Create contract record
-      const contractData: Record<string, any> = {
+      const contractData: Record<string, unknown> = {
         title: title.trim(),
         description: description.trim() || null,
         total_amount: totalAmount ? parseFloat(totalAmount) : null,

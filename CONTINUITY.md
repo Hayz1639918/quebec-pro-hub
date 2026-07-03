@@ -18,10 +18,19 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 - Git log : travail récent déjà fait sur US-006→045 (client) et US-106→117 (pro métier), fixes auth-lock et stale chunks.
 
 ## 4. What has been modified
-- Rien encore (audit en lecture seule). Fichiers créés : CONTINUITY.md (ce fichier). CLAUDE.md créé au commit précédent.
+- **Batch 1 (terminé)** : 116 erreurs lint → 0. Détail :
+  - 22 × `catch (x: any)` → `catch (x: unknown)` (sed global).
+  - Créé `src/types/tender.ts` : interfaces domaine (ProposalRecord, TenderProject, PartyInfo, TeamMember, TimelinePhase, ProposalReference, ProjectMilestone, InsuranceRequirements…) utilisées par ProposalView, TenderView, ProposalPDF, TenderPDF.
+  - Créé `src/integrations/supabase/untyped.ts` : export `db` (SupabaseClient non générique) remplaçant 14 × `(supabase as any)` — nécessaire car les types générés sont obsolètes (4 tables sur ~30).
+  - Casts ciblés `as any` → types structurels précis (profiles/contracts joins) dans ProjectDetails, ProjectProgress, ProjectReport, ProfessionalProfile, CompleteProfileEntrepreneur, ChatWindow, UploadContract, AdminDashboard, InviteProfessionalDialog.
+  - `Proposal` exporté de ProposalsList et réutilisé dans Dashboard (dé-duplication de type).
+  - `: any` redondants retirés des callbacks sur résultats Supabase déjà non typés (Dashboard, ProCalendar, ProDashboard, ProMyProjects, ProReviews, ProfessionalProfile, ProjectProgress, ProjectReport) — comportement identique ; vrai typage attendra la régénération des types Supabase.
+  - 3 `catch {}` vides commentés (Contracts.tsx), 1 prefer-const, 1 ternaire-expression → if/else (ChatWindow).
 
 ## 5. Important decisions made
-- Ordre du plan d'audit : (1) lint errors bloquants, (2) flows critiques par rôle, (3) responsive, (4) accessibilité, (5) duplication/gros fichiers, (6) sécurité/deps.
+- Ordre du plan d'audit : (1) lint errors bloquants, (2) sécurité deps, (3) flows critiques par rôle, (4) responsive, (5) accessibilité, (6) duplication/gros fichiers.
+- Réponses utilisateur (2026-07-03) : US-118 arabe/RTL **reporté** ; crypto (US-034) **hors scope** ; Supabase prod existe mais **pas de staging** → validations via code/build/tests, pas de tests destructifs sur la base réelle.
+- Les types générés Supabase (`src/integrations/supabase/types.ts`) sont obsolètes → TODO : `supabase gen types` quand accès CLI dispo, puis supprimer `untyped.ts`.
 
 ## 6. Constraints to respect
 - Pas de changements destructifs sans confirmation. Petits lots + validation après chaque lot. Push uniquement sur `claude/claude-md-working-rules-tayepf`.
@@ -39,7 +48,8 @@ Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ 
 - Créé : CONTINUITY.md.
 
 ## 10. Commands executed and results
-- `npm install` OK ; `type-check` OK ; `build` OK (warn chunk PDF 1.49MB) ; `test` 18/18 OK ; `lint` 116 errors/66 warnings.
+- Baseline : `npm install` OK ; `type-check` OK ; `build` OK (warn chunk PDF 1.49MB) ; `test` 18/18 OK ; `lint` 116 errors/66 warnings.
+- Après Batch 1 : `lint` 0 errors / 66 warnings ; `type-check` OK ; `test` 18/18 OK ; `build` OK.
 
 ## 11. Tests/build/lint/typecheck performed
 Voir §2 baseline.
@@ -65,7 +75,7 @@ Voir §2 baseline.
 - Couverture de tests quasi nulle (3 fichiers).
 
 ## 21. Exact next steps
-1. Batch 1 : corriger les 116 lint errors (surtout `any`) par petits lots + re-lint/typecheck/build.
+1. ~~Batch 1 : lint errors~~ ✅ FAIT (116 → 0).
 2. Batch 2 : `npm run audit:security` + traiter vulnérabilités critiques/high.
 3. Batch 3 : audit flows critiques (auth → création projet → proposition → contrat → paiement) via lecture code + Playwright.
 4. Batch 4 : responsive 5 breakpoints via Playwright screenshots.
