@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, FileText, ShieldCheck, ArrowRight } from "lucide-react";
+import Logo from "@/components/Logo";
 
 const STORAGE_KEY = "bn_intro_done_v1";
 const SPLASH_MS = 1000;
@@ -51,7 +52,7 @@ const IntroExperience = () => {
   if (phase === "splash") {
     return (
       <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
-        <img src="/logo-batirnet.png" alt="BâtirNet" className="h-16 w-auto animate-in fade-in zoom-in duration-500" />
+        <div className="animate-in fade-in zoom-in duration-500"><Logo size={56} /></div>
         <div className="mt-6 h-1 w-32 overflow-hidden rounded-full bg-muted">
           <div className="h-full w-1/2 animate-[loading_1s_ease-in-out_infinite] rounded-full bg-primary" />
         </div>
@@ -67,7 +68,7 @@ const IntroExperience = () => {
   return (
     <div className="fixed inset-0 z-[200] flex flex-col bg-background">
       <div className="flex items-center justify-between p-4">
-        <img src="/logo-batirnet.png" alt="BâtirNet" className="h-9 w-auto" />
+        <Logo size={32} />
         <Button variant="ghost" size="sm" onClick={finish}>
           Passer
         </Button>

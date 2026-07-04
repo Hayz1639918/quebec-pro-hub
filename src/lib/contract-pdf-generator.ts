@@ -167,7 +167,7 @@ function generateContractHTML(
               </tr>
               <tr>
                 <td><strong>Vérification en ligne:</strong></td>
-                <td>https://batirnet.ca/verify/${clientSignature?.verification_code}</td>
+                <td>https://batirnet.com/verify/${clientSignature?.verification_code}</td>
               </tr>
             </table>
           </div>

@@ -236,7 +236,7 @@ export const InvoicePDF = ({ invoice, contractorName = "Entrepreneur" }: Props) 
 
       {/* Footer */}
       <View style={styles.footer}>
-        <Text>BâtirNet — plateforme.batirnet.ca</Text>
+        <Text>BâtirNet — plateforme.batirnet.com</Text>
         <Text>Merci pour votre confiance</Text>
         <Text>{invoice.invoice_number}</Text>
       </View>

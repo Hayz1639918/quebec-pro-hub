@@ -91,7 +91,8 @@
     "for_clients": {
       "title": "Pour les clients",
       "description": "Réalisez vos projets en toute confiance avec les meilleurs professionnels."
-    }
+    },
+    "eyebrow": "Fonctionnalités"
   },
   "how_it_works": {
     "title": "Comment ça fonctionne",
@@ -113,7 +114,8 @@
         "title": "Évaluez la qualité",
         "description": "Notez votre expérience pour aider la communauté et garantir la qualité du service."
       }
-    }
+    },
+    "eyebrow": "Comment ça marche"
   },
   "cta": {
     "client": {
@@ -124,7 +126,8 @@
         "commitment": "Sans engagement",
         "response": "Réponses sous 24h",
         "free": "100% gratuit"
-      }
+      },
+      "eyebrow": "Pour les clients"
     },
     "contractor": {
       "title": "Vous êtes entrepreneur ?",
@@ -133,8 +136,12 @@
       "benefits": {
         "trial": "Essai gratuit 30 jours",
         "payments": "Paiements sécurisés"
-      }
-    }
+      },
+      "eyebrow": "Pour les professionnels"
+    },
+    "eyebrow": "Rejoindre BâtirNet",
+    "heading": "Commencez votre prochain projet",
+    "subheading": "Rejoignez des milliers de clients et de professionnels qui font confiance à BâtirNet."
   },
   "auth": {
     "title": "Bienvenue sur BâtirNet",
@@ -1352,5 +1359,12 @@
   "not_found": {
     "message": "Oups ! Cette page est introuvable.",
     "back_home": "Retour à l'accueil"
+  },
+  "trust_band": {
+    "title": "Une plateforme conçue pour la confiance",
+    "subtitle": "Chaque entrepreneur est vérifié, chaque paiement est protégé, chaque contrat est encadré.",
+    "rbq": "Licences RBQ vérifiées",
+    "pros": "Entrepreneurs qualifiés",
+    "payments": "Paiements sécurisés par jalons"
   }
 }

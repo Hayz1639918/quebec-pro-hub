@@ -7,99 +7,69 @@ const Features = () => {
   const { t } = useTranslation();
 
   const features = [
-    { icon: Shield,       title: t("features.list.security.title"),      description: t("features.list.security.description") },
-    { icon: Award,        title: t("features.list.quality.title"),       description: t("features.list.quality.description") },
-    { icon: Clock,        title: t("features.list.time.title"),          description: t("features.list.time.description") },
-    { icon: MessageSquare,title: t("features.list.communication.title"), description: t("features.list.communication.description") },
-    { icon: FileCheck,    title: t("features.list.contracts.title"),     description: t("features.list.contracts.description") },
-    { icon: Globe2,       title: t("features.list.multilingual.title"),  description: t("features.list.multilingual.description") },
+    { icon: Shield, title: t("features.list.security.title"), description: t("features.list.security.description") },
+    { icon: Award, title: t("features.list.quality.title"), description: t("features.list.quality.description") },
+    { icon: Clock, title: t("features.list.time.title"), description: t("features.list.time.description") },
+    { icon: MessageSquare, title: t("features.list.communication.title"), description: t("features.list.communication.description") },
+    { icon: FileCheck, title: t("features.list.contracts.title"), description: t("features.list.contracts.description") },
+    { icon: Globe2, title: t("features.list.multilingual.title"), description: t("features.list.multilingual.description") },
+  ];
+
+  const panels = [
+    { src: contractorImage, alt: "Entrepreneur révisant des plans de construction", title: t("features.for_contractors.title"), desc: t("features.for_contractors.description") },
+    { src: clientImage, alt: "Cliente satisfaite avec son entrepreneur après un projet réussi", title: t("features.for_clients.title"), desc: t("features.for_clients.description") },
   ];
 
   return (
-    <section className="relative py-24 sm:py-32 lg:py-40 overflow-hidden bg-[hsl(210,100%,32%)]">
-
+    <section className="bg-secondary/40 py-20 sm:py-28">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Section header */}
-        <div className="mb-16 sm:mb-24 max-w-3xl">
-          <span className="font-mono text-[11px] text-white/80 uppercase tracking-[0.15em] block mb-6">
-            Fonctionnalités
+        <div className="mb-12 sm:mb-16 max-w-2xl">
+          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
+            {t("features.eyebrow")}
           </span>
-          <h2 className="font-display text-white/90 leading-[1.02] mb-6">
+          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-[-0.02em] text-foreground text-balance">
             {t("features.title")}
           </h2>
-          <div className="h-px w-16 bg-white/10 mb-6" />
-          <p className="font-body text-lg text-white/70 leading-relaxed max-w-xl">
+          <p className="mt-4 text-lg text-muted-foreground leading-relaxed text-pretty">
             {t("features.subtitle")}
           </p>
         </div>
 
-        {/* Feature cards — editorial grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-white/[0.06] mb-16 sm:mb-24">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div
-                key={index}
-                className="relative bg-[hsl(210,100%,32%)] p-8 sm:p-10 group hover:bg-white/[0.03] transition-colors duration-500"
-              >
-                <div className="flex items-start justify-between mb-8">
-                  <div className="p-2.5 border border-white/40 bg-white/[0.08] group-hover:border-white/70 transition-all duration-500">
-                    <Icon className="h-5 w-5 text-white/70 group-hover:text-white transition-colors duration-500" />
-                  </div>
-                  <span className="font-mono text-[10px] text-white/75 tracking-[0.1em] group-hover:text-white/80 transition-colors">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-
-                <h3 className="font-ui font-medium text-base text-white/80 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="font-body text-sm text-white/80 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Dual image panels — editorial */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {[
-            {
-              src: contractorImage,
-              alt: "Entrepreneur révisant des plans de construction",
-              title: t("features.for_contractors.title"),
-              desc: t("features.for_contractors.description"),
-            },
-            {
-              src: clientImage,
-              alt: "Client satisfait avec son entrepreneur après un projet réussi",
-              title: t("features.for_clients.title"),
-              desc: t("features.for_clients.description"),
-            },
-          ].map(({ src, alt, title, desc }) => (
-            <div key={title} className="relative overflow-hidden group" style={{ aspectRatio: '4/3' }}>
-              <img
-                src={src}
-                alt={alt}
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(210,100%,32%)] via-[hsl(210,100%,32%)]/20 to-transparent" />
-
-              <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8">
-                <div className="h-px w-10 bg-white/20 mb-4" />
-                <h3 className="font-display text-xl sm:text-2xl text-white/90 mb-2 leading-tight">
-                  {title}
-                </h3>
-                <p className="font-body text-sm text-white/75 leading-relaxed line-clamp-2">
-                  {desc}
-                </p>
-              </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map(({ icon: Icon, title, description }) => (
+            <div
+              key={title}
+              className="rounded-xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-medium)]"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-light text-primary">
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-5 text-base font-semibold text-foreground">{title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{description}</p>
             </div>
           ))}
         </div>
 
+        <div className="mt-6 grid md:grid-cols-2 gap-4">
+          {panels.map(({ src, alt, title, desc }) => (
+            <div
+              key={title}
+              className="group relative overflow-hidden rounded-2xl border border-border"
+              style={{ aspectRatio: "16/10" }}
+            >
+              <img
+                src={src}
+                alt={alt}
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(214,75%,9%)]/85 via-[hsl(214,75%,9%)]/25 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                <h3 className="text-xl sm:text-2xl font-semibold text-white leading-tight">{title}</h3>
+                <p className="mt-2 text-sm text-white/85 leading-relaxed line-clamp-2">{desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

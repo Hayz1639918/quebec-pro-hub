@@ -14,7 +14,7 @@ import { HardHat, MapPin, Upload, CheckCircle2, Loader2, X, Plus } from "lucide-
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { geocodePostalCode } from "@/lib/geolocation";
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 
 const TRADE_LABELS: Record<string, string> = {
   electricien: "Électricien",
@@ -190,7 +190,7 @@ const CompleteProfileTrade = () => {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-2xl space-y-6">
         <div className="flex flex-col items-center gap-3">
-          <img src={logo} alt="BatirNet" className="h-10" />
+          <Logo size={40} />
           <div className="text-center">
             <h1 className="text-2xl font-bold">Complétez votre profil de métier</h1>
             <p className="text-muted-foreground text-sm mt-1">

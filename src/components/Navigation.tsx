@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 
 const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
   <button
@@ -133,16 +133,13 @@ const Navigation = () => {
           <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
 
             {/* ── Logo ── */}
-            <div
-              className="flex items-center gap-3 flex-shrink-0 cursor-pointer touch-target group"
+            <button
+              className="flex items-center flex-shrink-0 cursor-pointer touch-target rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               onClick={() => navigateTo("/")}
+              aria-label="BâtirNet — accueil"
             >
-              <img
-                src={logo}
-                alt="BâtirNet"
-                className="h-9 sm:h-11 md:h-12 w-auto object-contain"
-              />
-            </div>
+              <Logo size={34} />
+            </button>
 
             {/* ── Desktop nav links ── */}
             <div className="hidden md:flex items-center gap-1 lg:gap-2">
@@ -305,7 +302,7 @@ const Navigation = () => {
                 <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0 pt-safe bg-background border-l border-border">
                   <SheetHeader className="p-5 border-b border-border">
                     <SheetTitle className="flex items-center gap-2">
-                      <img src={logo} alt="BâtirNet" className="h-9 w-auto" />
+                      <Logo size={32} />
                     </SheetTitle>
                   </SheetHeader>
 

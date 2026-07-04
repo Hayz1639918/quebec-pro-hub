@@ -91,7 +91,8 @@
     "for_clients": {
       "title": "For Clients",
       "description": "Complete your projects with confidence with the best professionals."
-    }
+    },
+    "eyebrow": "Features"
   },
   "how_it_works": {
     "title": "How It Works",
@@ -113,7 +114,8 @@
         "title": "Rate Quality",
         "description": "Rate your experience to help the community and ensure service quality."
       }
-    }
+    },
+    "eyebrow": "How it works"
   },
   "cta": {
     "client": {
@@ -124,7 +126,8 @@
         "commitment": "No commitment",
         "response": "Responses within 24h",
         "free": "100% free"
-      }
+      },
+      "eyebrow": "For clients"
     },
     "contractor": {
       "title": "Are You a Contractor?",
@@ -133,8 +136,12 @@
       "benefits": {
         "trial": "30-day free trial",
         "payments": "Secure payments"
-      }
-    }
+      },
+      "eyebrow": "For professionals"
+    },
+    "eyebrow": "Join BâtirNet",
+    "heading": "Start your next project",
+    "subheading": "Join thousands of clients and professionals who trust BâtirNet."
   },
   "auth": {
     "title": "Welcome to BâtirNet",
@@ -1350,5 +1357,12 @@
   "not_found": {
     "message": "Oops! Page not found.",
     "back_home": "Back to home"
+  },
+  "trust_band": {
+    "title": "A platform built for trust",
+    "subtitle": "Every contractor is verified, every payment is protected, every contract is structured.",
+    "rbq": "Verified RBQ licences",
+    "pros": "Qualified contractors",
+    "payments": "Secure milestone payments"
   }
 }

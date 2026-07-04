@@ -1,5 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck, CreditCard, FileSignature, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import heroImage from "@/assets/hero-construction.jpg";
@@ -8,104 +7,112 @@ const Hero = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  return (
-    <section className="relative min-h-[100dvh] overflow-hidden bg-background">
+  const features = [
+    { icon: ShieldCheck, label: t("hero.features.verified") },
+    { icon: CreditCard, label: t("hero.features.payments") },
+    { icon: FileSignature, label: t("hero.features.contracts") },
+  ];
 
-      {/* ── Subtle grain overlay ── */}
+  const stats = [
+    { value: "2 500+", label: t("hero.stats.professionals") },
+    { value: "15K+", label: t("hero.stats.projects") },
+    { value: "4.8/5", label: t("hero.stats.satisfaction") },
+  ];
+
+  return (
+    <section className="relative overflow-hidden bg-background">
+      {/* Ambient soft light spots for depth (no flat empty background) */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+          background:
+            "radial-gradient(60rem 40rem at 85% -10%, hsl(210 100% 40% / 0.06), transparent 60%), radial-gradient(50rem 40rem at -10% 20%, hsl(210 100% 40% / 0.04), transparent 55%)",
         }}
       />
 
-      {/* ── Main content ── */}
-      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 lg:pt-40 pb-16 sm:pb-20 lg:pb-24 min-h-[100dvh] flex flex-col justify-center">
-
-        {/* ── Top mono label ── */}
-        <div className="animate-reveal-up mb-8 sm:mb-12">
-          <span className="font-mono text-[11px] sm:text-xs text-foreground/60 uppercase tracking-[0.15em]">
-            Plateforme canadienne pour entrepreneurs du bâtiment
-          </span>
-        </div>
-
-        {/* ── Headline ── */}
-        <div className="animate-reveal-up animation-delay-100 mb-8 sm:mb-10 max-w-5xl">
-          <h1 className="font-display text-foreground leading-[0.95] tracking-[-0.03em]">
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7rem]">
-              Trouvez les
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-32 lg:pt-36 pb-16 sm:pb-20 lg:pb-24">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* ── Left column — copy ── */}
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary-light/60 px-3.5 py-1.5 text-xs font-medium text-primary">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+              </span>
+              {t("hero.badge")}
             </span>
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7rem] italic text-primary">
-              meilleurs
-            </span>
-            <span className="block text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[7rem]">
-              entrepreneurs.
-            </span>
-          </h1>
-        </div>
 
-        {/* ── Thin divider ── */}
-        <div className="animate-draw-x animation-delay-200 mb-8 sm:mb-10">
-          <div className="h-px w-24 bg-foreground/15" />
-        </div>
+            <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.03em] leading-[1.05] text-foreground text-balance">
+              {t("hero.title")}
+            </h1>
 
-        {/* ── Subtitle ── */}
-        <p className="animate-reveal-up animation-delay-200 font-body text-lg sm:text-xl lg:text-2xl text-foreground/45 leading-relaxed max-w-2xl mb-10 sm:mb-14">
-          {t("hero.subtitle")}
-        </p>
+            <p className="mt-5 text-lg text-muted-foreground leading-relaxed text-pretty">
+              {t("hero.subtitle")}
+            </p>
 
-        {/* ── CTA buttons ── */}
-        <div className="flex flex-col sm:flex-row gap-4 animate-reveal-up animation-delay-300 mb-16 sm:mb-20">
-          <button
-            className="inline-flex items-center justify-center gap-3 font-ui font-medium text-sm sm:text-base px-8 py-3.5 bg-primary text-white hover:bg-[hsl(210,100%,33%)] transition-all duration-300 rounded-full group shadow-[0_0_32px_-8px_hsl(210,100%,40%,0.4)]"
-            onClick={() => navigate("/auth?mode=signup")}
-          >
-            {t("hero.cta_client")}
-            <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button
-            className="inline-flex items-center justify-center font-ui font-medium text-sm sm:text-base px-8 py-3.5 border border-primary/25 text-primary/70 hover:text-primary hover:border-primary/50 transition-all duration-300 rounded-full"
-            onClick={() => navigate("/auth?mode=signup")}
-          >
-            {t("hero.cta_pro")}
-          </button>
-        </div>
-
-        {/* ── Stats row ── */}
-        <div className="animate-reveal-up animation-delay-400 flex flex-wrap gap-x-10 gap-y-6 sm:gap-x-16">
-          {[
-            { value: "2 500+", label: t("hero.stats.professionals") },
-            { value: "15K+", label: t("hero.stats.projects") },
-            { value: "4.8/5", label: t("hero.stats.satisfaction") },
-          ].map(({ value, label }) => (
-            <div key={label}>
-              <div className="font-display text-3xl sm:text-4xl lg:text-5xl text-foreground leading-none mb-1">{value}</div>
-              <div className="font-mono text-[11px] text-foreground/70 uppercase tracking-[0.1em]">{label}</div>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => navigate("/auth?mode=signup")}
+                className="group inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-all duration-200 hover:bg-[hsl(var(--primary-hover))] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {t("hero.cta_client")}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+              <button
+                onClick={() => navigate("/auth?mode=signup")}
+                className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-6 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-secondary active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {t("hero.cta_pro")}
+              </button>
             </div>
-          ))}
-        </div>
 
-        {/* ── Hero image — editorial asymmetric ── */}
-        <div className="absolute top-0 right-0 w-[45%] h-full hidden lg:block animate-reveal-fade animation-delay-300">
-          <div className="absolute inset-0 overflow-hidden">
-            <img
-              src={heroImage}
-              alt="Entrepreneur professionnel en construction au Québec"
-              className="w-full h-full object-cover"
-            />
-            {/* Gradient fade into background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background/30" />
+            {/* Feature bullets */}
+            <ul className="mt-8 flex flex-col gap-2.5">
+              {features.map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-2.5 text-sm text-foreground/80">
+                  <Icon className="h-4 w-4 flex-shrink-0 text-primary" />
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* ── Right column — image card ── */}
+          <div className="relative">
+            <div className="relative overflow-hidden rounded-2xl border border-border shadow-[var(--shadow-large)]">
+              <img
+                src={heroImage}
+                alt="Entrepreneurs professionnels sur un chantier de construction au Québec"
+                className="aspect-[4/3] w-full object-cover"
+                width={800}
+                height={600}
+              />
+              {/* Floating trust card */}
+              <div className="absolute bottom-4 left-4 right-4 flex items-center gap-3 rounded-xl border border-border bg-background/95 px-4 py-3 backdrop-blur-sm shadow-[var(--shadow-medium)]">
+                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-success-light text-success">
+                  <CheckCircle2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {t("hero.features.verified")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Licence RBQ · Assurance vérifiée</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ── Bottom scroll hint ── */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-3 opacity-25">
-          <div className="h-px w-8 bg-foreground" />
-          <span className="font-mono text-[10px] text-foreground uppercase tracking-[0.15em]">Défiler</span>
-          <div className="h-px w-8 bg-foreground" />
+        {/* ── Stats row ── */}
+        <div className="mt-16 grid grid-cols-3 gap-4 border-t border-border pt-10 sm:mt-20 sm:max-w-2xl">
+          {stats.map(({ value, label }) => (
+            <div key={label}>
+              <div className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{value}</div>
+              <div className="mt-1 text-xs text-muted-foreground sm:text-sm">{label}</div>
+            </div>
+          ))}
         </div>
-
       </div>
     </section>
   );
