@@ -128,18 +128,6 @@ const CompleteProfileEntrepreneur = () => {
       toast({ variant: "destructive", title: "Nom de l'entreprise requis" });
       return;
     }
-    if (!docLicence) {
-      toast({ variant: "destructive", title: "Licence RBQ obligatoire", description: "Veuillez uploader votre licence RBQ." });
-      return;
-    }
-    if (!docAssurance) {
-      toast({ variant: "destructive", title: "Assurance obligatoire", description: "Veuillez uploader votre certificat d'assurance responsabilité civile." });
-      return;
-    }
-    if (!docIdentity) {
-      toast({ variant: "destructive", title: "Pièce d'identité obligatoire", description: "Veuillez uploader une pièce d'identité (passeport, permis de conduire, RAMQ, etc.)." });
-      return;
-    }
     if (selectedServices.length === 0) {
       toast({ variant: "destructive", title: "Sélectionnez au moins un service" });
       return;
@@ -147,9 +135,11 @@ const CompleteProfileEntrepreneur = () => {
 
     setLoading(true);
     try {
-      const licenceUrl = await uploadFile(docLicence, "rbq");
-      const assuranceUrl = await uploadFile(docAssurance, "assurance");
-      const identityUrl = await uploadFile(docIdentity, "identity");
+      // Documents RBQ / assurance / pièce d'identité sont OPTIONNELS : on ne
+      // les téléverse que s'ils ont été fournis (ils ajoutent le badge « Vérifié »).
+      const licenceUrl = docLicence ? await uploadFile(docLicence, "rbq") : null;
+      const assuranceUrl = docAssurance ? await uploadFile(docAssurance, "assurance") : null;
+      const identityUrl = docIdentity ? await uploadFile(docIdentity, "identity") : null;
 
       const finalRegion = region === "Autre" ? customRegion : region;
       const { error } = await supabase.from("profiles").update({
@@ -158,7 +148,7 @@ const CompleteProfileEntrepreneur = () => {
         rbq_certification_url: licenceUrl,
         insurance_info: assuranceUrl,
         id_document_url: identityUrl,
-        id_document_type: identityType,
+        id_document_type: identityUrl ? identityType : null,
         bio: bio.trim() || null,
         services_offered: JSON.stringify(selectedServices),
         city: city.trim() || null,
@@ -172,8 +162,14 @@ const CompleteProfileEntrepreneur = () => {
 
       if (error) throw error;
 
-      toast({ title: "Profil entrepreneur créé !", description: "Votre dossier est en attente de validation sous 24-48h." });
-      navigate("/pending-verification");
+      const hasDocuments = licenceUrl || assuranceUrl || identityUrl;
+      toast({
+        title: "Profil entrepreneur créé !",
+        description: hasDocuments
+          ? "Vos documents seront vérifiés sous 24-48h pour obtenir le badge « Vérifié »."
+          : "Vous pouvez ajouter votre licence RBQ et vos documents plus tard depuis votre profil.",
+      });
+      navigate("/pro/dashboard");
     } catch (e) {
       console.error(e);
       toast({ variant: "destructive", title: "Erreur", description: "Impossible de sauvegarder votre profil." });
@@ -249,7 +245,7 @@ const CompleteProfileEntrepreneur = () => {
               <div className="space-y-3 pt-2 border-t">
                 <Label className="flex items-center gap-2">
                   <Upload className="h-4 w-4 text-muted-foreground" />
-                  Documents de vérification
+                  Documents de vérification (optionnels)
                 </Label>
                 <p className="text-xs text-muted-foreground">Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</p>
 
@@ -257,15 +253,15 @@ const CompleteProfileEntrepreneur = () => {
                 <div className="space-y-1">
                   <Label className="text-sm font-normal flex items-center gap-1">
                     Scan de la licence RBQ
-                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                    <span className="text-muted-foreground text-xs font-medium ml-1">(optionnel)</span>
                   </Label>
                   <label
                     htmlFor="ent-doc-licence"
                     className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      docLicence ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
+                      docLicence ? "border-green-400 bg-green-50" : "border-border hover:border-primary/40 hover:bg-primary/5"
                     }`}
                   >
-                    <Upload className={`h-4 w-4 ${docLicence ? "text-green-600" : "text-red-400"}`} />
+                    <Upload className={`h-4 w-4 ${docLicence ? "text-green-600" : "text-muted-foreground"}`} />
                     <span className="text-sm text-muted-foreground truncate">{docLicence ? docLicence.name : "Cliquez pour choisir un fichier"}</span>
                     {docLicence && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                   </label>
@@ -276,15 +272,15 @@ const CompleteProfileEntrepreneur = () => {
                 <div className="space-y-1">
                   <Label className="text-sm font-normal flex items-center gap-1">
                     Certificat d'assurance responsabilité civile
-                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                    <span className="text-muted-foreground text-xs font-medium ml-1">(optionnel)</span>
                   </Label>
                   <label
                     htmlFor="ent-doc-assurance"
                     className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      docAssurance ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
+                      docAssurance ? "border-green-400 bg-green-50" : "border-border hover:border-primary/40 hover:bg-primary/5"
                     }`}
                   >
-                    <Upload className={`h-4 w-4 ${docAssurance ? "text-green-600" : "text-red-400"}`} />
+                    <Upload className={`h-4 w-4 ${docAssurance ? "text-green-600" : "text-muted-foreground"}`} />
                     <span className="text-sm text-muted-foreground truncate">{docAssurance ? docAssurance.name : "Cliquez pour choisir un fichier"}</span>
                     {docAssurance && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                   </label>
@@ -295,7 +291,7 @@ const CompleteProfileEntrepreneur = () => {
                 <div className="space-y-2">
                   <Label className="text-sm font-normal flex items-center gap-1">
                     Pièce d'identité
-                    <span className="text-red-500 text-xs font-medium ml-1">* obligatoire</span>
+                    <span className="text-muted-foreground text-xs font-medium ml-1">(optionnel)</span>
                   </Label>
                   <Select value={identityType} onValueChange={setIdentityType}>
                     <SelectTrigger>
@@ -311,10 +307,10 @@ const CompleteProfileEntrepreneur = () => {
                   <label
                     htmlFor="ent-doc-identity"
                     className={`flex items-center gap-3 p-3 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
-                      docIdentity ? "border-green-400 bg-green-50" : "border-red-300 hover:border-blue-400 hover:bg-blue-50/30"
+                      docIdentity ? "border-green-400 bg-green-50" : "border-border hover:border-primary/40 hover:bg-primary/5"
                     }`}
                   >
-                    <Upload className={`h-4 w-4 ${docIdentity ? "text-green-600" : "text-red-400"}`} />
+                    <Upload className={`h-4 w-4 ${docIdentity ? "text-green-600" : "text-muted-foreground"}`} />
                     <span className="text-sm text-muted-foreground truncate">{docIdentity ? docIdentity.name : "Cliquez pour choisir un fichier"}</span>
                     {docIdentity && <CheckCircle2 className="h-4 w-4 text-green-600 ml-auto shrink-0" />}
                   </label>
@@ -325,10 +321,10 @@ const CompleteProfileEntrepreneur = () => {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
-                  <p className="font-medium">Exigences légales — Loi sur le bâtiment (Québec) :</p>
-                  <p>• La licence RBQ est obligatoire pour tout entrepreneur qui signe des contrats de construction.</p>
-                  <p>• L'assurance responsabilité civile protège le client et l'entrepreneur en cas de dommages.</p>
-                  <p>• La pièce d'identité confirme l'identité du représentant légal de l'entreprise.</p>
+                  <p className="font-medium">Documents optionnels — pour obtenir le badge « Vérifié » :</p>
+                  <p>• Ajouter votre licence RBQ rassure les clients pour les contrats de construction.</p>
+                  <p>• Le certificat d'assurance responsabilité civile renforce la confiance.</p>
+                  <p>• Vous pouvez compléter ces documents plus tard depuis votre profil.</p>
                 </div>
               </div>
             </CardContent>
