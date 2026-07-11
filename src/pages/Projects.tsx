@@ -340,18 +340,6 @@ const Projects = () => {
             <p className="text-base sm:text-xl text-muted-foreground">
               {t('projects.hero.subtitle')}
             </p>
-            
-            {/* Main Search Bar */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={t('projects.search')}
-                className="pl-12 pr-4 h-14 text-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
 
             {/* Quick Stats */}
             <div className="flex items-center justify-center gap-8 pt-4">
@@ -440,6 +428,18 @@ const Projects = () => {
       {/* Main Content */}
       <section className="flex-1 py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Barre de recherche — placée juste au-dessus des résultats pour que
+              la recherche affiche les résultats directement en dessous, sans scroll. */}
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t('projects.search')}
+              className="pl-12 pr-4 h-12 text-base"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Filters Sidebar */}
             <aside className="lg:w-72 xl:w-80 flex-shrink-0">
