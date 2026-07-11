@@ -44,8 +44,14 @@ const BottomNav = () => {
   ];
 
   const isActive = (path: string) => {
-    const base = path.split("?")[0];
-    return location.pathname === base;
+    const [base, query] = path.split("?");
+    if (location.pathname !== base) return false;
+    // Deux entrées peuvent partager le même chemin (ex. client : Accueil =
+    // /dashboard, Projets = /dashboard?tab=projects). On distingue par l'onglet
+    // pour qu'une seule soit active à la fois.
+    const targetTab = new URLSearchParams(query).get("tab");
+    const currentTab = new URLSearchParams(location.search).get("tab");
+    return targetTab ? currentTab === targetTab : !currentTab;
   };
 
   return (

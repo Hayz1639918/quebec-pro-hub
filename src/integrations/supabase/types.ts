@@ -3935,6 +3935,9 @@ export type Database = {
           media_urls: Json | null
           milestones: Json | null
           payment_handling_preference: string
+          preferred_entrepreneur_type: string | null
+          required_certifications: string[] | null
+          payment_mode: string | null
           payment_terms: Json | null
           postal_code: string | null
           progress_percentage: number | null
@@ -3984,6 +3987,9 @@ export type Database = {
           media_urls?: Json | null
           milestones?: Json | null
           payment_handling_preference?: string
+          preferred_entrepreneur_type?: string | null
+          required_certifications?: string[] | null
+          payment_mode?: string | null
           payment_terms?: Json | null
           postal_code?: string | null
           progress_percentage?: number | null
@@ -4033,6 +4039,9 @@ export type Database = {
           media_urls?: Json | null
           milestones?: Json | null
           payment_handling_preference?: string
+          preferred_entrepreneur_type?: string | null
+          required_certifications?: string[] | null
+          payment_mode?: string | null
           payment_terms?: Json | null
           postal_code?: string | null
           progress_percentage?: number | null
