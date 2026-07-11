@@ -231,7 +231,17 @@
       "email_invalid": "Adresse courriel invalide",
       "email_invalid_description": "Veuillez vérifier votre adresse courriel (exemple : nom@exemple.com).",
       "email_not_confirmed": "Courriel non confirmé",
-      "email_not_confirmed_description": "Veuillez d'abord confirmer votre adresse en cliquant sur le lien reçu par courriel."
+      "email_not_confirmed_description": "Veuillez d'abord confirmer votre adresse en cliquant sur le lien reçu par courriel.",
+      "password_weak": "Mot de passe trop faible",
+      "password_weak_description": "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial (ex. : !@#$)."
+    },
+    "confirmation": {
+      "title": "Vérifiez votre courriel",
+      "sent_to": "Nous venons d'envoyer un lien de confirmation à :",
+      "step_open": "Ouvrez votre boîte de réception.",
+      "step_click": "Cliquez sur le lien « Confirmer mon adresse » dans le courriel.",
+      "step_spam": "Vous ne le voyez pas ? Vérifiez votre dossier courrier indésirable (spam).",
+      "got_it": "J'ai compris"
     }
   },
   "dashboard": {
@@ -771,7 +781,9 @@
       "verified": "Professionnels vérifiés",
       "avg_rating": "Note moyenne",
       "results_count": "{{count}} professionnel",
-      "results_count_plural": "{{count}} professionnels"
+      "results_count_plural": "{{count}} professionnels",
+      "total": "Professionnels",
+      "verified_count": "Vérifiés RBQ"
     },
     "card": {
       "verified": "Vérifié RBQ",

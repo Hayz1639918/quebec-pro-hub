@@ -254,8 +254,9 @@ const Professionals = () => {
 
   const fetchProfessionals = async () => {
     try {
-      // Show RBQ-verified professionals AND all trade professionals (whose
-      // RBQ/CCQ verification is optional — they get full visibility).
+      // Tous les professionnels sont visibles dans l'annuaire. La vérification
+      // RBQ/CCQ est optionnelle : elle donne seulement le badge « Vérifié »
+      // (rendu plus bas selon is_rbq_verified), pas la visibilité.
       let query = supabase
         .from('profiles')
         .select(`
@@ -295,8 +296,7 @@ const Professionals = () => {
           proposals_last_30_days,
           professional_type
         `)
-        .eq('user_type', 'professional')
-        .or('is_rbq_verified.eq.true,professional_type.eq.trade_professional');
+        .eq('user_type', 'professional');
 
       // Only restrict at DB level for trade_professional (exclusive filter).
       // For entrepreneur we filter client-side so old accounts (professional_type=NULL)
@@ -510,29 +510,19 @@ const Professionals = () => {
                 ? 'Spécialistes certifiés CCQ — électriciens, plombiers, maçons, menuisiers…'
                 : t('professionals.hero_subtitle')}
             </p>
-            
-            {/* Main Search Bar */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder={t('professionals.search_placeholder')}
-                className="pl-12 pr-4 h-14 text-lg"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
 
             {/* Quick Stats */}
             <div className="flex items-center justify-center gap-8 pt-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{professionals.length}</div>
-                <div className="text-sm text-muted-foreground">{t('professionals.stats.verified')}</div>
+                <div className="text-sm text-muted-foreground">{t('professionals.stats.total')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">100%</div>
-                <div className="text-sm text-muted-foreground">{t('professionals.card.verified')}</div>
+                <div className="text-2xl font-bold text-primary">
+                  {professionals.filter((p) => p.is_rbq_verified).length}
+                </div>
+                <div className="text-sm text-muted-foreground">{t('professionals.stats.verified_count')}</div>
               </div>
               <Separator orientation="vertical" className="h-12" />
               <div className="text-center">
@@ -609,6 +599,18 @@ const Professionals = () => {
       {/* Main Content */}
       <section className="flex-1 py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Barre de recherche — placée juste au-dessus des résultats pour que
+              la recherche affiche les résultats directement en dessous, sans scroll. */}
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={t('professionals.search_placeholder')}
+              className="pl-12 pr-4 h-12 text-base"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Filters Sidebar */}
             <aside className="lg:w-72 xl:w-80 flex-shrink-0">
@@ -851,19 +853,10 @@ const Professionals = () => {
                             <CardTitle className="flex items-center gap-2 flex-wrap">
                               <Building2 className="h-5 w-5 text-primary" />
                               {pro.company_name || pro.full_name}
-                              {pro.is_rbq_verified ? (
+                              {pro.is_rbq_verified && (
                                 <Badge variant="default" className="ml-2 bg-green-600">
                                   <CheckCircle2 className="h-3 w-3 mr-1" />
                                   {t('professionals.card.verified')}
-                                </Badge>
-                              ) : pro.professional_type === 'trade_professional' ? (
-                                <Badge variant="outline" className="ml-2 text-muted-foreground border-border">
-                                  Non vérifié
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline" className="ml-2 text-orange-600 border-orange-300">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {t('professionals.card.pending_verification')}
                                 </Badge>
                               )}
                             </CardTitle>

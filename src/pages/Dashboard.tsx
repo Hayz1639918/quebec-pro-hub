@@ -181,6 +181,13 @@ const Dashboard = () => {
     checkUser();
   }, []);
 
+  // Synchronise l'onglet actif avec le paramètre ?tab= de l'URL : permet à la
+  // navigation mobile (« Projets ») de basculer d'onglet même si on est déjà
+  // sur /dashboard (le composant ne se remonte pas dans ce cas).
+  useEffect(() => {
+    setActiveTab(searchParams.get('tab') || 'overview');
+  }, [searchParams]);
+
   const checkUser = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();

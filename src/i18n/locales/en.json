@@ -231,7 +231,17 @@
       "email_invalid": "Invalid email address",
       "email_invalid_description": "Please check your email address (example: name@example.com).",
       "email_not_confirmed": "Email not confirmed",
-      "email_not_confirmed_description": "Please confirm your address first by clicking the link sent to your inbox."
+      "email_not_confirmed_description": "Please confirm your address first by clicking the link sent to your inbox.",
+      "password_weak": "Password too weak",
+      "password_weak_description": "Your password must contain at least 8 characters, an uppercase letter, a number and a special character (e.g. !@#$)."
+    },
+    "confirmation": {
+      "title": "Check your email",
+      "sent_to": "We just sent a confirmation link to:",
+      "step_open": "Open your inbox.",
+      "step_click": "Click the \"Confirm my email\" link in the message.",
+      "step_spam": "Don't see it? Check your spam / junk folder.",
+      "got_it": "Got it"
     }
   },
   "dashboard": {
@@ -769,7 +779,9 @@
       "verified": "Verified Professionals",
       "avg_rating": "Average Rating",
       "results_count": "{{count}} professional",
-      "results_count_plural": "{{count}} professionals"
+      "results_count_plural": "{{count}} professionals",
+      "total": "Professionals",
+      "verified_count": "RBQ verified"
     },
     "card": {
       "verified": "RBQ Verified",

@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Briefcase, HardHat } from "lucide-react";
+import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Briefcase, HardHat, AlertCircle, MailCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Logo from "@/components/Logo";
@@ -190,6 +192,19 @@ const Auth = () => {
   // Trade professional specific
   const [tradeSpecialty, setTradeSpecialty] = useState("");
 
+  // Erreur affichée directement dans le formulaire (plus claire qu'un toast fugace).
+  const [formError, setFormError] = useState<{ title: string; description: string } | null>(null);
+  // Grande fenêtre de confirmation après inscription réussie.
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState("");
+
+  /** Affiche une erreur inline dans le formulaire + un toast, et arrête le chargement. */
+  const showError = (title: string, description: string) => {
+    setFormError({ title, description });
+    toast({ variant: "destructive", title, description });
+    setLoading(false);
+  };
+
   const redirectBasedOnProfile = (profile: AppProfile | null | undefined) => {
     navigate(getPostAuthRoute(profile));
   };
@@ -246,12 +261,7 @@ const Auth = () => {
     setLoading(true);
     try {
       if (!isValidEmail(forgotEmail)) {
-        toast({
-          variant: "destructive",
-          title: t("auth.messages.email_invalid"),
-          description: t("auth.messages.email_invalid_description"),
-        });
-        setLoading(false);
+        showError(t("auth.messages.email_invalid"), t("auth.messages.email_invalid_description"));
         return;
       }
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
@@ -266,7 +276,7 @@ const Auth = () => {
       setIsLogin(true);
     } catch (error) {
       const { title, description } = mapAuthError(error, t);
-      toast({ variant: "destructive", title, description });
+      showError(title, description);
     } finally {
       setLoading(false);
     }
@@ -275,11 +285,11 @@ const Auth = () => {
   const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast({ variant: "destructive", title: "Erreur", description: "Les mots de passe ne correspondent pas." });
+      showError("Les mots de passe ne correspondent pas", "Assurez-vous de saisir exactement le même mot de passe dans les deux champs.");
       return;
     }
     if (!isPasswordValid(newPassword)) {
-      toast({ variant: "destructive", title: "Mot de passe invalide", description: "Le mot de passe doit contenir 8+ caractères, une majuscule, un chiffre et un caractère spécial." });
+      showError(t("auth.messages.password_weak"), t("auth.messages.password_weak_description"));
       return;
     }
     setLoading(true);
@@ -301,49 +311,26 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     setLoading(true);
 
     try {
       // Basic validation - professional details will be collected after email confirmation
       if (!email || !password || !fullName) {
-        toast({
-          variant: "destructive",
-          title: t('auth.messages.missing_fields'),
-          description: t('auth.messages.missing_fields_description'),
-        });
-        setLoading(false);
+        showError(t('auth.messages.missing_fields'), t('auth.messages.missing_fields_description'));
         return;
       }
 
       // Validate email format BEFORE calling Supabase, so a typo never burns the
       // limited email-send quota (which otherwise locks the user's IP for ~1h).
       if (!isValidEmail(email)) {
-        toast({
-          variant: "destructive",
-          title: t('auth.messages.email_invalid'),
-          description: t('auth.messages.email_invalid_description'),
-        });
-        setLoading(false);
+        showError(t('auth.messages.email_invalid'), t('auth.messages.email_invalid_description'));
         return;
-      }
-
-      // Professionnel métier — spécialité obligatoire
-      if (userType === "professional" && professionalType === "trade_professional") {
-        if (!tradeSpecialty) {
-          toast({ variant: "destructive", title: "Corps de métier requis", description: "Sélectionnez votre spécialité." });
-          setLoading(false);
-          return;
-        }
       }
 
       // Password complexity validation
       if (!isPasswordValid(password)) {
-        toast({
-          variant: "destructive",
-          title: "Mot de passe trop faible",
-          description: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.",
-        });
-        setLoading(false);
+        showError(t('auth.messages.password_weak'), t('auth.messages.password_weak_description'));
         return;
       }
 
@@ -375,17 +362,24 @@ const Auth = () => {
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error(t('auth.messages.no_user_created'));
 
+      // Supabase renvoie un user SANS erreur mais avec identities=[] lorsque le
+      // courriel est déjà utilisé (protection anti-énumération). On le détecte
+      // pour afficher une vraie erreur « compte déjà existant » au lieu d'ouvrir
+      // la fenêtre de confirmation (qui ferait croire à tort à un nouveau compte).
+      const identities = (authData.user as { identities?: unknown[] }).identities;
+      if (Array.isArray(identities) && identities.length === 0) {
+        showError(t('auth.messages.email_exists'), t('auth.messages.email_exists_description'));
+        return;
+      }
+
       // Check if email confirmation is required
       const needsEmailConfirmation = !authData.session;
 
       if (needsEmailConfirmation) {
-        // Email confirmation is required (production mode)
-        toast({
-          title: t('auth.messages.success'),
-          description: userType === "professional"
-            ? "Un email de confirmation vous a été envoyé. Après confirmation, vous pourrez compléter votre profil professionnel."
-            : "Un email de confirmation vous a été envoyé. Veuillez vérifier votre boîte de réception.",
-        });
+        // Email confirmation required (production) : grande fenêtre centrée
+        // pour que l'utilisateur comprenne clairement l'étape suivante.
+        setConfirmationEmail(email);
+        setConfirmationOpen(true);
       } else {
         // No email confirmation needed (local dev mode) - update profile with phone
         if (phone) {
@@ -414,7 +408,7 @@ const Auth = () => {
 
     } catch (error) {
       const { title, description } = mapAuthError(error, t);
-      toast({ variant: "destructive", title, description });
+      showError(title, description);
     } finally {
       setLoading(false);
     }
@@ -422,13 +416,10 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
 
     if (!isValidEmail(email)) {
-      toast({
-        variant: "destructive",
-        title: t('auth.messages.email_invalid'),
-        description: t('auth.messages.email_invalid_description'),
-      });
+      showError(t('auth.messages.email_invalid'), t('auth.messages.email_invalid_description'));
       return;
     }
     setLoading(true);
@@ -463,7 +454,7 @@ const Auth = () => {
       redirectBasedOnProfile(userProfile);
     } catch (error) {
       const { title, description } = mapAuthError(error, t);
-      toast({ variant: "destructive", title, description });
+      showError(title, description);
     } finally {
       setLoading(false);
     }
@@ -496,6 +487,15 @@ const Auth = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 pb-4 sm:pb-6">
+
+          {/* Erreur affichée directement dans le formulaire, claire et persistante */}
+          {formError && (
+            <Alert variant="destructive" role="alert">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{formError.title}</AlertTitle>
+              <AlertDescription>{formError.description}</AlertDescription>
+            </Alert>
+          )}
 
           {/* Password Recovery Form */}
           {isPasswordRecovery ? (
@@ -588,7 +588,7 @@ const Auth = () => {
                   <Label htmlFor="password">{t('auth.login.password')}</Label>
                   <button
                     type="button"
-                    onClick={() => { setForgotPassword(true); setForgotEmail(email); }}
+                    onClick={() => { setFormError(null); setForgotPassword(true); setForgotEmail(email); }}
                     className="text-xs text-primary hover:underline"
                   >
                     {t('auth.login.forgot')}
@@ -763,9 +763,8 @@ const Auth = () => {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
                     <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-blue-700 space-y-1">
-                      <p className="font-medium">Après confirmation de votre courriel :</p>
-                      <p>• Vous serez invité à uploader votre <strong>licence RBQ</strong> et votre <strong>assurance responsabilité civile</strong>.</p>
-                      <p>• Vos documents seront vérifiés sous 24-48h avant activation de votre compte.</p>
+                      <p className="font-medium">Aucun document requis pour vous inscrire.</p>
+                      <p>Vous pourrez ajouter votre <strong>licence RBQ</strong> et votre assurance plus tard depuis votre profil pour obtenir le badge « Vérifié ».</p>
                     </div>
                   </div>
                 </div>
@@ -778,7 +777,7 @@ const Auth = () => {
                   <div className="space-y-2">
                     <Label className="flex items-center gap-2">
                       <HardHat className="h-4 w-4 text-amber-600" />
-                      Corps de métier *
+                      Corps de métier
                     </Label>
                     <Select value={tradeSpecialty} onValueChange={setTradeSpecialty}>
                       <SelectTrigger>
@@ -800,9 +799,7 @@ const Auth = () => {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">
-                      {tradeSpecialty === 'electricien' && "Licence délivrée par la CMEQ (Corporation des maîtres électriciens du Québec)"}
-                      {tradeSpecialty === 'plombier' && "Licence délivrée par la CMMTQ (Corporation des maîtres mécaniciens en tuyauterie du Québec)"}
-                      {tradeSpecialty && tradeSpecialty !== 'electricien' && tradeSpecialty !== 'plombier' && "Carte de compétence CCQ obligatoire pour tous les travailleurs de la construction au Québec"}
+                      Indiquez votre corps de métier principal. Vous pourrez préciser vos certifications (CCQ, CMEQ, CMMTQ…) plus tard dans votre profil.
                     </p>
                   </div>
 
@@ -831,11 +828,8 @@ const Auth = () => {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
                     <HardHat className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-amber-700 space-y-1">
-                      <p className="font-medium">Après confirmation de votre courriel :</p>
-                      <p>• Vous serez invité à uploader votre <strong>carte de compétence CCQ</strong> pour compléter votre profil.</p>
-                      {tradeSpecialty === 'electricien' && <p>• Les électriciens sont réglementés par la <strong>CMEQ</strong>.</p>}
-                      {tradeSpecialty === 'plombier' && <p>• Les plombiers/mécaniciens sont réglementés par la <strong>CMMTQ</strong>.</p>}
-                      <p>• Vos documents seront examinés sous 24-48h.</p>
+                      <p className="font-medium">Aucun document requis pour vous inscrire.</p>
+                      <p>Vous pourrez ajouter votre <strong>carte de compétence CCQ</strong> plus tard depuis votre profil pour obtenir le badge « Vérifié ».</p>
                     </div>
                   </div>
                 </div>
@@ -858,7 +852,7 @@ const Auth = () => {
             <div className="text-center text-sm">
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => { setFormError(null); setIsLogin(!isLogin); }}
                 className="text-primary hover:underline"
               >
                 {isLogin
@@ -869,6 +863,48 @@ const Auth = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Grande fenêtre de confirmation après inscription — l'utilisateur voit
+          clairement qu'il doit aller confirmer son courriel. */}
+      <Dialog open={confirmationOpen} onOpenChange={setConfirmationOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <div className="flex flex-col items-center gap-4 py-4">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success-light text-success">
+              <MailCheck className="h-8 w-8" />
+            </span>
+            <h2 className="text-xl font-bold text-foreground">
+              {t("auth.confirmation.title")}
+            </h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {t("auth.confirmation.sent_to")}
+            </p>
+            <p className="text-sm font-semibold text-foreground break-all">{confirmationEmail}</p>
+            <div className="w-full rounded-lg border border-border bg-secondary/40 p-4 text-left text-sm text-muted-foreground space-y-2">
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">1</span>
+                {t("auth.confirmation.step_open")}
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">2</span>
+                {t("auth.confirmation.step_click")}
+              </p>
+              <p className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">3</span>
+                {t("auth.confirmation.step_spam")}
+              </p>
+            </div>
+            <Button
+              className="w-full"
+              onClick={() => {
+                setConfirmationOpen(false);
+                setIsLogin(true);
+              }}
+            >
+              {t("auth.confirmation.got_it")}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 };

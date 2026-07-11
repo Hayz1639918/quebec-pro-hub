@@ -49,7 +49,7 @@ describe('getPostAuthRoute', () => {
     ).toBe('/complete-profile-entrepreneur');
   });
 
-  it('redirects pending entrepreneurs to the verification waiting screen', () => {
+  it('gives completed entrepreneurs full access without RBQ verification', () => {
     expect(
       getPostAuthRoute({
         user_type: 'professional',
@@ -57,7 +57,7 @@ describe('getPostAuthRoute', () => {
         is_rbq_verified: false,
         professional_type: 'entrepreneur',
       }),
-    ).toBe('/pending-verification');
+    ).toBe('/pro/dashboard');
   });
 
   it('gives completed trade professionals full access without RBQ verification', () => {
