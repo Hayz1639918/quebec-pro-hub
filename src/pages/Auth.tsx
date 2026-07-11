@@ -362,6 +362,16 @@ const Auth = () => {
       if (signUpError) throw signUpError;
       if (!authData.user) throw new Error(t('auth.messages.no_user_created'));
 
+      // Supabase renvoie un user SANS erreur mais avec identities=[] lorsque le
+      // courriel est déjà utilisé (protection anti-énumération). On le détecte
+      // pour afficher une vraie erreur « compte déjà existant » au lieu d'ouvrir
+      // la fenêtre de confirmation (qui ferait croire à tort à un nouveau compte).
+      const identities = (authData.user as { identities?: unknown[] }).identities;
+      if (Array.isArray(identities) && identities.length === 0) {
+        showError(t('auth.messages.email_exists'), t('auth.messages.email_exists_description'));
+        return;
+      }
+
       // Check if email confirmation is required
       const needsEmailConfirmation = !authData.session;
 
