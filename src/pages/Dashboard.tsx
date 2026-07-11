@@ -1287,14 +1287,14 @@ const Dashboard = () => {
             <TabsContent value="projects">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                     <div>
                       <CardTitle>{t('dashboard.projects.title')}</CardTitle>
                       <CardDescription>
                         {t('dashboard.projects.description')}
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       {projects.length > 0 && (
                         <Button variant="outline" size="sm" onClick={handleExportProjectsPDF}>
                           <Download className="mr-2 h-4 w-4" />
