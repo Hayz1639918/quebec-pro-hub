@@ -779,7 +779,9 @@
       "verified": "Verified Professionals",
       "avg_rating": "Average Rating",
       "results_count": "{{count}} professional",
-      "results_count_plural": "{{count}} professionals"
+      "results_count_plural": "{{count}} professionals",
+      "total": "Professionals",
+      "verified_count": "RBQ verified"
     },
     "card": {
       "verified": "RBQ Verified",
