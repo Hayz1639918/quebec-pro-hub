@@ -543,17 +543,17 @@ const Contracts = () => {
         </div>
       ) : (
         <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="contracts">{t('contracts.my_contracts')}</TabsTrigger>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="contracts" className="flex-1 sm:flex-none">{t('contracts.my_contracts')}</TabsTrigger>
               {userType === 'professional' && (
-                <TabsTrigger value="templates">{t('contracts.create_contract')}</TabsTrigger>
+                <TabsTrigger value="templates" className="flex-1 sm:flex-none">{t('contracts.create_contract')}</TabsTrigger>
               )}
             </TabsList>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsUploading(true)}
-              className="ml-4"
+              className="w-full sm:w-auto"
             >
               <Upload className="h-4 w-4 mr-2" />
               Uploader un contrat existant

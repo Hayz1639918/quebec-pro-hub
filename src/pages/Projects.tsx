@@ -369,12 +369,12 @@ const Projects = () => {
       {/* Interactive Map Section */}
       <section className="py-6 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-primary" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
               {t('projects.map.title', 'Projets près de vous')}
             </h2>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-shrink-0">
               <Button
                 variant={showMap ? "default" : "outline"}
                 size="sm"
@@ -428,18 +428,6 @@ const Projects = () => {
       {/* Main Content */}
       <section className="flex-1 py-8 sm:py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Barre de recherche — placée juste au-dessus des résultats pour que
-              la recherche affiche les résultats directement en dessous, sans scroll. */}
-          <div className="relative mb-6">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder={t('projects.search')}
-              className="pl-12 pr-4 h-12 text-base"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
           <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
             {/* Filters Sidebar */}
             <aside className="lg:w-72 xl:w-80 flex-shrink-0">
@@ -537,9 +525,22 @@ const Projects = () => {
 
             {/* Results */}
             <div className="flex-1">
+              {/* Barre de recherche — en haut de la colonne des résultats : sur
+                  mobile elle apparaît sous les filtres, juste au-dessus des
+                  résultats (affichage direct sans scroll). */}
+              <div className="relative mb-6">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder={t('projects.search')}
+                  className="pl-12 pr-4 h-12 text-base"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
               <div className="mb-6 flex items-center justify-between">
                 <p className="text-muted-foreground">
-                  {filteredProjects.length === 1 
+                  {filteredProjects.length === 1
                     ? t('projects.stats.results_count', { count: filteredProjects.length })
                     : t('projects.stats.results_count_plural', { count: filteredProjects.length })
                   }
