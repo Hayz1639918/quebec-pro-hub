@@ -512,7 +512,7 @@ const Professionals = () => {
             </p>
 
             {/* Quick Stats */}
-            <div className="flex items-center justify-center gap-8 pt-4">
+            <div className="flex items-center justify-center gap-4 sm:gap-8 pt-4">
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">{professionals.length}</div>
                 <div className="text-sm text-muted-foreground">{t('professionals.stats.total')}</div>
