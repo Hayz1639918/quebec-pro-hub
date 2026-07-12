@@ -16,7 +16,7 @@ Ces templates ne se déploient pas par migration : ils doivent être collés dan
 le dashboard.
 
 1. Ouvrir le [dashboard Supabase](https://supabase.com/dashboard) → projet
-   BâtirNet (`eieywrvrhdwbhefmlxoe`).
+   BâtirNet (`gsnjnhxzacwjslirfxgy`).
 2. Aller dans **Authentication → Emails → Templates**.
 3. Pour chaque template ci-dessous, coller le contenu du fichier HTML dans le
    corps (« Message body ») et définir le sujet :

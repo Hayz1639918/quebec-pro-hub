@@ -284,7 +284,7 @@ sur la page `/auth` (onglets Connexion et Inscription). Le code appelle
 1. [Google Cloud Console](https://console.cloud.google.com) → créer des
    identifiants OAuth 2.0 (type « Application Web »).
 2. Origine JavaScript autorisée : l'URL de production. URI de redirection :
-   `https://eieywrvrhdwbhefmlxoe.supabase.co/auth/v1/callback`.
+   `https://gsnjnhxzacwjslirfxgy.supabase.co/auth/v1/callback`.
 3. Supabase → Authentication → Providers → Google : activer, coller
    Client ID + Client Secret.
 
@@ -292,7 +292,7 @@ sur la page `/auth` (onglets Connexion et Inscription). Le code appelle
 1. [Apple Developer](https://developer.apple.com) (compte payant requis) →
    créer un App ID + Service ID avec « Sign in with Apple », générer la clé
    privée (.p8).
-2. URL de retour : `https://eieywrvrhdwbhefmlxoe.supabase.co/auth/v1/callback`.
+2. URL de retour : `https://gsnjnhxzacwjslirfxgy.supabase.co/auth/v1/callback`.
 3. Supabase → Authentication → Providers → Apple : activer, renseigner
    Service ID, Team ID, Key ID et la clé privée.
 
