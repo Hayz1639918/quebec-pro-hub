@@ -18,6 +18,12 @@ import { AppProfile, getPostAuthRoute } from "@/lib/auth-routing";
 type UserType = "client" | "professional";
 type ProfessionalType = "entrepreneur" | "trade_professional";
 type CompanyType = "individuel" | "societe";
+type OAuthProvider = "google" | "apple";
+
+// Choix de type de compte fait sur l'onglet Inscription avant un départ vers
+// Google/Apple : survit à la redirection OAuth puis est consommé (et effacé)
+// au retour pour typer le profil créé par défaut en « client ».
+const OAUTH_SIGNUP_KEY = "batirnet_oauth_signup_choice";
 
 // Password strength validation
 const PASSWORD_RULES = {
@@ -48,6 +54,12 @@ function mapAuthError(error: unknown, t: TranslateFn): { title: string; descript
 
   const is = (needle: string) => code.includes(needle) || message.includes(needle);
 
+  if (is("provider is not enabled") || is("unsupported provider")) {
+    return {
+      title: t("auth.messages.oauth_unavailable"),
+      description: t("auth.messages.oauth_unavailable_description"),
+    };
+  }
   if (status === 429 || is("rate_limit") || is("rate limit") || is("too many") || is("security purposes")) {
     return {
       title: t("auth.messages.rate_limited"),
@@ -209,20 +221,67 @@ const Auth = () => {
     navigate(getPostAuthRoute(profile));
   };
 
+  /**
+   * Résolution partagée après connexion (mot de passe OU retour OAuth) :
+   * consomme le choix de type de compte fait avant un départ OAuth depuis
+   * l'onglet Inscription, convertit le profil « client » créé par défaut
+   * par le trigger, puis redirige selon le profil.
+   */
+  const resolvePostAuth = async (uid: string) => {
+    const pendingRaw = localStorage.getItem(OAUTH_SIGNUP_KEY);
+    localStorage.removeItem(OAUTH_SIGNUP_KEY);
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type, profile_completed, is_rbq_verified, professional_type')
+      .eq('id', uid)
+      .single();
+
+    if (!profile) return;
+
+    // Conversion uniquement pour un profil encore vierge (créé par défaut en
+    // « client » par le trigger) — jamais pour un compte déjà complété.
+    if (pendingRaw && profile.user_type === 'client' && !profile.profile_completed) {
+      try {
+        const pending = JSON.parse(pendingRaw) as {
+          userType?: string;
+          professionalType?: string;
+          tradeSpecialty?: string | null;
+        };
+        if (pending.userType === 'professional') {
+          const professional_type =
+            pending.professionalType === 'trade_professional' ? 'trade_professional' : 'entrepreneur';
+          const { error } = await supabase
+            .from('profiles')
+            .update({
+              user_type: 'professional',
+              professional_type,
+              ...(pending.tradeSpecialty ? { trade_specialty: pending.tradeSpecialty } : {}),
+            })
+            .eq('id', uid);
+          if (!error) {
+            redirectBasedOnProfile({
+              user_type: 'professional',
+              profile_completed: false,
+              is_rbq_verified: false,
+              professional_type,
+            });
+            return;
+          }
+        }
+      } catch {
+        // Choix illisible : on retombe sur la redirection normale.
+      }
+    }
+
+    redirectBasedOnProfile(profile as AppProfile);
+  };
+
   useEffect(() => {
     // Check if user is already logged in
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        // Fetch user profile to determine where to redirect
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type, profile_completed, is_rbq_verified, professional_type')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!profile) return;
-
-        redirectBasedOnProfile(profile as AppProfile);
+        await resolvePostAuth(session.user.id);
       }
     });
 
@@ -239,21 +298,14 @@ const Auth = () => {
         // Defer Supabase calls out of the auth callback: awaiting a query here
         // can deadlock the Supabase auth lock and hang the whole app.
         const uid = session.user.id;
-        setTimeout(async () => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('user_type, profile_completed, is_rbq_verified, professional_type')
-            .eq('id', uid)
-            .single();
-
-          if (!profile) return;
-
-          redirectBasedOnProfile(profile as AppProfile);
+        setTimeout(() => {
+          void resolvePostAuth(uid);
         }, 0);
       }
     });
 
     return () => subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, isPasswordRecovery]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -411,6 +463,40 @@ const Auth = () => {
       showError(title, description);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Connexion / inscription via Google ou Apple (US-002).
+   * Sur l'onglet Inscription, le type de compte choisi est mémorisé le temps
+   * de l'aller-retour OAuth puis appliqué au profil dans resolvePostAuth().
+   */
+  const handleOAuth = async (provider: OAuthProvider) => {
+    setFormError(null);
+    try {
+      if (!isLogin && userType === "professional") {
+        localStorage.setItem(
+          OAUTH_SIGNUP_KEY,
+          JSON.stringify({
+            userType,
+            professionalType,
+            tradeSpecialty: professionalType === "trade_professional" ? tradeSpecialty || null : null,
+          })
+        );
+      } else {
+        // Onglet Connexion (ou inscription client) : purge tout choix périmé
+        // d'une tentative OAuth abandonnée pour ne jamais convertir à tort.
+        localStorage.removeItem(OAUTH_SIGNUP_KEY);
+      }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: `${window.location.origin}/auth` },
+      });
+      if (error) throw error;
+    } catch (error) {
+      localStorage.removeItem(OAUTH_SIGNUP_KEY);
+      const { title, description } = mapAuthError(error, t);
+      showError(title, description);
     }
   };
 
@@ -849,17 +935,58 @@ const Auth = () => {
           )}
 
           {!forgotPassword && !isPasswordRecovery && (
-            <div className="text-center text-sm">
-              <button
-                type="button"
-                onClick={() => { setFormError(null); setIsLogin(!isLogin); }}
-                className="text-primary hover:underline"
-              >
-                {isLogin
-                  ? t('auth.login.no_account')
-                  : t('auth.signup.already_account')}
-              </button>
-            </div>
+            <>
+              {/* Connexion via fournisseurs OAuth (US-002) */}
+              <div className="relative" role="separator" aria-label={t('auth.oauth.or')}>
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">{t('auth.oauth.or')}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => handleOAuth("google")}
+                  disabled={loading}
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.57 5.57 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z" />
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z" />
+                    <path fill="#FBBC05" d="M5.27 14.29A7.13 7.13 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a11.99 11.99 0 0 0 0 10.76l3.98-3.09z" />
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" />
+                  </svg>
+                  {t('auth.oauth.google')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => handleOAuth("apple")}
+                  disabled={loading}
+                >
+                  <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M16.36 12.79c-.03-2.53 2.07-3.74 2.16-3.8-1.18-1.72-3.01-1.96-3.66-1.99-1.56-.16-3.04.92-3.83.92-.79 0-2.01-.9-3.3-.87-1.7.03-3.26.99-4.13 2.5-1.76 3.06-.45 7.59 1.27 10.07.84 1.21 1.84 2.58 3.16 2.53 1.27-.05 1.75-.82 3.28-.82 1.53 0 1.96.82 3.3.79 1.36-.02 2.22-1.24 3.06-2.46.96-1.41 1.36-2.78 1.38-2.85-.03-.01-2.65-1.02-2.69-4.02zM13.84 5.35c.7-.85 1.17-2.02 1.04-3.2-1 .04-2.23.67-2.95 1.51-.65.75-1.21 1.95-1.06 3.1 1.12.09 2.27-.57 2.97-1.41z" />
+                  </svg>
+                  {t('auth.oauth.apple')}
+                </Button>
+              </div>
+
+              <div className="text-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => { setFormError(null); setIsLogin(!isLogin); }}
+                  className="text-primary hover:underline"
+                >
+                  {isLogin
+                    ? t('auth.login.no_account')
+                    : t('auth.signup.already_account')}
+                </button>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

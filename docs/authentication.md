@@ -260,26 +260,45 @@ try {
 }
 ```
 
-## Intégration OAuth
+## Intégration OAuth (US-002 — implémentée)
 
-### Google OAuth
+Les boutons « Continuer avec Google » et « Continuer avec Apple » sont en place
+sur la page `/auth` (onglets Connexion et Inscription). Le code appelle
+`supabase.auth.signInWithOAuth({ provider, options: { redirectTo: origin + "/auth" } })`.
 
-**Configuration requise dans Supabase :**
-1. Activer le provider Google dans Authentication > Providers
-2. Configurer les clés OAuth (Client ID, Client Secret)
-3. Ajouter les URLs de redirection autorisées
+**Comportement côté application :**
+- Retour OAuth sur `/auth` : la session est détectée et l'utilisateur est
+  redirigé selon son profil (`getPostAuthRoute`).
+- Un nouvel utilisateur OAuth reçoit un profil `client` par défaut (trigger
+  `handle_new_user_signup`). Si l'inscription a été initiée depuis l'onglet
+  Inscription avec un type « Entrepreneur » ou « Pro métier », ce choix est
+  conservé (localStorage, clé `batirnet_oauth_signup_choice`) le temps de
+  l'aller-retour, puis appliqué au profil au retour ; l'utilisateur est alors
+  dirigé vers le parcours de complétion de profil correspondant.
+- Si un fournisseur n'est pas activé côté Supabase, l'utilisateur voit un
+  message clair (« Ce mode de connexion n'est pas encore activé »).
 
-**Code :**
-```typescript
-const handleGoogleAuth = async () => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/`,
-    },
-  });
-};
-```
+**Configuration requise dans le dashboard Supabase (à faire avant la prod) :**
+
+*Google :*
+1. [Google Cloud Console](https://console.cloud.google.com) → créer des
+   identifiants OAuth 2.0 (type « Application Web »).
+2. Origine JavaScript autorisée : l'URL de production. URI de redirection :
+   `https://eieywrvrhdwbhefmlxoe.supabase.co/auth/v1/callback`.
+3. Supabase → Authentication → Providers → Google : activer, coller
+   Client ID + Client Secret.
+
+*Apple :*
+1. [Apple Developer](https://developer.apple.com) (compte payant requis) →
+   créer un App ID + Service ID avec « Sign in with Apple », générer la clé
+   privée (.p8).
+2. URL de retour : `https://eieywrvrhdwbhefmlxoe.supabase.co/auth/v1/callback`.
+3. Supabase → Authentication → Providers → Apple : activer, renseigner
+   Service ID, Team ID, Key ID et la clé privée.
+
+*Dans les deux cas :* vérifier Authentication → URL Configuration →
+`Site URL` = URL de production, et ajouter `https://<domaine>/auth` aux
+`Redirect URLs`.
 
 ## Tests
 
