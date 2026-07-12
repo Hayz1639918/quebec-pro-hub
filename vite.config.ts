@@ -90,6 +90,8 @@ export default defineConfig(({ mode }) => ({
     globals: true,
     setupFiles: "./src/test/setup.ts",
     css: true,
+    // Les tests E2E (dossier e2e/) appartiennent à Playwright, pas à Vitest.
+    exclude: ["node_modules/**", "dist/**", "e2e/**"],
     coverage: {
       reporter: ["text", "lcov"],
       exclude: [

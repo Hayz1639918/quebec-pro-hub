@@ -99,3 +99,7 @@ pnpm-lock.yaml
 # Agent skills (outillage local, non versionné)
 .agents/
 skills-lock.json
+
+# Playwright
+test-results/
+playwright-report/

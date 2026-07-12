@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { MapPin, User, Briefcase, Shield, Award, TrendingUp, DollarSign, Settings, Loader2 } from "lucide-react";
 import { geocodePostalCode } from "@/lib/geolocation";
+import TwoFactorSettings from "@/components/auth/TwoFactorSettings";
 
 // Lazy-load Epic 30 components to avoid large initial bundle
 const TradeSelection = lazy(() => import("@/components/pro/TradeSelection"));
@@ -445,6 +446,9 @@ const ProProfile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Sécurité — vérification en deux étapes */}
+            <TwoFactorSettings />
           </TabsContent>
 
           {/* ── Tab: Métiers (US-106) ── */}

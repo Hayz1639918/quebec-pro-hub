@@ -148,6 +148,19 @@
     "subtitle_login": "Connectez-vous à votre compte BâtirNet",
     "subtitle_signup": "Créez votre compte BâtirNet",
     "or": "OU",
+    "oauth": {
+      "or": "ou continuer avec",
+      "google": "Continuer avec Google",
+      "apple": "Continuer avec Apple"
+    },
+    "mfa": {
+      "title": "Vérification en deux étapes",
+      "subtitle": "Entrez le code à 6 chiffres de votre application d'authentification",
+      "code_label": "Code de vérification",
+      "button": "Vérifier",
+      "button_loading": "Vérification...",
+      "cancel": "Annuler et revenir à la connexion"
+    },
     "login": {
       "title": "Connexion",
       "email": "Adresse email",
@@ -224,6 +237,10 @@
       "signup_error": "Une erreur est survenue lors de l'inscription",
       "no_user_logged": "Aucun utilisateur connecté",
       "google_error": "Impossible de se connecter avec Google",
+      "oauth_unavailable": "Connexion indisponible",
+      "oauth_unavailable_description": "Ce mode de connexion n'est pas encore activé. Utilisez votre courriel et votre mot de passe, ou réessayez plus tard.",
+      "mfa_invalid": "Code invalide",
+      "mfa_invalid_description": "Le code saisi est incorrect ou expiré. Vérifiez le code affiché dans votre application, puis réessayez.",
       "rate_limited": "Trop de tentatives",
       "rate_limited_description": "Vous avez fait plusieurs tentatives d'affilée. Pour votre sécurité, veuillez patienter environ une heure avant de réessayer. Si vous avez déjà un compte, essayez plutôt de vous connecter ou d'utiliser « Mot de passe oublié ».",
       "email_exists": "Compte déjà existant",

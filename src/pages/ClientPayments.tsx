@@ -32,6 +32,7 @@ import { fr } from "date-fns/locale";
 import { pdf } from "@react-pdf/renderer";
 import { InvoicePDF, type InvoiceData } from "@/components/InvoicePDF";
 import { createCheckoutSession, isStripeConfigured } from "@/services/stripe-service";
+import OnlinePaymentComingSoonBadge from "@/components/payments/OnlinePaymentComingSoonBadge";
 
 type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
 type PaymentMethod = "card" | "transfer" | "crypto" | "cheque" | "cash";
@@ -348,9 +349,16 @@ const ClientPayments = () => {
                           {isPending && isPlatform && (
                             <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-md text-xs text-primary flex items-start gap-2">
                               <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                              <span>
-                                Paiement sécurisé via la plateforme. Les fonds sont protégés jusqu'à validation du jalon par vous et l'entrepreneur.
-                              </span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <span className="font-medium">Paiement sécurisé via la plateforme</span>
+                                  {!stripeReady && <OnlinePaymentComingSoonBadge />}
+                                </div>
+                                <span>
+                                  Les fonds sont protégés jusqu'à validation du jalon par vous et l'entrepreneur.
+                                  {!stripeReady && " Le paiement en ligne sera activé prochainement — vous serez notifié dès qu'il sera disponible."}
+                                </span>
+                              </div>
                             </div>
                           )}
 

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { User, MapPin, Phone, Mail, Home, Loader2, CheckCircle2, Lock, Eye, EyeOff, Shield, XCircle, Lightbulb, Camera } from "lucide-react";
+import TwoFactorSettings from "@/components/auth/TwoFactorSettings";
 
 // Password validation helpers
 const PASSWORD_RULES = {
@@ -501,6 +502,9 @@ const ClientProfile = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Vérification en deux étapes */}
+          <TwoFactorSettings />
 
           {/* Info box */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
