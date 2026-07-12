@@ -191,6 +191,9 @@ const Auth = () => {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  // Défi 2FA : id du facteur TOTP à valider avant d'entrer dans l'application.
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -223,11 +226,25 @@ const Auth = () => {
 
   /**
    * Résolution partagée après connexion (mot de passe OU retour OAuth) :
-   * consomme le choix de type de compte fait avant un départ OAuth depuis
-   * l'onglet Inscription, convertit le profil « client » créé par défaut
-   * par le trigger, puis redirige selon le profil.
+   * exige d'abord le code 2FA si un facteur TOTP vérifié existe, consomme le
+   * choix de type de compte fait avant un départ OAuth depuis l'onglet
+   * Inscription (conversion du profil « client » créé par défaut par le
+   * trigger), puis redirige selon le profil.
+   * Retourne true si un défi 2FA est requis (aucune redirection faite).
    */
-  const resolvePostAuth = async (uid: string) => {
+  const resolvePostAuth = async (uid: string): Promise<boolean> => {
+    // 2FA : si le compte a un facteur TOTP vérifié et que la session est
+    // encore au niveau aal1, on exige le code avant toute redirection.
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const totp = (factors?.totp ?? []).find((f) => f.status === "verified");
+      if (totp) {
+        setMfaFactorId(totp.id);
+        return true;
+      }
+    }
+
     const pendingRaw = localStorage.getItem(OAUTH_SIGNUP_KEY);
     localStorage.removeItem(OAUTH_SIGNUP_KEY);
 
@@ -237,7 +254,7 @@ const Auth = () => {
       .eq('id', uid)
       .single();
 
-    if (!profile) return;
+    if (!profile) return false;
 
     // Conversion uniquement pour un profil encore vierge (créé par défaut en
     // « client » par le trigger) — jamais pour un compte déjà complété.
@@ -266,7 +283,7 @@ const Auth = () => {
               is_rbq_verified: false,
               professional_type,
             });
-            return;
+            return false;
           }
         }
       } catch {
@@ -275,6 +292,49 @@ const Auth = () => {
     }
 
     redirectBasedOnProfile(profile as AppProfile);
+    return false;
+  };
+
+  /** Valide le code TOTP saisi lors du défi 2FA à la connexion. */
+  const handleVerifyMfa = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaFactorId || mfaCode.trim().length < 6) return;
+    setFormError(null);
+    setLoading(true);
+    try {
+      const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+        factorId: mfaFactorId,
+      });
+      if (challengeError) throw challengeError;
+
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId: challenge.id,
+        code: mfaCode.trim(),
+      });
+      if (verifyError) throw verifyError;
+
+      setMfaFactorId(null);
+      setMfaCode("");
+      toast({
+        title: t('auth.messages.login_success'),
+        description: t('auth.messages.welcome_default'),
+      });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await resolvePostAuth(session.user.id);
+    } catch {
+      showError(t('auth.messages.mfa_invalid'), t('auth.messages.mfa_invalid_description'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** Abandonne le défi 2FA : déconnexion propre et retour au formulaire. */
+  const cancelMfa = async () => {
+    setMfaFactorId(null);
+    setMfaCode("");
+    setFormError(null);
+    await supabase.auth.signOut();
   };
 
   useEffect(() => {
@@ -518,26 +578,15 @@ const Auth = () => {
       
       if (error) throw error;
       if (!authData.user) throw new Error(t('auth.messages.no_user_logged'));
-      
-      // Fetch user profile to determine where to redirect
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type, full_name, profile_completed, is_rbq_verified, professional_type')
-        .eq('id', authData.user.id)
-        .single();
 
-      const userProfile = profile as (AppProfile & {
-        full_name: string;
-      }) | null;
-
-      toast({
-        title: t('auth.messages.login_success'),
-        description: userProfile?.full_name
-          ? t('auth.messages.welcome', { name: userProfile.full_name })
-          : t('auth.messages.welcome_default'),
-      });
-
-      redirectBasedOnProfile(userProfile);
+      // resolvePostAuth gère le défi 2FA éventuel puis la redirection.
+      const requiresMfa = await resolvePostAuth(authData.user.id);
+      if (!requiresMfa) {
+        toast({
+          title: t('auth.messages.login_success'),
+          description: t('auth.messages.welcome_default'),
+        });
+      }
     } catch (error) {
       const { title, description } = mapAuthError(error, t);
       showError(title, description);
@@ -555,14 +604,18 @@ const Auth = () => {
           </div>
           <div>
             <CardTitle className="text-lg sm:text-xl md:text-2xl" role="heading" aria-level={1}>
-              {isPasswordRecovery
+              {mfaFactorId
+                ? t('auth.mfa.title')
+                : isPasswordRecovery
                 ? "Nouveau mot de passe"
                 : forgotPassword
                 ? "Mot de passe oublié"
                 : isLogin ? t('auth.login.title') : t('auth.signup.title')}
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              {isPasswordRecovery
+              {mfaFactorId
+                ? t('auth.mfa.subtitle')
+                : isPasswordRecovery
                 ? "Choisissez un nouveau mot de passe sécurisé"
                 : forgotPassword
                 ? "Entrez votre email pour recevoir un lien de réinitialisation"
@@ -583,8 +636,40 @@ const Auth = () => {
             </Alert>
           )}
 
-          {/* Password Recovery Form */}
-          {isPasswordRecovery ? (
+          {/* Défi 2FA à la connexion */}
+          {mfaFactorId ? (
+            <form onSubmit={handleVerifyMfa} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="mfa-code">{t('auth.mfa.code_label')}</Label>
+                <Input
+                  id="mfa-code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ""))}
+                  className="text-center font-mono tracking-[0.5em] text-lg"
+                  autoFocus
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={loading || mfaCode.length < 6}>
+                {loading ? t('auth.mfa.button_loading') : t('auth.mfa.button')}
+              </Button>
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={cancelMfa}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {t('auth.mfa.cancel')}
+                </button>
+              </div>
+            </form>
+
+          /* Password Recovery Form */
+          ) : isPasswordRecovery ? (
             <form onSubmit={handleSetNewPassword} className="space-y-4">
               <PasswordField
                 id="new-password"
@@ -934,7 +1019,7 @@ const Auth = () => {
             </form>
           )}
 
-          {!forgotPassword && !isPasswordRecovery && (
+          {!forgotPassword && !isPasswordRecovery && !mfaFactorId && (
             <>
               {/* Connexion via fournisseurs OAuth (US-002) */}
               <div className="relative" role="separator" aria-label={t('auth.oauth.or')}>

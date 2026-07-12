@@ -153,6 +153,14 @@
       "google": "Continue with Google",
       "apple": "Continue with Apple"
     },
+    "mfa": {
+      "title": "Two-step verification",
+      "subtitle": "Enter the 6-digit code from your authenticator app",
+      "code_label": "Verification code",
+      "button": "Verify",
+      "button_loading": "Verifying...",
+      "cancel": "Cancel and return to login"
+    },
     "login": {
       "title": "Login",
       "email": "Email Address",
@@ -231,6 +239,8 @@
       "google_error": "Unable to sign in with Google",
       "oauth_unavailable": "Sign-in unavailable",
       "oauth_unavailable_description": "This sign-in method is not enabled yet. Use your email and password, or try again later.",
+      "mfa_invalid": "Invalid code",
+      "mfa_invalid_description": "The code you entered is incorrect or expired. Check the code shown in your app and try again.",
       "rate_limited": "Too many attempts",
       "rate_limited_description": "You've made several attempts in a row. For your security, please wait about an hour before trying again. If you already have an account, try signing in or use \"Forgot password\".",
       "email_exists": "Account already exists",
