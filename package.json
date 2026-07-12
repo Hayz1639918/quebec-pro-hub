@@ -19,7 +19,9 @@
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit",
     "audit:deps": "npx depcheck",
-    "audit:security": "npm audit --audit-level=moderate"
+    "audit:security": "npm audit --audit-level=moderate",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
