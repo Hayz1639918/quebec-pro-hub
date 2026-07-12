@@ -34,6 +34,7 @@ import {
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import OnlinePaymentComingSoonBadge from "@/components/payments/OnlinePaymentComingSoonBadge";
 
 type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
 type PaymentMethod = "card" | "transfer" | "crypto" | "cheque" | "cash";
@@ -286,7 +287,10 @@ const ProPayments = () => {
         <Alert className="mb-6 border-primary/20 bg-primary/5">
           <Info className="h-4 w-4 text-primary" aria-hidden="true" />
           <AlertDescription className="text-sm text-foreground">
-            <strong className="font-medium">Via la plateforme :</strong> le client paie en ligne, fonds en escrow jusqu'à validation du jalon.
+            <span className="block mb-1.5">
+              <OnlinePaymentComingSoonBadge />
+            </span>
+            <strong className="font-medium">Via la plateforme :</strong> le client paiera en ligne, fonds en escrow jusqu'à validation du jalon — activation prochaine.
             {" "}
             <strong className="font-medium">Hors plateforme :</strong> le client vous paie directement — utilisez « Marquer comme reçu » une fois le règlement effectué.
           </AlertDescription>
@@ -483,8 +487,9 @@ const ProPayments = () => {
               <Building2 className="h-4 w-4 text-primary" />
               Compte bancaire
             </CardTitle>
-            <CardDescription>
-              Configurez votre compte pour recevoir les virements une fois Stripe activé.
+            <CardDescription className="flex items-center gap-2 flex-wrap">
+              Configurez votre compte pour recevoir les virements une fois le paiement en ligne activé.
+              <OnlinePaymentComingSoonBadge />
             </CardDescription>
           </CardHeader>
           <CardContent>

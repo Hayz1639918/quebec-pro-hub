@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building2, Clock, DollarSign, Shield } from "lucide-react";
+import OnlinePaymentComingSoonBadge from "@/components/payments/OnlinePaymentComingSoonBadge";
 
 // US-051 — Configuration des informations bancaires
 // L'intégration bancaire (Stripe Connect ou équivalent) est en cours de développement.
@@ -33,9 +34,10 @@ const ProBankAccount = () => {
         {/* Coming soon */}
         <Card className="border-amber-200 bg-amber-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-amber-800">
+            <CardTitle className="flex items-center gap-2 flex-wrap text-amber-800">
               <Clock className="h-5 w-5" />
               Fonctionnalité en cours de développement
+              <OnlinePaymentComingSoonBadge />
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-amber-900">
