@@ -10,10 +10,14 @@ invisible (bleu sur bleu — voir capture du 2026-07-03).
 arrondie** dans l'en-tête. Le logo lui-même et le reste du design (en-tête bleu,
 textes, bouton) sont inchangés.
 
-## Comment appliquer (manuel — dashboard Supabase)
+## Statut : ✅ DÉPLOYÉS en production le 2026-07-12
 
-Ces templates ne se déploient pas par migration : ils doivent être collés dans
-le dashboard.
+Les deux templates ont été installés sur le projet `gsnjnhxzacwjslirfxgy` via
+l'API de gestion Supabase (sujets FR + corps HTML). Les fichiers de ce dossier
+sont les copies exactes de ce qui est en production — toute retouche future
+doit être re-déployée (dashboard ou API).
+
+## Comment (ré)appliquer — dashboard Supabase
 
 1. Ouvrir le [dashboard Supabase](https://supabase.com/dashboard) → projet
    BâtirNet (`gsnjnhxzacwjslirfxgy`).

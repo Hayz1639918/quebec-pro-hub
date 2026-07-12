@@ -1,84 +1,57 @@
-<!-- ============================================================
-  BâtirNet — Courriel de confirmation d'inscription (Supabase Auth)
-  Sujet suggéré : Confirmez votre compte BâtirNet
-  À coller dans : Supabase Dashboard → Authentication → Emails
-                  → Templates → « Confirm signup »
-  Variables Supabase : {{ .ConfirmationURL }}, {{ .SiteURL }}
-  Correctif : le logo (bleu, fond transparent) est posé sur une
-  pastille blanche arrondie pour rester visible sur l'en-tête bleu.
-  Le design (en-tête bleu, textes, bouton) est inchangé.
-============================================================ -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f5f7;padding:24px 12px;">
-  <tr>
-    <td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
-        <!-- En-tête bleu (identique) -->
-        <tr>
-          <td align="center" style="background-color:#0066CC;padding:40px 24px;border-radius:12px 12px 0 0;">
-            <!-- Pastille blanche : rend le logo bleu visible sans le modifier -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td align="center" style="background-color:#ffffff;border-radius:16px;padding:16px 28px;">
-                  <img src="{{ .SiteURL }}/logo-batirnet.png" width="140" height="140" alt="BâtirNet" style="display:block;width:140px;height:140px;border:0;" />
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <!-- Corps (identique) -->
-        <tr>
-          <td style="padding:40px 40px 16px 40px;">
-            <h1 style="margin:0 0 20px 0;font-size:28px;line-height:1.25;color:#111827;font-weight:700;">
-              Confirmez votre adresse courriel
-            </h1>
-            <p style="margin:0 0 28px 0;font-size:17px;line-height:1.6;color:#374151;">
-              Merci de vous être inscrit sur BâtirNet, la plateforme qui connecte
-              les clients aux entrepreneurs qualifiés du Québec. Pour activer
-              votre compte, veuillez confirmer votre adresse courriel en cliquant
-              sur le bouton ci-dessous.
-            </p>
-          </td>
-        </tr>
-        <!-- Bouton (identique) -->
-        <tr>
-          <td align="center" style="padding:0 40px 32px 40px;">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td align="center" style="background-color:#0066CC;border-radius:12px;">
-                  <a href="{{ .ConfirmationURL }}"
-                     style="display:block;padding:16px 24px;font-size:18px;font-weight:700;color:#ffffff;text-decoration:none;">
-                    Confirmer mon adresse
-                  </a>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-        <!-- Lien de secours -->
-        <tr>
-          <td style="padding:0 40px 32px 40px;">
-            <p style="margin:0 0 8px 0;font-size:13px;line-height:1.5;color:#6b7280;">
-              Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :
-            </p>
-            <p style="margin:0;font-size:13px;line-height:1.5;word-break:break-all;">
-              <a href="{{ .ConfirmationURL }}" style="color:#0066CC;text-decoration:underline;">{{ .ConfirmationURL }}</a>
-            </p>
-          </td>
-        </tr>
-        <!-- Pied de page -->
-        <tr>
-          <td style="padding:24px 40px;border-top:1px solid #e5e7eb;">
-            <p style="margin:0;font-size:12px;line-height:1.6;color:#9ca3af;">
-              Vous recevez ce courriel parce qu'un compte a été créé avec cette adresse
-              sur BâtirNet. Si vous n'êtes pas à l'origine de cette inscription, vous
-              pouvez ignorer ce message en toute sécurité.
-            </p>
-            <p style="margin:8px 0 0 0;font-size:12px;color:#9ca3af;">
-              © BâtirNet — Plateforme de mise en relation clients &amp; entrepreneurs du Québec
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<div style="margin:0;padding:0;background-color:#f4f6f8;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f6f8;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+          <tr>
+            <td style="background-color:#0066cc;padding:28px 32px;text-align:center;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" style="background-color:#ffffff;border-radius:14px;padding:12px 20px;">
+                    <img src="https://batirnet.com/logo-batirnet.png" alt="BâtirNet" width="140" style="display:block;margin:0 auto;max-width:140px;height:auto;" />
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 32px 24px 32px;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a;">
+              <h1 style="margin:0 0 16px 0;font-size:22px;font-weight:700;color:#1a1a1a;">Confirmez votre adresse courriel</h1>
+              <p style="margin:0 0 24px 0;font-size:15px;line-height:1.6;color:#4a5568;">
+                Merci de vous être inscrit sur BâtirNet, la plateforme qui connecte les clients aux entrepreneurs qualifiés du Québec. Pour activer votre compte, veuillez confirmer votre adresse courriel en cliquant sur le bouton ci-dessous.
+              </p>
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px auto;">
+                <tr>
+                  <td align="center" style="border-radius:8px;background-color:#0066cc;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">
+                      Confirmer mon adresse
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#8a94a6;">
+                Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :
+              </p>
+              <p style="margin:0 0 24px 0;font-size:13px;line-height:1.6;word-break:break-all;">
+                <a href="{{ .ConfirmationURL }}" style="color:#0066cc;">{{ .ConfirmationURL }}</a>
+              </p>
+              <p style="margin:0;font-size:13px;line-height:1.6;color:#8a94a6;">
+                Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer ce courriel en toute sécurité.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:20px 32px;background-color:#f4f6f8;text-align:center;font-family:Arial,Helvetica,sans-serif;">
+              <p style="margin:0;font-size:12px;color:#8a94a6;">
+                BâtirNet — La plateforme de confiance pour vos projets de construction et rénovation au Québec.
+              </p>
+              <p style="margin:8px 0 0 0;font-size:12px;color:#8a94a6;">
+                <a href="https://batirnet.com" style="color:#0066cc;text-decoration:none;">batirnet.com</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</div>
