@@ -1,5 +1,55 @@
 # CONTINUITY.md — BâtirNet Audit & Production-Readiness
 
+## ⚡ Session 2026-07-12 — branche `claude/p2p-payment-system-qq1xqg`
+
+**Objectif de la session** (demande utilisateur) : Stripe reporté (indicateur
+« à venir » seulement) ; correction RLS ; OAuth ; 2FA ; tests E2E ; préparation
+du déploiement final ; correction du courriel de confirmation (logo bleu sur
+bleu invisible).
+
+**Livré (5 commits)** :
+1. **Courriels** : templates Supabase Auth recréés (`supabase/email-templates/`),
+   logo (bleu sur fond transparent) posé sur pastille blanche arrondie —
+   visible, design inchangé. Confirmation + réinitialisation. **À coller
+   manuellement dans le dashboard** (voir README du dossier). Rendu vérifié
+   par screenshot Playwright.
+2. **Stripe « à venir »** : badge réutilisable `OnlinePaymentComingSoonBadge`
+   sur ClientPayments (bloc paiement plateforme), ProPayments (alerte d'en-tête
+   + carte compte bancaire) et ProBankAccount. Textes ajustés au futur.
+3. **RLS** : migration `090_restrict_authenticated_profile_reads.sql` — ferme
+   le risque résiduel documenté en 088 : les comptes authentifiés ne lisent
+   les profils CLIENTS qu'avec une relation d'affaires réelle (fonction
+   SECURITY DEFINER `has_business_relationship` : conversation, contrat,
+   proposition, invitation, paiement, soumission, avis, projet open). Propre
+   profil + profils professionnels + admins inchangés. **À appliquer en prod.**
+4. **OAuth Google/Apple (US-002)** : boutons sur /auth (connexion + inscription),
+   choix de type de compte transmis via localStorage à travers l'aller-retour
+   OAuth puis appliqué au profil (conversion client→professionnel du profil
+   vierge créé par le trigger). Config dashboard documentée dans
+   docs/authentication.md. Message clair si fournisseur non activé.
+5. **2FA TOTP** : composant `TwoFactorSettings` (QR + code) dans ClientProfile
+   et ProProfile (onglet infos) ; défi 2FA à la connexion dans Auth.tsx
+   (resolvePostAuth partagé mot de passe/OAuth) ; migration
+   `091_enforce_mfa_aal2.sql` (politiques RESTRICTIVE aal2 sur 11 tables
+   sensibles — l'API ne peut pas contourner le défi). **À appliquer en prod.**
+6. **Tests E2E** : `playwright.config.ts` + `e2e/public-routes.spec.ts`
+   (13 tests ✅ : rendu, formulaires auth, OAuth, responsive 320→1440 sans
+   overflow, 404). `npm run test:e2e`. Chromium pré-installé réutilisé,
+   env Supabase factice, e2e/ exclu de Vitest.
+7. **Déploiement** : `docs/deployment-checklist.md` — validations, migrations
+   090/091 à appliquer, config dashboard (courriels, OAuth, MFA, URLs),
+   vérifications post-déploiement. Le déploiement production reste à
+   déclencher par le propriétaire.
+
+**Validations session** : type-check ✅, 18/18 tests unitaires ✅, 13/13 E2E ✅,
+lint 0 erreur / 65 warnings (baseline 66), build ✅.
+
+**Reste à faire (manuel, propriétaire)** : appliquer 090+091, coller les
+2 templates courriel, configurer Google/Apple OAuth, valider la checklist
+de déploiement (docs/deployment-checklist.md) puis déployer.
+
+---
+
 ## 1. Final objective
 Auditer et améliorer BâtirNet (marketplace construction Québec : clients ↔ entrepreneurs ↔ admin) pour la rendre production-ready selon des validations vérifiables : fonctionnel, responsive (320px→1440px+), accessible (base WCAG), UX cohérente, alignée sur les 123 user stories (US-001 → US-123), code maintenable, faible duplication.
 
@@ -130,7 +180,7 @@ Voir §2 baseline.
 - ~~Vulnérabilités npm~~ : corrigées sauf esbuild/vite (dev-only, accepté). Les 40 alertes Dependabot GitHub datent de main — la branche est en avance.
 - Chunk PDF 1.49 MB (perf).
 - Couverture de tests quasi nulle (3 fichiers).
-- OAuth Google/Apple (US-002) absent ; Stripe stub (paiement en ligne indisponible, hors-plateforme OK) ; i18n incomplet sur certaines pages (textes français en dur, ex. ProposalsList, ProposalView) alors que le site se dit FR/EN.
+- ~~OAuth Google/Apple (US-002) absent~~ → ✅ implémenté (2026-07-12, config dashboard requise) ; 2FA TOTP ✅ implémentée (2026-07-12, migration 091 à appliquer) ; risque résiduel profils→authenticated ✅ corrigé (migration 090 à appliquer) ; Stripe stub assumé « à venir » (indicateur affiché, hors-plateforme OK) ; i18n incomplet sur certaines pages (textes français en dur, ex. ProposalsList, ProposalView) alors que le site se dit FR/EN.
 
 ## 21. Exact next steps
 1. ~~Batch 1 : lint errors~~ ✅ FAIT (116 → 0).
