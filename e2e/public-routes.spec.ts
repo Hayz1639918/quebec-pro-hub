@@ -70,15 +70,18 @@ test.describe("Responsive — pas de débordement horizontal", () => {
 });
 
 test.describe("Authentification", () => {
-  test("formulaire de connexion : champs, OAuth et validation courriel", async ({ page }) => {
+  test("formulaire de connexion : champs, OAuth masqué et validation courriel", async ({ page }) => {
     await page.goto("/auth?mode=login");
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator("#password")).toBeVisible();
 
-    // Boutons OAuth (US-002)
-    await expect(page.getByRole("button", { name: /Google/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Apple/i })).toBeVisible();
+    // Boutons OAuth (US-002) : implémentés mais masqués tant que
+    // VITE_ENABLE_OAUTH n'est pas à "true" (décision 2026-07-12).
+    await expect(page.getByRole("button", { name: /Google/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Apple/i })).toHaveCount(0);
+    // La bascule connexion↔inscription reste visible sous le formulaire.
+    await expect(page.getByRole("button", { name: /Pas encore de compte/ })).toBeVisible();
 
     // Validation côté client : courriel accepté par la validation native du
     // navigateur mais rejeté par la validation applicative (TLD manquant)

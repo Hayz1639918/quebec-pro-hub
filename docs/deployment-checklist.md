@@ -37,13 +37,11 @@ vérifiée en prod le 2026-07-03.
 - [ ] Envoyer un courriel de test et vérifier que le logo est visible
       (pastille blanche sur en-tête bleu).
 
-### OAuth (US-002)
-- [ ] Activer Google (Client ID/Secret depuis Google Cloud Console) —
-      procédure détaillée dans `docs/authentication.md` § Intégration OAuth.
-- [ ] Activer Apple (Service ID, Team ID, Key ID, clé .p8 — compte Apple
-      Developer requis).
-- [ ] Tant qu'un fournisseur n'est pas activé, le bouton correspondant
-      affiche « Ce mode de connexion n'est pas encore activé » (géré).
+### OAuth (US-002) — REPORTÉ (décision 2026-07-12)
+Les boutons Google/Apple sont **masqués** (drapeau `VITE_ENABLE_OAUTH`,
+absent = masqué). Rien à faire pour ce déploiement. Le jour venu :
+configurer les fournisseurs (procédure dans `docs/authentication.md`),
+puis définir `VITE_ENABLE_OAUTH=true` sur Vercel et redéployer.
 
 ### MFA / 2FA
 - [ ] Vérifier que TOTP est activé : Authentication → Multi-Factor (TOTP est

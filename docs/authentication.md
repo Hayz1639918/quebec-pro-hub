@@ -260,9 +260,15 @@ try {
 }
 ```
 
-## Intégration OAuth (US-002 — implémentée)
+## Intégration OAuth (US-002 — implémentée, MASQUÉE)
 
-Les boutons « Continuer avec Google » et « Continuer avec Apple » sont en place
+**Statut (2026-07-12)** : le code est complet mais les boutons sont masqués
+(décision produit — fournisseurs non configurés pour l'instant). Pour les
+afficher : définir la variable d'environnement **`VITE_ENABLE_OAUTH=true`**
+(Vercel → Settings → Environment Variables) APRÈS avoir configuré les
+fournisseurs ci-dessous, puis redéployer.
+
+Les boutons « Continuer avec Google » et « Continuer avec Apple » existent
 sur la page `/auth` (onglets Connexion et Inscription). Le code appelle
 `supabase.auth.signInWithOAuth({ provider, options: { redirectTo: origin + "/auth" } })`.
 

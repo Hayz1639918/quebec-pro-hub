@@ -25,6 +25,12 @@ type OAuthProvider = "google" | "apple";
 // au retour pour typer le profil créé par défaut en « client ».
 const OAUTH_SIGNUP_KEY = "batirnet_oauth_signup_choice";
 
+// Connexion Google/Apple : implémentée mais masquée pour l'instant (décision
+// 2026-07-12 — fournisseurs non configurés côté Google/Apple). Pour réactiver :
+// définir VITE_ENABLE_OAUTH=true (Vercel → Environment Variables) et configurer
+// les fournisseurs dans Supabase (voir docs/authentication.md).
+const OAUTH_PROVIDERS_ENABLED = import.meta.env.VITE_ENABLE_OAUTH === "true";
+
 // Password strength validation
 const PASSWORD_RULES = {
   minLength: 8,
@@ -1019,7 +1025,7 @@ const Auth = () => {
             </form>
           )}
 
-          {!forgotPassword && !isPasswordRecovery && !mfaFactorId && (
+          {!forgotPassword && !isPasswordRecovery && !mfaFactorId && OAUTH_PROVIDERS_ENABLED && (
             <>
               {/* Connexion via fournisseurs OAuth (US-002) */}
               <div className="relative" role="separator" aria-label={t('auth.oauth.or')}>
@@ -1059,19 +1065,21 @@ const Auth = () => {
                   {t('auth.oauth.apple')}
                 </Button>
               </div>
-
-              <div className="text-center text-sm">
-                <button
-                  type="button"
-                  onClick={() => { setFormError(null); setIsLogin(!isLogin); }}
-                  className="text-primary hover:underline"
-                >
-                  {isLogin
-                    ? t('auth.login.no_account')
-                    : t('auth.signup.already_account')}
-                </button>
-              </div>
             </>
+          )}
+
+          {!forgotPassword && !isPasswordRecovery && !mfaFactorId && (
+            <div className="text-center text-sm">
+              <button
+                type="button"
+                onClick={() => { setFormError(null); setIsLogin(!isLogin); }}
+                className="text-primary hover:underline"
+              >
+                {isLogin
+                  ? t('auth.login.no_account')
+                  : t('auth.signup.already_account')}
+              </button>
+            </div>
           )}
         </CardContent>
       </Card>
