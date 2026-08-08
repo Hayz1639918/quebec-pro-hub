@@ -21,7 +21,7 @@ const Features = () => {
   ];
 
   return (
-    <section className="bg-secondary/40 py-20 sm:py-28">
+    <section id="resources" className="bg-secondary/40 py-20 sm:py-28">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-12 sm:mb-16 max-w-2xl">
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">

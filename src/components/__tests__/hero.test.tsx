@@ -12,9 +12,9 @@ describe('Hero', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/meilleurs entrepreneurs/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/entrepreneurs/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Plateforme internationale sécurisée/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /trouvez le bon\s+entrepreneur/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/entrepreneur/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/professionnels vérifiés pour vos projets/i)).toBeInTheDocument();
   });
 
   it('shows primary actions and key stats', () => {
@@ -27,7 +27,7 @@ describe('Hero', () => {
     expect(screen.getByRole('button', { name: /publier un projet/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /devenir professionnel/i })).toBeInTheDocument();
     expect(screen.getByText(/2 500\+/i)).toBeInTheDocument();
-    expect(screen.getByText(/15K\+/i)).toBeInTheDocument();
-    expect(screen.getByText(/4\.8\/5/i)).toBeInTheDocument();
+    expect(screen.getByText(/15 000\+/i)).toBeInTheDocument();
+    expect(screen.getByText(/4,8\/5/i)).toBeInTheDocument();
   });
 });

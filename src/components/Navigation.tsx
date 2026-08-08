@@ -33,7 +33,11 @@ const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType
   </button>
 );
 
-const Navigation = () => {
+interface NavigationProps {
+  homeStyle?: boolean;
+}
+
+const Navigation = ({ homeStyle = false }: NavigationProps) => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string; email?: string} | null>(null);
   const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean; professional_type?: string} | null>(null);
@@ -120,38 +124,60 @@ const Navigation = () => {
     navigate(path);
   };
 
+  const desktopLinks = homeStyle
+    ? [
+        { label: t('navigation.professionals'), path: '/professionals' },
+        { label: t('hero.cta_client'), path: '/auth?mode=signup' },
+        { label: t('how_it_works.title'), path: '#how-it-works' },
+        { label: t('footer.resources.title'), path: '#resources' },
+        { label: t('footer.company.about'), path: '#about' },
+      ]
+    : [
+        { label: 'Entrepreneurs', path: '/professionals?type=entrepreneur' },
+        { label: 'Professionnels', path: '/professionals?type=trade_professional' },
+        { label: 'Projets', path: '/projects' },
+      ];
+
+  const handleDesktopNavigation = (path: string) => {
+    if (path.startsWith('#')) {
+      document.querySelector(path)?.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-background/95 backdrop-blur-lg border-b border-foreground/8 shadow-soft'
-          : 'bg-transparent'
-      }`}
+      className={
+        homeStyle
+          ? `home-public-nav fixed z-50 transition-all duration-500 ${scrolled ? 'home-public-nav--scrolled' : ''}`
+          : `fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+              scrolled
+                ? 'bg-background/95 backdrop-blur-lg border-b border-foreground/8 shadow-soft'
+                : 'bg-transparent'
+            }`
+      }
     >
-      <div className="pt-safe relative">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
+      <div className={homeStyle ? 'home-public-nav__safe' : 'pt-safe relative'}>
+        <div className={homeStyle ? 'home-public-nav__shell' : 'container mx-auto px-4 sm:px-6 lg:px-8'}>
+          <div className={homeStyle ? 'home-public-nav__row' : 'flex items-center justify-between h-16 sm:h-18 md:h-20'}>
 
             {/* ── Logo ── */}
             <button
-              className="flex items-center flex-shrink-0 cursor-pointer touch-target rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className={`flex items-center flex-shrink-0 cursor-pointer touch-target rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${homeStyle ? 'home-public-nav__logo' : ''}`}
               onClick={() => navigateTo("/")}
               aria-label="BâtirNet — accueil"
             >
-              <Logo size={34} />
+              <Logo size={homeStyle ? 30 : 34} />
             </button>
 
             {/* ── Desktop nav links ── */}
-            <div className="hidden md:flex items-center gap-1 lg:gap-2">
-              {[
-                { label: 'Entrepreneurs', path: '/professionals?type=entrepreneur' },
-                { label: 'Professionnels', path: '/professionals?type=trade_professional' },
-                { label: 'Projets', path: '/projects' },
-              ].map(({ label, path }) => (
+            <div className={homeStyle ? 'home-public-nav__links hidden md:flex' : 'hidden md:flex items-center gap-1 lg:gap-2'}>
+              {desktopLinks.map(({ label, path }) => (
                 <button
                   key={path}
-                  onClick={() => navigate(path)}
-                  className="nav-link px-4 py-2 text-foreground/70 hover:text-foreground transition-colors text-sm font-ui"
+                  onClick={() => handleDesktopNavigation(path)}
+                  className={homeStyle ? 'home-public-nav__link' : 'nav-link px-4 py-2 text-foreground/70 hover:text-foreground transition-colors text-sm font-ui'}
                 >
                   {label}
                 </button>
@@ -159,7 +185,7 @@ const Navigation = () => {
             </div>
 
             {/* ── Desktop right actions ── */}
-            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
+            <div className={homeStyle ? 'home-public-nav__actions hidden md:flex' : 'hidden md:flex items-center gap-3 flex-shrink-0'}>
               <LanguageSwitcher />
 
               {user ? (
@@ -255,13 +281,13 @@ const Navigation = () => {
               ) : (
                 <>
                   <button
-                    className="hidden sm:block font-ui text-sm text-foreground/50 hover:text-foreground transition-colors px-3 py-2"
+                    className={`hidden sm:block font-ui text-sm text-foreground/50 hover:text-foreground transition-colors px-3 py-2 ${homeStyle ? 'home-public-nav__login' : ''}`}
                     onClick={() => navigate("/auth?mode=login")}
                   >
                     {t('navigation.login')}
                   </button>
                   <button
-                    className="font-ui font-medium text-sm px-5 py-2 bg-primary hover:bg-primary-hover text-white transition-colors rounded-full"
+                    className={`font-ui font-medium text-sm px-5 py-2 bg-primary hover:bg-primary-hover text-white transition-colors rounded-full ${homeStyle ? 'home-public-nav__signup' : ''}`}
                     onClick={() => navigate("/auth?mode=signup")}
                   >
                     {t('navigation.signup')}

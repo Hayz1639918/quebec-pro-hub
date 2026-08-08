@@ -5,11 +5,12 @@ import Features from "@/components/Features";
 import TrustBand from "@/components/TrustBand";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
+import "@/styles/home-reference.css";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
-      <Navigation />
+      <Navigation homeStyle />
       <main>
         <Hero />
         <HowItWorks />
