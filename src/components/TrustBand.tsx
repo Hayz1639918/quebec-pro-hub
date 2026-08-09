@@ -18,6 +18,7 @@ const TrustBand = () => {
 
   return (
     <section
+      id="about"
       className="relative overflow-hidden bg-[hsl(var(--navy-deep))]"
       style={{
         backgroundImage:

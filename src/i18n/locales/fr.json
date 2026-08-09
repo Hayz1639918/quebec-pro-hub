@@ -39,20 +39,44 @@
     "signup": "Inscription"
   },
   "hero": {
-    "title": "Connectez-vous avec les meilleurs entrepreneurs",
-    "subtitle": "Plateforme internationale sécurisée pour vos projets de construction et rénovation",
+    "title": "Trouvez le bon\nentrepreneur,\nen toute confiance",
+    "subtitle": "Des professionnels vérifiés pour vos projets partout au Québec.",
     "cta_client": "Publier un projet",
     "cta_pro": "Devenir professionnel",
-    "badge": "Plateforme internationale de confiance",
+    "badge": "La construction en toute confiance",
     "features": {
       "verified": "Entrepreneurs vérifiés et certifiés",
       "payments": "Paiements sécurisés par jalons",
       "contracts": "Contrats intelligents avec e-signature"
     },
     "stats": {
-      "professionals": "Professionnels vérifiés",
-      "projects": "Projets réalisés",
-      "satisfaction": "Satisfaction client"
+      "professionals": "professionnels vérifiés",
+      "projects": "projets publiés",
+      "satisfaction": "satisfaction moyenne"
+    },
+    "search": {
+      "service_label": "Que voulez-vous réaliser ?",
+      "service_placeholder": "Ex. : Agrandissement, rénovation, toiture...",
+      "location_label": "Où ?",
+      "location_placeholder": "Ville ou région",
+      "button": "Rechercher"
+    },
+    "verified_card": {
+      "eyebrow": "Entrepreneur vérifié",
+      "company": "Construction Martin Inc.",
+      "role": "Entrepreneur général",
+      "location": "Montréal, QC",
+      "reviews": "128 avis",
+      "license": "RBQ : 5678-1234-01"
+    },
+    "featured": {
+      "title": "Projets en vedette",
+      "view_all": "Voir tous les projets",
+      "items": {
+        "renovation": "Rénovation résidentielle",
+        "new_home": "Construction neuve",
+        "commercial": "Rénovation commerciale"
+      }
     }
   },
   "features": {

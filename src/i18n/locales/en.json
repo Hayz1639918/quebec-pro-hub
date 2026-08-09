@@ -39,20 +39,44 @@
     "signup": "Sign Up"
   },
   "hero": {
-    "title": "Connect with the Best Contractors",
-    "subtitle": "Secure international platform for your construction and renovation projects",
+    "title": "Find the right\ncontractor,\nwith confidence",
+    "subtitle": "Verified professionals for your projects throughout Quebec.",
     "cta_client": "Post a Project",
     "cta_pro": "Become a Professional",
-    "badge": "Trusted International Platform",
+    "badge": "Build with complete confidence",
     "features": {
       "verified": "Verified and certified contractors",
       "payments": "Secure milestone-based payments",
       "contracts": "Smart contracts with e-signature"
     },
     "stats": {
-      "professionals": "Verified Professionals",
-      "projects": "Completed Projects",
-      "satisfaction": "Client Satisfaction"
+      "professionals": "verified professionals",
+      "projects": "projects posted",
+      "satisfaction": "average satisfaction"
+    },
+    "search": {
+      "service_label": "What would you like to build?",
+      "service_placeholder": "E.g. extension, renovation, roofing...",
+      "location_label": "Where?",
+      "location_placeholder": "City or region",
+      "button": "Search"
+    },
+    "verified_card": {
+      "eyebrow": "Verified contractor",
+      "company": "Construction Martin Inc.",
+      "role": "General contractor",
+      "location": "Montreal, QC",
+      "reviews": "128 reviews",
+      "license": "RBQ: 5678-1234-01"
+    },
+    "featured": {
+      "title": "Featured projects",
+      "view_all": "View all projects",
+      "items": {
+        "renovation": "Residential renovation",
+        "new_home": "New construction",
+        "commercial": "Commercial renovation"
+      }
     }
   },
   "features": {
