@@ -1,7 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://gsnjnhxzacwjslirfxgy.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdzbmpuaHh6YWN3anNsaXJmeGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAzNzYzNzQsImV4cCI6MjA3NTk1MjM3NH0.OKL0qmvAB8dh0QwOxi7laMd5lJh64TdjivHdO-8w6-0';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Variables d\'environnement manquantes.');
+  console.error('   Définissez VITE_SUPABASE_URL et une clé (SUPABASE_SERVICE_ROLE_KEY');
+  console.error('   pour le seed, ou VITE_SUPABASE_PUBLISHABLE_KEY) avant de lancer ce script.');
+  process.exit(1);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

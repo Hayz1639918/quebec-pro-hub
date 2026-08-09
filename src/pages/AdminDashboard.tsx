@@ -14,6 +14,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { openSignedDocument } from "@/lib/storage";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import AdminLicensePanel from "@/components/admin/AdminLicensePanel";
@@ -1081,7 +1082,7 @@ const AdminDashboard = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(selectedProfessional.rbq_certification_url!, '_blank')}
+                        onClick={() => openSignedDocument('certifications', selectedProfessional.rbq_certification_url, () => toast({ variant: 'destructive', title: 'Document indisponible', description: "Impossible d'ouvrir ce document." }))}
                       >
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Voir le document
@@ -1102,7 +1103,7 @@ const AdminDashboard = () => {
                       variant="outline"
                       size="sm"
                       className="mt-1"
-                      onClick={() => window.open(selectedProfessional.insurance_info!, '_blank')}
+                      onClick={() => openSignedDocument('certifications', selectedProfessional.insurance_info, () => toast({ variant: 'destructive', title: 'Document indisponible', description: "Impossible d'ouvrir ce document." }))}
                     >
                       <ExternalLink className="h-4 w-4 mr-2" />
                       Voir le document
