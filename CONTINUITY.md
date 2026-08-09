@@ -1,5 +1,76 @@
 # CONTINUITY.md — BâtirNet Audit & Production-Readiness
 
+## ⚡ Session 2026-08-09 — Audit sécurité pré-lancement — branche `claude/security-audit-prelaunch-97wh1b`
+
+**Demande** : audit de sécurité complet (checklist pré-lancement) + connexion
+Supabase (MCP/CLI) pour vérifier/corriger la sécurité.
+
+**Connexion Supabase** : ❌ impossible dans cette session — aucune variable
+d'env (`.env`/`.env.local` absents), pas de CLI Supabase installé, pas de MCP
+Supabase disponible. L'audit DB a été fait **statiquement** sur les 92 migrations
+(qui définissent entièrement la posture RLS). Les migrations ne peuvent pas être
+appliquées par moi → action propriétaire requise (voir ci-dessous).
+
+**🔴 CRITIQUE trouvé & corrigé (code + migration) — fuite de documents privés** :
+- Bucket `certifications` était **public** (migration 041 l'avait basculé de privé
+  → public). Il contient licences RBQ, **certificats d'assurance** ET **pièces
+  d'identité gouvernementales** (passeport, permis, carte RAMQ — via
+  `id_document_url`, migration 069). Tout fichier était lisible par n'importe qui
+  via `getPublicUrl` (chemins `<user_id>/identity-<timestamp>` semi-devinables).
+  Violation Loi 25 / RGPD.
+- Bucket `chat-attachments` était **public** → fichiers de conversations privées
+  lisibles par tous.
+- **Correctif** : migration `092_secure_sensitive_storage_buckets.sql` (buckets →
+  privés + politiques RLS : propriétaire/admin pour certifications, participants
+  pour chat). Code basculé sur URLs signées : `src/lib/storage.ts` (helper),
+  `AdminDashboard` (ouverture doc via URL signée), `ProfessionalProfile` (retrait
+  de l'exposition publique des documents RBQ/assurance), `ChatWindow` +
+  `ChatAttachment.tsx` (URLs signées, stocke désormais le chemin). ⚠️ **Migration
+  092 à APPLIQUER en prod** (SQL Editor / CLI).
+
+**🟠 HIGH corrigés (code)** :
+- Aucun en-tête de sécurité sur le déploiement Vercel → ajoutés dans `vercel.json`
+  (CSP, HSTS, X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy,
+  Permissions-Policy). CSP calibrée pour Google Fonts, tuiles Leaflet, Supabase
+  REST/Realtime, Resend.
+- Edge function `send-signature-confirmation` : valeurs utilisateur interpolées
+  dans le HTML sans échappement (injection/phishing) + CORS `*`. Durcie :
+  validation d'entrées (email/longueurs), échappement HTML, URL de vérification
+  restreinte au domaine, CORS restreint, JWT explicite dans `config.toml`.
+- `scripts/seed-test-projects.js` : URL Supabase + clé anon en dur → variables
+  d'environnement.
+
+**🟡 MEDIUM/LOW** : `npm audit fix` (non-breaking) appliqué → 10 → 4 vulns
+(3 modérées + 1 dev-only) ; react-router-dom 6.30.1 → 6.30.4 (open-redirect),
+postcss patché. Restant : esbuild/vite (dev-only, nécessite vite@8 majeur —
+reporté). Stockage token en localStorage = défaut Supabase (mitigé par CSP +
+DOMPurify). Rate limiting applicatif côté client seulement (auth Supabase a des
+limites serveur).
+
+**✅ BON / déjà en place** : buckets `contracts` et `insurance-certificates`
+privés ; XSS maîtrisé (DOMPurify sur tous les `dangerouslySetInnerHTML`) ; RLS
+activée sur les tables sensibles ; `is_admin()` SECURITY DEFINER avec
+`search_path` fixé ; secrets hors du repo (aucune service-role key committée) ;
+`.gitignore` couvre les `.env`.
+
+**Validations** : `npm install` ✅, `build` ✅, `lint` 0 erreur / 65 warnings
+(baseline), `test` 18/18 ✅. type-check : erreur pré-existante TS5101
+(`baseUrl` déprécié dans tsconfig.json, non liée à ce travail).
+
+**RESTE À FAIRE (propriétaire)** :
+1. Appliquer migration **092** (buckets privés) — CRITIQUE.
+2. Appliquer migrations **090** (profils→authenticated) et **091** (MFA aal2)
+   écrites dans une session précédente, toujours en attente.
+3. Après 092 : vérifier dans le dashboard Storage que `certifications` et
+   `chat-attachments` sont bien `Private` et qu'aucune politique publique
+   résiduelle ne subsiste.
+4. Configurer alertes/plafonds de facturation (Supabase, Resend) — « cap the
+   blast radius ».
+5. Mettre en place des sauvegardes DB testées (restauration) — GitHub n'est pas
+   une sauvegarde.
+
+---
+
 ## ⚡ Session 2026-07-12 — branche `claude/p2p-payment-system-qq1xqg`
 
 **Objectif de la session** (demande utilisateur) : Stripe reporté (indicateur

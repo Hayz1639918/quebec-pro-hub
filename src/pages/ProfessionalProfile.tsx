@@ -35,6 +35,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import InviteProfessionalDialog from '@/components/invitations/InviteProfessionalDialog';
+import { isStorageUrl } from '@/lib/storage';
 
 interface ProfessionalProfile {
   id: string;
@@ -597,7 +598,17 @@ const ProfessionalProfile = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 whitespace-pre-wrap">{profile.insurance_info}</p>
+                  {/* Ne jamais exposer publiquement l'URL/le document d'assurance
+                      (PII). Si insurance_info contient un lien de stockage, on
+                      affiche seulement une confirmation neutre. */}
+                  {isStorageUrl(profile.insurance_info) ? (
+                    <p className="text-gray-700 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      Certificat d'assurance responsabilité civile fourni
+                    </p>
+                  ) : (
+                    <p className="text-gray-700 whitespace-pre-wrap">{profile.insurance_info}</p>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -622,14 +633,14 @@ const ProfessionalProfile = () => {
                             <p className="text-sm text-gray-600">{profile.rbq_number}</p>
                           </div>
                         </div>
+                        {/* Le document RBQ brut n'est pas exposé publiquement.
+                            Le numéro RBQ ci-dessus + le badge « Vérifié » suffisent
+                            à la confiance ; le document est réservé à l'admin. */}
                         {profile.rbq_certification_url && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(profile.rbq_certification_url!, '_blank')}
-                          >
-                            Voir le certificat
-                          </Button>
+                          <span className="flex items-center gap-1.5 text-sm text-green-700">
+                            <CheckCircle className="h-4 w-4" />
+                            Document fourni
+                          </span>
                         )}
                       </div>
                     )}

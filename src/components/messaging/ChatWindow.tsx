@@ -16,7 +16,6 @@ import {
   Paperclip,
   MapPin,
   DollarSign,
-  FileText,
   Image as ImageIcon,
   X,
   Ban,
@@ -45,6 +44,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { MeetingSchedulerDialog } from "./MeetingSchedulerDialog";
+import { ChatAttachment } from "./ChatAttachment";
 
 // Constants for validation and pagination
 const MAX_MESSAGE_LENGTH = 5000;
@@ -540,8 +540,8 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
       const { error: uploadError } = await supabase.storage.from("chat-attachments").upload(path, file);
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from("chat-attachments").getPublicUrl(path);
-
+      // Bucket privé : on stocke le CHEMIN de l'objet, pas une URL publique.
+      // L'affichage génère une URL signée à la lecture (voir ChatAttachment).
       const isImage = file.type.startsWith("image/");
       const content = isImage ? `Image partagée : ${file.name}` : `Fichier partagé : ${file.name}`;
 
@@ -550,7 +550,7 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
         sender_id: userId,
         receiver_id: receiverId,
         content,
-        attachment_url: publicUrl,
+        attachment_url: path,
         attachment_type: isImage ? "image" : "file",
       });
 
@@ -874,29 +874,13 @@ export const ChatWindow = ({ userId, conversation }: ChatWindowProps) => {
                     ) : (
                       <>
                         <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                        {/* Attachment preview */}
+                        {/* Attachment preview (URL signée depuis le bucket privé) */}
                         {message.attachment_url && (
-                          <div className="mt-2">
-                            {message.attachment_type === 'image' ? (
-                              <a href={message.attachment_url} target="_blank" rel="noopener noreferrer">
-                                <img
-                                  src={message.attachment_url}
-                                  alt="Image partagée"
-                                  className="max-w-xs max-h-48 rounded-lg object-cover border"
-                                />
-                              </a>
-                            ) : (
-                              <a
-                                href={message.attachment_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`flex items-center gap-2 text-xs underline ${isOwnMessage ? 'text-primary-foreground/80' : 'text-primary'}`}
-                              >
-                                <FileText className="h-4 w-4 flex-shrink-0" />
-                                Télécharger le fichier
-                              </a>
-                            )}
-                          </div>
+                          <ChatAttachment
+                            attachment={message.attachment_url}
+                            type={message.attachment_type}
+                            isOwnMessage={isOwnMessage}
+                          />
                         )}
                       </>
                     )}

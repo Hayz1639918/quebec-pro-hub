@@ -1,1 +1,8 @@
 project_id = "gsnjnhxzacwjslirfxgy"
+
+# Require a valid Supabase JWT for the signature-confirmation email function.
+# This is the platform default, but we set it explicitly so the function is
+# never accidentally deployed with --no-verify-jwt (which would let anyone
+# trigger emails / abuse the Resend quota).
+[functions.send-signature-confirmation]
+verify_jwt = true
