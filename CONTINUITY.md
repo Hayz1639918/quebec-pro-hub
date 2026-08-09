@@ -57,7 +57,26 @@ activée sur les tables sensibles ; `is_admin()` SECURITY DEFINER avec
 (baseline), `test` 18/18 ✅. type-check : erreur pré-existante TS5101
 (`baseUrl` déprécié dans tsconfig.json, non liée à ce travail).
 
+**🔵 Passe 2 — audit approfondi auth/authz (checklist « vibe-coded »)** :
+- **Endpoints IA** : AUCUN (pas d'OpenAI/Anthropic/LLM dans le code) → section
+  « protéger les endpoints IA » = N/A.
+- **46 fonctions `SECURITY DEFINER` auditées** (elles bypassent la RLS). Toutes
+  les RPC sensibles (paiement/admin/proposition) vérifient l'autorisation :
+  ex. `approve_milestone` exige `auth.uid() = client_id` (seul le client
+  payeur libère les fonds), `admin_*` exigent `is_admin()`. Les fonctions sans
+  contrôle sont des triggers/cron internes (`send_meeting_reminders`,
+  `run_compliance_checks` = `service_role` uniquement). Seul GRANT à `anon` =
+  `increment_project_views` (compteur inoffensif). → posture authz solide.
+- **Couverture RLS** : 40/41 tables ont `ENABLE ROW LEVEL SECURITY`. **1 trou
+  trouvé & corrigé** : `message_rate_limits` (pas de RLS + `GRANT SELECT` à
+  `authenticated`) → fuite inter-utilisateur de métadonnées d'activité.
+  Migration `093_enable_rls_message_rate_limits.sql` (RLS + lecture limitée à
+  sa propre ligne). ⚠️ **À APPLIQUER en prod**.
+- **CSRF** : non applicable (auth par header Bearer, pas de cookie de session).
+- **Uploads** : `allowed_mime_types` + `file_size_limit` par bucket. OK.
+
 **RESTE À FAIRE (propriétaire)** :
+0. Appliquer migration **093** (RLS message_rate_limits).
 1. Appliquer migration **092** (buckets privés) — CRITIQUE.
 2. Appliquer migrations **090** (profils→authenticated) et **091** (MFA aal2)
    écrites dans une session précédente, toujours en attente.
