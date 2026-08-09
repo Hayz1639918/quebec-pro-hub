@@ -14,14 +14,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search, Banknote } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search, Banknote, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
-import Logo from "@/components/Logo";
+import logo from "/logo-batirnet.png";
 
 const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
   <button
@@ -33,7 +33,11 @@ const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType
   </button>
 );
 
-const Navigation = () => {
+type NavigationProps = {
+  variant?: "default" | "home";
+};
+
+const Navigation = ({ variant = "default" }: NavigationProps) => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string; email?: string} | null>(null);
   const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean; professional_type?: string} | null>(null);
@@ -41,6 +45,7 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
+  const isHome = variant === "home";
 
   useEffect(() => {
     checkUser();
@@ -120,47 +125,83 @@ const Navigation = () => {
     navigate(path);
   };
 
+  const homeLinks: { label: string; path: string; hasChevron?: boolean }[] = [
+    { label: "Trouver un professionnel", path: "/professionals" },
+    { label: "Publier un projet", path: "/dashboard/new-project" },
+    { label: "Comment ça fonctionne", path: "/#how-it-works" },
+    { label: "Ressources", path: "/#how-it-works", hasChevron: true },
+    { label: "À propos", path: "/#how-it-works" },
+  ];
+
+  const defaultLinks: { label: string; path: string; hasChevron?: boolean }[] = [
+    { label: "Entrepreneurs", path: "/professionals?type=entrepreneur" },
+    { label: "Professionnels", path: "/professionals?type=trade_professional" },
+    { label: "Projets", path: "/projects" },
+  ];
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-background/95 backdrop-blur-lg border-b border-foreground/8 shadow-soft'
-          : 'bg-transparent'
+        isHome
+          ? "bg-transparent"
+          : scrolled
+            ? "bg-background/95 backdrop-blur-lg border-b border-foreground/8 shadow-soft"
+            : "bg-transparent"
       }`}
     >
       <div className="pt-safe relative">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-18 md:h-20">
+        <div className={`container mx-auto px-4 sm:px-6 lg:px-8 ${isHome ? "pt-3 sm:pt-4 max-w-6xl" : ""}`}>
+          <div
+            className={
+              isHome
+                ? `flex items-center justify-between gap-2 h-14 sm:h-[3.75rem] px-3 sm:px-4 lg:px-5 rounded-full bg-white shadow-[0_10px_40px_-8px_rgba(13,43,69,0.28)] border border-slate-200/60 transition-shadow duration-300 ${
+                    scrolled ? "shadow-[0_14px_44px_-8px_rgba(13,43,69,0.35)]" : ""
+                  }`
+                : "flex items-center justify-between h-16 sm:h-18 md:h-20"
+            }
+          >
 
             {/* ── Logo ── */}
-            <button
-              className="flex items-center flex-shrink-0 cursor-pointer touch-target rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            <div
+              className="flex items-center gap-3 flex-shrink-0 cursor-pointer touch-target group"
               onClick={() => navigateTo("/")}
-              aria-label="BâtirNet — accueil"
             >
-              <Logo size={34} />
-            </button>
+              <img
+                src={logo}
+                alt="BâtirNet"
+                className={`${isHome ? "h-8 sm:h-9" : "h-9 sm:h-11 md:h-12"} w-auto object-contain`}
+              />
+            </div>
 
             {/* ── Desktop nav links ── */}
-            <div className="hidden md:flex items-center gap-1 lg:gap-2">
-              {[
-                { label: 'Entrepreneurs', path: '/professionals?type=entrepreneur' },
-                { label: 'Professionnels', path: '/professionals?type=trade_professional' },
-                { label: 'Projets', path: '/projects' },
-              ].map(({ label, path }) => (
+            <div className={`hidden md:flex items-center ${isHome ? "gap-0 flex-1 justify-center min-w-0" : "gap-0.5 lg:gap-1"}`}>
+              {(isHome ? homeLinks : defaultLinks).map(({ label, path, hasChevron }) => (
                 <button
-                  key={path}
-                  onClick={() => navigate(path)}
-                  className="nav-link px-4 py-2 text-foreground/70 hover:text-foreground transition-colors text-sm font-ui"
+                  key={label}
+                  type="button"
+                  onClick={() => {
+                    if (path.startsWith("/#")) {
+                      const id = path.slice(2);
+                      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+                    } else {
+                      navigate(path);
+                    }
+                  }}
+                  className={`nav-link inline-flex items-center gap-1 py-2 transition-colors font-ui cursor-pointer whitespace-nowrap ${
+                    isHome
+                      ? "px-2 lg:px-2.5 text-[12px] lg:text-[13px] text-foreground/65 hover:text-primary"
+                      : "px-3 lg:px-3.5 text-[13px] lg:text-sm text-foreground/50 hover:text-foreground"
+                  }`}
                 >
                   {label}
+                  {hasChevron && <ChevronDown className="h-3.5 w-3.5 opacity-60" />}
                 </button>
               ))}
             </div>
 
             {/* ── Desktop right actions ── */}
-            <div className="hidden md:flex items-center gap-3 flex-shrink-0">
-              <LanguageSwitcher />
+            <div className="hidden md:flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
+              {!isHome && <LanguageSwitcher />}
 
               {user ? (
                 <>
@@ -172,7 +213,6 @@ const Navigation = () => {
                         variant="ghost"
                         size="icon"
                         className="rounded-full h-9 w-9 border border-foreground/10 hover:border-foreground/20 hover:bg-foreground/5 text-foreground/50 hover:text-foreground transition-all"
-                        aria-label="Menu du compte"
                       >
                         <User className="h-4 w-4" />
                       </Button>
@@ -255,16 +295,22 @@ const Navigation = () => {
               ) : (
                 <>
                   <button
-                    className="hidden sm:block font-ui text-sm text-foreground/50 hover:text-foreground transition-colors px-3 py-2"
+                    className={`hidden sm:block font-ui text-sm transition-colors px-3 py-2 cursor-pointer ${
+                      isHome ? "text-foreground/65 hover:text-primary" : "text-foreground/50 hover:text-foreground"
+                    }`}
                     onClick={() => navigate("/auth?mode=login")}
                   >
                     {t('navigation.login')}
                   </button>
                   <button
-                    className="font-ui font-medium text-sm px-5 py-2 bg-primary hover:bg-primary-hover text-white transition-colors rounded-full"
+                    className={`font-ui font-medium text-sm px-5 py-2 text-white transition-colors rounded-full cursor-pointer ${
+                      isHome
+                        ? "bg-primary hover:bg-primary-hover"
+                        : "bg-primary hover:bg-primary-hover"
+                    }`}
                     onClick={() => navigate("/auth?mode=signup")}
                   >
-                    {t('navigation.signup')}
+                    {isHome ? "S'inscrire" : t('navigation.signup')}
                   </button>
                 </>
               )}
@@ -302,7 +348,7 @@ const Navigation = () => {
                 <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0 pt-safe bg-background border-l border-border">
                   <SheetHeader className="p-5 border-b border-border">
                     <SheetTitle className="flex items-center gap-2">
-                      <Logo size={32} />
+                      <img src={logo} alt="BâtirNet" className="h-9 w-auto" />
                     </SheetTitle>
                   </SheetHeader>
 

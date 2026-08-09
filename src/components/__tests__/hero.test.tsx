@@ -12,12 +12,18 @@ describe('Hero', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/meilleurs entrepreneurs/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/entrepreneurs/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Plateforme internationale sécurisée/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', {
+        name: /Trouvez le bon entrepreneur, en toute confiance/i,
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/La construction en toute confiance/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Des professionnels vérifiés pour vos projets partout au Québec/i),
+    ).toBeInTheDocument();
   });
 
-  it('shows primary actions and key stats', () => {
+  it('shows primary actions and search selects', () => {
     render(
       <MemoryRouter>
         <Hero />
@@ -25,9 +31,9 @@ describe('Hero', () => {
     );
 
     expect(screen.getByRole('button', { name: /publier un projet/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /devenir professionnel/i })).toBeInTheDocument();
-    expect(screen.getByText(/2 500\+/i)).toBeInTheDocument();
-    expect(screen.getByText(/15K\+/i)).toBeInTheDocument();
-    expect(screen.getByText(/4\.8\/5/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /trouver un professionnel/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /rechercher/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/type de projet/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/ville ou région/i)).toBeInTheDocument();
   });
 });

@@ -3,39 +3,39 @@
 @tailwind utilities;
 
 /* ============================================================
-   BATIRNET — SaaS moderne épuré
-   Palette : blanc #ffffff · bleu #0066CC · marine #061428
-   Fonts : Outfit (display + UI + corps, géométrique) · DM Mono (labels/meta)
+   BATIRNET — Marketplace construction Québec
+   Palette : blanc #ffffff · marine #0D2B45 · accent orange #F2994A
+   Fonts : Instrument Serif (display) · Source Serif 4 (corps) · Outfit (UI) · DM Mono (mono)
    ============================================================ */
 
 @layer base {
   :root {
     /* ─── Surfaces — blanc pur ─── */
     --background: 0 0% 100%;            /* #ffffff — blanc */
-    --foreground: 214 75% 9%;           /* #071628 — marine profond */
+    --foreground: 207 68% 12%;          /* #0A2236 — marine profond */
 
     --card: 210 20% 98%;
-    --card-foreground: 214 75% 9%;
+    --card-foreground: 207 68% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 214 75% 9%;
+    --popover-foreground: 207 68% 12%;
 
-    /* ─── Bleu BâtirNet — #0066CC ─── */
-    --primary: 210 100% 40%;            /* #0066cc */
+    /* ─── Bleu marine BâtirNet — #0D2B45 ─── */
+    --primary: 207 68% 16%;             /* #0D2B45 */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 210 100% 33%;      /* #0052a8 */
-    --primary-light: 210 100% 95%;      /* #e6f2ff */
+    --primary-hover: 207 60% 22%;       /* #163A58 */
+    --primary-light: 207 40% 95%;       /* #EEF3F7 */
 
     /* ─── Secondaire ─── */
-    --secondary: 210 25% 95%;
-    --secondary-foreground: 214 75% 9%;
+    --secondary: 207 25% 95%;
+    --secondary-foreground: 207 68% 12%;
 
     --muted: 210 20% 93%;
-    --muted-foreground: 214 16% 38%;
+    --muted-foreground: 207 15% 42%;
 
-    --accent: 210 100% 40%;
+    --accent: 207 68% 16%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 210 100% 33%;
+    --accent-hover: 207 60% 22%;
 
     /* ─── Fonctionnel ─── */
     --destructive: 4 72% 50%;
@@ -43,12 +43,12 @@
 
     --border: 210 15% 88%;
     --input: 210 15% 91%;
-    --ring: 210 100% 40%;
+    --ring: 207 68% 16%;
 
-    --radius: 0.625rem;
+    --radius: 0.25rem;
 
     /* ─── Sémantique ─── */
-    --success: 145 60% 30%;
+    --success: 145 55% 36%;
     --success-foreground: 0 0% 100%;
     --success-light: 145 55% 94%;
 
@@ -56,55 +56,55 @@
     --warning-foreground: 0 0% 100%;
     --warning-light: 38 90% 94%;
 
-    --info: 210 100% 40%;
+    --info: 207 68% 16%;
     --info-foreground: 0 0% 100%;
-    --info-light: 210 100% 95%;
+    --info-light: 207 40% 95%;
 
-    /* ─── Effets — ombres ultra-diffuses teintées bleu marine ─── */
-    --shadow-soft:   0 1px 2px hsl(214 60% 12% / 0.04), 0 2px 8px hsl(214 60% 12% / 0.04);
-    --shadow-medium: 0 2px 4px hsl(214 60% 12% / 0.04), 0 8px 24px hsl(214 60% 12% / 0.07);
-    --shadow-large:  0 4px 8px hsl(214 60% 12% / 0.05), 0 24px 48px hsl(214 60% 12% / 0.10);
+    /* ─── Effets ─── */
+    --shadow-soft:   0 2px 12px -3px hsl(207 40% 16% / 0.08);
+    --shadow-medium: 0 8px 30px -6px hsl(207 40% 16% / 0.12);
+    --shadow-large:  0 24px 64px -12px hsl(207 40% 16% / 0.16);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     /* ─── Navy for dark sections ─── */
-    --navy-deep: 214 75% 7%;            /* #061428 */
-    --navy-mid:  214 70% 11%;           /* #0a1f3d */
-    --navy-soft: 214 60% 16%;           /* #142d52 */
+    --navy-deep: 207 70% 8%;            /* #06111C */
+    --navy-mid:  207 65% 12%;           /* #0A1F33 */
+    --navy-soft: 207 55% 18%;           /* #15324A */
   }
 
   .dark {
-    --background: 214 75% 7%;
+    --background: 207 70% 8%;
     --foreground: 210 20% 93%;
-    --card: 214 70% 11%;
+    --card: 207 55% 12%;
     --card-foreground: 210 20% 93%;
-    --popover: 214 70% 10%;
+    --popover: 207 55% 11%;
     --popover-foreground: 210 20% 93%;
-    --primary: 210 100% 55%;
+    --primary: 207 45% 55%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 210 100% 63%;
-    --primary-light: 210 100% 16%;
-    --secondary: 214 40% 14%;
+    --primary-hover: 207 45% 63%;
+    --primary-light: 207 40% 16%;
+    --secondary: 207 40% 14%;
     --secondary-foreground: 210 20% 90%;
-    --muted: 214 35% 13%;
-    --muted-foreground: 30 8% 65%;
-    --accent: 214 60% 55%;
+    --muted: 207 35% 13%;
+    --muted-foreground: 30 8% 55%;
+    --accent: 207 45% 55%;
     --accent-foreground: 0 0% 100%;
-    --accent-hover: 214 60% 63%;
+    --accent-hover: 207 45% 63%;
     --destructive: 4 68% 52%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 12% 20%;
     --input: 220 12% 18%;
-    --ring: 214 60% 55%;
+    --ring: 207 45% 55%;
     --success: 145 55% 42%;
     --success-foreground: 0 0% 100%;
     --success-light: 145 55% 12%;
     --warning: 38 90% 54%;
     --warning-foreground: 220 15% 8%;
     --warning-light: 38 90% 12%;
-    --info: 214 60% 55%;
+    --info: 207 45% 55%;
     --info-foreground: 0 0% 100%;
-    --info-light: 214 40% 14%;
+    --info-light: 207 40% 14%;
   }
 }
 
@@ -124,38 +124,34 @@
   body {
     @apply bg-background text-foreground antialiased;
     background-color: hsl(var(--background));
-    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv11" 1, "ss01" 1, "kern" 1;
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    font-feature-settings: "rlig" 1, "calt" 1, "kern" 1;
     font-optical-sizing: auto;
     overflow-x: hidden;
     min-height: 100vh;
     min-height: 100dvh;
-    line-height: 1.6;
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', system-ui, sans-serif;
-  }
-
   h1, h2 {
-    font-weight: 700;
-    letter-spacing: -0.03em;
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
     line-height: 1.05;
   }
 
   h3, h4 {
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.2;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
   }
 
   h5, h6 {
-    font-weight: 500;
-    letter-spacing: -0.01em;
+    font-family: 'Outfit', system-ui, sans-serif;
+    font-weight: 400;
   }
 
   h1 { @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl; }
@@ -175,9 +171,6 @@
     min-height: 100vh;
     min-height: 100dvh;
   }
-
-  .text-balance { text-wrap: balance; }
-  .text-pretty { text-wrap: pretty; }
 }
 
 /* ══════════════════════════════════════════════
@@ -481,7 +474,7 @@ img { max-width: 100%; height: auto; }
 .corner-mark { position: relative; }
 .corner-mark::before, .corner-mark::after { display: none; }
 .corner-mark-dark::before, .corner-mark-dark::after { display: none; }
-.tech-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+.tech-label { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.5; }
 .tech-label-blue { font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--primary)); }
 .tech-badge { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border: 1px solid hsl(var(--border)); background: hsl(var(--muted)); font-family: 'DM Mono', monospace; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: hsl(var(--foreground)); }
 .tech-badge-dark { border-color: hsl(220 12% 25%); background: hsl(220 15% 15%); color: hsl(30 15% 80%); }

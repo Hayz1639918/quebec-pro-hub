@@ -5,44 +5,62 @@ const HowItWorks = () => {
   const { t } = useTranslation();
 
   const steps = [
-    { icon: Search, num: "01", title: t("how_it_works.steps.find.title"), description: t("how_it_works.steps.find.description") },
-    { icon: FileText, num: "02", title: t("how_it_works.steps.sign.title"), description: t("how_it_works.steps.sign.description") },
-    { icon: CreditCard, num: "03", title: t("how_it_works.steps.pay.title"), description: t("how_it_works.steps.pay.description") },
+    { icon: Search,       num: "01", title: t("how_it_works.steps.find.title"),   description: t("how_it_works.steps.find.description") },
+    { icon: FileText,     num: "02", title: t("how_it_works.steps.sign.title"),   description: t("how_it_works.steps.sign.description") },
+    { icon: CreditCard,   num: "03", title: t("how_it_works.steps.pay.title"),    description: t("how_it_works.steps.pay.description") },
     { icon: CheckCircle2, num: "04", title: t("how_it_works.steps.review.title"), description: t("how_it_works.steps.review.description") },
   ];
 
   return (
-    <section id="how-it-works" className="bg-background py-20 sm:py-28">
+    <section id="how-it-works" className="relative py-16 sm:py-20 lg:py-24 overflow-hidden bg-background">
+
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 sm:mb-16 max-w-2xl">
-          <span className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
-            {t("how_it_works.eyebrow")}
+
+        {/* Section header — editorial style */}
+        <div className="mb-10 sm:mb-14 max-w-3xl">
+          <span className="font-mono text-[11px] text-foreground/30 uppercase tracking-[0.15em] block mb-4">
+            Comment ça marche
           </span>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-[-0.02em] text-foreground text-balance">
+          <h2 className="font-display text-foreground leading-[1.02] mb-4">
             {t("how_it_works.title")}
           </h2>
-          <p className="mt-4 text-lg text-muted-foreground leading-relaxed text-pretty">
+          <div className="h-px w-16 bg-foreground/12 mb-4" />
+          <p className="font-body text-lg text-foreground/40 leading-relaxed max-w-xl">
             {t("how_it_works.subtitle")}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          {steps.map(({ icon: Icon, num, title, description }) => (
-            <div
-              key={num}
-              className="group rounded-xl border border-border bg-card p-6 transition-all duration-200 hover:border-primary/30 hover:shadow-[var(--shadow-medium)]"
-            >
-              <div className="flex items-center justify-between">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-light text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">{num}</span>
+        {/* Steps — clean numbered list */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-0">
+          {steps.map((step, index) => {
+            const Icon = step.icon;
+            return (
+              <div
+                key={index}
+                className="relative py-8 xl:py-10 xl:px-8 border-t border-foreground/8 group hover:bg-foreground/[0.02] transition-colors duration-500"
+              >
+                {/* Number + icon row */}
+                <div className="flex items-start justify-between mb-8">
+                  <span className="font-mono text-[11px] text-foreground/20 tracking-[0.1em]">
+                    {step.num}
+                  </span>
+                  <div className="p-2.5 border border-foreground/8 bg-foreground/[0.02] group-hover:border-primary/20 group-hover:bg-primary/5 transition-all duration-500">
+                    <Icon className="h-5 w-5 text-foreground/25 group-hover:text-primary transition-colors duration-500" />
+                  </div>
+                </div>
+
+                {/* Content */}
+                <h3 className="font-ui font-medium text-lg text-foreground mb-3">
+                  {step.title}
+                </h3>
+                <p className="font-body text-sm text-foreground/35 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
-              <h3 className="mt-5 text-base font-semibold text-foreground">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{description}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
       </div>
     </section>
   );

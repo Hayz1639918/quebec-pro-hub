@@ -6,6 +6,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import FavoriteButton from "@/components/FavoriteButton";
 import { getUserLocation, sortByProximity, formatDistance, type Coordinates } from "@/lib/geolocation";
+import { HOME_SERVICES, HOME_REGIONS, findHomeOption } from "@/data/home-search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -190,10 +191,36 @@ const Professionals = () => {
     checkUser();
   }, [typeFilter]); // re-fetch when ?type= changes
 
+  // Apply home-search URL params (?service=&region=)
+  useEffect(() => {
+    const serviceParam = searchParams.get("service");
+    const regionParam = searchParams.get("region");
+    const serviceOpt = findHomeOption(HOME_SERVICES, serviceParam);
+    const regionOpt = findHomeOption(HOME_REGIONS, regionParam);
+
+    if (serviceOpt) {
+      const match = SERVICES.find(
+        (s) => s.toLowerCase() === serviceOpt.label.toLowerCase(),
+      );
+      setSelectedService(match || serviceOpt.label);
+    }
+    if (regionOpt) {
+      const match = REGIONS.find(
+        (r) =>
+          r.toLowerCase() === regionOpt.label.toLowerCase() ||
+          regionOpt.keywords.some((k) => r.toLowerCase().includes(k)),
+      );
+      setSelectedRegion(match || regionOpt.label);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, t]);
+
   // Reset filters when language changes to ensure translated values match
   useEffect(() => {
-    setSelectedService(SERVICES[0]);
-    setSelectedRegion(REGIONS[0]);
+    const serviceParam = searchParams.get("service");
+    const regionParam = searchParams.get("region");
+    if (!serviceParam) setSelectedService(SERVICES[0]);
+    if (!regionParam) setSelectedRegion(REGIONS[0]);
     setSelectedBudget(BUDGET_RANGES[0]);
     setSelectedAvailability(AVAILABILITY_OPTIONS[0]);
     setSelectedResponseTime(RESPONSE_TIME_OPTIONS[0]);
@@ -347,9 +374,12 @@ const Professionals = () => {
           return offered && !KNOWN_SERVICES_LOWER.some(s => offered.includes(s));
         });
       } else {
-        filtered = filtered.filter((pro) =>
-          pro.services_offered?.toLowerCase().includes(selectedService.toLowerCase())
-        );
+        const serviceOpt = findHomeOption(HOME_SERVICES, selectedService);
+        const keywords = serviceOpt?.keywords ?? [selectedService.toLowerCase()];
+        filtered = filtered.filter((pro) => {
+          const offered = pro.services_offered?.toLowerCase() || "";
+          return keywords.some((k) => offered.includes(k));
+        });
       }
     }
 
@@ -363,10 +393,13 @@ const Professionals = () => {
           return !KNOWN_REGIONS_LOWER.some(r => proRegion.includes(r) || proCity.includes(r));
         });
       } else {
-        filtered = filtered.filter((pro) =>
-          pro.city?.toLowerCase().includes(selectedRegion.toLowerCase()) ||
-          pro.region?.toLowerCase().includes(selectedRegion.toLowerCase())
-        );
+        const regionOpt = findHomeOption(HOME_REGIONS, selectedRegion);
+        const keywords = regionOpt?.keywords ?? [selectedRegion.toLowerCase()];
+        filtered = filtered.filter((pro) => {
+          const proRegion = pro.region?.toLowerCase() || "";
+          const proCity = pro.city?.toLowerCase() || "";
+          return keywords.some((k) => proRegion.includes(k) || proCity.includes(k));
+        });
       }
     }
 

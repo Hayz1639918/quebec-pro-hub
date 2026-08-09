@@ -8,7 +8,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedProRoute from "@/components/ProtectedProRoute";
 import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
-import IntroExperience from "@/components/IntroExperience";
 import BottomNav from "@/components/BottomNav";
 
 // Lazy load all pages for code splitting
@@ -74,7 +73,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <IntroExperience />
         <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
