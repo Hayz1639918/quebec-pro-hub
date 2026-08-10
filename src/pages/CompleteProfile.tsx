@@ -210,12 +210,9 @@ const CompleteProfile = () => {
       }
 
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('certifications')
-        .getPublicUrl(filePath);
-
-      return publicUrl;
+      // Bucket privé : conserver uniquement le chemin de l'objet. Les écrans
+      // autorisés génèrent une URL signée au moment de la consultation.
+      return data.path;
     } catch (error: unknown) {
       console.error('Error uploading RBQ certification:', error);
       toast({
@@ -580,4 +577,3 @@ const CompleteProfile = () => {
 };
 
 export default CompleteProfile;
-

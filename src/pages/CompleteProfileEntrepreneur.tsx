@@ -118,7 +118,7 @@ const CompleteProfileEntrepreneur = () => {
       .from("certifications")
       .upload(filePath, file, { cacheControl: "3600", upsert: false });
     if (error) throw error;
-    return supabase.storage.from("certifications").getPublicUrl(filePath).data.publicUrl;
+    return filePath;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

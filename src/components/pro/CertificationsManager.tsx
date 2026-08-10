@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Award, Plus, Trash2, Upload, ExternalLink, AlertTriangle } from "lucide-react";
+import { openSignedDocument } from "@/lib/storage";
 
 interface CertificationsManagerProps {
   professionalId: string;
@@ -137,10 +138,9 @@ const CertificationsManager = ({ professionalId }: CertificationsManagerProps) =
         .upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from("certifications").getPublicUrl(path);
       const { error: updateError } = await supabase
         .from("professional_certifications")
-        .update({ certificate_url: publicUrl })
+        .update({ certificate_url: path })
         .eq("id", certId);
       if (updateError) throw updateError;
 
@@ -237,15 +237,22 @@ const CertificationsManager = ({ professionalId }: CertificationsManagerProps) =
                     </div>
 
                     {cert.certificate_url && (
-                      <a
-                        href={cert.certificate_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        type="button"
+                        onClick={() => openSignedDocument(
+                          "certifications",
+                          cert.certificate_url,
+                          () => toast({
+                            variant: "destructive",
+                            title: "Document indisponible",
+                            description: "Impossible d'ouvrir cette preuve.",
+                          }),
+                        )}
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
                         <ExternalLink className="h-3 w-3" />
                         Voir la preuve
-                      </a>
+                      </button>
                     )}
                   </div>
 
