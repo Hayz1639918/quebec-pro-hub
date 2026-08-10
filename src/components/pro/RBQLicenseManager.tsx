@@ -146,8 +146,7 @@ const RBQLicenseManager = ({ professionalId }: RBQLicenseManagerProps) => {
       const { error: uploadError } = await supabase.storage.from("certifications").upload(path, file, { upsert: true });
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage.from("certifications").getPublicUrl(path);
-      const { error: updateError } = await supabase.from("rbq_licenses").update({ certificate_url: publicUrl }).eq("id", licenseId);
+      const { error: updateError } = await supabase.from("rbq_licenses").update({ certificate_url: path }).eq("id", licenseId);
       if (updateError) throw updateError;
 
       await fetchLicenses();

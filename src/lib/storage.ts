@@ -28,10 +28,17 @@ export function extractStoragePath(bucket: string, stored: string): string {
   return stored.split("?")[0];
 }
 
-/** Vrai si la valeur ressemble à une URL de stockage (et non à du texte libre). */
+/**
+ * Vrai si la valeur ressemble à une référence de stockage (URL historique ou
+ * nouveau chemin d'objet `<uuid>/<fichier>`) et non à du texte libre.
+ */
 export function isStorageUrl(value: string | null | undefined): boolean {
   if (!value) return false;
-  return /\/storage\/v1\/object\//.test(value) || /^https?:\/\//.test(value);
+  return (
+    /\/storage\/v1\/object\//.test(value)
+    || /^https?:\/\//.test(value)
+    || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\/.+/i.test(value)
+  );
 }
 
 /**

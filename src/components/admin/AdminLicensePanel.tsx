@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, ShieldCheck, ShieldAlert, ShieldX, ExternalLink, Loader2 } from "lucide-react";
+import { openSignedDocument } from "@/lib/storage";
 
 type LicenseStatus = "pending_verification" | "valid" | "expired" | "revoked";
 
@@ -125,7 +126,15 @@ const AdminLicensePanel = ({ professionalId }: { professionalId: string }) => {
               variant="link"
               size="sm"
               className="px-0 h-auto"
-              onClick={() => window.open(license.certificate_url!, "_blank")}
+              onClick={() => openSignedDocument(
+                "certifications",
+                license.certificate_url,
+                () => toast({
+                  variant: "destructive",
+                  title: "Document indisponible",
+                  description: "Impossible d'ouvrir ce certificat.",
+                }),
+              )}
             >
               <ExternalLink className="h-4 w-4 mr-1" />
               Voir le certificat

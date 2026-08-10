@@ -686,14 +686,10 @@ const ProfessionalProfile = () => {
                             </div>
                           </div>
                           {cert.certificate_url && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="shrink-0"
-                              onClick={() => window.open(cert.certificate_url!, '_blank')}
-                            >
-                              Voir
-                            </Button>
+                            <span className="shrink-0 flex items-center gap-1.5 text-sm text-blue-700">
+                              <CheckCircle className="h-4 w-4" />
+                              Document fourni
+                            </span>
                           )}
                         </div>
                       );
@@ -993,4 +989,3 @@ const ProfessionalProfile = () => {
 };
 
 export default ProfessionalProfile;
-
