@@ -1,4 +1,5 @@
 -- Performance hardening for the production database.
+-- The filename version matches the migration recorded in production.
 --
 -- 1. Add the covering indexes reported by the Supabase advisor for foreign
 --    keys. PostgreSQL does not create these indexes automatically.
