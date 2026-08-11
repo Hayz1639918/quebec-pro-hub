@@ -52,6 +52,151 @@ END $$;
 
 DO $$
 BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'contract_templates'
+      AND policyname = 'Professionals can manage contract templates'
+  ) THEN
+    RAISE EXCEPTION 'KO: professionals can still manage templates they do not own';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'contract_templates'
+      AND policyname = 'Users can delete their own custom templates'
+      AND cmd = 'DELETE'
+      AND COALESCE(qual, '') ILIKE '%created_by%auth.uid%'
+  ) THEN
+    RAISE EXCEPTION 'KO: template deletion policy is not owner-scoped';
+  END IF;
+
+  IF pg_get_functiondef(
+       'public.delete_custom_template(uuid)'::regprocedure
+     ) NOT ILIKE '%created_by = current_user_id%'
+     OR pg_get_functiondef(
+       'public.delete_custom_template(uuid)'::regprocedure
+     ) ILIKE '%created_by IS NULL%'
+  THEN
+    RAISE EXCEPTION 'KO: template deletion RPC accepts unowned templates';
+  END IF;
+
+  RAISE NOTICE 'OK: custom template deletion is owner-scoped';
+END $$;
+
+DO $$
+BEGIN
+  IF has_table_privilege('authenticated', 'public.proposals', 'DELETE')
+     OR EXISTS (
+       SELECT 1
+       FROM pg_policies
+       WHERE schemaname = 'public'
+         AND tablename = 'proposals'
+         AND policyname IN (
+           'Clients can update proposals on own projects',
+           'Clients can delete proposals on own projects'
+         )
+     ) THEN
+    RAISE EXCEPTION 'KO: clients can directly delete or decide proposals';
+  END IF;
+
+  IF pg_get_functiondef(
+       'public.reject_proposal(uuid)'::regprocedure
+     ) ILIKE '%DELETE FROM public.proposals%'
+     OR pg_get_functiondef(
+       'public.reject_proposal(uuid)'::regprocedure
+     ) NOT ILIKE '%status = ''rejected''%'
+  THEN
+    RAISE EXCEPTION 'KO: proposal rejection does not preserve audit history';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgrelid = 'public.proposals'::regclass
+      AND tgname = 'trigger_guard_proposal_status_mutations'
+      AND NOT tgisinternal
+  ) THEN
+    RAISE EXCEPTION 'KO: direct proposal status mutation guard is missing';
+  END IF;
+
+  RAISE NOTICE 'OK: proposal decisions are server-managed and non-destructive';
+END $$;
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'project_invitations'
+      AND policyname IN (
+        'Clients manage their own invitations',
+        'Professionals can respond to invitations'
+      )
+  ) THEN
+    RAISE EXCEPTION 'KO: invitation rows remain directly mutable';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'project_invitations'
+      AND policyname = 'Clients can create invitations for own projects'
+      AND cmd = 'INSERT'
+      AND COALESCE(with_check, '') ILIKE '%projects%client_id%'
+  ) THEN
+    RAISE EXCEPTION 'KO: invitation creation is not project-owner scoped';
+  END IF;
+
+  IF has_column_privilege(
+       'authenticated', 'public.project_invitations', 'responded_at', 'INSERT'
+     ) OR has_column_privilege(
+       'authenticated', 'public.project_invitations', 'project_id', 'UPDATE'
+     ) THEN
+    RAISE EXCEPTION 'KO: invitation audit or ownership fields are browser-writable';
+  END IF;
+
+  IF pg_get_functiondef(
+       'public.respond_to_invitation(uuid,text)'::regprocedure
+     ) NOT ILIKE '%FOR UPDATE%'
+     OR pg_get_functiondef(
+       'public.respond_to_invitation(uuid,text)'::regprocedure
+     ) NOT ILIKE '%professional_id IS DISTINCT FROM caller_id%'
+  THEN
+    RAISE EXCEPTION 'KO: invitation response RPC lacks actor or concurrency checks';
+  END IF;
+
+  RAISE NOTICE 'OK: invitations are owner-created and RPC-responded';
+END $$;
+
+DO $$
+BEGIN
+  IF has_column_privilege(
+       'authenticated', 'public.contractor_payments', 'amount', 'UPDATE'
+     ) OR has_column_privilege(
+       'authenticated', 'public.contractor_payments', 'client_id', 'UPDATE'
+     ) OR NOT has_column_privilege(
+       'authenticated', 'public.contractor_payments', 'status', 'UPDATE'
+     ) THEN
+    RAISE EXCEPTION 'KO: payment dispute update privileges are too broad or missing';
+  END IF;
+
+  IF has_table_privilege('authenticated', 'public.invoices', 'INSERT')
+     OR has_table_privilege('authenticated', 'public.invoices', 'UPDATE')
+     OR has_table_privilege('authenticated', 'public.invoices', 'DELETE') THEN
+    RAISE EXCEPTION 'KO: browser clients can forge or rewrite invoices';
+  END IF;
+
+  RAISE NOTICE 'OK: payment disputes are column-scoped and invoices are trusted-write only';
+END $$;
+
+DO $$
+BEGIN
   IF has_table_privilege('anon', 'public.contract_audit_trail', 'INSERT')
      OR has_table_privilege('authenticated', 'public.contract_audit_trail', 'INSERT')
      OR EXISTS (
@@ -201,12 +346,37 @@ BEGIN
     RAISE EXCEPTION 'KO: actor-checked admin verification RPCs are unavailable';
   END IF;
 
+  IF pg_get_functiondef(
+       'public.handle_new_user_signup()'::regprocedure
+     ) NOT ILIKE '%SET search_path TO ''''%'
+     OR pg_get_functiondef(
+       'public.handle_new_user_signup()'::regprocedure
+     ) ILIKE '%is_admin%raw_user_meta_data%'
+  THEN
+    RAISE EXCEPTION 'KO: signup trigger trusts unvalidated privileged metadata';
+  END IF;
+
+  IF to_regprocedure('public.admin_delete_rejected_account(uuid)') IS NOT NULL THEN
+    IF has_function_privilege(
+         'authenticated', 'public.admin_delete_rejected_account(uuid)', 'EXECUTE'
+       ) THEN
+      RAISE EXCEPTION 'KO: permanent account deletion remains browser-callable';
+    END IF;
+  END IF;
+
   IF EXISTS (
     SELECT 1
     FROM pg_proc AS procedure
     JOIN pg_namespace AS namespace ON namespace.oid = procedure.pronamespace
     WHERE namespace.nspname = 'public'
       AND procedure.prosecdef
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend AS dependency
+        WHERE dependency.classid = 'pg_proc'::regclass
+          AND dependency.objid = procedure.oid
+          AND dependency.deptype = 'e'
+      )
       AND (
         procedure.proconfig IS NULL
         OR NOT EXISTS (

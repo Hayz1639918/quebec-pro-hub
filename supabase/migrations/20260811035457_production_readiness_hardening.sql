@@ -155,10 +155,28 @@ CREATE POLICY "authenticated_read_profiles"
   );
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
-ALTER POLICY "Users can update own profile"
-  ON public.profiles TO authenticated;
-ALTER POLICY "Admins can update any profile"
-  ON public.profiles TO authenticated;
+DO $$
+DECLARE
+  policy_record record;
+BEGIN
+  FOR policy_record IN
+    SELECT policyname
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'profiles'
+      AND policyname IN (
+        'Users can update own profile',
+        'Admins can update any profile',
+        'Admins can update verification status'
+      )
+  LOOP
+    EXECUTE format(
+      'ALTER POLICY %I ON public.profiles TO authenticated',
+      policy_record.policyname
+    );
+  END LOOP;
+END;
+$$;
 
 REVOKE SELECT, INSERT, UPDATE, DELETE ON public.profiles FROM anon;
 REVOKE SELECT, INSERT, UPDATE ON public.profiles FROM authenticated;
@@ -257,6 +275,80 @@ CREATE TRIGGER trigger_guard_profile_privileged_fields
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW
   EXECUTE FUNCTION public.guard_profile_privileged_fields();
+
+-- Create the initial profile from a deliberately small, validated subset of
+-- signup metadata. Metadata selects the onboarding path but never grants admin
+-- or verification privileges.
+CREATE OR REPLACE FUNCTION public.handle_new_user_signup()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  requested_user_type text := NEW.raw_user_meta_data->>'user_type';
+  safe_user_type public.user_type := CASE
+    WHEN requested_user_type = 'professional'
+      THEN 'professional'::public.user_type
+    ELSE 'client'::public.user_type
+  END;
+  safe_professional_type text := CASE
+    WHEN requested_user_type = 'professional'
+      AND NEW.raw_user_meta_data->>'professional_type'
+        IN ('entrepreneur', 'trade_professional')
+      THEN NEW.raw_user_meta_data->>'professional_type'
+    ELSE NULL
+  END;
+  safe_full_name text := LEFT(
+    COALESCE(NULLIF(BTRIM(NEW.raw_user_meta_data->>'full_name'), ''), 'Utilisateur'),
+    160
+  );
+BEGIN
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    user_type,
+    professional_type,
+    company_type,
+    rbq_subcat,
+    trade_specialty,
+    profile_completed,
+    created_at,
+    updated_at
+  ) VALUES (
+    NEW.id,
+    NEW.email,
+    safe_full_name,
+    safe_user_type,
+    safe_professional_type,
+    CASE WHEN safe_user_type = 'professional'::public.user_type
+      THEN LEFT(NEW.raw_user_meta_data->>'company_type', 120)
+      ELSE NULL
+    END,
+    CASE WHEN safe_user_type = 'professional'::public.user_type
+      THEN LEFT(NEW.raw_user_meta_data->>'rbq_subcat', 200)
+      ELSE NULL
+    END,
+    CASE WHEN safe_user_type = 'professional'::public.user_type
+      THEN LEFT(NEW.raw_user_meta_data->>'trade_specialty', 200)
+      ELSE NULL
+    END,
+    safe_user_type = 'client'::public.user_type,
+    statement_timestamp(),
+    statement_timestamp()
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user_signup();
 
 -- Public certification pages receive a safe projection rather than raw
 -- certificate numbers and private storage paths.
@@ -492,6 +584,386 @@ $$;
 -- -------------------------------------------------------------------------
 -- 4. Contract audit trail and server-authoritative signatures
 -- -------------------------------------------------------------------------
+
+-- A legacy FOR ALL policy and delete RPC allowed professionals to delete
+-- templates they did not own, including legacy rows with NULL ownership.
+DROP POLICY IF EXISTS "Professionals can manage contract templates"
+  ON public.contract_templates;
+DROP POLICY IF EXISTS "Users can delete their own custom templates"
+  ON public.contract_templates;
+DROP POLICY IF EXISTS "Professionals can create own contract templates"
+  ON public.contract_templates;
+DROP POLICY IF EXISTS "Professionals can update own contract templates"
+  ON public.contract_templates;
+
+CREATE POLICY "Professionals can create own contract templates"
+  ON public.contract_templates
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    created_by = (SELECT auth.uid())
+    AND EXISTS (
+      SELECT 1
+      FROM public.profiles AS profile
+      WHERE profile.id = (SELECT auth.uid())
+        AND profile.user_type = 'professional'::public.user_type
+    )
+  );
+
+CREATE POLICY "Professionals can update own contract templates"
+  ON public.contract_templates
+  FOR UPDATE
+  TO authenticated
+  USING (created_by = (SELECT auth.uid()))
+  WITH CHECK (created_by = (SELECT auth.uid()));
+
+CREATE POLICY "Users can delete their own custom templates"
+  ON public.contract_templates
+  FOR DELETE
+  TO authenticated
+  USING (created_by = (SELECT auth.uid()));
+
+CREATE OR REPLACE FUNCTION public.delete_custom_template(template_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  current_user_id uuid := (SELECT auth.uid());
+  deleted_template_id uuid;
+BEGIN
+  IF current_user_id IS NULL THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'User must be authenticated'
+    );
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.profiles AS profile
+    WHERE profile.id = current_user_id
+      AND profile.user_type = 'professional'::public.user_type
+  ) THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Only professionals can delete custom templates'
+    );
+  END IF;
+
+  DELETE FROM public.contract_templates
+  WHERE id = template_id
+    AND created_by = current_user_id
+  RETURNING id INTO deleted_template_id;
+
+  IF deleted_template_id IS NULL THEN
+    RETURN jsonb_build_object(
+      'success', false,
+      'error', 'Template not found or not owned by the current user'
+    );
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', true,
+    'deleted_id', deleted_template_id
+  );
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.delete_custom_template(uuid)
+  FROM PUBLIC, anon, authenticated;
+
+-- Proposal decisions must preserve the audit history and may only be made by
+-- the client who owns the project. Browser clients cannot change status or
+-- delete proposal rows directly.
+DROP POLICY IF EXISTS "Clients can update proposals on own projects"
+  ON public.proposals;
+DROP POLICY IF EXISTS "Clients can delete proposals on own projects"
+  ON public.proposals;
+REVOKE DELETE ON public.proposals FROM anon, authenticated;
+
+CREATE OR REPLACE FUNCTION public.guard_proposal_status_mutations()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF current_user IN ('anon', 'authenticated') THEN
+    IF TG_OP = 'INSERT' AND NEW.status IS DISTINCT FROM 'pending' THEN
+      RAISE EXCEPTION 'Proposal status is server-managed';
+    END IF;
+
+    IF TG_OP = 'UPDATE' AND NEW.status IS DISTINCT FROM OLD.status THEN
+      RAISE EXCEPTION 'Proposal status is server-managed';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trigger_guard_proposal_status_mutations
+  ON public.proposals;
+CREATE TRIGGER trigger_guard_proposal_status_mutations
+  BEFORE INSERT OR UPDATE ON public.proposals
+  FOR EACH ROW
+  EXECUTE FUNCTION public.guard_proposal_status_mutations();
+
+CREATE OR REPLACE FUNCTION public.accept_proposal(proposal_uuid uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  caller_id uuid := (SELECT auth.uid());
+  proposal_record public.proposals%ROWTYPE;
+  project_record public.projects%ROWTYPE;
+BEGIN
+  IF caller_id IS NULL THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT * INTO proposal_record
+  FROM public.proposals
+  WHERE id = proposal_uuid
+  FOR UPDATE;
+
+  IF NOT FOUND OR proposal_record.status IS DISTINCT FROM 'pending' THEN
+    RAISE EXCEPTION 'Proposal not found or already processed';
+  END IF;
+
+  SELECT * INTO project_record
+  FROM public.projects
+  WHERE id = proposal_record.project_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR project_record.client_id IS DISTINCT FROM caller_id THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  IF project_record.assigned_professional_id IS NOT NULL THEN
+    RAISE EXCEPTION 'Project already has an assigned professional';
+  END IF;
+
+  UPDATE public.proposals
+  SET status = 'accepted', updated_at = statement_timestamp()
+  WHERE id = proposal_uuid
+    AND status = 'pending';
+
+  WITH rejected AS (
+    UPDATE public.proposals
+    SET status = 'rejected', updated_at = statement_timestamp()
+    WHERE project_id = proposal_record.project_id
+      AND id <> proposal_uuid
+      AND status = 'pending'
+    RETURNING professional_id
+  )
+  INSERT INTO public.notifications (
+    user_id, type, title, message, related_project_id, action_url
+  )
+  SELECT
+    rejected.professional_id,
+    'proposal_rejected',
+    'Projet attribué à un autre professionnel',
+    'Le projet "' || COALESCE(project_record.title, 'Projet') ||
+      '" a été attribué à un autre professionnel.',
+    proposal_record.project_id,
+    '/projects'
+  FROM rejected;
+
+  UPDATE public.projects
+  SET assigned_professional_id = proposal_record.professional_id,
+      status = 'in_progress',
+      updated_at = statement_timestamp()
+  WHERE id = proposal_record.project_id;
+
+  INSERT INTO public.notifications (
+    user_id, type, title, message, related_project_id, action_url
+  ) VALUES (
+    proposal_record.professional_id,
+    'proposal_accepted',
+    'Proposition acceptée',
+    'Votre proposition pour "' || COALESCE(project_record.title, 'Projet') ||
+      '" a été acceptée.',
+    proposal_record.project_id,
+    '/pro/my-projects'
+  );
+
+  RETURN true;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.reject_proposal(proposal_uuid uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  caller_id uuid := (SELECT auth.uid());
+  proposal_record public.proposals%ROWTYPE;
+  project_record public.projects%ROWTYPE;
+BEGIN
+  IF caller_id IS NULL THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  SELECT * INTO proposal_record
+  FROM public.proposals
+  WHERE id = proposal_uuid
+  FOR UPDATE;
+
+  IF NOT FOUND OR proposal_record.status IS DISTINCT FROM 'pending' THEN
+    RAISE EXCEPTION 'Proposal not found or already processed';
+  END IF;
+
+  SELECT * INTO project_record
+  FROM public.projects
+  WHERE id = proposal_record.project_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR project_record.client_id IS DISTINCT FROM caller_id THEN
+    RAISE EXCEPTION 'Not authorized';
+  END IF;
+
+  UPDATE public.proposals
+  SET status = 'rejected', updated_at = statement_timestamp()
+  WHERE id = proposal_uuid
+    AND status = 'pending';
+
+  INSERT INTO public.notifications (
+    user_id, type, title, message, related_project_id, action_url
+  ) VALUES (
+    proposal_record.professional_id,
+    'proposal_rejected',
+    'Proposition non retenue',
+    'Votre proposition pour "' || COALESCE(project_record.title, 'Projet') ||
+      '" n''a pas été retenue.',
+    proposal_record.project_id,
+    '/projects'
+  );
+
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.accept_proposal(uuid)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.reject_proposal(uuid)
+  FROM PUBLIC, anon, authenticated;
+
+-- Invitations are created by the client who owns the project, and responses
+-- are processed only by the actor-checking RPC. The legacy FOR ALL/UPDATE
+-- policies allowed callers to rewrite project, participant and audit fields.
+DROP POLICY IF EXISTS "Clients manage their own invitations"
+  ON public.project_invitations;
+DROP POLICY IF EXISTS "Clients can read own invitations"
+  ON public.project_invitations;
+DROP POLICY IF EXISTS "Clients can create invitations for own projects"
+  ON public.project_invitations;
+DROP POLICY IF EXISTS "Professionals can respond to invitations"
+  ON public.project_invitations;
+
+CREATE POLICY "Clients can read own invitations"
+  ON public.project_invitations
+  FOR SELECT
+  TO authenticated
+  USING (client_id = (SELECT auth.uid()));
+
+CREATE POLICY "Clients can create invitations for own projects"
+  ON public.project_invitations
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    client_id = (SELECT auth.uid())
+    AND status = 'pending'
+    AND responded_at IS NULL
+    AND EXISTS (
+      SELECT 1
+      FROM public.projects AS project
+      WHERE project.id = project_id
+        AND project.client_id = (SELECT auth.uid())
+    )
+  );
+
+REVOKE INSERT, UPDATE, DELETE ON public.project_invitations
+  FROM anon, authenticated;
+GRANT INSERT (project_id, client_id, professional_id, message, status)
+  ON public.project_invitations TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.respond_to_invitation(
+  p_invitation_id uuid,
+  p_response text
+)
+RETURNS public.project_invitations
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  caller_id uuid := (SELECT auth.uid());
+  invitation_record public.project_invitations%ROWTYPE;
+BEGIN
+  IF caller_id IS NULL OR p_response NOT IN ('accepted', 'declined') THEN
+    RAISE EXCEPTION 'Not authorized or invalid response';
+  END IF;
+
+  SELECT * INTO invitation_record
+  FROM public.project_invitations
+  WHERE id = p_invitation_id
+  FOR UPDATE;
+
+  IF NOT FOUND
+     OR invitation_record.professional_id IS DISTINCT FROM caller_id
+     OR invitation_record.status IS DISTINCT FROM 'pending' THEN
+    RAISE EXCEPTION 'Invitation not found or not available';
+  END IF;
+
+  UPDATE public.project_invitations
+  SET status = p_response,
+      responded_at = statement_timestamp(),
+      updated_at = statement_timestamp()
+  WHERE id = p_invitation_id
+    AND status = 'pending'
+  RETURNING * INTO invitation_record;
+
+  RETURN invitation_record;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.respond_to_invitation(uuid, text)
+  FROM PUBLIC, anon, authenticated;
+
+-- Financial records are created by trusted triggers/backends. A contractor
+-- may dispute an escrow payment, but may not rewrite its amount, parties or
+-- settlement metadata through a broad UPDATE policy.
+DROP POLICY IF EXISTS "Contractors can update their own payments (dispute)"
+  ON public.contractor_payments;
+DROP POLICY IF EXISTS "Contractors can dispute escrow payments"
+  ON public.contractor_payments;
+CREATE POLICY "Contractors can dispute escrow payments"
+  ON public.contractor_payments
+  FOR UPDATE
+  TO authenticated
+  USING (
+    contractor_id = (SELECT auth.uid())
+    AND status = 'in_escrow'
+  )
+  WITH CHECK (
+    contractor_id = (SELECT auth.uid())
+    AND status = 'disputed'
+    AND dispute_reason IS NOT NULL
+  );
+
+REVOKE UPDATE ON public.contractor_payments FROM anon, authenticated;
+GRANT UPDATE (status, dispute_reason, dispute_details)
+  ON public.contractor_payments TO authenticated;
+
+DROP POLICY IF EXISTS "Professionals can create invoices" ON public.invoices;
+DROP POLICY IF EXISTS "Issuers can update their invoices" ON public.invoices;
+REVOKE INSERT, UPDATE, DELETE ON public.invoices FROM anon, authenticated;
 
 DROP POLICY IF EXISTS "System can insert audit trail" ON public.contract_audit_trail;
 DROP POLICY IF EXISTS "System can insert audit trail entries" ON public.contract_audit_trail;
@@ -1297,7 +1769,6 @@ GRANT EXECUTE ON FUNCTION public.can_access_project(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.accept_contract_proposal(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.accept_proposal(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_allow_resubmission(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_delete_rejected_account(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_reject_rbq(uuid, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_verify_rbq(uuid, text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.approve_milestone(uuid) TO authenticated;
