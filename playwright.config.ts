@@ -13,7 +13,8 @@ import fs from "node:fs";
  * (ex. runner cloud : /opt/pw-browsers/chromium), l'exécutable est réutilisé
  * au lieu d'être retéléchargé.
  */
-const PREINSTALLED_CHROMIUM = "/opt/pw-browsers/chromium";
+const PREINSTALLED_CHROMIUM = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+  || "/opt/pw-browsers/chromium";
 const executablePath = fs.existsSync(PREINSTALLED_CHROMIUM) ? PREINSTALLED_CHROMIUM : undefined;
 
 // Environnement Supabase factice : l'URL pointe vers un domaine inexistant,

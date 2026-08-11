@@ -66,7 +66,7 @@ export const DisputeForm = ({ contractId, userId, onSubmitted }: DisputeFormProp
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: error?.message || "Impossible de soumettre le litige.",
+        description: error instanceof Error ? error.message : "Impossible de soumettre le litige.",
       });
     } finally {
       setSubmitting(false);

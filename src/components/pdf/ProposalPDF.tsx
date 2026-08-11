@@ -399,7 +399,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </View>
           <View style={styles.fieldRow}>
             <Text style={styles.fieldLabel}>N° de licence :</Text>
-            <Text style={styles.fieldValueMedium}>{proposal.rbq_license_number || professional?.rbq_license || ''}</Text>
+            <Text style={styles.fieldValueMedium}>{proposal.rbq_license_number || professional?.rbq_number || ''}</Text>
             <Text style={styles.fieldLabel}>Valide jusqu'au :</Text>
             <Text style={styles.fieldValue}>{formatDate(proposal.valid_until)}</Text>
           </View>
@@ -653,7 +653,7 @@ export const ProposalPDF: React.FC<ProposalPDFProps> = ({
                   <Text style={[styles.tableCell, { flex: 2 }]}>{ref.project_name || `Projet ${index + 1}`}</Text>
                   <Text style={styles.tableCell}>{ref.client_name}</Text>
                   <Text style={styles.tableCell}>{ref.year || '-'}</Text>
-                  <Text style={styles.tableCellLast}>{ref.value ? formatCurrency(ref.value) : '-'}</Text>
+                  <Text style={styles.tableCellLast}>{ref.value ? formatCurrency(Number(ref.value)) : '-'}</Text>
                 </View>
               ))}
             </View>

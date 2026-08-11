@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, MessageSquare, FileText, CheckCircle, X, Trash2, Settings2 } from "lucide-react";
@@ -30,6 +31,18 @@ interface Notification {
     professional_id?: string;
   } | null;
 }
+
+const normalizeMetadata = (value: unknown): Notification['metadata'] => {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const metadata = value as Record<string, unknown>;
+  const readString = (key: string) => typeof metadata[key] === 'string' ? metadata[key] as string : undefined;
+  return {
+    proposal_id: readString('proposal_id'),
+    project_id: readString('project_id'),
+    conversation_id: readString('conversation_id'),
+    professional_id: readString('professional_id'),
+  };
+};
 
 const Notifications = () => {
   const { t, i18n } = useTranslation();
@@ -161,11 +174,8 @@ const Notifications = () => {
   };
 
   const fetchPrefs = async (uid: string) => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('notification_preferences')
-      .eq('id', uid)
-      .single();
+    const profile = await getMyProfile();
+    const data = profile?.id === uid ? profile : null;
     if (data?.notification_preferences && typeof data.notification_preferences === 'object') {
       setPrefs(prev => ({ ...prev, ...(data.notification_preferences as Partial<NotifPrefs>) }));
     }
@@ -194,7 +204,17 @@ const Notifications = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotifications(data || []);
+      setNotifications((data || []).map((notification) => ({
+        id: notification.id,
+        user_id: notification.user_id,
+        type: notification.type,
+        title: notification.title,
+        message: notification.message,
+        action_url: notification.action_url,
+        is_read: notification.is_read ?? false,
+        created_at: notification.created_at ?? new Date(0).toISOString(),
+        metadata: normalizeMetadata(notification.metadata),
+      })));
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
@@ -529,4 +549,3 @@ const Notifications = () => {
 };
 
 export default Notifications;
-

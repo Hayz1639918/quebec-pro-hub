@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import RouteLoader from "@/components/RouteLoader";
 
 /**
@@ -36,22 +37,10 @@ export default function ProtectedProRoute() {
           return;
         }
 
-        // Fast path: trust user_metadata when present
-        const userTypeFromMeta = session.user.user_metadata?.user_type;
-        if (userTypeFromMeta === "professional") {
-          setChecking(false);
-          return;
-        }
-
-        // Fallback: verify against profiles table (handles stale/missing metadata)
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("user_type")
-          .eq("id", session.user.id)
-          .single();
+        const profile = await getMyProfile();
         if (cancelled) return;
 
-        if (!profile || profile.user_type !== "professional") {
+        if (!profile || profile.id !== session.user.id || profile.user_type !== "professional") {
           navigate("/dashboard", { replace: true });
           return;
         }

@@ -218,7 +218,7 @@ const CompleteProfile = () => {
       toast({
         variant: "destructive",
         title: "Erreur d'upload",
-        description: error?.message || "Erreur lors du téléchargement du fichier",
+        description: error instanceof Error ? error.message : "Erreur lors du téléchargement du fichier",
       });
       return null;
     }

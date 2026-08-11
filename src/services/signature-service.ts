@@ -1,65 +1,48 @@
-// Service de signature électronique maison - Alternative gratuite à DocuSign
 import { supabase } from '@/integrations/supabase/client';
+import type { Contract } from '@/types/contracts';
+import type { Database, Json } from '@/integrations/supabase/types';
+import { normalizeContract } from '@/lib/contract-mapper';
 
-export interface SignatureData {
+export interface SignatureSubmission {
   signature_image: string;
-  signed_at: string;
-  ip_address: string;
-  user_agent: string;
   coordinates: { x: number; y: number };
-  // Nouveaux champs pour sécurité
-  document_hash: string;      // Hash SHA-256 du document
-  signature_hash: string;      // Hash de la signature
-  verification_code: string;   // Code de vérification unique
-  geolocation?: {             // Position GPS (optionnel)
+  signature_method: 'draw' | 'type';
+  geolocation?: {
     latitude: number;
     longitude: number;
     accuracy: number;
   };
 }
 
-export interface AuditTrail {
-  event_type: 'created' | 'viewed' | 'signed' | 'verified' | 'downloaded';
-  user_id: string;
-  user_name: string;
-  created_at: string;
+export interface SignatureData extends SignatureSubmission {
+  signed_at: string;
   ip_address: string;
   user_agent: string;
-  details?: Record<string, unknown>;
+  document_hash: string;
+  signature_hash: string;
+  verification_code: string;
+}
+
+export interface AuditTrail {
+  id: string;
+  event_type: string;
+  user_name: string;
+  created_at: string;
+  ip_address: string | null;
+  details: Record<string, unknown>;
+}
+
+interface SigningResponse {
+  success?: boolean;
+  message?: string;
+  contract?: Database['public']['Tables']['contracts']['Row'];
+  signatureData?: SignatureData;
+  signerRole?: 'client' | 'professional';
+  emailSent?: boolean;
 }
 
 class SignatureService {
-  // Générer un hash SHA-256 d'un document
-  async generateDocumentHash(content: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(content);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Générer un code de vérification unique
-  generateVerificationCode(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 15);
-    return `BTN-${timestamp}-${random}`.toUpperCase();
-  }
-
-  // Obtenir l'adresse IP du client via API locale (proxy Vite vers serveur dev)
-  async getClientIP(): Promise<string> {
-    try {
-      const response = await fetch('/api/v1/client-ip');
-      if (!response.ok) throw new Error('Failed to fetch client IP');
-      const data = await response.json();
-      return data.ip || 'unknown';
-    } catch (error) {
-      console.error('Error getting IP:', error);
-      return 'unknown';
-    }
-  }
-
-  // Obtenir la géolocalisation (avec permission)
-  async getGeolocation(): Promise<SignatureData['geolocation'] | undefined> {
+  async getGeolocation(): Promise<SignatureSubmission['geolocation'] | undefined> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
         resolve(undefined);
@@ -67,154 +50,86 @@ class SignatureService {
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
-          resolve({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy,
-          });
-        },
+        (position) => resolve({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        }),
         () => resolve(undefined),
-        { timeout: 5000 }
+        { timeout: 5000 },
       );
     });
   }
 
-  // Créer une signature complète avec toutes les données
-  async createSignature(
+  async createSignatureSubmission(
     signatureImage: string,
-    contractContent: string,
-    coordinates: { x: number; y: number }
-  ): Promise<SignatureData> {
-    const [ipAddress, geolocation, documentHash] = await Promise.all([
-      this.getClientIP(),
-      this.getGeolocation(),
-      this.generateDocumentHash(contractContent),
-    ]);
-
-    const signatureHash = await this.generateDocumentHash(signatureImage);
-    const verificationCode = this.generateVerificationCode();
-
+    coordinates: { x: number; y: number },
+    signatureMethod: SignatureSubmission['signature_method'],
+  ): Promise<SignatureSubmission> {
     return {
       signature_image: signatureImage,
-      signed_at: new Date().toISOString(),
-      ip_address: ipAddress,
-      user_agent: navigator.userAgent,
       coordinates,
-      document_hash: documentHash,
-      signature_hash: signatureHash,
-      verification_code: verificationCode,
-      geolocation,
+      signature_method: signatureMethod,
+      geolocation: await this.getGeolocation(),
     };
   }
 
-  // Envoyer un email de confirmation de signature
-  async sendSignatureConfirmationEmail(
+  async signContract(
     contractId: string,
-    recipientEmail: string,
-    recipientName: string,
-    verificationCode: string
-  ): Promise<boolean> {
-    try {
-      const verificationUrl = `${window.location.origin}/contracts/verify/${verificationCode}`;
-      const { data, error } = await supabase.functions.invoke('send-signature-confirmation', {
-        body: {
-          contractId,
-          recipientEmail,
-          recipientName,
-          verificationCode,
-          verificationUrl,
-        },
-      });
+    signatureData: SignatureSubmission,
+  ): Promise<{
+    contract: Contract;
+    signatureData: SignatureData;
+    signerRole: 'client' | 'professional';
+    emailSent: boolean;
+  }> {
+    const { data, error } = await supabase.functions.invoke<SigningResponse>(
+      'send-signature-confirmation',
+      { body: { contractId, signatureData } },
+    );
 
-      if (error) {
-        throw error;
-      }
-
-      return Boolean(data?.success);
-    } catch (error) {
-      console.error('Error sending confirmation email:', error);
-      return false;
+    if (error) throw error;
+    if (!data?.success || !data.contract || !data.signatureData || !data.signerRole) {
+      throw new Error(data?.message || 'La signature n’a pas pu être enregistrée.');
     }
+
+    return {
+      contract: normalizeContract(data.contract),
+      signatureData: data.signatureData,
+      signerRole: data.signerRole,
+      emailSent: Boolean(data.emailSent),
+    };
   }
 
-  // Vérifier l'intégrité d'une signature
-  async verifySignature(
-    signatureData: SignatureData,
-    currentDocumentContent: string
-  ): Promise<{ valid: boolean; reason?: string }> {
-    // Vérifier le hash du document
-    const currentHash = await this.generateDocumentHash(currentDocumentContent);
-    
-    if (currentHash !== signatureData.document_hash) {
-      return {
-        valid: false,
-        reason: 'Le document a été modifié après la signature',
-      };
-    }
-
-    // Vérifier le hash de la signature
-    const currentSigHash = await this.generateDocumentHash(signatureData.signature_image);
-    
-    if (currentSigHash !== signatureData.signature_hash) {
-      return {
-        valid: false,
-        reason: 'La signature a été altérée',
-      };
-    }
-
-    return { valid: true };
-  }
-
-  // Ajouter une entrée à la piste d'audit
-  async addAuditTrailEntry(
+  async recordAuditEvent(
     contractId: string,
-    entry: Omit<AuditTrail, 'ip_address' | 'user_agent'>
+    eventType: 'viewed' | 'downloaded',
+    details: Record<string, unknown> = {},
   ): Promise<void> {
-    const ipAddress = await this.getClientIP();
-    
-    const auditEntry: AuditTrail = {
-      ...entry,
-      created_at: entry.created_at,
-      ip_address: ipAddress,
-      user_agent: navigator.userAgent,
-    };
-
-    // Stocker dans Supabase
-    const { error } = await supabase
-      .from('contract_audit_trail')
-      .insert({
-        contract_id: contractId,
-        event_type: auditEntry.event_type,
-        user_id: entry.user_id,
-        user_name: entry.user_name,
-        created_at: entry.created_at,
-        ip_address: auditEntry.ip_address,
-        user_agent: auditEntry.user_agent,
-        details: entry.details || {},
-      });
+    const { error } = await supabase.rpc('add_contract_audit_event', {
+      p_contract_id: contractId,
+      p_event_type: eventType,
+      p_user_agent: navigator.userAgent,
+      p_details: details as Json,
+    });
 
     if (error) {
-      console.error('Error adding audit trail entry:', error);
+      console.error('Unable to record contract audit event:', error);
     }
   }
 
-  // Obtenir l'audit trail d'un contrat
   async getContractAuditTrail(contractId: string): Promise<AuditTrail[]> {
-    const { data, error } = await supabase
-      .from('contract_audit_trail')
-      .select('*')
-      .eq('contract_id', contractId)
-      .order('created_at', { ascending: false });
+    const { data, error } = await supabase.rpc('get_contract_audit_trail', {
+      contract_uuid: contractId,
+    });
 
     if (error) {
-      console.error('Error getting audit trail:', error);
+      console.error('Unable to read contract audit trail:', error);
       return [];
     }
 
-    return data || [];
+    return (data || []) as AuditTrail[];
   }
 }
 
 export const signatureService = new SignatureService();
-

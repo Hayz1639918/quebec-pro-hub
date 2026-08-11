@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -118,33 +119,53 @@ export const UploadContract = ({
       return;
     }
 
+    if (!otherPartyEmail.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Autre partie requise",
+        description: "Indiquez le courriel du client ou du professionnel lié au contrat.",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Find the other party by email
-      let otherPartyId = null;
-      if (otherPartyEmail.trim()) {
-        const { data: otherParty, error: searchError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', otherPartyEmail.trim().toLowerCase())
-          .single();
-        
-        if (searchError || !otherParty) {
-          toast({
-            variant: "destructive",
-            title: "Utilisateur non trouvé",
-            description: `Aucun utilisateur avec l'email ${otherPartyEmail}`,
-          });
-          setLoading(false);
-          return;
-        }
-        otherPartyId = otherParty.id;
+      const normalizedEmail = otherPartyEmail.trim().toLowerCase();
+      const partyLookup = userType === 'client'
+        ? await supabase
+            .from('public_professional_profiles')
+            .select('id')
+            .eq('email', normalizedEmail)
+            .single()
+        : await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', normalizedEmail)
+            .eq('user_type', 'client')
+            .single();
+      const { data: otherParty, error: searchError } = partyLookup;
+
+      if (searchError || !otherParty) {
+        toast({
+          variant: "destructive",
+          title: "Utilisateur non trouvé",
+          description: `Aucune partie admissible ou liée à votre compte avec l’email ${otherPartyEmail}`,
+        });
+        setLoading(false);
+        return;
       }
+      const otherPartyId = otherParty.id;
 
       // Upload file to storage
-      const fileExt = file.name.split('.').pop()?.toLowerCase();
-      const fileName = `contract-${Date.now()}.${fileExt}`;
+      const extensions: Record<string, string> = {
+        'application/pdf': 'pdf',
+        'image/jpeg': 'jpg',
+        'image/jpg': 'jpg',
+        'image/png': 'png',
+      };
+      const fileName = `${crypto.randomUUID()}.${extensions[file.type]}`;
       const filePath = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -161,10 +182,10 @@ export const UploadContract = ({
       const fileUrl = filePath;
 
       // Create contract record
-      const contractData: Record<string, unknown> = {
+      const contractData: Database['public']['Tables']['contracts']['Insert'] = {
         title: title.trim(),
         description: description.trim() || null,
-        total_amount: totalAmount ? parseFloat(totalAmount) : null,
+        total_amount: totalAmount ? parseFloat(totalAmount) : 0,
         start_date: startDate || null,
         end_date: endDate || null,
         is_uploaded: true,
@@ -172,21 +193,10 @@ export const UploadContract = ({
         uploaded_filename: file.name,
         uploaded_at: new Date().toISOString(),
         status: 'draft',
-        content: `Contrat uploadé: ${file.name}`,
+        contract_content: `Contrat importé : ${file.name}`,
+        client_id: userType === 'client' ? userId : otherPartyId,
+        professional_id: userType === 'professional' ? userId : otherPartyId,
       };
-
-      // Set client and professional based on user type
-      if (userType === 'professional') {
-        contractData.professional_id = userId;
-        if (otherPartyId) {
-          contractData.client_id = otherPartyId;
-        }
-      } else {
-        contractData.client_id = userId;
-        if (otherPartyId) {
-          contractData.professional_id = otherPartyId;
-        }
-      }
 
       const { error: insertError } = await supabase
         .from('contracts')
@@ -333,7 +343,7 @@ export const UploadContract = ({
               <div>
                 <Label htmlFor="otherPartyEmail" className="flex items-center gap-1">
                   <User className="h-3 w-3" />
-                  Email de l'autre partie (optionnel)
+                  Email de l'autre partie *
                 </Label>
                 <Input
                   id="otherPartyEmail"
@@ -341,6 +351,7 @@ export const UploadContract = ({
                   value={otherPartyEmail}
                   onChange={(e) => setOtherPartyEmail(e.target.value)}
                   placeholder="client@email.com"
+                  required
                 />
               </div>
             </div>
@@ -397,6 +408,4 @@ export const UploadContract = ({
 };
 
 export default UploadContract;
-
-
 

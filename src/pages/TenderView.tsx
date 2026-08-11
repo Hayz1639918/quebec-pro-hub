@@ -26,6 +26,7 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import type { TenderProject, PartyInfo } from '@/types/tender';
 import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
+import { normalizeTenderProject } from '@/lib/tender-mapper';
 
 const TenderView = () => {
   const { t } = useTranslation();
@@ -62,9 +63,8 @@ const TenderView = () => {
     try {
       setLoading(true);
       
-      // Fetch from the view that includes client details
       const { data: tenderData, error: tenderError } = await supabase
-        .from('tenders_complete')
+        .from('projects')
         .select('*')
         .eq('id', id)
         .single();
@@ -72,21 +72,29 @@ const TenderView = () => {
       if (tenderError) throw tenderError;
 
       if (tenderData) {
-        // Separate project and client data
-        const {
-          client_name,
-          client_company,
-          client_email,
-          client_phone,
-          ...projectData
-        } = tenderData;
+        setProject(normalizeTenderProject(tenderData));
 
-        setProject(projectData);
+        const { data: publicClient } = await supabase
+          .from('public_project_clients')
+          .select('full_name, company_name')
+          .eq('project_id', tenderData.id)
+          .maybeSingle();
+
+        let privateClient: PartyInfo | null = null;
+        if (!publicClient) {
+          const { data } = await supabase
+            .from('profiles')
+            .select('full_name, company_name, email, phone')
+            .eq('id', tenderData.client_id)
+            .maybeSingle();
+          privateClient = data;
+        }
+
         setClient({
-          full_name: client_name,
-          company_name: client_company,
-          email: client_email,
-          phone: client_phone,
+          full_name: publicClient?.full_name ?? privateClient?.full_name ?? 'Client',
+          company_name: publicClient?.company_name ?? privateClient?.company_name ?? null,
+          email: privateClient?.email ?? null,
+          phone: privateClient?.phone ?? null,
         });
       }
     } catch (error: unknown) {
@@ -449,4 +457,3 @@ const TenderView = () => {
 };
 
 export default TenderView;
-

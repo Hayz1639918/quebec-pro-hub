@@ -4,6 +4,7 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -121,8 +122,14 @@ const ProProfile = () => {
   }, [profile.postal_code, toast]);
 
   const fetchProfile = async (uid: string) => {
-    const { data, error } = await supabase.from("profiles").select("*").eq("id", uid).single();
-    if (error) return console.error(error);
+    let data;
+    try {
+      data = await getMyProfile();
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+    if (data?.id !== uid) return;
     if (data?.user_type !== "professional") {
       navigate("/");
       return;

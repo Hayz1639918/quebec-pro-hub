@@ -194,13 +194,10 @@ const AdminDashboard = () => {
   // Fetch dashboard stats
   const fetchStats = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_dashboard_stats')
-        .select('*')
-        .single();
+      const { data, error } = await supabase.rpc('get_admin_dashboard_stats');
 
       if (error) throw error;
-      setStats(data);
+      setStats((data?.[0] as DashboardStats | undefined) ?? null);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -209,13 +206,10 @@ const AdminDashboard = () => {
   // Fetch pending verifications
   const fetchPendingVerifications = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_pending_verifications')
-        .select('*')
-        .order('created_at', { ascending: true });
+      const { data, error } = await supabase.rpc('get_admin_pending_verifications');
 
       if (error) throw error;
-      setPendingVerifications(data || []);
+      setPendingVerifications((data || []) as PendingVerification[]);
     } catch (error) {
       console.error('Error fetching pending verifications:', error);
     }
@@ -224,13 +218,10 @@ const AdminDashboard = () => {
   // Fetch rejected professionals
   const fetchRejectedProfessionals = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('admin_rejected_professionals')
-        .select('*')
-        .order('updated_at', { ascending: false });
+      const { data, error } = await supabase.rpc('get_admin_rejected_professionals');
 
       if (error) throw error;
-      setRejectedProfessionals(data || []);
+      setRejectedProfessionals((data || []) as RejectedProfessional[]);
     } catch (error) {
       console.error('Error fetching rejected professionals:', error);
     }
@@ -250,9 +241,20 @@ const AdminDashboard = () => {
 
       if (error) throw error;
       
-      const logsWithNames = (data || []).map(log => ({
-        ...log,
-        admin_name: (log.profiles as { full_name: string } | null)?.full_name || 'Unknown'
+      const toRecord = (value: unknown): Record<string, unknown> | null =>
+        value !== null && typeof value === 'object' && !Array.isArray(value)
+          ? value as Record<string, unknown>
+          : null;
+      const logsWithNames: AuditLog[] = (data || []).map(log => ({
+        id: log.id,
+        admin_id: log.admin_id,
+        action: log.action,
+        target_type: log.target_type,
+        target_id: log.target_id,
+        old_values: toRecord(log.old_values),
+        new_values: toRecord(log.new_values),
+        created_at: log.created_at ?? new Date(0).toISOString(),
+        admin_name: (log.profiles as { full_name: string } | null)?.full_name || 'Unknown',
       }));
       
       setAuditLogs(logsWithNames);
@@ -376,7 +378,7 @@ const AdminDashboard = () => {
 
   const fetchReviewReports = useCallback(async () => {
     try {
-      const { data } = await db
+      const { data } = await supabase
         .from("review_reports")
         .select("id, review_id, reporter_id, reason, detail, status, created_at")
         .order("created_at", { ascending: false });
@@ -402,7 +404,7 @@ const AdminDashboard = () => {
 
   const fetchUserReports = useCallback(async () => {
     try {
-      const { data } = await db
+      const { data } = await supabase
         .from("user_reports")
         .select("id, reporter_id, reported_user_id, conversation_id, reason, detail, status, created_at")
         .order("created_at", { ascending: false });
@@ -1373,4 +1375,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

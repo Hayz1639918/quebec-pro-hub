@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import logo from "/logo-batirnet.png";
@@ -96,8 +97,13 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
   };
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    setProfile(data);
+    try {
+      const data = await getMyProfile();
+      setProfile(data?.id === userId ? data : null);
+    } catch (error) {
+      console.warn('Could not fetch the current profile:', error);
+      setProfile(null);
+    }
     fetchUnreadNotifications(userId);
   };
 

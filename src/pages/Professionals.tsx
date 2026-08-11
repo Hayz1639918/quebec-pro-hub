@@ -54,7 +54,7 @@ interface Professional {
   company_name: string;
   rbq_number: string;
   services_offered: string | null;
-  insurance_info: string | null;
+  has_insurance_document: boolean;
   is_rbq_verified: boolean;
   city: string | null;
   region: string | null;
@@ -285,7 +285,7 @@ const Professionals = () => {
       // RBQ/CCQ est optionnelle : elle donne seulement le badge « Vérifié »
       // (rendu plus bas selon is_rbq_verified), pas la visibilité.
       let query = supabase
-        .from('profiles')
+        .from('public_professional_profiles')
         .select(`
           id,
           full_name,
@@ -294,7 +294,7 @@ const Professionals = () => {
           company_name,
           rbq_number,
           services_offered,
-          insurance_info,
+          has_insurance_document,
           is_rbq_verified,
           city,
           region,
@@ -620,7 +620,7 @@ const Professionals = () => {
                     total_reviews: p.total_reviews || 0,
                   }))}
                 onRadiusChange={setMapRadius}
-                onLocationChange={(lat, lng) => setUserLocation({ lat, lng })}
+                onLocationChange={(latitude, longitude) => setUserLocation({ latitude, longitude })}
                 defaultRadius={mapRadius}
                 height="400px"
               />
@@ -1107,4 +1107,3 @@ const Professionals = () => {
 };
 
 export default Professionals;
-

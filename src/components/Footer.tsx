@@ -20,7 +20,7 @@ const Footer = () => {
       { label: t("footer.resources.faq"), href: "#" },
     ],
     legal: [
-      { label: t("footer.legal.terms"), href: "#" },
+      { label: t("footer.legal.terms"), href: "/terms-of-service" },
       { label: t("footer.legal.privacy"), href: "/privacy-policy" },
       { label: t("footer.legal.cookies"), href: "#" },
       { label: t("footer.legal.compliance"), href: "/privacy-policy" },

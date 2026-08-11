@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Mail, Phone, MapPin, FileText, Lock, Users, Clock } from "lucide-react";
+import { Shield, Mail, FileText, Lock, Users, Clock } from "lucide-react";
 
 const PrivacyPolicy = () => {
   useEffect(() => {
@@ -22,12 +22,12 @@ const PrivacyPolicy = () => {
           </div>
           <h1 className="text-4xl font-bold mb-4">Politique de Confidentialité</h1>
           <p className="text-gray-600">
-            Conforme à la Loi 25 du Québec sur la protection des renseignements personnels
+            Cadre de protection des renseignements personnels de BâtirNet
           </p>
           <div className="flex items-center justify-center gap-4 mt-4 text-sm text-gray-500">
-            <span>Date d'entrée en vigueur : 2025-11-03</span>
+            <span>Mise à jour : 2026-08-11</span>
             <span>•</span>
-            <span>Version 1.0</span>
+            <span>Version 1.1</span>
           </div>
         </div>
 
@@ -37,14 +37,14 @@ const PrivacyPolicy = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Responsable de la Protection des Renseignements Personnels
+              Point de contact — renseignements personnels
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
-              Conformément à l'article 3.2 de la Loi 25, nous avons désigné un responsable de la protection des renseignements personnels :
+              Pour toute question, plainte ou demande d’exercice de vos droits, écrivez à l’adresse suivante :
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div className="flex items-start gap-3">
                 <Mail className="w-5 h-5 text-primary mt-0.5" />
                 <div>
@@ -52,13 +52,6 @@ const PrivacyPolicy = () => {
                   <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
                     privacy@batirnet.com
                   </a>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Phone className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Téléphone</p>
-                  <p className="text-gray-600">À définir</p>
                 </div>
               </div>
             </div>
@@ -320,7 +313,6 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
-
 
 
 

@@ -27,7 +27,12 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Contract, ContractStatus } from "@/types/contracts";
-import type { SignatureData } from "@/services/signature-service";
+import { normalizeContract } from "@/lib/contract-mapper";
+import {
+  signatureService,
+  type SignatureData,
+  type SignatureSubmission,
+} from "@/services/signature-service";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
@@ -146,7 +151,7 @@ export const ContractViewer = ({
         }
 
         const transformedContract: Contract = {
-          ...data,
+          ...normalizeContract(data),
           client_name: clientName,
           professional_name: professionalName,
           company_name: companyName,
@@ -159,53 +164,37 @@ export const ContractViewer = ({
       toast({
         variant: "destructive",
         title: t('common.error'),
-        description: error?.message || t('contracts.error_loading_contract'),
+        description: error instanceof Error ? error.message : t('contracts.error_loading_contract'),
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignContract = async (signatureData: SignatureData) => {
-    if (!contract || !currentUserId) return;
+  const handleSignContract = async (
+    signatureData: SignatureSubmission,
+  ): Promise<SignatureData> => {
+    if (!contract || !currentUserId) {
+      throw new Error('Contrat ou utilisateur introuvable.');
+    }
 
     try {
       setSigning(true);
 
-      const isClient = currentUserId === contract.client_id;
-      const updateData = isClient
-        ? {
-            client_signature_data: signatureData,
-            client_signed_at: new Date().toISOString(),
-          }
-        : {
-            professional_signature_data: signatureData,
-            professional_signed_at: new Date().toISOString(),
-          };
-
-      const { data, error } = await supabase
-        .from('contracts')
-        .update(updateData)
-        .eq('id', contractId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setContract(data);
-      onContractUpdate?.(data);
+      const result = await signatureService.signContract(contractId, signatureData);
+      setContract(result.contract);
+      onContractUpdate?.(result.contract);
 
       toast({
         title: t('contracts.signed_successfully'),
-        description: t('contracts.signed_successfully_description'),
+        description: result.emailSent
+          ? t('contracts.signed_successfully_description')
+          : 'La signature est enregistrée. Le courriel de confirmation pourra être renvoyé plus tard.',
       });
+      return result.signatureData;
     } catch (error) {
       console.error('Error signing contract:', error);
-      toast({
-        variant: "destructive",
-        title: t('common.error'),
-        description: t('contracts.error_signing'),
-      });
+      throw error;
     } finally {
       setSigning(false);
     }
@@ -823,9 +812,7 @@ export const ContractViewer = ({
                 onSignatureComplete={handleSignContract}
                 signerName={getSignerName()}
                 contractTitle={contract.title}
-                contractContent={contract.contract_content}
                 contract={contract}
-                currentUserId={currentUserId}
                 disabled={signing}
                 trigger={
                   <Button size="lg" disabled={signing} className="px-8">

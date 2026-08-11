@@ -342,8 +342,13 @@ const NewProject = () => {
 
     for (const file of files) {
       try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${projectId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const extensions: Record<string, string> = {
+          'image/jpeg': 'jpg',
+          'image/jpg': 'jpg',
+          'image/png': 'png',
+          'application/pdf': 'pdf',
+        };
+        const fileName = `${projectId}/${crypto.randomUUID()}.${extensions[file.type]}`;
         
         const { error: uploadError } = await supabase.storage
           .from('projects')

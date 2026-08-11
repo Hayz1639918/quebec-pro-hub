@@ -90,7 +90,7 @@ const ProMyProjects = () => {
           current_phase,
           contract_id,
           client_id,
-          profiles:client_id (full_name, company_name),
+          profiles!projects_client_id_fkey (full_name, company_name),
           contracts:contract_id (status, client_signed_at, professional_signed_at, start_date)
         `)
         .eq('assigned_professional_id', uid)
@@ -289,4 +289,3 @@ const ProMyProjects = () => {
 };
 
 export default ProMyProjects;
-

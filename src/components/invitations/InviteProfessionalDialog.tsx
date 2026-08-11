@@ -42,7 +42,7 @@ interface ClientProject {
 // accepting bids. We keep this list permissive (open is the only status
 // where the marketplace lets pros submit proposals) but easy to extend
 // if we later introduce a "draft" or "in_review" status.
-const ELIGIBLE_STATUSES = ['open'];
+const ELIGIBLE_STATUSES = ['open'] as const;
 
 export const InviteProfessionalDialog = ({
   open,
@@ -92,7 +92,7 @@ export const InviteProfessionalDialog = ({
       const projectIds = (projectsData || []).map((p: { id: string }) => p.id);
       const invitedSet = new Set<string>();
       if (projectIds.length > 0) {
-        const { data: existing } = await db
+        const { data: existing } = await supabase
           .from('project_invitations')
           .select('project_id')
           .eq('professional_id', professionalId)

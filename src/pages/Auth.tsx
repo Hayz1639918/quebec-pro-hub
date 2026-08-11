@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, User, Building2, Phone, Eye, EyeOff, CheckCircle2, XCircle, Briefcase, HardHat, AlertCircle, MailCheck } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import Logo from "@/components/Logo";
 import { AppProfile, getPostAuthRoute } from "@/lib/auth-routing";
 
@@ -24,6 +25,8 @@ type OAuthProvider = "google" | "apple";
 // Google/Apple : survit à la redirection OAuth puis est consommé (et effacé)
 // au retour pour typer le profil créé par défaut en « client ».
 const OAUTH_SIGNUP_KEY = "batirnet_oauth_signup_choice";
+const TERMS_VERSION = "2026-08-11";
+const PRIVACY_VERSION = "2026-08-11";
 
 // Connexion Google/Apple : implémentée mais masquée pour l'instant (décision
 // 2026-07-12 — fournisseurs non configurés côté Google/Apple). Pour réactiver :
@@ -212,6 +215,7 @@ const Auth = () => {
   const [companyType, setCompanyType] = useState<CompanyType>("individuel");
   // Trade professional specific
   const [tradeSpecialty, setTradeSpecialty] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Erreur affichée directement dans le formulaire (plus claire qu'un toast fugace).
   const [formError, setFormError] = useState<{ title: string; description: string } | null>(null);
@@ -270,7 +274,19 @@ const Auth = () => {
           userType?: string;
           professionalType?: string;
           tradeSpecialty?: string | null;
+          termsVersion?: string;
+          privacyVersion?: string;
+          termsAcceptedAt?: string;
         };
+        if (pending.termsVersion && pending.privacyVersion && pending.termsAcceptedAt) {
+          await supabase.auth.updateUser({
+            data: {
+              terms_version: pending.termsVersion,
+              privacy_version: pending.privacyVersion,
+              terms_accepted_at: pending.termsAcceptedAt,
+            },
+          });
+        }
         if (pending.userType === 'professional') {
           const professional_type =
             pending.professionalType === 'trade_professional' ? 'trade_professional' : 'entrepreneur';
@@ -439,6 +455,14 @@ const Auth = () => {
         return;
       }
 
+      if (!acceptedTerms) {
+        showError(
+          "Acceptation requise",
+          "Veuillez accepter les conditions d’utilisation et la politique de confidentialité pour créer un compte.",
+        );
+        return;
+      }
+
       // Validate email format BEFORE calling Supabase, so a typo never burns the
       // limited email-send quota (which otherwise locks the user's IP for ~1h).
       if (!isValidEmail(email)) {
@@ -466,6 +490,9 @@ const Auth = () => {
             full_name: fullName,
             user_type: userType,
             phone: phone || null,
+            terms_version: TERMS_VERSION,
+            privacy_version: PRIVACY_VERSION,
+            terms_accepted_at: new Date().toISOString(),
             ...(userType === "professional" && {
               company_type: companyType === "individuel" ? "sole_proprietor" : "corporation",
               professional_type: professionalType,
@@ -540,13 +567,23 @@ const Auth = () => {
   const handleOAuth = async (provider: OAuthProvider) => {
     setFormError(null);
     try {
-      if (!isLogin && userType === "professional") {
+      if (!isLogin && !acceptedTerms) {
+        showError(
+          "Acceptation requise",
+          "Veuillez accepter les conditions d’utilisation et la politique de confidentialité pour créer un compte.",
+        );
+        return;
+      }
+      if (!isLogin) {
         localStorage.setItem(
           OAUTH_SIGNUP_KEY,
           JSON.stringify({
             userType,
             professionalType,
             tradeSpecialty: professionalType === "trade_professional" ? tradeSpecialty || null : null,
+            termsVersion: TERMS_VERSION,
+            privacyVersion: PRIVACY_VERSION,
+            termsAcceptedAt: new Date().toISOString(),
           })
         );
       } else {
@@ -1019,7 +1056,26 @@ const Auth = () => {
                 </p>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                <Checkbox
+                  id="accept-legal"
+                  checked={acceptedTerms}
+                  onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                  aria-required="true"
+                />
+                <Label htmlFor="accept-legal" className="text-sm font-normal leading-relaxed cursor-pointer">
+                  J’accepte les{' '}
+                  <a href="/terms-of-service" target="_blank" rel="noreferrer" className="text-primary underline">
+                    conditions d’utilisation
+                  </a>{' '}
+                  et la{' '}
+                  <a href="/privacy-policy" target="_blank" rel="noreferrer" className="text-primary underline">
+                    politique de confidentialité
+                  </a>.
+                </Label>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
                 {loading ? t('auth.signup.button_loading') : t('auth.signup.button')}
               </Button>
             </form>

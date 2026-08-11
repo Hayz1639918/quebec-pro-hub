@@ -70,7 +70,7 @@ const ExperienceStats = ({ professionalId }: ExperienceStatsProps) => {
         .eq("professional_id", professionalId),
       supabase
         .from("profiles")
-        .select("average_rating, total_reviews, total_projects_completed")
+        .select("average_rating, total_reviews, total_projects")
         .eq("id", professionalId)
         .single(),
     ]);
@@ -83,7 +83,7 @@ const ExperienceStats = ({ professionalId }: ExperienceStatsProps) => {
         : 0;
 
     setPlatformStats({
-      platform_projects: acceptedProposals,
+      platform_projects: projectsRes.data?.total_projects ?? acceptedProposals,
       platform_proposals: acceptedProposals,
       avg_rating: projectsRes.data?.average_rating ?? avgRating,
       total_reviews: projectsRes.data?.total_reviews ?? reviews.length,

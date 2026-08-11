@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { ContractTemplate, ContractCategory } from "@/types/contracts";
 import { useTranslation } from "react-i18next";
+import DOMPurify from "dompurify";
 
 interface ContractTemplatesProps {
   onSelectTemplate: (template: ContractTemplate) => void;
@@ -73,7 +74,21 @@ export const ContractTemplates = ({
         throw error;
       }
 
-      const templatesData = data || [];
+      const templatesData: ContractTemplate[] = (data || []).map((template) => ({
+        id: template.id,
+        name: template.name,
+        description: template.description,
+        category: template.category as ContractCategory,
+        template_content: template.template_content,
+        variables: template.variables && typeof template.variables === 'object' && !Array.isArray(template.variables)
+          ? template.variables
+          : {},
+        is_active: Boolean(template.is_active),
+        created_by: template.created_by,
+        created_at: template.created_at || '',
+        updated_at: template.updated_at || '',
+        version: template.version ?? 1,
+      }));
       setTemplates(templatesData);
     } catch (error) {
       console.error('Error fetching contract templates:', error);
@@ -140,7 +155,7 @@ export const ContractTemplates = ({
     // For now, just show the template content in a new window
     const previewWindow = window.open('', '_blank');
     if (previewWindow) {
-      previewWindow.document.write(template.template_content);
+      previewWindow.document.write(DOMPurify.sanitize(template.template_content));
       previewWindow.document.title = template.name;
     }
   };
@@ -197,8 +212,11 @@ export const ContractTemplates = ({
       }
 
       // La fonction retourne un objet JSON avec success/error
-      if (data && typeof data === 'object') {
-        if (data.success === true) {
+      const result = data && typeof data === 'object' && !Array.isArray(data)
+        ? data as { success?: boolean; error?: string }
+        : null;
+      if (result) {
+        if (result.success === true) {
           // Succès - retirer le template de la liste locale
           setTemplates(prev => prev.filter(t => t.id !== template.id));
           toast({
@@ -206,13 +224,13 @@ export const ContractTemplates = ({
             description: 'Le contrat personnalisé a été supprimé avec succès',
           });
           return;
-        } else if (data.error) {
+        } else if (result.error) {
           // Erreur retournée par la fonction
           console.error('Erreur de la fonction:', data);
           toast({
             variant: "destructive",
             title: t('common.error'),
-            description: data.error,
+            description: result.error,
           });
           return;
         }
@@ -241,12 +259,13 @@ export const ContractTemplates = ({
       
       let errorMessage = 'Erreur lors de la suppression du contrat';
       
-      if (error?.message) {
-        errorMessage = error.message;
+      const rpcError = error as { code?: string; message?: string } | null;
+      if (rpcError?.message) {
+        errorMessage = rpcError.message;
       }
       
       // Si la fonction RPC n'existe pas, afficher un message clair
-      if (error?.code === '42883' || error?.message?.includes('function') || error?.message?.includes('does not exist')) {
+      if (rpcError?.code === '42883' || rpcError?.message?.includes('function') || rpcError?.message?.includes('does not exist')) {
         errorMessage = 'La fonction de suppression n\'existe pas. Veuillez appliquer la migration 028_allow_users_delete_own_templates.sql dans Supabase.';
       }
       

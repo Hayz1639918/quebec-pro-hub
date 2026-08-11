@@ -9,7 +9,14 @@ export type ContractStatus =
   | 'cancelled'
   | 'expired';
 
-export type ContractCategory = 'construction' | 'renovation' | 'maintenance' | 'consultation';
+export type ContractCategory =
+  | 'construction'
+  | 'renovation'
+  | 'maintenance'
+  | 'consultation'
+  | 'preliminary'
+  | 'subcontract'
+  | 'acceptance';
 
 export interface ContractTemplate {
   id: string;
@@ -17,7 +24,7 @@ export interface ContractTemplate {
   description: string | null;
   category: ContractCategory;
   template_content: string;
-  variables: Record<string, string>; // variable_name -> type
+  variables: Record<string, unknown>; // variable_name -> type/metadata
   is_active: boolean;
   created_by: string | null;
   created_at: string;
@@ -47,7 +54,7 @@ export interface SignatureData {
 
 export interface Contract {
   id: string;
-  project_id: string;
+  project_id: string | null;
   template_id: string | null;
   
   // Parties

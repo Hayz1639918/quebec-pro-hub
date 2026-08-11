@@ -37,6 +37,7 @@ const ProPortfolio = lazy(() => import("./pages/ProPortfolio"));
 const ProCalendar = lazy(() => import("./pages/ProCalendar"));
 const ProjectDetails = lazy(() => import("./pages/ProjectDetails"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TenderView = lazy(() => import("./pages/TenderView"));
 const ProposalView = lazy(() => import("./pages/ProposalView"));
 const ProfessionalProfile = lazy(() => import("./pages/ProfessionalProfile"));
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route element={<ProtectedAdminRoute />}>
                 <Route path="/admin" element={<AdminDashboard />} />
               </Route>

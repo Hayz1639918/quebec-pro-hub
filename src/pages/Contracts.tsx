@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Contract, ContractStatus, ContractStats } from "@/types/contracts";
+import { normalizeContract } from "@/lib/contract-mapper";
 import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { fr, enUS } from "date-fns/locale";
@@ -136,7 +137,7 @@ const Contracts = () => {
               }
 
               const transformedContract: Contract = {
-                ...data,
+                ...normalizeContract(data),
                 client_name: clientName,
                 professional_name: professionalName,
                 company_name: companyName,
@@ -156,7 +157,7 @@ const Contracts = () => {
             toast({
               variant: "destructive",
               title: t('common.error'),
-              description: error?.message || t('contracts.error_loading_contract'),
+              description: error instanceof Error ? error.message : t('contracts.error_loading_contract'),
             });
           }
         })();
@@ -277,7 +278,7 @@ const Contracts = () => {
           }
 
           return {
-            ...contract,
+            ...normalizeContract(contract),
             client_name: clientName,
             professional_name: professionalName,
             company_name: companyName,

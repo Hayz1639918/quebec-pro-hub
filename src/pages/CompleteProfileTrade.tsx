@@ -106,11 +106,10 @@ const CompleteProfileTrade = () => {
     if (!postalCode || postalCode.length < 3) return;
     setGeocoding(true);
     try {
-      const result = await geocodePostalCode(postalCode);
+      const result = await geocodePostalCode(postalCode, city || undefined);
       if (result) {
-        setLatitude(result.lat);
-        setLongitude(result.lng);
-        if (!city && result.city) setCity(result.city);
+        setLatitude(result.latitude);
+        setLongitude(result.longitude);
       }
     } catch { /* ignore */ } finally {
       setGeocoding(false);
