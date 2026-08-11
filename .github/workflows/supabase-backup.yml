@@ -1,0 +1,106 @@
+name: Encrypted Supabase Backup
+
+on:
+  schedule:
+    - cron: "23 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-production-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Database and Storage
+    if: >-
+      ${{
+        secrets.SUPABASE_DB_URL != '' &&
+        secrets.SUPABASE_SERVICE_ROLE_KEY != '' &&
+        secrets.BACKUP_ENCRYPTION_PASSPHRASE != ''
+      }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      SUPABASE_URL: https://gsnjnhxzacwjslirfxgy.supabase.co
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Validate backup secrets
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_URL" || { echo "Missing SUPABASE_DB_URL" >&2; exit 1; }
+          test -n "$SUPABASE_SERVICE_ROLE_KEY" || { echo "Missing SUPABASE_SERVICE_ROLE_KEY" >&2; exit 1; }
+          test -n "$BACKUP_ENCRYPTION_PASSPHRASE" || { echo "Missing BACKUP_ENCRYPTION_PASSPHRASE" >&2; exit 1; }
+          test "${#BACKUP_ENCRYPTION_PASSPHRASE}" -ge 32 || { echo "BACKUP_ENCRYPTION_PASSPHRASE must contain at least 32 characters" >&2; exit 1; }
+
+      - name: Export database and Storage
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          umask 077
+          backup_root="$RUNNER_TEMP/batirnet-supabase-backup"
+          mkdir -p "$backup_root/database" "$backup_root/storage"
+
+          npx --yes supabase@2.81.3 db dump --db-url "$SUPABASE_DB_URL" --role-only -f "$backup_root/database/roles.sql"
+          npx --yes supabase@2.81.3 db dump --db-url "$SUPABASE_DB_URL" -f "$backup_root/database/schema.sql"
+          npx --yes supabase@2.81.3 db dump --db-url "$SUPABASE_DB_URL" --use-copy --data-only -x "storage.buckets_vectors" -x "storage.vector_indexes" -f "$backup_root/database/data.sql"
+
+          node scripts/backup-supabase-storage.mjs \
+            "$backup_root/storage" \
+            "$backup_root/storage-manifest.json"
+
+          {
+            printf 'created_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'repository=%s\n' "$GITHUB_REPOSITORY"
+            printf 'commit=%s\n' "$GITHUB_SHA"
+            printf 'project_ref=gsnjnhxzacwjslirfxgy\n'
+          } > "$backup_root/backup-info.txt"
+
+      - name: Encrypt backup
+        shell: bash
+        env:
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          backup_root="$RUNNER_TEMP/batirnet-supabase-backup"
+          archive="$RUNNER_TEMP/batirnet-supabase-${GITHUB_RUN_ID}.tar.gz"
+          encrypted="$archive.enc"
+
+          tar -C "$backup_root" -czf "$archive" .
+          openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+            -in "$archive" \
+            -out "$encrypted" \
+            -pass env:BACKUP_ENCRYPTION_PASSPHRASE
+          (
+            cd "$RUNNER_TEMP"
+            sha256sum "$(basename "$encrypted")" > "$(basename "$encrypted").sha256"
+          )
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: batirnet-supabase-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/batirnet-supabase-${{ github.run_id }}.tar.gz.enc
+            ${{ runner.temp }}/batirnet-supabase-${{ github.run_id }}.tar.gz.enc.sha256
+          if-no-files-found: error
+          retention-days: 30
