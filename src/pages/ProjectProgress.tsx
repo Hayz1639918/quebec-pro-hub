@@ -48,6 +48,17 @@ interface Project {
   end_date: string | null;
 }
 
+type ProjectProgressStatus = 'cancelled' | 'not_started' | 'in_progress' | 'paused' | 'completed';
+
+const PROJECT_PROGRESS_STATUSES: ProjectProgressStatus[] = [
+  'cancelled', 'not_started', 'in_progress', 'paused', 'completed',
+];
+
+const normalizeProgressStatus = (value: string | null): ProjectProgressStatus =>
+  value && PROJECT_PROGRESS_STATUSES.includes(value as ProjectProgressStatus)
+    ? value as ProjectProgressStatus
+    : 'not_started';
+
 interface ProjectReport {
   id: string;
   title: string;
@@ -95,7 +106,7 @@ const ProjectProgress = () => {
   // Form state
   const [progressPercentage, setProgressPercentage] = useState(0);
   const [currentPhase, setCurrentPhase] = useState('');
-  const [progressStatus, setProgressStatus] = useState('in_progress');
+  const [progressStatus, setProgressStatus] = useState<ProjectProgressStatus>('in_progress');
 
   // US-059 — Media uploads
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; caption: string }[]>([]);
@@ -150,7 +161,7 @@ const ProjectProgress = () => {
           contract_id,
           client_id,
           media_urls,
-          profiles:client_id (full_name, company_name),
+          profiles!projects_client_id_fkey (full_name, company_name),
           contracts:contract_id (start_date, end_date)
         `)
         .eq('id', id)
@@ -169,7 +180,7 @@ const ProjectProgress = () => {
         category: projectData.category,
         city: projectData.city,
         progress_percentage: projectData.progress_percentage || 0,
-        progress_status: projectData.progress_status || 'not_started',
+        progress_status: normalizeProgressStatus(projectData.progress_status),
         current_phase: projectData.current_phase,
         contract_id: projectData.contract_id,
         client_id: projectData.client_id,
@@ -181,7 +192,7 @@ const ProjectProgress = () => {
       setProject(formattedProject);
       setProgressPercentage(formattedProject.progress_percentage);
       setCurrentPhase(formattedProject.current_phase || '');
-      setProgressStatus(formattedProject.progress_status);
+      setProgressStatus(normalizeProgressStatus(formattedProject.progress_status));
       // Load existing media
       const existingMedia = (projectData as { media_urls?: unknown }).media_urls;
       if (Array.isArray(existingMedia)) setSavedMediaUrls(existingMedia);
@@ -446,7 +457,7 @@ const ProjectProgress = () => {
                 {/* Status */}
                 <div>
                   <Label htmlFor="status">Statut du projet</Label>
-                  <Select value={progressStatus} onValueChange={setProgressStatus}>
+              <Select value={progressStatus} onValueChange={(value) => setProgressStatus(normalizeProgressStatus(value))}>
                     <SelectTrigger id="status" className="mt-2">
                       <SelectValue />
                     </SelectTrigger>
@@ -695,9 +706,6 @@ const ProjectProgress = () => {
 };
 
 export default ProjectProgress;
-
-
-
 
 
 

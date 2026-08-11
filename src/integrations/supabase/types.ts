@@ -5401,6 +5401,88 @@ export type Database = {
       }
     }
     Views: {
+      public_professional_certifications: {
+        Row: {
+          cert_name: string | null
+          cert_type: string | null
+          expires_at: string | null
+          has_document: boolean | null
+          id: string | null
+          issued_at: string | null
+          issuer: string | null
+          professional_id: string | null
+        }
+        Relationships: []
+      }
+      public_professional_profiles: {
+        Row: {
+          accepts_small_projects: boolean | null
+          activity_score: number | null
+          availability_status: Database["public"]["Enums"]["availability_status"] | null
+          available_from: string | null
+          average_rating: number | null
+          bio: string | null
+          business_volume_cad: number | null
+          certifications: Json | null
+          city: string | null
+          company_name: string | null
+          company_type: string | null
+          created_at: string | null
+          daily_rate_max: number | null
+          daily_rate_min: number | null
+          email: string | null
+          favorites_count: number | null
+          full_name: string | null
+          has_insurance_document: boolean | null
+          has_rbq_document: boolean | null
+          hourly_rate_max: number | null
+          hourly_rate_min: number | null
+          id: string | null
+          is_rbq_verified: boolean | null
+          languages: string[] | null
+          last_active_at: string | null
+          latitude: number | null
+          linkedin_url: string | null
+          longitude: number | null
+          minimum_project_budget: number | null
+          phone: string | null
+          professional_type: string | null
+          profile_picture_url: string | null
+          profile_views: number | null
+          profile_views_count: number | null
+          proposals_last_30_days: number | null
+          rbq_number: string | null
+          rbq_subcat: string | null
+          region: string | null
+          response_time_hours: number | null
+          service_radius_km: number | null
+          service_zones: string[] | null
+          services_offered: string | null
+          subscription_tier: string | null
+          total_projects: number | null
+          total_projects_external: number | null
+          total_proposals_sent: number | null
+          total_reviews: number | null
+          trade_specialty: string | null
+          travel_distance_km: number | null
+          user_type: Database["public"]["Enums"]["user_type"] | null
+          website_url: string | null
+          years_experience: number | null
+        }
+        Relationships: []
+      }
+      public_project_clients: {
+        Row: {
+          city: string | null
+          company_name: string | null
+          full_name: string | null
+          id: string | null
+          profile_picture_url: string | null
+          project_id: string | null
+          region: string | null
+        }
+        Relationships: []
+      }
       admin_dashboard_stats: {
         Row: {
           open_projects: number | null
@@ -6214,6 +6296,15 @@ export type Database = {
       }
     }
     Functions: {
+      add_contract_audit_event: {
+        Args: {
+          p_contract_id: string
+          p_details?: Json
+          p_event_type: string
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       _postgis_deprecate: {
         Args: { newname: string; oldname: string; version: string }
         Returns: undefined
@@ -6610,6 +6701,22 @@ export type Database = {
           user_name: string
         }[]
       }
+      get_admin_pending_verifications: {
+        Args: never
+        Returns: Database["public"]["Views"]["admin_pending_verifications"]["Row"][]
+      }
+      get_admin_dashboard_stats: {
+        Args: never
+        Returns: Database["public"]["Views"]["admin_dashboard_stats"]["Row"][]
+      }
+      get_admin_rejected_professionals: {
+        Args: never
+        Returns: Database["public"]["Views"]["admin_rejected_professionals"]["Row"][]
+      }
+      get_my_profile: {
+        Args: never
+        Returns: Database["public"]["Tables"]["profiles"]["Row"][]
+      }
       get_contract_status: {
         Args: { contract_uuid: string }
         Returns: Database["public"]["Enums"]["contract_status"]
@@ -6798,6 +6905,16 @@ export type Database = {
         Args: { method?: string; note?: string; payment_id: string }
         Returns: string
       }
+      sign_contract_secure: {
+        Args: {
+          p_contract_id: string
+          p_ip_address?: string
+          p_signature_data: Json
+          p_signer_id: string
+          p_user_agent?: string
+        }
+        Returns: Json
+      }
       should_notify: {
         Args: { notif_type: string; target_user: string }
         Returns: boolean
@@ -6805,6 +6922,10 @@ export type Database = {
       soft_delete_message: {
         Args: { deleter_id: string; message_id: string }
         Returns: boolean
+      }
+      verify_contract_signature: {
+        Args: { p_verification_code: string }
+        Returns: Json
       }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }

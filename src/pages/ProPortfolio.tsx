@@ -122,7 +122,7 @@ const ProPortfolio = () => {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
       toast({
         variant: 'destructive',
         title: 'Format invalide',
@@ -155,9 +155,13 @@ const ProPortfolio = () => {
     if (!imageFile || !userId) return null;
 
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `portfolio/${fileName}`;
+      const extensions: Record<string, string> = {
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/webp': 'webp',
+        'image/gif': 'gif',
+      };
+      const filePath = `${userId}/${crypto.randomUUID()}.${extensions[imageFile.type]}`;
 
       const { error: uploadError } = await supabase.storage
         .from('portfolio-images')
@@ -555,4 +559,3 @@ const ProPortfolio = () => {
 };
 
 export default ProPortfolio;
-

@@ -23,7 +23,7 @@ export interface ProposalReference {
   client_name?: string;
   contact_phone?: string;
   year?: string | number;
-  value?: number;
+  value?: string | number;
 }
 
 export interface ProjectMilestone {
@@ -51,6 +51,7 @@ export interface PartyInfo {
   email?: string | null;
   phone?: string | null;
   company_name?: string | null;
+  rbq_number?: string | null;
 }
 
 export interface TenderProject {

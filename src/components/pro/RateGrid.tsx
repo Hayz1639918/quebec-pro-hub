@@ -67,7 +67,16 @@ const RateGrid = ({ professionalId }: RateGridProps) => {
       .select("*")
       .eq("professional_id", professionalId)
       .order("trade_code");
-    if (!error) setRates(data ?? []);
+    if (!error) {
+      setRates((data ?? []).map((rate) => ({
+        ...rate,
+        rate_type: ['hourly', 'flat', 'per_sqft'].includes(rate.rate_type)
+          ? rate.rate_type as RateType
+          : 'hourly',
+        created_at: rate.created_at || '',
+        updated_at: rate.updated_at || '',
+      })));
+    }
   };
 
   const fetchTrades = async () => {

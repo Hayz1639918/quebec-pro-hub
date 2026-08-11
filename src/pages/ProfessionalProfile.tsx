@@ -35,7 +35,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import InviteProfessionalDialog from '@/components/invitations/InviteProfessionalDialog';
-import { isStorageUrl } from '@/lib/storage';
 
 interface ProfessionalProfile {
   id: string;
@@ -44,9 +43,9 @@ interface ProfessionalProfile {
   phone: string | null;
   company_name: string | null;
   rbq_number: string | null;
-  rbq_certification_url: string | null;
+  has_rbq_document: boolean;
   services_offered: string | null;
-  insurance_info: string | null;
+  has_insurance_document: boolean;
   is_rbq_verified: boolean;
   created_at: string;
   bio?: string | null;
@@ -67,6 +66,7 @@ interface PortfolioItem {
 interface Review {
   id: string;
   client_id: string;
+  project_id: string;
   rating: number;
   comment: string | null;
   created_at: string;
@@ -90,11 +90,10 @@ interface PublicCertification {
   id: string;
   cert_type: string;
   cert_name: string;
-  cert_number: string | null;
   issuer: string | null;
   issued_at: string | null;
   expires_at: string | null;
-  certificate_url: string | null;
+  has_document: boolean;
 }
 
 const ProfessionalProfile = () => {
@@ -158,7 +157,7 @@ const ProfessionalProfile = () => {
       setLoading(true);
       
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_professional_profiles')
         .select('*')
         .eq('id', id)
         .eq('user_type', 'professional')
@@ -223,7 +222,7 @@ const ProfessionalProfile = () => {
     try {
       const { data } = await supabase
         .from('reviews')
-        .select('id, client_id, rating, comment, created_at, project_id, quality_rating, punctuality_rating, communication_rating, value_rating')
+        .select('id, client_id, rating, comment, created_at, project_id')
         .eq('professional_id', id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -236,7 +235,7 @@ const ProfessionalProfile = () => {
 
         const [clientsRes, repliesRes, projectsRes] = await Promise.all([
           supabase.from('profiles').select('id, full_name').in('id', clientIds),
-          db
+          supabase
             .from('review_replies')
             .select('review_id, content, created_at')
             .in('review_id', reviewIds),
@@ -275,10 +274,10 @@ const ProfessionalProfile = () => {
 
   const fetchCertifications = async () => {
     try {
-      const { data } = await db
-        .from('professional_certifications')
+      const { data } = await supabase
+        .from('public_professional_certifications')
         .select(
-          'id, cert_type, cert_name, cert_number, issuer, issued_at, expires_at, certificate_url'
+          'id, cert_type, cert_name, issuer, issued_at, expires_at, has_document'
         )
         .eq('professional_id', id)
         .order('issued_at', { ascending: false });
@@ -589,7 +588,7 @@ const ProfessionalProfile = () => {
             )}
 
             {/* Assurances */}
-            {profile.insurance_info && (
+            {profile.has_insurance_document && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -598,17 +597,10 @@ const ProfessionalProfile = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {/* Ne jamais exposer publiquement l'URL/le document d'assurance
-                      (PII). Si insurance_info contient un lien de stockage, on
-                      affiche seulement une confirmation neutre. */}
-                  {isStorageUrl(profile.insurance_info) ? (
-                    <p className="text-gray-700 flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      Certificat d'assurance responsabilité civile fourni
-                    </p>
-                  ) : (
-                    <p className="text-gray-700 whitespace-pre-wrap">{profile.insurance_info}</p>
-                  )}
+                  <p className="text-gray-700 flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Certificat d'assurance responsabilité civile fourni
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -636,7 +628,7 @@ const ProfessionalProfile = () => {
                         {/* Le document RBQ brut n'est pas exposé publiquement.
                             Le numéro RBQ ci-dessus + le badge « Vérifié » suffisent
                             à la confiance ; le document est réservé à l'admin. */}
-                        {profile.rbq_certification_url && (
+                        {profile.has_rbq_document && (
                           <span className="flex items-center gap-1.5 text-sm text-green-700">
                             <CheckCircle className="h-4 w-4" />
                             Document fourni
@@ -675,7 +667,6 @@ const ProfessionalProfile = () => {
                               </p>
                               <div className="flex flex-wrap gap-2 text-xs text-gray-600 mt-0.5">
                                 {cert.issuer && <span>Émis par {cert.issuer}</span>}
-                                {cert.cert_number && <span>N° {cert.cert_number}</span>}
                                 {cert.expires_at && (
                                   <span className={expired ? 'text-red-600' : ''}>
                                     {expired ? 'Expirée le ' : 'Expire le '}
@@ -685,7 +676,7 @@ const ProfessionalProfile = () => {
                               </div>
                             </div>
                           </div>
-                          {cert.certificate_url && (
+                          {cert.has_document && (
                             <span className="shrink-0 flex items-center gap-1.5 text-sm text-blue-700">
                               <CheckCircle className="h-4 w-4" />
                               Document fourni

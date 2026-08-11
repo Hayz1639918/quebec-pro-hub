@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { RBQLicense, RBQLicenseFormData } from "@/types/contractor-profile";
+import type { RBQLicense, RBQLicenseFormData, RBQLicenseStatus } from "@/types/contractor-profile";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,7 +77,16 @@ const RBQLicenseManager = ({ professionalId }: RBQLicenseManagerProps) => {
       .select("*")
       .eq("professional_id", professionalId)
       .order("created_at", { ascending: false });
-    if (!error) setLicenses(data ?? []);
+    if (!error) {
+      setLicenses((data ?? []).map((license) => ({
+        ...license,
+        status: ['pending_verification', 'valid', 'expired', 'revoked'].includes(license.status)
+          ? license.status as RBQLicenseStatus
+          : 'pending_verification',
+        created_at: license.created_at || '',
+        updated_at: license.updated_at || '',
+      })));
+    }
     setLoading(false);
   };
 

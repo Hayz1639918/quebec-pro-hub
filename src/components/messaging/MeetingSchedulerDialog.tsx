@@ -103,7 +103,7 @@ export function MeetingSchedulerDialog({
       // Notification to participant
       await supabase.from("notifications").insert({
         user_id: participantId,
-        type: "meeting",
+        type: "meeting_reminder",
         title: "Réunion planifiée",
         message: `Une réunion "${title}" a été planifiée le ${formattedDate} à ${formattedTime}.`,
         action_url: `/messages?conversation=${conversationId}`,

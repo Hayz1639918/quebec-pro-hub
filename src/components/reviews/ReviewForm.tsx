@@ -130,7 +130,7 @@ export default function ReviewForm({ projectId, professionalId, onSubmitted }: R
     } catch (err: unknown) {
       toast({
         title: "Erreur",
-        description: err.message || "Impossible d'envoyer l'avis.",
+        description: err instanceof Error ? err.message : "Impossible d'envoyer l'avis.",
         variant: "destructive",
       });
     } finally {

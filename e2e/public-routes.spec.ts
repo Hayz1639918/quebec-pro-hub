@@ -53,7 +53,7 @@ test.describe("Accueil", () => {
 });
 
 test.describe("Responsive — pas de débordement horizontal", () => {
-  const routes = ["/", "/auth", "/professionals", "/projects", "/privacy-policy"];
+  const routes = ["/", "/auth", "/professionals", "/projects", "/privacy-policy", "/terms-of-service"];
   const widths = [320, 390, 768, 1024, 1440];
 
   for (const route of routes) {
@@ -104,6 +104,11 @@ test.describe("Authentification", () => {
     await page.locator("#signup-password").fill("abc");
     await expect(page.getByText("8 caractères minimum")).toBeVisible();
     await expect(page.getByText("Une lettre majuscule")).toBeVisible();
+
+    const submit = page.locator('form button[type="submit"]');
+    await expect(submit).toBeDisabled();
+    await page.locator('#accept-legal').check();
+    await expect(submit).toBeEnabled();
   });
 
   test("bascule connexion ↔ inscription", async ({ page }) => {
@@ -131,6 +136,11 @@ test.describe("Pages publiques", () => {
   test("politique de confidentialité : rendu", async ({ page }) => {
     await page.goto("/privacy-policy");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  });
+
+  test("conditions d’utilisation : rendu", async ({ page }) => {
+    await page.goto("/terms-of-service");
+    await expect(page.getByRole("heading", { name: "Conditions d’utilisation", level: 1 })).toBeVisible();
   });
 
   test("page 404 pour une route inconnue", async ({ page }) => {

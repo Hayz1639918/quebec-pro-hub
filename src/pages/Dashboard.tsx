@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import ProjectList from "@/components/dashboard/ProjectList";
@@ -65,6 +66,7 @@ interface FavoriteProfessional {
   hourly_rate_min: number | null;
   hourly_rate_max: number | null;
   availability_status: 'available' | 'busy' | 'unavailable' | null;
+  available_from: string | null;
   response_time_hours: number | null;
   activity_score: number | null;
   notes: string | null;
@@ -81,7 +83,7 @@ interface Project {
   budget_max: number | null;
   city: string | null;
   region: string | null;
-  status: string;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
   deadline: string | null;
   created_at: string;
   updated_at: string;
@@ -200,13 +202,10 @@ const Dashboard = () => {
       setUser(session.user);
 
       // Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError) throw profileError;
+      const profileData = await getMyProfile();
+      if (!profileData || profileData.id !== session.user.id) {
+        throw new Error('Profil introuvable');
+      }
       
       setProfile(profileData);
 
@@ -276,7 +275,7 @@ const Dashboard = () => {
             client_signed_at,
             professional_signed_at
           ),
-          profiles:assigned_professional_id (full_name, company_name)
+          profiles!projects_assigned_professional_id_fkey (full_name, company_name)
         `)
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
@@ -285,7 +284,25 @@ const Dashboard = () => {
 
       // Transform data to include contract signature info
       const transformedProjects: Project[] = (projectsData || []).map((p) => ({
-        ...p,
+        id: p.id,
+        title: p.title,
+        description: p.description,
+        category: p.category,
+        budget_min: p.budget_min,
+        budget_max: p.budget_max,
+        city: p.city,
+        region: p.region,
+        status: p.status ?? 'open',
+        deadline: p.deadline,
+        created_at: p.created_at ?? new Date(0).toISOString(),
+        updated_at: p.updated_at ?? p.created_at ?? new Date(0).toISOString(),
+        proposals_count: p.proposals_count ?? 0,
+        views_count: p.views_count ?? 0,
+        assigned_professional_id: p.assigned_professional_id,
+        progress_percentage: p.progress_percentage ?? 0,
+        progress_status: p.progress_status ?? 'not_started',
+        current_phase: p.current_phase,
+        contract_id: p.contract_id,
         contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
         client_signed_at: p.contracts?.client_signed_at || null,
         professional_signed_at: p.contracts?.professional_signed_at || null,
@@ -345,9 +362,9 @@ const Dashboard = () => {
     try {
       setLoadingFavorites(true);
 
-      const { data, error } = await supabase
-        .from('favorites_with_details')
-        .select('*')
+      const { data: favoriteRows, error } = await supabase
+        .from('favorites')
+        .select('id, professional_id, notes, priority, created_at')
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
@@ -361,7 +378,48 @@ const Dashboard = () => {
         throw error;
       }
 
-      setFavorites(data || []);
+      if (!favoriteRows?.length) {
+        setFavorites([]);
+        return;
+      }
+
+      const professionalIds = favoriteRows.map((favorite) => favorite.professional_id);
+      const { data: professionalRows, error: professionalError } = await supabase
+        .from('public_professional_profiles')
+        .select('id, full_name, company_name, rbq_number, services_offered, city, region, years_experience, average_rating, total_reviews, total_projects, hourly_rate_min, hourly_rate_max, availability_status, available_from, response_time_hours, activity_score')
+        .in('id', professionalIds);
+
+      if (professionalError) throw professionalError;
+      const professionalsById = new Map(
+        (professionalRows || []).filter((row) => row.id).map((row) => [row.id as string, row]),
+      );
+
+      setFavorites(favoriteRows.map((favorite) => {
+        const professional = professionalsById.get(favorite.professional_id);
+        return {
+          id: favorite.id,
+          professional_id: favorite.professional_id,
+          full_name: professional?.full_name || 'Professionnel',
+          company_name: professional?.company_name || professional?.full_name || 'Professionnel',
+          rbq_number: professional?.rbq_number || 'Non renseigné',
+          services_offered: professional?.services_offered ?? null,
+          city: professional?.city ?? null,
+          region: professional?.region ?? null,
+          years_experience: professional?.years_experience ?? null,
+          average_rating: professional?.average_rating ?? 0,
+          total_reviews: professional?.total_reviews ?? 0,
+          total_projects: professional?.total_projects ?? 0,
+          hourly_rate_min: professional?.hourly_rate_min ?? null,
+          hourly_rate_max: professional?.hourly_rate_max ?? null,
+          availability_status: professional?.availability_status ?? null,
+          available_from: professional?.available_from ?? null,
+          response_time_hours: professional?.response_time_hours ?? null,
+          activity_score: professional?.activity_score ?? null,
+          notes: favorite.notes,
+          priority: favorite.priority ?? 0,
+          created_at: favorite.created_at ?? new Date(0).toISOString(),
+        };
+      }));
     } catch (error) {
       console.error('Error fetching favorites:', error);
       // Don't show error toast if table doesn't exist yet
@@ -393,7 +451,7 @@ const Dashboard = () => {
           current_phase,
           contract_id,
           assigned_professional_id,
-          profiles:assigned_professional_id (full_name, company_name),
+          profiles!projects_assigned_professional_id_fkey (full_name, company_name),
           contracts:contract_id (client_signed_at, professional_signed_at)
         `)
         .eq('client_id', userId)
@@ -457,7 +515,7 @@ const Dashboard = () => {
               created_at,
               is_read_by_client,
               projects:project_id (title),
-              profiles:professional_id (full_name, company_name)
+              profiles!project_reports_professional_id_fkey (full_name, company_name)
             `)
             .in('project_id', projectIds)
             .order('created_at', { ascending: false })
@@ -523,7 +581,7 @@ const Dashboard = () => {
           client_signed_at,
           professional_signed_at,
           projects:project_id (title),
-          profiles:professional_id (full_name, company_name)
+          profiles!contracts_professional_id_fkey (full_name, company_name)
         `)
         .eq('client_id', userId)
         .is('client_signed_at', null)
@@ -572,7 +630,7 @@ const Dashboard = () => {
           client_signed_at,
           professional_signed_at,
           projects:project_id (title),
-          profiles:professional_id (full_name, company_name)
+          profiles!contracts_professional_id_fkey (full_name, company_name)
         `)
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
@@ -629,7 +687,7 @@ const Dashboard = () => {
           contracts:contract_id (
             id, title, project_id,
             projects:project_id (title),
-            profiles:professional_id (full_name)
+            profiles!contracts_professional_id_fkey (full_name)
           )
         `)
         .eq('contracts.client_id', userId)
@@ -786,7 +844,7 @@ const Dashboard = () => {
       if (projectIds.length > 0) {
         const { data: proposals } = await supabase
           .from('proposals')
-          .select('*, profiles:professional_id(full_name), projects:project_id(title)')
+          .select('*, profiles!proposals_professional_id_fkey(full_name), projects:project_id(title)')
           .in('project_id', projectIds)
           .order('created_at', { ascending: false });
 
@@ -1520,4 +1578,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-

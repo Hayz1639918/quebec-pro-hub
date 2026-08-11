@@ -242,9 +242,9 @@ const ProDashboard = () => {
 
   const fetchPendingInvitations = async (uid: string) => {
     try {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('project_invitations')
-        .select('id, project_id, client_id, message, status, created_at, projects:project_id(title), profiles:client_id(full_name, company_name)')
+        .select('id, project_id, client_id, message, status, created_at, projects:project_id(title), profiles!project_invitations_client_id_fkey(full_name, company_name)')
         .eq('professional_id', uid)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
@@ -311,11 +311,11 @@ const ProDashboard = () => {
           client_signed_at,
           professional_signed_at,
           projects:project_id (title),
-          profiles:client_id (full_name, company_name)
+          profiles!contracts_client_id_fkey (full_name, company_name)
         `)
         .eq('professional_id', uid)
         .is('professional_signed_at', null)
-        .in('status', ['draft', 'pending', 'active'])
+        .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures'])
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -380,7 +380,7 @@ const ProDashboard = () => {
         .from('contracts')
         .select('id', { count: 'exact', head: true })
         .eq('professional_id', uid)
-        .in('status', ['draft', 'pending_signature']);
+        .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures']);
 
       // Fetch active projects (those with proposals)
       const { data: activeProjectsData } = await supabase
@@ -453,7 +453,7 @@ const ProDashboard = () => {
             current_phase,
             contract_id,
             client_id,
-            profiles:client_id (full_name, company_name),
+            profiles!projects_client_id_fkey (full_name, company_name),
             contracts:contract_id (status, client_signed_at, professional_signed_at, start_date)
           `)
           .eq('assigned_professional_id', uid)
@@ -1130,4 +1130,3 @@ const ProDashboard = () => {
 };
 
 export default ProDashboard;
-

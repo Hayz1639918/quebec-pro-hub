@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -114,8 +115,14 @@ const ClientProfile = () => {
   }, []);
 
   const fetchProfile = async (uid: string) => {
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', uid).single();
-    if (error) return console.error(error);
+    let data;
+    try {
+      data = await getMyProfile();
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+    if (data?.id !== uid) return;
     if (data?.user_type !== 'client') {
       navigate("/pro/profile");
       return;
@@ -522,7 +529,6 @@ const ClientProfile = () => {
 };
 
 export default ClientProfile;
-
 
 
 

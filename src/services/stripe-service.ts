@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getMyProfile } from '@/services/profile-service';
 
 const STRIPE_NOT_CONFIGURED = 'Stripe is not configured. Please provide API keys.';
 
@@ -52,17 +53,14 @@ export async function getConnectOnboardingStatus(professionalId: string): Promis
   isOnboarded: boolean;
   accountId: string | null;
 }> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('stripe_account_id, stripe_onboarding_complete')
-    .eq('id', professionalId)
-    .single();
-
-  if (error) throw error;
+  const data = await getMyProfile();
+  if (!data || data.id !== professionalId) {
+    throw new Error('Not authorized to read this payout profile.');
+  }
 
   return {
     hasAccount: !!data?.stripe_account_id,
-    isOnboarded: data?.stripe_onboarding_complete ?? false,
+    isOnboarded: data?.payout_enabled ?? false,
     accountId: data?.stripe_account_id ?? null,
   };
 }

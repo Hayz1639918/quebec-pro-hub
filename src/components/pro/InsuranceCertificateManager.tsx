@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { InsuranceCertificate } from "@/types/contractor-profile";
+import type { InsuranceCertificate, InsuranceStatus, InsuranceType } from "@/types/contractor-profile";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -62,7 +62,19 @@ const InsuranceCertificateManager = ({ professionalId }: InsuranceCertificateMan
       .select("*")
       .eq("professional_id", professionalId)
       .order("created_at", { ascending: false });
-    if (!error) setCertificates(data ?? []);
+    if (!error) {
+      setCertificates((data ?? []).map((certificate) => ({
+        ...certificate,
+        insurance_type: ['liability', 'professional', 'other'].includes(certificate.insurance_type)
+          ? certificate.insurance_type as InsuranceType
+          : 'other',
+        status: ['active', 'expiring_soon', 'expired'].includes(certificate.status)
+          ? certificate.status as InsuranceStatus
+          : 'active',
+        created_at: certificate.created_at || '',
+        updated_at: certificate.updated_at || '',
+      })));
+    }
     setLoading(false);
   };
 

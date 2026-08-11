@@ -78,7 +78,16 @@ const CertificationsManager = ({ professionalId }: CertificationsManagerProps) =
       .select("*")
       .eq("professional_id", professionalId)
       .order("created_at", { ascending: false });
-    if (!error) setCertifications(data ?? []);
+    if (!error) {
+      setCertifications((data ?? []).map((certification) => ({
+        ...certification,
+        cert_type: ['ccq', 'asp', 'other'].includes(certification.cert_type)
+          ? certification.cert_type as CertType
+          : 'other',
+        created_at: certification.created_at || '',
+        updated_at: certification.updated_at || '',
+      })));
+    }
     setLoading(false);
   };
 

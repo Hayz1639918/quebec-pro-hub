@@ -50,6 +50,13 @@ interface Booking {
   project_title?: string;
 }
 
+const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'] as const;
+
+const normalizeBookingStatus = (value: string): Booking['status'] =>
+  BOOKING_STATUSES.includes(value as Booking['status'])
+    ? value as Booking['status']
+    : 'pending';
+
 const ProCalendar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -144,8 +151,17 @@ const ProCalendar = () => {
 
       if (error) throw error;
 
-      const bookingsWithDetails = (data || []).map((b) => ({
-        ...b,
+      const bookingsWithDetails: Booking[] = (data || []).map((b) => ({
+        id: b.id,
+        professional_id: b.professional_id,
+        client_id: b.client_id,
+        project_id: b.project_id,
+        date: b.date,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        status: normalizeBookingStatus(b.status),
+        notes: b.notes,
+        created_at: b.created_at ?? new Date(0).toISOString(),
         client_name: b.profiles?.full_name || 'Client',
         project_title: b.projects?.title || 'Sans titre',
       }));
@@ -585,4 +601,3 @@ const ProCalendar = () => {
 };
 
 export default ProCalendar;
-

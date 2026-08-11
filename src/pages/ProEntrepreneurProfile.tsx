@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Linkedin, Award, Globe, MapPin, Plus, X, CheckCircle2 } from "lucide-react";
+import type { Json } from "@/integrations/supabase/types";
 
 const LANGUAGES = ["Français", "English", "Español", "Português", "Arabe", "Mandarin", "Italien"];
 
@@ -28,6 +29,35 @@ interface Certification {
   issuer: string;
   year: string;
 }
+
+const parseStoredValue = (value: unknown): unknown => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const normalizeStringList = (value: unknown): string[] => {
+  const parsed = parseStoredValue(value);
+  return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : [];
+};
+
+const normalizeCertifications = (value: unknown): Certification[] => {
+  const parsed = parseStoredValue(value);
+  if (!Array.isArray(parsed)) return [];
+  return parsed.flatMap((item) => {
+    if (item === null || typeof item !== 'object' || Array.isArray(item)) return [];
+    const cert = item as Record<string, unknown>;
+    if (typeof cert.name !== 'string') return [];
+    return [{
+      name: cert.name,
+      issuer: typeof cert.issuer === 'string' ? cert.issuer : '',
+      year: typeof cert.year === 'string' ? cert.year : '',
+    }];
+  });
+};
 
 const ProEntrepreneurProfile = () => {
   const navigate = useNavigate();
@@ -70,15 +100,9 @@ const ProEntrepreneurProfile = () => {
       return;
     }
     if (data.linkedin_url) setLinkedinUrl(data.linkedin_url);
-    if (data.certifications) {
-      try { setCertifications(JSON.parse(data.certifications)); } catch { /* ignore */ }
-    }
-    if (data.languages) {
-      try { setSelectedLanguages(JSON.parse(data.languages)); } catch { /* ignore */ }
-    }
-    if (data.service_zones) {
-      try { setSelectedZones(JSON.parse(data.service_zones)); } catch { /* ignore */ }
-    }
+    setCertifications(normalizeCertifications(data.certifications));
+    setSelectedLanguages(normalizeStringList(data.languages));
+    setSelectedZones(normalizeStringList(data.service_zones));
   };
 
   const saveProfile = async () => {
@@ -89,9 +113,9 @@ const ProEntrepreneurProfile = () => {
         .from("profiles")
         .update({
           linkedin_url: linkedinUrl || null,
-          certifications: certifications.length > 0 ? JSON.stringify(certifications) : null,
-          languages: selectedLanguages.length > 0 ? JSON.stringify(selectedLanguages) : null,
-          service_zones: selectedZones.length > 0 ? JSON.stringify(selectedZones) : null,
+          certifications: certifications.length > 0 ? certifications as unknown as Json : null,
+          languages: selectedLanguages.length > 0 ? selectedLanguages : null,
+          service_zones: selectedZones.length > 0 ? selectedZones : null,
         })
         .eq("id", userId);
       if (error) throw error;

@@ -23,6 +23,7 @@ import {
   Milestone as MilestoneIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { getMyProfile } from "@/services/profile-service";
 import { useToast } from "@/hooks/use-toast";
 import type { ContractTemplate } from "@/types/contracts";
 import { useTranslation } from "react-i18next";
@@ -53,7 +54,9 @@ interface Project {
   id: string;
   title: string;
   description: string;
-  address: string;
+  city: string | null;
+  region: string | null;
+  postal_code: string | null;
   payment_handling_preference?: string | null;
 }
 
@@ -149,13 +152,8 @@ export const ContractBuilder = ({
 
   const fetchClientProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
+      const data = await getMyProfile();
+      if (data?.id !== userId) throw new Error('Client profile not found');
       setClientProfile(data);
     } catch (error) {
       console.error('Error fetching client profile:', error);
@@ -165,7 +163,7 @@ export const ContractBuilder = ({
   const fetchProfessionals = async () => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('public_professional_profiles')
         .select('id, full_name, company_name, email, rbq_number')
         .eq('user_type', 'professional')
         .order('full_name');
@@ -181,7 +179,7 @@ export const ContractBuilder = ({
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, description, address, payment_handling_preference')
+        .select('id, title, description, city, region, postal_code, payment_handling_preference')
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
@@ -221,7 +219,9 @@ export const ContractBuilder = ({
       professional_email: selectedProfessional.email || '',
       project_title: formData.title || selectedProject.title,
       project_description: formData.description || selectedProject.description || '',
-      project_address: selectedProject.address || '',
+      project_address: [selectedProject.city, selectedProject.region, selectedProject.postal_code]
+        .filter(Boolean)
+        .join(', '),
       start_date: formData.start_date || '',
       end_date: formData.end_date || '',
       total_amount: formData.total_amount || '0',

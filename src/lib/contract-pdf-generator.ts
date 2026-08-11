@@ -1,6 +1,7 @@
 // Générateur de PDF professionnel pour contrats signés
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import DOMPurify from 'dompurify';
 import type { Contract } from '@/types/contracts';
 import type { SignatureData } from '@/services/signature-service';
 
@@ -21,7 +22,7 @@ export async function generateSignedContractPDF(
     <html>
       <head>
         <meta charset="utf-8">
-        <title>Contrat - ${contract.title}</title>
+        <title>Contrat - ${escapeHtml(contract.title)}</title>
         <style>${getContractPDFStyles()}</style>
       </head>
       <body>
@@ -42,6 +43,9 @@ function generateContractHTML(
   professionalSignature: SignatureData | null
 ): string {
   const isSigned = clientSignature && professionalSignature;
+  const safeContractContent = DOMPurify.sanitize(contract.contract_content);
+  const safeClientSignature = safeSignatureImage(clientSignature?.signature_image);
+  const safeProfessionalSignature = safeSignatureImage(professionalSignature?.signature_image);
   
   return `
     <div class="contract-document">
@@ -63,7 +67,7 @@ function generateContractHTML(
 
       <!-- Titre du contrat -->
       <div class="contract-title">
-        <h2>${contract.title}</h2>
+        <h2>${escapeHtml(contract.title)}</h2>
       </div>
 
       <!-- Parties contractantes -->
@@ -72,20 +76,20 @@ function generateContractHTML(
         
         <div class="party">
           <h4>LE CLIENT</h4>
-          <p><strong>Nom:</strong> ${contract.client_name}</p>
-          <p><strong>Email:</strong> ${contract.client_id}</p>
+          <p><strong>Nom:</strong> ${escapeHtml(contract.client_name || 'Non renseigné')}</p>
+          <p><strong>Identifiant:</strong> ${escapeHtml(contract.client_id)}</p>
         </div>
 
         <div class="party">
           <h4>LE PROFESSIONNEL</h4>
-          <p><strong>Nom:</strong> ${contract.professional_name}</p>
-          <p><strong>Entreprise:</strong> ${contract.company_name || 'N/A'}</p>
+          <p><strong>Nom:</strong> ${escapeHtml(contract.professional_name || 'Non renseigné')}</p>
+          <p><strong>Entreprise:</strong> ${escapeHtml(contract.company_name || 'N/A')}</p>
         </div>
       </section>
 
       <!-- Contenu du contrat -->
       <section class="contract-content">
-        ${contract.contract_content}
+        ${safeContractContent}
       </section>
 
       <!-- Conditions financières -->
@@ -111,15 +115,15 @@ function generateContractHTML(
           <!-- Signature Client -->
           <div class="signature-box">
             <h4>Signature du Client</h4>
-            ${clientSignature ? `
+            ${clientSignature && safeClientSignature ? `
               <div class="signature-image-container">
-                <img src="${clientSignature.signature_image}" alt="Signature client" class="signature-image" />
+                <img src="${safeClientSignature}" alt="Signature client" class="signature-image" />
               </div>
               <div class="signature-details">
-                <p><strong>${contract.client_name}</strong></p>
+                <p><strong>${escapeHtml(contract.client_name || 'Client')}</strong></p>
                 <p>Signé le: ${format(new Date(clientSignature.signed_at), 'd MMMM yyyy à HH:mm', { locale: fr })}</p>
-                <p class="verification-code">Code: ${clientSignature.verification_code}</p>
-                <p class="signature-meta">IP: ${clientSignature.ip_address}</p>
+                <p class="verification-code">Code: ${escapeHtml(clientSignature.verification_code)}</p>
+                <p class="signature-meta">IP: ${escapeHtml(clientSignature.ip_address)}</p>
               </div>
             ` : `
               <div class="signature-pending">
@@ -131,15 +135,15 @@ function generateContractHTML(
           <!-- Signature Professionnel -->
           <div class="signature-box">
             <h4>Signature du Professionnel</h4>
-            ${professionalSignature ? `
+            ${professionalSignature && safeProfessionalSignature ? `
               <div class="signature-image-container">
-                <img src="${professionalSignature.signature_image}" alt="Signature professionnel" class="signature-image" />
+                <img src="${safeProfessionalSignature}" alt="Signature professionnel" class="signature-image" />
               </div>
               <div class="signature-details">
-                <p><strong>${contract.professional_name}</strong></p>
+                <p><strong>${escapeHtml(contract.professional_name || 'Professionnel')}</strong></p>
                 <p>Signé le: ${format(new Date(professionalSignature.signed_at), 'd MMMM yyyy à HH:mm', { locale: fr })}</p>
-                <p class="verification-code">Code: ${professionalSignature.verification_code}</p>
-                <p class="signature-meta">IP: ${professionalSignature.ip_address}</p>
+                <p class="verification-code">Code: ${escapeHtml(professionalSignature.verification_code)}</p>
+                <p class="signature-meta">IP: ${escapeHtml(professionalSignature.ip_address)}</p>
               </div>
             ` : `
               <div class="signature-pending">
@@ -155,19 +159,19 @@ function generateContractHTML(
         <section class="certificate-section">
           <h3>CERTIFICAT DE SIGNATURE ÉLECTRONIQUE</h3>
           <div class="certificate">
-            <p>Ce document a été signé électroniquement conformément aux lois canadiennes sur les signatures électroniques.</p>
+            <p>Ce certificat récapitule les données de signature enregistrées par BâtirNet. La qualification juridique du contrat dépend de son contenu et du contexte applicable.</p>
             <table class="certificate-table">
               <tr>
                 <td><strong>Hash du document:</strong></td>
-                <td class="mono">${clientSignature?.document_hash?.substring(0, 32)}...</td>
+                <td class="mono">${escapeHtml(clientSignature?.document_hash?.substring(0, 32) || '')}...</td>
               </tr>
               <tr>
-                <td><strong>Date et heure du serveur:</strong></td>
-                <td>${format(new Date(), 'd MMMM yyyy à HH:mm:ss', { locale: fr })} EST</td>
+                <td><strong>Date de génération du certificat:</strong></td>
+                <td>${format(new Date(), 'd MMMM yyyy à HH:mm:ss', { locale: fr })}</td>
               </tr>
               <tr>
                 <td><strong>Vérification en ligne:</strong></td>
-                <td>https://batirnet.com/verify/${clientSignature?.verification_code}</td>
+                <td>https://batirnet.com/contracts/verify/${encodeURIComponent(clientSignature?.verification_code || '')}</td>
               </tr>
             </table>
           </div>
@@ -177,11 +181,24 @@ function generateContractHTML(
       <!-- Pied de page -->
       <footer class="contract-footer">
         <p>Document généré par BâtirNet - Plateforme de construction canadienne</p>
-        <p>Ce document est juridiquement contraignant une fois signé par les deux parties</p>
+        <p>Conservez ce document avec les communications et pièces pertinentes au contrat.</p>
         <p class="page-number">Page 1</p>
       </footer>
     </div>
   `;
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeSignatureImage(value?: string): string {
+  return value && /^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(value) ? value : '';
 }
 
 function getContractPDFStyles(): string {

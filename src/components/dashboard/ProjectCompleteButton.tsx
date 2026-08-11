@@ -60,7 +60,7 @@ export default function ProjectCompleteButton({
     } catch (err: unknown) {
       toast({
         title: "Erreur",
-        description: err.message || "Impossible de mettre à jour le statut du projet.",
+        description: err instanceof Error ? err.message : "Impossible de mettre à jour le statut du projet.",
         variant: "destructive",
       });
     } finally {

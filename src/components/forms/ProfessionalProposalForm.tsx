@@ -18,6 +18,7 @@ import {
   Send
 } from 'lucide-react';
 import { toast } from 'sonner';
+import type { Json } from '@/integrations/supabase/types';
 
 interface ProfessionalProposalFormProps {
   projectId: string;
@@ -198,12 +199,12 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
           work_methodology: methodology || null,
           estimated_budget: parseFloat(estimatedBudget),
           estimated_duration_days: parseInt(estimatedDuration),
-          team_composition: validTeamMembers.length > 0 ? validTeamMembers : null,
-          timeline_details: validTimelinePhases.length > 0 ? validTimelinePhases : null,
-          budget_breakdown: Object.keys(budgetBreakdown).length > 0 ? budgetBreakdown : null,
+          team_composition: validTeamMembers.length > 0 ? validTeamMembers as unknown as Json : null,
+          timeline_details: validTimelinePhases.length > 0 ? validTimelinePhases as unknown as Json : null,
+          budget_breakdown: Object.keys(budgetBreakdown).length > 0 ? budgetBreakdown as Json : null,
           rbq_license_number: rbqLicense || null,
           insurance_proof_url: insuranceUrl || null,
-          references: validReferences.length > 0 ? validReferences : null,
+          references: validReferences.length > 0 ? validReferences as unknown as Json : null,
           warranty_offered_months: parseInt(warrantyMonths),
           valid_until: validUntil.toISOString().split('T')[0],
           status: 'pending',
@@ -233,7 +234,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
           .from('notifications')
           .insert({
             user_id: projectData.client_id,
-            type: 'proposal',
+            type: 'new_proposal',
             title: 'Nouvelle proposition reçue',
             message: `${professionalData.company_name || professionalData.full_name} a soumis une proposition pour "${projectData.title}"`,
             action_url: `/proposal/${proposal.id}?showPDF=true`,
@@ -254,7 +255,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
       }
     } catch (error: unknown) {
       console.error('Error submitting proposal:', error);
-      if (error.code === '23505') {
+      if ((error as { code?: string } | null)?.code === '23505') {
         toast.error('Vous avez déjà soumis une proposition pour ce projet');
       } else {
         toast.error('Erreur lors de l\'envoi de la soumission');
@@ -660,4 +661,3 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
 };
 
 export default ProfessionalProposalForm;
-

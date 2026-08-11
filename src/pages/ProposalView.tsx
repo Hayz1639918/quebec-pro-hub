@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { getMyProfile } from '@/services/profile-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import type { ProposalRecord, TenderProject, PartyInfo } from '@/types/tender';
 import { formatCurrency, formatDateLong as formatDate } from '@/lib/format';
+import { normalizeProposalRecord } from '@/lib/tender-mapper';
 
 const ProposalView = () => {
   const { t } = useTranslation();
@@ -56,11 +58,7 @@ const ProposalView = () => {
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const profile = await getMyProfile();
       setCurrentUser(profile);
     }
   };
@@ -93,13 +91,13 @@ const ProposalView = () => {
           professional_company,
           professional_email,
           professional_phone,
-          professional_rbq,
-          ...proposalOnly
+          professional_rbq
         } = proposalData;
 
-        setProposal(proposalOnly);
+        setProposal(normalizeProposalRecord(proposalData));
         setProject({
-          title: project_title,
+          id: proposalData.project_id ?? '',
+          title: project_title ?? 'Projet',
           tender_number,
           category: project_category,
           city: project_city,
@@ -115,7 +113,7 @@ const ProposalView = () => {
           company_name: professional_company,
           email: professional_email,
           phone: professional_phone,
-          rbq_license: professional_rbq,
+          rbq_number: professional_rbq,
         });
       }
     } catch (error: unknown) {
@@ -126,7 +124,7 @@ const ProposalView = () => {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: string) => {
+  const handleStatusUpdate = async (newStatus: 'accepted' | 'rejected') => {
     try {
       const { error } = await supabase
         .from('proposals')
@@ -531,7 +529,7 @@ const ProposalView = () => {
                     )}
                     {ref.value && (
                       <p className="text-sm font-medium text-green-600">
-                        Valeur : {formatCurrency(ref.value)}
+                        Valeur : {formatCurrency(Number(ref.value))}
                       </p>
                     )}
                   </div>
@@ -548,4 +546,3 @@ const ProposalView = () => {
 };
 
 export default ProposalView;
-

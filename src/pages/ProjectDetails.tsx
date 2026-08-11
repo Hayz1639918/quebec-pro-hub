@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { getMyProfile } from '@/services/profile-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +97,8 @@ interface Profile {
   company_name?: string;
 }
 
+type ClientProfile = Pick<Profile, 'id' | 'full_name' | 'company_name'>;
+
 
 const STATUS_COLORS: Record<string, string> = {
   open: 'bg-green-500',
@@ -116,7 +119,7 @@ const ProjectDetails = () => {
     cancelled: t('projects.status.cancelled'),
   };
   const [project, setProject] = useState<Project | null>(null);
-  const [client, setClient] = useState<Profile | null>(null);
+  const [client, setClient] = useState<ClientProfile | null>(null);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showProposalForm, setShowProposalForm] = useState(false);
@@ -163,7 +166,9 @@ const ProjectDetails = () => {
       }
       await Promise.all([fetchProjectDetails(), fetchProjectDocuments()]);
     } catch (err: unknown) {
-      toast.error("Erreur lors de la mise à jour", { description: err?.message || 'Erreur inconnue' });
+      toast.error("Erreur lors de la mise à jour", {
+        description: err instanceof Error ? err.message : 'Erreur inconnue',
+      });
     } finally {
       setProcessingProposalId(null);
     }
@@ -206,7 +211,7 @@ const ProjectDetails = () => {
   const fetchRecommendations = async (category: string) => {
     try {
       const { data } = await supabase
-        .from('profiles')
+        .from('public_professional_profiles')
         .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
         .eq('user_type', 'professional')
         .eq('is_rbq_verified', true)
@@ -217,7 +222,7 @@ const ProjectDetails = () => {
       else {
         // Fallback: top rated professionals
         const { data: topPros } = await supabase
-          .from('profiles')
+          .from('public_professional_profiles')
           .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
           .eq('user_type', 'professional')
           .eq('is_rbq_verified', true)
@@ -370,11 +375,7 @@ const ProjectDetails = () => {
   const fetchCurrentUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const profile = await getMyProfile();
       setCurrentUser(profile);
     }
   };
@@ -394,11 +395,18 @@ const ProjectDetails = () => {
       setProject(projectData);
 
       // Récupérer les infos du client
-      const { data: clientData, error: clientError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', projectData.client_id)
-        .single();
+      const clientResult = projectData.status === 'open'
+        ? await supabase
+            .from('public_project_clients')
+            .select('id, full_name, company_name')
+            .eq('project_id', projectData.id)
+            .single()
+        : await supabase
+            .from('profiles')
+            .select('id, full_name, company_name')
+            .eq('id', projectData.client_id)
+            .single();
+      const { data: clientData, error: clientError } = clientResult;
 
       if (clientError) throw clientError;
       setClient(clientData);
@@ -505,7 +513,7 @@ const ProjectDetails = () => {
           .from('notifications')
           .insert({
             user_id: project.client_id,
-            type: 'message',
+            type: 'new_message',
             title: t('notifications.types.new_message'),
             message: `${currentUser.company_name || currentUser.full_name} ${t('messages.sent_message_about')} "${project.title}"`,
             action_url: `/messages?conversation=${conversationId}`,
@@ -1367,4 +1375,3 @@ const ProjectDetails = () => {
 };
 
 export default ProjectDetails;
-
