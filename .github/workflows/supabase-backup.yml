@@ -15,27 +15,41 @@ concurrency:
 jobs:
   backup:
     name: Database and Storage
-    if: >-
-      ${{
-        secrets.SUPABASE_DB_URL != '' &&
-        secrets.SUPABASE_SERVICE_ROLE_KEY != '' &&
-        secrets.BACKUP_ENCRYPTION_PASSPHRASE != ''
-      }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       SUPABASE_URL: https://gsnjnhxzacwjslirfxgy.supabase.co
 
     steps:
+      - name: Check backup configuration
+        id: backup_config
+        shell: bash
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
+        run: |
+          if test -n "$SUPABASE_DB_URL" \
+            && test -n "$SUPABASE_SERVICE_ROLE_KEY" \
+            && test -n "$BACKUP_ENCRYPTION_PASSPHRASE"; then
+            printf 'configured=true\n' >> "$GITHUB_OUTPUT"
+          else
+            printf 'configured=false\n' >> "$GITHUB_OUTPUT"
+            printf '::warning::Backup skipped until the three documented repository secrets are configured.\n'
+          fi
+
       - name: Checkout repository
+        if: steps.backup_config.outputs.configured == 'true'
         uses: actions/checkout@v6
 
       - name: Setup Node.js
+        if: steps.backup_config.outputs.configured == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: "22"
 
       - name: Validate backup secrets
+        if: steps.backup_config.outputs.configured == 'true'
         shell: bash
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -49,6 +63,7 @@ jobs:
           test "${#BACKUP_ENCRYPTION_PASSPHRASE}" -ge 32 || { echo "BACKUP_ENCRYPTION_PASSPHRASE must contain at least 32 characters" >&2; exit 1; }
 
       - name: Export database and Storage
+        if: steps.backup_config.outputs.configured == 'true'
         shell: bash
         env:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
@@ -75,6 +90,7 @@ jobs:
           } > "$backup_root/backup-info.txt"
 
       - name: Encrypt backup
+        if: steps.backup_config.outputs.configured == 'true'
         shell: bash
         env:
           BACKUP_ENCRYPTION_PASSPHRASE: ${{ secrets.BACKUP_ENCRYPTION_PASSPHRASE }}
@@ -96,6 +112,7 @@ jobs:
           )
 
       - name: Upload encrypted backup
+        if: steps.backup_config.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: batirnet-supabase-${{ github.run_id }}
