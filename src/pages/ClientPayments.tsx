@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -8,7 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
@@ -16,8 +26,6 @@ import {
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Shield,
-  CreditCard,
   Building2,
   FileText,
   ChevronRight,
@@ -25,188 +33,195 @@ import {
   Loader2,
   HardHat,
   Info,
+  Send,
 } from "lucide-react";
-import { Download } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { pdf } from "@react-pdf/renderer";
-import { InvoicePDF, type InvoiceData } from "@/components/InvoicePDF";
-import { createCheckoutSession, isStripeConfigured } from "@/services/stripe-service";
-import OnlinePaymentComingSoonBadge from "@/components/payments/OnlinePaymentComingSoonBadge";
 
-type PaymentStatus = "pending" | "in_escrow" | "released" | "disputed" | "cancelled";
-type PaymentMethod = "card" | "transfer" | "crypto" | "cheque" | "cash";
-type PaymentHandling = "platform" | "offline";
+type PaymentStatus =
+  | "pending"
+  | "in_escrow"
+  | "processing"
+  | "succeeded"
+  | "released"
+  | "failed"
+  | "refunded"
+  | "disputed"
+  | "cancelled";
+type DirectMethod = "transfer" | "cheque" | "cash";
 
-interface ClientPaymentRow {
+type PaymentMetadata = {
+  payment_sent_by_client?: boolean;
+  payment_sent_at?: string;
+  payment_sent_method?: DirectMethod;
+  payment_sent_note?: string | null;
+};
+
+interface ClientPayment {
   id: string;
   contract_id: string | null;
   contractor_id: string;
-  milestone_id: string | null;
   project_title: string;
   milestone: string;
   amount: number;
-  net_amount: number;
   status: PaymentStatus;
-  payment_method: PaymentMethod;
+  payment_method: string | null;
   released_at: string | null;
   created_at: string;
-}
-
-interface EnrichedPayment extends ClientPaymentRow {
+  metadata: PaymentMetadata | null;
   professional_name: string;
-  payment_handling: PaymentHandling;
-  invoice_number: string | null;
-  invoice: InvoiceData | null;
 }
 
-const statusConfig: Record<PaymentStatus, { label: string; tone: string; icon: React.ElementType }> = {
-  pending:   { label: "À payer",    tone: "bg-warning-light text-warning border-warning/30",        icon: Clock },
-  in_escrow: { label: "En escrow",  tone: "bg-primary/10 text-primary border-primary/30",            icon: Shield },
-  released:  { label: "Payé",       tone: "bg-success-light text-success border-success/30",        icon: CheckCircle2 },
-  disputed:  { label: "En litige",  tone: "bg-destructive/10 text-destructive border-destructive/30", icon: AlertTriangle },
-  cancelled: { label: "Annulé",     tone: "bg-muted text-muted-foreground border-border",            icon: AlertTriangle },
-};
-
-const methodMeta: Record<PaymentMethod, { label: string; icon: React.ElementType }> = {
-  card:     { label: "Carte",    icon: CreditCard },
-  transfer: { label: "Virement", icon: Building2 },
-  crypto:   { label: "Crypto",   icon: Banknote },
-  cheque:   { label: "Chèque",   icon: FileText },
-  cash:     { label: "Comptant", icon: Banknote },
-};
-
-const handlingMeta: Record<PaymentHandling, { label: string; tone: string }> = {
-  platform: { label: "Via plateforme",  tone: "bg-primary/10 text-primary border-primary/30" },
-  offline:  { label: "Hors plateforme", tone: "bg-muted text-foreground border-border" },
+const methodLabels: Record<DirectMethod, string> = {
+  transfer: "Virement bancaire",
+  cheque: "Chèque",
+  cash: "Comptant",
 };
 
 const ClientPayments = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [payments, setPayments] = useState<EnrichedPayment[]>([]);
+  const [payments, setPayments] = useState<ClientPayment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<ClientPayment | null>(null);
+  const [sendMethod, setSendMethod] = useState<DirectMethod>("transfer");
+  const [sendNote, setSendNote] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth?mode=login"); return; }
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("user_type")
-        .eq("id", session.user.id)
-        .single();
-      if (prof?.user_type !== "client") { navigate("/"); return; }
-      await fetchPayments(session.user.id);
-      setLoading(false);
-    })();
-  }, [navigate]);
+    void loadPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const fetchPayments = async (uid: string) => {
+  const loadPage = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/auth?mode=login");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", session.user.id)
+      .single();
+
+    if (profile?.user_type !== "client") {
+      navigate("/");
+      return;
+    }
+
+    await fetchPayments(session.user.id);
+    setLoading(false);
+  };
+
+  const fetchPayments = async (userId: string) => {
     const { data: rows, error } = await supabase
       .from("contractor_payments")
-      .select("*")
-      .eq("client_id", uid)
+      .select("id, contract_id, contractor_id, project_title, milestone, amount, status, payment_method, released_at, created_at, metadata")
+      .eq("client_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger vos paiements" });
-      return;
-    }
-
-    const raw = (rows || []) as unknown as ClientPaymentRow[];
-    const contractIds = [...new Set(raw.map(p => p.contract_id).filter(Boolean))] as string[];
-    const contractorIds = [...new Set(raw.map(p => p.contractor_id))];
-
-    const [contractsRes, profilesRes, invoicesRes] = await Promise.all([
-      contractIds.length
-        ? supabase.from("contracts").select("id, payment_handling").in("id", contractIds)
-        : Promise.resolve({ data: [] as { id: string; payment_handling: string }[] }),
-      supabase.from("profiles").select("id, full_name, company_name").in("id", contractorIds),
-      supabase.from("invoices").select("*").eq("client_id", uid),
-    ]);
-
-    const contractMap = new Map(
-      (contractsRes.data || []).map(c => [c.id, (c.payment_handling as PaymentHandling) || "platform"])
-    );
-    const profileMap = new Map(
-      (profilesRes.data || []).map(p => [p.id, p.company_name || p.full_name || "Entrepreneur"])
-    );
-    const invoiceMap = new Map<string, InvoiceData>();
-    ((invoicesRes.data || []) as Array<InvoiceData & { milestone_id?: string | null }>).forEach((i) => {
-      if (i.milestone_id) invoiceMap.set(i.milestone_id, i);
-    });
-
-    setPayments(raw.map(p => {
-      const invoice = p.milestone_id ? (invoiceMap.get(p.milestone_id) ?? null) : null;
-      return {
-        ...p,
-        professional_name: profileMap.get(p.contractor_id) || "Entrepreneur",
-        payment_handling: p.contract_id ? (contractMap.get(p.contract_id) || "platform") : "platform",
-        invoice_number: invoice?.invoice_number ?? null,
-        invoice,
-      };
-    }));
-  };
-
-  const handleDownloadInvoice = async (payment: EnrichedPayment) => {
-    if (!payment.invoice) return;
-    setDownloadingId(payment.id);
-    try {
-      const blob = await pdf(
-        <InvoicePDF invoice={payment.invoice} contractorName={payment.professional_name} />
-      ).toBlob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${payment.invoice.invoice_number}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("PDF generation failed", e);
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de générer le PDF" });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
-
-  const totalPaid = payments
-    .filter(p => p.status === "released")
-    .reduce((s, p) => s + Number(p.amount), 0);
-  const totalDue = payments
-    .filter(p => ["pending", "in_escrow"].includes(p.status))
-    .reduce((s, p) => s + Number(p.amount), 0);
-  const pendingCount = payments.filter(p => ["pending", "in_escrow"].includes(p.status)).length;
-
-  const handlePayOnline = async (payment: EnrichedPayment) => {
-    if (!payment.contract_id) {
-      toast({ variant: "destructive", title: "Erreur", description: "Contrat introuvable pour ce paiement." });
-      return;
-    }
-    if (!isStripeConfigured()) {
       toast({
-        title: "Stripe bientôt disponible",
-        description: "Le paiement en ligne sécurisé sera activé dès réception des clés Stripe.",
+        variant: "destructive",
+        title: "Erreur",
+        description: "Impossible de charger vos paiements.",
       });
       return;
     }
-    setPayingId(payment.id);
+
+    const contractorIds = [...new Set((rows || []).map((row) => row.contractor_id))];
+    const { data: pros } = contractorIds.length
+      ? await supabase
+          .from("public_professional_profiles")
+          .select("id, full_name, company_name")
+          .in("id", contractorIds)
+      : { data: [] as Array<{ id: string; full_name: string; company_name: string | null }> };
+
+    const names = new Map(
+      (pros || []).map((pro) => [pro.id, pro.company_name || pro.full_name || "Entrepreneur"]),
+    );
+
+    setPayments(
+      (rows || []).map((row) => ({
+        ...row,
+        amount: Number(row.amount),
+        status: row.status as PaymentStatus,
+        metadata: (row.metadata || {}) as PaymentMetadata,
+        professional_name: names.get(row.contractor_id) || "Entrepreneur",
+      })),
+    );
+  };
+
+  const openSendDialog = (payment: ClientPayment) => {
+    const metadata = payment.metadata || {};
+    setSelectedPayment(payment);
+    setSendMethod(metadata.payment_sent_method || "transfer");
+    setSendNote(metadata.payment_sent_note || "");
+    setSendOpen(true);
+  };
+
+  const markAsSent = async () => {
+    if (!selectedPayment) return;
+    setSubmitting(true);
     try {
-      await createCheckoutSession({
-        milestoneId: payment.milestone_id || payment.id,
-        contractId: payment.contract_id,
-        amount: Number(payment.amount),
-        description: `${payment.milestone} — ${payment.project_title}`,
+      const rpcClient = supabase as unknown as {
+        rpc: (
+          fn: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ error: { message?: string } | null }>;
+      };
+      const { error } = await rpcClient.rpc("mark_offline_payment_sent", {
+        payment_id: selectedPayment.id,
+        method: sendMethod,
+        note: sendNote.trim() || null,
       });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Paiement indisponible";
-      toast({ variant: "destructive", title: "Erreur", description: msg });
+      if (error) throw new Error(error.message || "Impossible d'enregistrer l'envoi");
+
+      const sentAt = new Date().toISOString();
+      setPayments((current) =>
+        current.map((payment) =>
+          payment.id === selectedPayment.id
+            ? {
+                ...payment,
+                metadata: {
+                  ...(payment.metadata || {}),
+                  payment_sent_by_client: true,
+                  payment_sent_at: sentAt,
+                  payment_sent_method: sendMethod,
+                  payment_sent_note: sendNote.trim() || null,
+                },
+              }
+            : payment,
+        ),
+      );
+      setSendOpen(false);
+      toast({
+        title: "Paiement marqué comme envoyé",
+        description: "L'entrepreneur doit maintenant confirmer qu'il l'a reçu.",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Impossible d'enregistrer l'envoi";
+      toast({ variant: "destructive", title: "Erreur", description: message });
     } finally {
-      setPayingId(null);
+      setSubmitting(false);
     }
   };
+
+  const totalReceived = useMemo(
+    () => payments.filter((payment) => payment.status === "released").reduce((sum, payment) => sum + payment.amount, 0),
+    [payments],
+  );
+  const totalPending = useMemo(
+    () => payments.filter((payment) => payment.status === "pending").reduce((sum, payment) => sum + payment.amount, 0),
+    [payments],
+  );
+  const sentWaitingCount = useMemo(
+    () => payments.filter((payment) => payment.status === "pending" && payment.metadata?.payment_sent_by_client).length,
+    [payments],
+  );
 
   if (loading) {
     return (
@@ -219,257 +234,224 @@ const ClientPayments = () => {
             <Skeleton className="h-24" />
             <Skeleton className="h-24" />
           </div>
-          <Skeleton className="h-28 mb-3" />
-          <Skeleton className="h-28" />
+          <Skeleton className="h-32 mb-3" />
+          <Skeleton className="h-32" />
         </main>
         <Footer />
       </div>
     );
   }
 
+  const getFiltered = (tab: "all" | "pending" | "sent" | "received") => {
+    if (tab === "pending") return payments.filter((p) => p.status === "pending" && !p.metadata?.payment_sent_by_client);
+    if (tab === "sent") return payments.filter((p) => p.status === "pending" && p.metadata?.payment_sent_by_client);
+    if (tab === "received") return payments.filter((p) => p.status === "released");
+    return payments;
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navigation />
-      <main className="container mx-auto px-4 py-8 max-w-5xl pt-24">
+      <main className="container mx-auto px-4 py-8 max-w-5xl pt-24 flex-1">
         <Button variant="ghost" onClick={() => navigate("/dashboard")} className="gap-2 mb-6 -ml-2">
           <ArrowLeft className="h-4 w-4" />
           Tableau de bord
         </Button>
 
         <div className="mb-6">
-          <p className="tech-label-blue mb-2">Espace client · Finances</p>
+          <p className="tech-label-blue mb-2">Espace client · Suivi</p>
           <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
             <Banknote className="h-7 w-7 text-primary" />
             Mes paiements
           </h1>
           <p className="text-muted-foreground mt-1">
-            Factures et versements liés à vos contrats de construction
+            Suivez les règlements effectués directement avec vos entrepreneurs.
           </p>
         </div>
 
+        <Card className="mb-6 border-primary/20 bg-primary/5">
+          <CardContent className="p-4 flex items-start gap-3">
+            <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium">BâtirNet ne traite pas les fonds.</p>
+              <p className="text-muted-foreground mt-1">
+                Payez l'entrepreneur directement par virement, chèque ou comptant. Ensuite, marquez le paiement comme envoyé; l'entrepreneur confirmera sa réception dans BâtirNet.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          <Card className="card-accent border-warning/30 bg-warning-light/30">
+          <Card>
             <CardContent className="p-4">
-              <p className="tech-label mb-2">À régler</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">À régler / confirmer</p>
               <p className="text-2xl font-bold">
-                {totalDue.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">{pendingCount} paiement(s) en attente</p>
-            </CardContent>
-          </Card>
-          <Card className="card-accent border-success/30 bg-success-light/30">
-            <CardContent className="p-4">
-              <p className="tech-label mb-2">Total payé</p>
-              <p className="text-2xl font-bold">
-                {totalPaid.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {payments.filter(p => p.status === "released").length} versement(s) confirmé(s)
+                {totalPending.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
               </p>
             </CardContent>
           </Card>
-          <Card className="card-accent">
+          <Card>
             <CardContent className="p-4">
-              <p className="tech-label mb-2">Jalons facturés</p>
-              <p className="text-2xl font-bold">{payments.length}</p>
-              <p className="text-xs text-muted-foreground mt-1">Sur l'ensemble de vos projets</p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Envoyés, en attente</p>
+              <p className="text-2xl font-bold">{sentWaitingCount}</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-2">Réception confirmée</p>
+              <p className="text-2xl font-bold">
+                {totalReceived.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="tous">
-          <TabsList className="mb-4">
-            <TabsTrigger value="tous">Tous</TabsTrigger>
-            <TabsTrigger value="a-payer">À payer</TabsTrigger>
-            <TabsTrigger value="payes">Payés</TabsTrigger>
+        <Tabs defaultValue="all">
+          <TabsList className="mb-4 flex-wrap h-auto">
+            <TabsTrigger value="all">Tous</TabsTrigger>
+            <TabsTrigger value="pending">À régler</TabsTrigger>
+            <TabsTrigger value="sent">Envoyés</TabsTrigger>
+            <TabsTrigger value="received">Reçus</TabsTrigger>
           </TabsList>
 
-          {(["tous", "a-payer", "payes"] as const).map(tab => {
-            const filtered = tab === "tous" ? payments
-              : tab === "a-payer" ? payments.filter(p => ["pending", "in_escrow"].includes(p.status))
-              : payments.filter(p => p.status === "released");
-
-            return (
-              <TabsContent key={tab} value={tab} className="space-y-3">
-                {filtered.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 flex flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-                      <Inbox className="h-10 w-10 opacity-40" />
-                      <div>
-                        <p className="font-medium text-foreground">Aucun paiement</p>
-                        <p className="text-sm">Les factures apparaîtront ici après validation d'un jalon.</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  filtered.map(payment => {
-                    const StatusIcon = statusConfig[payment.status].icon;
-                    const MethodIcon = methodMeta[payment.payment_method]?.icon ?? Building2;
-                    const isPending = ["pending", "in_escrow"].includes(payment.status);
-                    const isPlatform = payment.payment_handling === "platform";
-                    const stripeReady = isStripeConfigured();
-
-                    return (
-                      <Card key={payment.id} className="card-accent hover:shadow-md transition-shadow">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 className="font-semibold">{payment.milestone}</h3>
-                                <Badge className={`${statusConfig[payment.status].tone} border`}>
-                                  <StatusIcon className="h-3 w-3 mr-1" />
-                                  {statusConfig[payment.status].label}
+          {(["all", "pending", "sent", "received"] as const).map((tab) => (
+            <TabsContent key={tab} value={tab} className="space-y-3">
+              {getFiltered(tab).length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <Inbox className="h-10 w-10 opacity-40 mx-auto mb-3" />
+                    <p className="font-medium text-foreground">Aucun paiement dans cette catégorie</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                getFiltered(tab).map((payment) => {
+                  const sent = Boolean(payment.metadata?.payment_sent_by_client);
+                  const received = payment.status === "released";
+                  const problematic = ["disputed", "failed", "refunded", "cancelled"].includes(payment.status);
+                  return (
+                    <Card key={payment.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4 flex-wrap">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold">{payment.milestone}</h3>
+                              {received ? (
+                                <Badge className="bg-success-light text-success border border-success/30">
+                                  <CheckCircle2 className="h-3 w-3 mr-1" /> Reçu
                                 </Badge>
-                                <Badge className={`${handlingMeta[payment.payment_handling].tone} border text-xs`}>
-                                  {handlingMeta[payment.payment_handling].label}
+                              ) : sent ? (
+                                <Badge variant="outline" className="border-primary/30 text-primary">
+                                  <Send className="h-3 w-3 mr-1" /> Envoyé
                                 </Badge>
-                              </div>
-                              <p className="text-sm text-muted-foreground flex items-center gap-1 flex-wrap">
-                                <HardHat className="h-3 w-3 shrink-0" />
-                                {payment.professional_name}
-                                <span className="text-border">·</span>
-                                {payment.project_title}
-                              </p>
-                              {payment.invoice_number && (
-                                <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                                  Facture {payment.invoice_number}
-                                </p>
+                              ) : problematic ? (
+                                <Badge variant="destructive">
+                                  <AlertTriangle className="h-3 w-3 mr-1" /> À vérifier
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">
+                                  <Clock className="h-3 w-3 mr-1" /> À régler
+                                </Badge>
                               )}
                             </div>
-                            <div className="text-right shrink-0">
-                              <p className="text-xl font-bold">
-                                {Number(payment.amount).toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1 flex-wrap">
+                              <HardHat className="h-3 w-3" />
+                              {payment.professional_name}
+                              <span>·</span>
+                              {payment.project_title}
+                            </p>
+                            {sent && payment.metadata?.payment_sent_at && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Envoyé le {format(new Date(payment.metadata.payment_sent_at), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                                {payment.metadata.payment_sent_method ? ` · ${methodLabels[payment.metadata.payment_sent_method]}` : ""}
                               </p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(payment.created_at), "dd MMM yyyy", { locale: fr })}
+                            )}
+                            {sent && payment.metadata?.payment_sent_note && (
+                              <p className="text-xs text-muted-foreground mt-1">Note : {payment.metadata.payment_sent_note}</p>
+                            )}
+                            {received && payment.released_at && (
+                              <p className="text-xs text-success mt-2">
+                                Réception confirmée le {format(new Date(payment.released_at), "dd MMM yyyy", { locale: fr })}
                               </p>
-                            </div>
+                            )}
                           </div>
-
-                          {isPending && isPlatform && (
-                            <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-md text-xs text-primary flex items-start gap-2">
-                              <Shield className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                  <span className="font-medium">Paiement sécurisé via la plateforme</span>
-                                  {!stripeReady && <OnlinePaymentComingSoonBadge />}
-                                </div>
-                                <span>
-                                  Les fonds sont protégés jusqu'à validation du jalon par vous et l'entrepreneur.
-                                  {!stripeReady && " Le paiement en ligne sera activé prochainement — vous serez notifié dès qu'il sera disponible."}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {isPending && !isPlatform && (
-                            <div className="mt-3 p-3 bg-muted border border-border rounded-md text-xs text-muted-foreground flex items-start gap-2">
-                              <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
-                              <div>
-                                <p className="font-medium text-foreground mb-1">Règlement hors plateforme</p>
-                                <p>
-                                  Réglez <strong>{payment.professional_name}</strong> directement par{" "}
-                                  <strong>virement bancaire</strong>, <strong>chèque</strong> ou <strong>comptant</strong>.
-                                  L'entrepreneur confirmera la réception dans son espace Paiements.
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
-                          {payment.status === "released" && (
-                            <div className="mt-3 p-2 bg-success-light/50 border border-success/20 rounded text-xs text-success flex items-center gap-2">
-                              <CheckCircle2 className="h-3 w-3 shrink-0" />
-                              Payé
-                              {payment.released_at && (
-                                <> le {format(new Date(payment.released_at), "dd MMM yyyy", { locale: fr })}</>
-                              )}
-                              {payment.payment_method && (
-                                <> · {methodMeta[payment.payment_method]?.label ?? payment.payment_method}</>
-                              )}
-                            </div>
-                          )}
-
-                          <div className="flex items-center justify-between mt-3 gap-3 flex-wrap">
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              {payment.status === "released" && (
-                                <span className="flex items-center gap-1">
-                                  <MethodIcon className="h-3 w-3" />
-                                  {methodMeta[payment.payment_method]?.label ?? "—"}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              {payment.invoice && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="gap-1"
-                                  disabled={downloadingId === payment.id}
-                                  onClick={() => handleDownloadInvoice(payment)}
-                                >
-                                  {downloadingId === payment.id ? (
-                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                  ) : (
-                                    <Download className="h-3 w-3" />
-                                  )}
-                                  Facture PDF
-                                </Button>
-                              )}
-                              {payment.contract_id && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="gap-1"
-                                  onClick={() => navigate(`/contracts?contract=${payment.contract_id}`)}
-                                >
-                                  <FileText className="h-3 w-3" />
-                                  Contrat
-                                  <ChevronRight className="h-3 w-3" />
-                                </Button>
-                              )}
-                              {isPending && isPlatform && (
-                                stripeReady ? (
-                                  <Button
-                                    size="sm"
-                                    className="gap-1 btn-blueprint"
-                                    disabled={payingId === payment.id}
-                                    onClick={() => handlePayOnline(payment)}
-                                  >
-                                    {payingId === payment.id ? (
-                                      <Loader2 className="h-3 w-3 animate-spin" />
-                                    ) : (
-                                      <CreditCard className="h-3 w-3" />
-                                    )}
-                                    Payer en ligne
-                                  </Button>
-                                ) : (
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span tabIndex={0}>
-                                        <Button size="sm" className="gap-1" disabled>
-                                          <CreditCard className="h-3 w-3" />
-                                          Payer en ligne
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Stripe bientôt disponible</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                )
-                              )}
-                            </div>
+                          <div className="text-right">
+                            <p className="text-xl font-bold">
+                              {payment.amount.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}
+                            </p>
                           </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
-              </TabsContent>
-            );
-          })}
+                        </div>
+
+                        <div className="flex justify-end gap-2 mt-4 flex-wrap">
+                          {payment.contract_id && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/contracts?contract=${payment.contract_id}`)}
+                            >
+                              <FileText className="h-3 w-3 mr-1" /> Contrat <ChevronRight className="h-3 w-3 ml-1" />
+                            </Button>
+                          )}
+                          {payment.status === "pending" && (
+                            <Button size="sm" onClick={() => openSendDialog(payment)}>
+                              <Send className="h-3 w-3 mr-1" />
+                              {sent ? "Modifier l'envoi" : "Marquer comme envoyé"}
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
+            </TabsContent>
+          ))}
         </Tabs>
       </main>
+
+      <Dialog open={sendOpen} onOpenChange={setSendOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Marquer le paiement comme envoyé</DialogTitle>
+            <DialogDescription>
+              {selectedPayment && `${selectedPayment.milestone} — ${selectedPayment.amount.toLocaleString("fr-CA", { style: "currency", currency: "CAD" })}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-md border bg-muted/50 p-3 text-sm text-muted-foreground">
+              Cette action enregistre uniquement votre déclaration dans BâtirNet. Elle n'effectue aucun transfert bancaire.
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="send-method">Méthode utilisée</Label>
+              <Select value={sendMethod} onValueChange={(value) => setSendMethod(value as DirectMethod)}>
+                <SelectTrigger id="send-method"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="transfer">Virement bancaire</SelectItem>
+                  <SelectItem value="cheque">Chèque</SelectItem>
+                  <SelectItem value="cash">Comptant</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="send-note">Note facultative</Label>
+              <Textarea
+                id="send-note"
+                value={sendNote}
+                onChange={(event) => setSendNote(event.target.value)}
+                maxLength={500}
+                placeholder="Ex. Virement envoyé le 11 août, référence 1234"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSendOpen(false)}>Annuler</Button>
+            <Button onClick={markAsSent} disabled={submitting}>
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              Confirmer l'envoi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );

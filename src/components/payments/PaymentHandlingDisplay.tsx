@@ -1,34 +1,31 @@
-import { Shield, Banknote, Info } from "lucide-react";
+import { Banknote, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
+// `platform` remains in the type only for historical records created before the
+// direct-settlement product decision. The database normalizes all new writes to
+// `offline`; neither value means that BâtirNet handles funds.
 export type PaymentHandlingMode = "platform" | "offline";
 export type PaymentHandlingPreference = PaymentHandlingMode | "negotiable";
 export type PaymentHandlingAudience = "client" | "pro" | "neutral";
 
 export const PAYMENT_HANDLING_SELECT_OPTIONS: Record<PaymentHandlingMode, string> = {
-  platform: "Via la plateforme (paiement en ligne sécurisé)",
-  offline: "Hors plateforme (virement / chèque / comptant)",
+  platform: "Règlement direct entre les parties (ancien choix)",
+  offline: "Règlement direct — virement / chèque / comptant",
 };
 
 export function getPaymentHandlingHint(
-  mode: PaymentHandlingMode,
+  _mode: PaymentHandlingMode,
   audience: PaymentHandlingAudience
 ): string {
   if (audience === "pro") {
-    return mode === "offline"
-      ? "Vous marquerez chaque paiement reçu directement du client dans l'espace Paiements."
-      : "Les paiements transitent par BâtirNet (escrow) et sont libérés à la validation des jalons.";
+    return "Le client vous paie directement. BâtirNet ne reçoit ni ne conserve les fonds : le client peut marquer le paiement comme envoyé, puis vous confirmez sa réception.";
   }
   if (audience === "client") {
-    return mode === "offline"
-      ? "Vous réglez l'entrepreneur directement (virement, chèque ou comptant). L'entrepreneur confirme la réception dans l'app."
-      : "Vous payez en ligne via BâtirNet. Les fonds sont protégés jusqu'à validation de chaque jalon.";
+    return "Vous réglez l'entrepreneur directement. BâtirNet ne reçoit ni ne conserve les fonds : vous pouvez marquer le paiement comme envoyé, puis l'entrepreneur confirme sa réception.";
   }
-  return mode === "offline"
-    ? "Le client règle l'entrepreneur directement. L'entrepreneur confirme chaque paiement reçu dans l'espace Paiements."
-    : "Les paiements transitent par la plateforme (escrow) et sont libérés à la validation des jalons.";
+  return "Le règlement se fait directement entre le client et l'entrepreneur. BâtirNet sert uniquement à suivre les statuts envoyé et reçu.";
 }
 
 interface PaymentHandlingBadgeProps {
@@ -36,25 +33,11 @@ interface PaymentHandlingBadgeProps {
   className?: string;
 }
 
-export function PaymentHandlingBadge({ mode, className }: PaymentHandlingBadgeProps) {
-  const Icon = mode === "offline" ? Banknote : Shield;
-  const label =
-    mode === "offline"
-      ? "Hors plateforme — virement / chèque / comptant"
-      : "Via la plateforme — paiement en ligne sécurisé";
-
+export function PaymentHandlingBadge({ className }: PaymentHandlingBadgeProps) {
   return (
-    <Badge
-      className={cn(
-        "gap-1 border",
-        mode === "offline"
-          ? "bg-muted text-foreground border-border"
-          : "bg-primary/10 text-primary border-primary/20",
-        className
-      )}
-    >
-      <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
-      {label}
+    <Badge className={cn("gap-1 border bg-muted text-foreground border-border", className)}>
+      <Banknote className="h-3 w-3 shrink-0" aria-hidden="true" />
+      Règlement direct
     </Badge>
   );
 }
@@ -88,12 +71,14 @@ export function PaymentHandlingPreferenceNotice({
   preference,
   className,
 }: PaymentHandlingPreferenceNoticeProps) {
-  if (!preference || preference === "negotiable") return null;
+  if (!preference) return null;
 
   const label =
     preference === "platform"
-      ? "Le client a indiqué préférer un règlement via la plateforme."
-      : "Le client a indiqué préférer un règlement hors plateforme.";
+      ? "Ce projet utilisait l'ancien choix de paiement via la plateforme. Le règlement se fait désormais directement entre les parties."
+      : preference === "negotiable"
+        ? "La modalité avait été laissée à discuter. Le règlement se fait directement entre les parties et BâtirNet en suit seulement le statut."
+        : "Le client a indiqué un règlement direct avec l'entrepreneur.";
 
   return (
     <Alert className={cn("border-primary/20 bg-primary/5", className)}>
