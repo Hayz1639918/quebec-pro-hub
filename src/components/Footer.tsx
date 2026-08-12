@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -39,7 +39,7 @@ const Footer = () => {
 
           {/* Brand column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-5 space-y-6">
-            <img src={logo} alt="BâtirNet Logo" className="h-10 sm:h-12 w-auto object-contain brightness-0 invert" />
+            <Logo size={44} onDark />
 
             <p className="font-body text-sm text-white/70 leading-relaxed max-w-[280px]">
               {t("footer.tagline")}
