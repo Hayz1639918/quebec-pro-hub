@@ -10,12 +10,11 @@ import ProtectedProRoute from "@/components/ProtectedProRoute";
 import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
 import BottomNav from "@/components/BottomNav";
 
-// Lazy load all pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
 const PendingVerification = lazy(() => import("./pages/PendingVerification"));
-const Professionals = lazy(() => import("./pages/Professionals"));
+const Professionals = lazy(() => import("./pages/ProfessionalsDirectory"));
 const Projects = lazy(() => import("./pages/Projects"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NewProject = lazy(() => import("./pages/NewProject"));
@@ -40,13 +39,12 @@ const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const TenderView = lazy(() => import("./pages/TenderView"));
 const ProposalView = lazy(() => import("./pages/ProposalView"));
-const ProfessionalProfile = lazy(() => import("./pages/ProfessionalProfile"));
+const ProfessionalProfile = lazy(() => import("./pages/ProfessionalDetails"));
 const ProjectProgress = lazy(() => import("./pages/ProjectProgress"));
 const ProjectReport = lazy(() => import("./pages/ProjectReport"));
 const ProMyProjects = lazy(() => import("./pages/ProMyProjects"));
 const ClientProfile = lazy(() => import("./pages/ClientProfile"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-// Epic 10-18 — Entrepreneur pages
 const CompleteProfileEntrepreneur = lazy(() => import("./pages/CompleteProfileEntrepreneur"));
 const CompleteProfileTrade = lazy(() => import("./pages/CompleteProfileTrade"));
 const ProEntrepreneurProfile = lazy(() => import("./pages/ProEntrepreneurProfile"));
@@ -55,10 +53,10 @@ const ProMeetings = lazy(() => import("./pages/ProMeetings"));
 const ProPayments = lazy(() => import("./pages/ProPayments"));
 const ProInvoices = lazy(() => import("./pages/ProInvoices"));
 const ClientPayments = lazy(() => import("./pages/ClientPayments"));
+const ResourcePage = lazy(() => import("./pages/ResourcePage"));
 
 const queryClient = new QueryClient();
 
-// Loading fallback component
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
     <div className="flex flex-col items-center gap-4">
@@ -89,7 +87,6 @@ const App = () => (
               <Route path="/tender/:id" element={<TenderView />} />
               <Route path="/proposal/:id" element={<ProposalView />} />
               <Route path="/professional/:id" element={<ProfessionalProfile />} />
-              {/* All /pro/* routes require a professional account */}
               <Route element={<ProtectedProRoute />}>
                 <Route path="/pro/dashboard" element={<ProDashboard />} />
                 <Route path="/pro/profile" element={<ProProfile />} />
@@ -122,10 +119,21 @@ const App = () => (
               <Route path="/contracts/verify/:verificationCode" element={<VerifySignature />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
+
+              <Route path="/about" element={<ResourcePage kind="about" />} />
+              <Route path="/careers" element={<ResourcePage kind="careers" />} />
+              <Route path="/blog" element={<ResourcePage kind="blog" />} />
+              <Route path="/contact" element={<ResourcePage kind="contact" />} />
+              <Route path="/help" element={<ResourcePage kind="help" />} />
+              <Route path="/guide/client" element={<ResourcePage kind="client-guide" />} />
+              <Route path="/guide/professional" element={<ResourcePage kind="professional-guide" />} />
+              <Route path="/faq" element={<ResourcePage kind="faq" />} />
+              <Route path="/cookies" element={<ResourcePage kind="cookies" />} />
+              <Route path="/compliance" element={<ResourcePage kind="compliance" />} />
+
               <Route element={<ProtectedAdminRoute />}>
                 <Route path="/admin" element={<AdminDashboard />} />
               </Route>
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
