@@ -56,6 +56,37 @@
   color: #0d2b45;
 }
 
+/* Public profile: the four marketplace counters used to look like headline
+ * KPIs even when everything was zero. Keep them available, but deliberately
+ * compact and secondary so a new profile does not look unfinished. */
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t {
+  gap: 0.5rem !important;
+  padding-top: 0.75rem !important;
+  border-top-color: hsl(var(--foreground) / 0.08) !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t > div {
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.75rem;
+  background: hsl(var(--muted) / 0.38);
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .text-2xl {
+  font-size: 1rem !important;
+  line-height: 1.35rem !important;
+  color: hsl(var(--foreground) / 0.72) !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .h-6.w-6 {
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .text-sm {
+  font-size: 0.72rem !important;
+  color: hsl(var(--muted-foreground) / 0.9) !important;
+}
+
 /* Empty states should feel deliberate and compact rather than like oversized
  * missing-data cards. Existing empty-state blocks usually use dashed borders. */
 .bg-gray-50 .border-dashed {
