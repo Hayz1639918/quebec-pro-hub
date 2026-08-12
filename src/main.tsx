@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import "./styles/visual-polish.css";
 import "./i18n/config"; // Import i18n configuration
 import { CHUNK_RELOAD_KEY } from "./lib/lazy-with-reload";
 

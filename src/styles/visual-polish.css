@@ -1,0 +1,118 @@
+/* Visual audit polish
+ * Keeps the existing BâtirNet language while reducing the visual gap between
+ * the editorial home page and application pages.
+ */
+
+/* Low-opacity foreground utilities were too faint on white/light surfaces. */
+.text-foreground\/30,
+.text-foreground\/35 {
+  color: hsl(var(--foreground) / 0.62) !important;
+}
+
+.text-foreground\/40 {
+  color: hsl(var(--foreground) / 0.66) !important;
+}
+
+.text-foreground\/45,
+.text-foreground\/50 {
+  color: hsl(var(--foreground) / 0.7) !important;
+}
+
+/* Internal application pages: softer editorial canvas instead of a flat
+ * component-library grey. This intentionally targets the existing page shell
+ * used throughout the authenticated/public internal screens. */
+.bg-gray-50 {
+  background-color: #f7f9fc !important;
+  background-image:
+    radial-gradient(circle at 12% 0%, hsl(var(--primary) / 0.055), transparent 32rem),
+    linear-gradient(180deg, #fbfcfe 0%, #f5f8fb 100%);
+}
+
+.bg-gray-50 > nav + div,
+.bg-gray-50 > nav + main {
+  padding-top: clamp(5.25rem, 8vw, 6.5rem);
+}
+
+/* Give Shadcn cards on application pages a quieter, more branded treatment. */
+.bg-gray-50 .bg-card {
+  border-color: hsl(var(--foreground) / 0.09) !important;
+  box-shadow: 0 16px 42px -30px rgba(13, 43, 69, 0.32);
+}
+
+.bg-gray-50 .rounded-lg.bg-card,
+.bg-gray-50 .rounded-xl.bg-card {
+  border-radius: 1rem;
+}
+
+.bg-gray-50 h1,
+.bg-gray-50 h2,
+.bg-gray-50 h3 {
+  letter-spacing: -0.018em;
+}
+
+/* Reuse the editorial navy treatment on major page headers when those headers
+ * already use primary/foreground colors. */
+.bg-gray-50 h1 {
+  color: #0d2b45;
+}
+
+/* Public profile: the four marketplace counters used to look like headline
+ * KPIs even when everything was zero. Keep them available, but deliberately
+ * compact and secondary so a new profile does not look unfinished. */
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t {
+  gap: 0.5rem !important;
+  padding-top: 0.75rem !important;
+  border-top-color: hsl(var(--foreground) / 0.08) !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t > div {
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.75rem;
+  background: hsl(var(--muted) / 0.38);
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .text-2xl {
+  font-size: 1rem !important;
+  line-height: 1.35rem !important;
+  color: hsl(var(--foreground) / 0.72) !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .h-6.w-6 {
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+}
+
+.bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t .text-sm {
+  font-size: 0.72rem !important;
+  color: hsl(var(--muted-foreground) / 0.9) !important;
+}
+
+/* Empty states should feel deliberate and compact rather than like oversized
+ * missing-data cards. Existing empty-state blocks usually use dashed borders. */
+.bg-gray-50 .border-dashed {
+  min-height: 0 !important;
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: hsl(var(--primary) / 0.18) !important;
+}
+
+/* Map containers should not dominate small screens. The directory already
+ * defaults to list mode; this makes any explicitly opened map more compact. */
+@media (max-width: 767px) {
+  .bg-gray-50 [class*="h-[500px]"],
+  .bg-gray-50 [class*="h-[600px]"],
+  .bg-gray-50 [class*="min-h-[500px]"] {
+    max-height: 22rem;
+  }
+
+  .bg-gray-50 .border-dashed {
+    padding: 1.5rem 1rem !important;
+  }
+}
+
+/* Slightly stronger secondary copy throughout the site without flattening the
+ * hierarchy. */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground) / 0.92);
+}
