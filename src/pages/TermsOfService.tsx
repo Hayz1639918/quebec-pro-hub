@@ -21,8 +21,8 @@ const sections = [
     content: 'Les utilisateurs déterminent eux-mêmes la portée, le prix, l’échéancier et les autres conditions de leurs projets. Relisez tout contrat avant de le signer. Les signatures, horodatages et codes de vérification enregistrés par la plateforme servent à documenter l’opération; leur effet juridique dépend du document et des circonstances.',
   },
   {
-    title: '5. Paiements',
-    content: 'Les fonctions de paiement peuvent être limitées, désactivées ou offertes par un fournisseur tiers. Tant qu’un paiement intégré n’est pas explicitement confirmé comme disponible, les parties demeurent responsables de convenir d’un mode de paiement sûr, de conserver leurs preuves et de respecter leurs obligations fiscales.',
+    title: '5. Paiements et règlements',
+    content: 'Les paiements se font directement entre le client et le professionnel selon le moyen convenu entre eux. BâtirNet ne reçoit pas, ne conserve pas, ne protège pas et ne transfère pas les fonds. La plateforme peut uniquement enregistrer des informations de suivi, notamment le montant prévu, le moyen déclaré, l’indication « envoyé » du client et la confirmation « reçu » du professionnel. Ces statuts sont déclaratifs et ne remplacent pas une preuve bancaire. Chaque partie demeure responsable de conserver ses preuves et de respecter ses obligations fiscales et contractuelles.',
   },
   {
     title: '6. Utilisation acceptable',
@@ -34,7 +34,7 @@ const sections = [
   },
   {
     title: '8. Confidentialité',
-    content: 'Le traitement des renseignements personnels est décrit dans la Politique de confidentialité. Ne publiez pas dans les zones publiques de renseignements, pièces d’identité, coordonnées bancaires ou documents confidentiels qui n’y sont pas nécessaires.',
+    content: 'Le traitement des renseignements personnels est décrit dans la Politique de confidentialité. Le courriel professionnel peut être affiché publiquement comme moyen de contact commercial. Ne publiez pas dans les zones publiques de pièces d’identité, coordonnées bancaires ou documents confidentiels qui n’y sont pas nécessaires.',
   },
   {
     title: '9. Suspension et fermeture',
