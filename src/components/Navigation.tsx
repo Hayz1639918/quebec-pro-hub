@@ -22,7 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile } from "@/services/profile-service";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
-import logo from "/logo-batirnet.png";
+import Logo from "@/components/Logo";
 
 const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
   <button
@@ -168,16 +168,14 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
           >
 
             {/* ── Logo ── */}
-            <div
-              className="flex items-center gap-3 flex-shrink-0 cursor-pointer touch-target group"
+            <button
+              type="button"
+              className="flex items-center flex-shrink-0 cursor-pointer touch-target group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               onClick={() => navigateTo("/")}
+              aria-label="Retour à l'accueil BâtirNet"
             >
-              <img
-                src={logo}
-                alt="BâtirNet"
-                className={`${isHome ? "h-8 sm:h-9" : "h-9 sm:h-11 md:h-12"} w-auto object-contain`}
-              />
-            </div>
+              <Logo size={isHome ? 38 : 42} className="transition-transform duration-200 group-hover:scale-[1.02]" />
+            </button>
 
             {/* ── Desktop nav links ── */}
             <div className={`hidden md:flex items-center ${isHome ? "gap-0 flex-1 justify-center min-w-0" : "gap-0.5 lg:gap-1"}`}>
@@ -354,7 +352,7 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
                 <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0 pt-safe bg-background border-l border-border">
                   <SheetHeader className="p-5 border-b border-border">
                     <SheetTitle className="flex items-center gap-2">
-                      <img src={logo} alt="BâtirNet" className="h-9 w-auto" />
+                      <Logo size={40} />
                     </SheetTitle>
                   </SheetHeader>
 
