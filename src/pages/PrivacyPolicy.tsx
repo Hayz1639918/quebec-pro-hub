@@ -3,7 +3,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Mail, FileText, Lock, Users, Clock } from "lucide-react";
+import { Shield, Mail, FileText, Lock, Users, Clock, Banknote } from "lucide-react";
 
 const PrivacyPolicy = () => {
   useEffect(() => {
@@ -13,26 +13,23 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Navigation />
-      
+
       <main className="container mx-auto px-4 py-12 max-w-4xl">
-        {/* En-tête */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
             <Shield className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-4xl font-bold mb-4">Politique de Confidentialité</h1>
-          <p className="text-gray-600">
-            Cadre de protection des renseignements personnels de BâtirNet
-          </p>
+          <p className="text-gray-600">Cadre de protection des renseignements personnels de BâtirNet</p>
           <div className="flex items-center justify-center gap-4 mt-4 text-sm text-gray-500">
             <span>Mise à jour : 2026-08-11</span>
             <span>•</span>
-            <span>Version 1.1</span>
+            <span>Version 1.2</span>
           </div>
         </div>
 
-        {/* Responsable RP */}
         <h2 className="sr-only">Contenu de la politique de confidentialité</h2>
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -42,268 +39,170 @@ const PrivacyPolicy = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-gray-600">
-              Pour toute question, plainte ou demande d’exercice de vos droits, écrivez à l’adresse suivante :
+              Pour toute question, plainte ou demande d’exercice de vos droits, écrivez à :
             </p>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-start gap-3">
-                <Mail className="w-5 h-5 text-primary mt-0.5" />
-                <div>
-                  <p className="font-medium">Email</p>
-                  <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
-                    privacy@batirnet.com
-                  </a>
-                </div>
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-primary mt-0.5" />
+              <div>
+                <p className="font-medium">Email</p>
+                <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
+                  privacy@batirnet.com
+                </a>
               </div>
             </div>
-            <p className="text-sm text-gray-500 mt-4">
-              Vous pouvez contacter notre responsable pour toute question concernant cette politique ou l'exercice de vos droits.
-            </p>
           </CardContent>
         </Card>
 
-        {/* Introduction */}
         <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Introduction</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Introduction</CardTitle></CardHeader>
           <CardContent className="prose prose-sm max-w-none">
             <p>
-              BâtirNet exploite la plateforme web accessible à cette adresse. Cette Politique de Confidentialité 
-              décrit comment nous recueillons, utilisons, divulguons et protégeons vos renseignements personnels 
-              conformément à la <strong>Loi 25</strong> (Loi modernisant des dispositions législatives en matière 
-              de protection des renseignements personnels) et à la <strong>Loi sur la protection des renseignements 
-              personnels dans le secteur privé (LPRPSP)</strong> du Québec.
-            </p>
-            <p>
-              En utilisant notre Plateforme, vous consentez aux pratiques décrites dans cette politique.
+              BâtirNet décrit dans cette politique comment les renseignements personnels sont recueillis,
+              utilisés, communiqués et protégés dans le cadre de la plateforme. Nous appliquons les exigences
+              québécoises applicables, notamment la Loi modernisant des dispositions législatives en matière de
+              protection des renseignements personnels (Loi 25) et la Loi sur la protection des renseignements
+              personnels dans le secteur privé.
             </p>
           </CardContent>
         </Card>
 
-        {/* Renseignements collectés */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              1. Renseignements Personnels Collectés
+              1. Renseignements collectés et affichage public
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="font-semibold mb-3">1.1 Informations de Compte</h3>
-              <p className="text-gray-600 mb-3">Lorsque vous créez un compte sur BâtirNet, nous recueillons :</p>
-              
-              <div className="bg-gray-50 p-4 rounded-lg mb-3">
-                <p className="font-medium mb-2">Pour tous les utilisateurs :</p>
-                <ul className="list-disc list-inside space-y-1 text-gray-600">
-                  <li>Nom complet</li>
-                  <li>Adresse courriel</li>
-                  <li>Numéro de téléphone</li>
-                  <li>Ville, province, code postal</li>
-                  <li>Mot de passe (chiffré, jamais stocké en clair)</li>
-                  <li>Type d'utilisateur (client ou professionnel)</li>
-                </ul>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-medium mb-2">Pour les professionnels :</p>
-                <ul className="list-disc list-inside space-y-1 text-gray-600">
-                  <li>Nom de l'entreprise</li>
-                  <li>Numéro de licence RBQ</li>
-                  <li>Spécialités et services offerts</li>
-                  <li>Informations d'assurance</li>
-                </ul>
-              </div>
-
-              <p className="text-sm text-gray-500 mt-3">
-                <strong>Finalité :</strong> Création et gestion de votre compte, authentification, fourniture des services.
-              </p>
+              <h3 className="font-semibold mb-3">1.1 Informations de compte</h3>
+              <p className="text-gray-600 mb-3">Selon le type de compte, nous pouvons recueillir :</p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>nom, adresse courriel et numéro de téléphone;</li>
+                <li>ville, région et renseignements de profil;</li>
+                <li>pour les professionnels : entreprise, licence RBQ, services, expérience et documents de vérification;</li>
+                <li>informations nécessaires à l’authentification et à la sécurité du compte.</li>
+              </ul>
             </div>
 
             <Separator />
 
             <div>
-              <h3 className="font-semibold mb-3">1.2 Informations d'Utilisation</h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
-                <li><strong>Données de connexion :</strong> Adresse IP, navigateur, horodatage</li>
-                <li><strong>Données de navigation :</strong> Pages visitées, durée de session</li>
-                <li><strong>Géolocalisation :</strong> Uniquement pour signatures de contrats (avec consentement)</li>
-              </ul>
-              <p className="text-sm text-gray-500 mt-3">
-                <strong>Finalité :</strong> Sécurité, détection de fraude, audit trail des signatures.
+              <h3 className="font-semibold mb-3">1.2 Profil public des professionnels</h3>
+              <p className="text-gray-600 mb-3">
+                Pour permettre aux entrepreneurs et professionnels de présenter leur entreprise et d’être contactés,
+                certaines informations professionnelles sont volontairement publiques :
               </p>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>nom du professionnel et nom de l’entreprise;</li>
+                <li><strong>adresse courriel professionnelle</strong> utilisée comme moyen de contact public;</li>
+                <li>ville et région, services, expérience, tarifs ou disponibilités lorsque fournis;</li>
+                <li>numéro RBQ, statut de vérification, portfolio, avis et évaluations;</li>
+                <li>site web ou liens professionnels lorsque fournis.</li>
+              </ul>
+              <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-gray-700">
+                Le numéro de téléphone, l’adresse complète, les documents de vérification bruts, les métriques internes
+                d’activité et les coordonnées géographiques précises ne font pas partie du profil public. Les comptes
+                administrateurs ne sont pas listés dans l’annuaire public.
+              </div>
             </div>
 
             <Separator />
 
             <div>
-              <h3 className="font-semibold mb-3">1.3 Informations de Projet et Contrat</h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-600">
-                <li>Descriptions de projets</li>
-                <li>Budgets et délais</li>
-                <li>Messages échangés</li>
-                <li>Contrats signés électroniquement</li>
-                <li>Évaluations et avis</li>
+              <h3 className="font-semibold mb-3">1.3 Projets, contrats et communications</h3>
+              <ul className="list-disc list-inside space-y-1 text-gray-600">
+                <li>descriptions de projets, budgets, dates et pièces jointes;</li>
+                <li>propositions et contrats;</li>
+                <li>messages et notifications liés aux projets;</li>
+                <li>avis et évaluations.</li>
               </ul>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Vos droits */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              2. Vos Droits (Loi 25)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="border-l-4 border-primary pl-4">
-                <h4 className="font-semibold mb-1">Droit d'accès (Art. 27)</h4>
-                <p className="text-gray-600 text-sm">
-                  Vous pouvez demander une copie de vos renseignements personnels en format JSON.
-                </p>
-              </div>
+            <Separator />
 
-              <div className="border-l-4 border-primary pl-4">
-                <h4 className="font-semibold mb-1">Droit de rectification (Art. 28)</h4>
-                <p className="text-gray-600 text-sm">
-                  Vous pouvez demander la correction de renseignements inexacts.
-                </p>
-              </div>
-
-              <div className="border-l-4 border-primary pl-4">
-                <h4 className="font-semibold mb-1">Droit à la suppression (Art. 29)</h4>
-                <p className="text-gray-600 text-sm">
-                  Vous pouvez demander la suppression de votre compte (données contractuelles conservées 7 ans).
-                </p>
-              </div>
-
-              <div className="bg-blue-50 p-4 rounded-lg mt-4">
-                <p className="text-sm">
-                  <strong>Délai de réponse :</strong> Maximum 30 jours (Loi 25)
-                </p>
-                <p className="text-sm mt-2">
-                  <strong>Pour exercer vos droits :</strong>{" "}
-                  <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
-                    privacy@batirnet.com
-                  </a>
-                </p>
-              </div>
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Banknote className="w-4 h-4" />
+                1.4 Suivi des paiements directs
+              </h3>
+              <p className="text-gray-600">
+                BâtirNet <strong>ne reçoit pas, ne conserve pas et ne transfère pas les fonds</strong> entre les parties.
+                Le client et l’entrepreneur conviennent directement du moyen de règlement. La plateforme peut enregistrer
+                le montant prévu, le mode déclaré (par exemple virement, chèque ou comptant), la date à laquelle le client
+                indique avoir envoyé le paiement, la confirmation de réception de l’entrepreneur et une note facultative.
+              </p>
+              <p className="text-gray-600 mt-3">
+                Ces statuts constituent un suivi déclaratif du projet; ils ne sont pas une preuve bancaire et BâtirNet ne
+                stocke aucun numéro de carte de crédit dans ce processus.
+              </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Sécurité */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              3. Mesures de Sécurité
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><Lock className="w-5 h-5" />2. Vos droits</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="border-l-4 border-primary pl-4">
+              <h4 className="font-semibold mb-1">Accès</h4>
+              <p className="text-gray-600 text-sm">Vous pouvez demander l’accès aux renseignements personnels que nous détenons à votre sujet.</p>
+            </div>
+            <div className="border-l-4 border-primary pl-4">
+              <h4 className="font-semibold mb-1">Rectification</h4>
+              <p className="text-gray-600 text-sm">Vous pouvez demander la correction de renseignements inexacts ou incomplets.</p>
+            </div>
+            <div className="border-l-4 border-primary pl-4">
+              <h4 className="font-semibold mb-1">Suppression et retrait du consentement</h4>
+              <p className="text-gray-600 text-sm">Vous pouvez présenter une demande de suppression lorsque la loi le permet et retirer un consentement applicable.</p>
+            </div>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm">
+                Pour exercer vos droits : <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">privacy@batirnet.com</a>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Shield className="w-5 h-5" />3. Mesures de sécurité</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                <span className="text-gray-600">Chiffrement TLS 1.3 pour toutes les communications</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                <span className="text-gray-600">Chiffrement des mots de passe (bcrypt)</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                <span className="text-gray-600">Contrôles d'accès stricts (RLS Supabase)</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                <span className="text-gray-600">Scan de sécurité automatique (CodeQL, Dependabot)</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-green-600 text-xs">✓</span>
-                </div>
-                <span className="text-gray-600">Journalisation des accès et modifications</span>
-              </li>
+            <ul className="list-disc list-inside space-y-2 text-gray-600">
+              <li>communications HTTPS/TLS;</li>
+              <li>contrôles d’accès et Row-Level Security (RLS);</li>
+              <li>séparation entre données publiques et données privées;</li>
+              <li>journalisation et contrôles des opérations sensibles;</li>
+              <li>analyses automatisées de sécurité du code et des dépendances.</li>
             </ul>
           </CardContent>
         </Card>
 
-        {/* Rétention */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              4. Durée de Conservation
-            </CardTitle>
+            <CardTitle className="flex items-center gap-2"><Clock className="w-5 h-5" />4. Conservation</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-gray-600">Données de compte</span>
-                <span className="font-medium">Tant que compte actif</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-gray-600">Contrats et paiements</span>
-                <span className="font-medium">7 ans (Code civil QC)</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-gray-600">Logs de sécurité</span>
-                <span className="font-medium">2 ans</span>
-              </div>
-              <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="text-gray-600">Messages et notifications</span>
-                <span className="font-medium">Supprimés avec compte</span>
-              </div>
-            </div>
+          <CardContent className="space-y-3 text-gray-600">
+            <p>Nous conservons les renseignements seulement pendant la durée nécessaire aux services, aux obligations légales, à la sécurité et au règlement de différends.</p>
+            <p>Les données liées aux contrats, factures et suivis de règlement peuvent devoir être conservées plus longtemps que les données ordinaires du profil.</p>
           </CardContent>
         </Card>
 
-        {/* Contact */}
         <Card className="mb-8 border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Mail className="w-5 h-5" />
-              Nous Contacter
-            </CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle className="flex items-center gap-2"><Mail className="w-5 h-5" />Nous contacter</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-gray-600 mb-4">
-              Pour toute question concernant cette politique ou vos renseignements personnels :
+            <p className="text-gray-600">
+              Pour toute question concernant cette politique ou vos renseignements personnels :{" "}
+              <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">privacy@batirnet.com</a>.
             </p>
-            <div className="space-y-2">
-              <p>
-                <strong>Email :</strong>{" "}
-                <a href="mailto:privacy@batirnet.com" className="text-primary hover:underline">
-                  privacy@batirnet.com
-                </a>
-              </p>
-              <p className="text-sm text-gray-500">
-                Délai de réponse : Maximum 30 jours conformément à la Loi 25
-              </p>
-            </div>
           </CardContent>
         </Card>
 
-        {/* Modification */}
         <div className="text-center py-8 text-sm text-gray-500">
-          <p>
-            Nous nous réservons le droit de modifier cette politique. Les modifications seront 
-            publiées sur cette page avec une nouvelle date d'entrée en vigueur.
-          </p>
-          <p className="mt-2">
-            <strong>Dernière mise à jour :</strong> 2025-11-03
-          </p>
+          <p>Les modifications importantes à cette politique seront publiées sur cette page avec une date de mise à jour.</p>
+          <p className="mt-2"><strong>Dernière mise à jour :</strong> 2026-08-11</p>
         </div>
       </main>
 
@@ -313,8 +212,3 @@ const PrivacyPolicy = () => {
 };
 
 export default PrivacyPolicy;
-
-
-
-
-
