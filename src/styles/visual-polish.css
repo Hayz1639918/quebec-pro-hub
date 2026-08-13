@@ -1,9 +1,8 @@
-/* Visual audit polish
- * Keeps the existing BâtirNet language while reducing the visual gap between
- * the editorial home page and application pages.
+/* BâtirNet visual system
+ * Shared polish keeps public and authenticated pages in the same visual family
+ * as the home page without forcing decorative imagery into utility screens.
  */
 
-/* Low-opacity foreground utilities were too faint on white/light surfaces. */
 .text-foreground\/30,
 .text-foreground\/35 {
   color: hsl(var(--foreground) / 0.62) !important;
@@ -18,9 +17,11 @@
   color: hsl(var(--foreground) / 0.7) !important;
 }
 
-/* Internal application pages: softer editorial canvas instead of a flat
- * component-library grey. This intentionally targets the existing page shell
- * used throughout the authenticated/public internal screens. */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground) / 0.92);
+}
+
+/* Application canvas */
 .bg-gray-50 {
   background-color: #f7f9fc !important;
   background-image:
@@ -33,7 +34,6 @@
   padding-top: clamp(5.25rem, 8vw, 6.5rem);
 }
 
-/* Give Shadcn cards on application pages a quieter, more branded treatment. */
 .bg-gray-50 .bg-card {
   border-color: hsl(var(--foreground) / 0.09) !important;
   box-shadow: 0 16px 42px -30px rgba(13, 43, 69, 0.32);
@@ -50,15 +50,84 @@
   letter-spacing: -0.018em;
 }
 
-/* Reuse the editorial navy treatment on major page headers when those headers
- * already use primary/foreground colors. */
 .bg-gray-50 h1 {
   color: #0d2b45;
 }
 
-/* Public profile: the four marketplace counters used to look like headline
- * KPIs even when everything was zero. Keep them available, but deliberately
- * compact and secondary so a new profile does not look unfinished. */
+/* Shared page language used by the refreshed directory, contracts and footer resources. */
+.bn-page-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 86% 20%, hsl(var(--primary) / 0.095), transparent 24rem),
+    radial-gradient(circle at 12% -30%, rgba(242, 153, 74, 0.10), transparent 22rem),
+    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.bn-page-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -8rem -10rem auto;
+  width: 22rem;
+  height: 22rem;
+  border: 1px solid hsl(var(--primary) / 0.08);
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+.bn-surface {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  padding: clamp(1.25rem, 2.5vw, 2rem);
+  box-shadow: 0 24px 56px -42px rgba(13, 43, 69, 0.55);
+}
+
+.bn-card-lift {
+  transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
+}
+
+.bn-card-lift:hover {
+  transform: translateY(-4px);
+  border-color: hsl(var(--primary) / 0.18);
+  box-shadow: 0 30px 64px -42px rgba(13, 43, 69, 0.62);
+}
+
+/* Subtle motion only: short entrance, slow image drift, small floating card. */
+@keyframes bn-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bn-image-drift {
+  0% { transform: scale(1.015); }
+  50% { transform: scale(1.035) translate3d(-0.3%, -0.2%, 0); }
+  100% { transform: scale(1.015); }
+}
+
+@keyframes bn-float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.bn-reveal {
+  animation: bn-reveal 620ms cubic-bezier(.22,.8,.28,1) both;
+}
+
+.bn-delay-2 {
+  animation-delay: 130ms;
+}
+
+.bn-hero-image {
+  animation: bn-image-drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.bn-float-soft {
+  animation: bn-float-soft 5.5s ease-in-out infinite;
+}
+
+/* Existing public profile counters remain compact and secondary. */
 .bg-gray-50 .grid.grid-cols-2.md\:grid-cols-4.gap-4.pt-4.border-t {
   gap: 0.5rem !important;
   padding-top: 0.75rem !important;
@@ -87,8 +156,6 @@
   color: hsl(var(--muted-foreground) / 0.9) !important;
 }
 
-/* Empty states should feel deliberate and compact rather than like oversized
- * missing-data cards. Existing empty-state blocks usually use dashed borders. */
 .bg-gray-50 .border-dashed {
   min-height: 0 !important;
   padding-top: 2rem !important;
@@ -97,8 +164,15 @@
   border-color: hsl(var(--primary) / 0.18) !important;
 }
 
-/* Map containers should not dominate small screens. The directory already
- * defaults to list mode; this makes any explicitly opened map more compact. */
+/* Bring generic utility pages closer to the same rounded, quiet surface system. */
+main .bg-card.border:not(.border-dashed) {
+  transition: box-shadow 220ms ease, border-color 220ms ease;
+}
+
+main .bg-card.border:not(.border-dashed):hover {
+  border-color: hsl(var(--primary) / 0.14);
+}
+
 @media (max-width: 767px) {
   .bg-gray-50 [class*="h-[500px]"],
   .bg-gray-50 [class*="h-[600px]"],
@@ -109,10 +183,22 @@
   .bg-gray-50 .border-dashed {
     padding: 1.5rem 1rem !important;
   }
+
+  .bn-surface {
+    border-radius: 1.25rem;
+  }
 }
 
-/* Slightly stronger secondary copy throughout the site without flattening the
- * hierarchy. */
-.text-muted-foreground {
-  color: hsl(var(--muted-foreground) / 0.92);
+@media (prefers-reduced-motion: reduce) {
+  .bn-reveal,
+  .bn-hero-image,
+  .bn-float-soft {
+    animation: none !important;
+  }
+
+  .bn-card-lift,
+  .bn-card-lift:hover {
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+  }
 }
