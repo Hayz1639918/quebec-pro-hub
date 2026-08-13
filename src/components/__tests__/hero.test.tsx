@@ -14,13 +14,14 @@ describe('Hero', () => {
 
     expect(
       screen.getByRole('heading', {
-        name: /Trouvez le bon entrepreneur, en toute confiance/i,
+        name: /Trouvez le bon professionnel pour votre projet/i,
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/La construction en toute confiance/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Des professionnels vérifiés pour vos projets partout au Québec/i),
+      screen.getByText(/Publiez votre besoin, découvrez des professionnels au Québec/i),
     ).toBeInTheDocument();
+    expect(screen.getByText(/Échanges centralisés/i)).toBeInTheDocument();
+    expect(screen.getByText(/Contrats et suivi/i)).toBeInTheDocument();
   });
 
   it('shows primary actions and search selects', () => {

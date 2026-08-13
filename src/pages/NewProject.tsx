@@ -74,6 +74,11 @@ const DEFAULT_EVALUATION_CRITERIA = [
   { id: "guarantees", label: "Garanties et assurances", weight: 10 },
 ];
 
+type ProjectUploadResult = {
+  uploadedCount: number;
+  failedFiles: string[];
+};
+
 const NewProject = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -227,26 +232,42 @@ const NewProject = () => {
     setFiles((current) => [...current, ...validFiles].slice(0, 5));
   };
 
-  const uploadProjectImages = async (projectId: string): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
-    for (const file of files) {
+  const uploadProjectFiles = async (projectId: string): Promise<ProjectUploadResult> => {
+    let uploadedCount = 0;
+    const failedFiles: string[] = [];
+    const extension: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/jpg": "jpg",
+      "image/png": "png",
+      "application/pdf": "pdf",
+    };
+
+    for (const [displayOrder, file] of files.entries()) {
+      const storagePath = `${projectId}/${crypto.randomUUID()}.${extension[file.type] || "bin"}`;
       try {
-        const extension: Record<string, string> = {
-          "image/jpeg": "jpg",
-          "image/jpg": "jpg",
-          "image/png": "png",
-          "application/pdf": "pdf",
-        };
-        const fileName = `${projectId}/${crypto.randomUUID()}.${extension[file.type]}`;
-        const { error } = await supabase.storage.from("projects").upload(fileName, file);
-        if (error) throw error;
-        const { data: { publicUrl } } = supabase.storage.from("projects").getPublicUrl(fileName);
-        uploadedUrls.push(publicUrl);
+        const { error: uploadError } = await supabase.storage.from("projects").upload(storagePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from("projects").getPublicUrl(storagePath);
+        const { error: metadataError } = await supabase
+          .from("project_images")
+          .insert({ project_id: projectId, image_url: publicUrl, display_order: displayOrder });
+
+        if (metadataError) {
+          // Best-effort cleanup so a failed DB link does not leave an orphaned storage object.
+          const { error: cleanupError } = await supabase.storage.from("projects").remove([storagePath]);
+          if (cleanupError) console.warn("Unable to clean up orphaned project upload", cleanupError);
+          throw metadataError;
+        }
+
+        uploadedCount += 1;
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error(`Unable to upload project file ${file.name}:`, error);
+        failedFiles.push(file.name);
       }
     }
-    return uploadedUrls;
+
+    return { uploadedCount, failedFiles };
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -305,17 +326,24 @@ const NewProject = () => {
         .single();
 
       if (projectError) throw projectError;
+      if (!project) throw new Error(t("new_project.messages.creation_error"));
 
-      if (project && files.length > 0) {
-        const imageUrls = await uploadProjectImages(project.id);
-        await Promise.all(
-          imageUrls.map((imageUrl, displayOrder) =>
-            supabase.from("project_images").insert({ project_id: project.id, image_url: imageUrl, display_order: displayOrder }),
-          ),
-        );
+      const uploadResult = files.length > 0
+        ? await uploadProjectFiles(project.id)
+        : { uploadedCount: 0, failedFiles: [] };
+
+      if (uploadResult.failedFiles.length > 0) {
+        const failedPreview = uploadResult.failedFiles.slice(0, 3).join(", ");
+        const extraCount = uploadResult.failedFiles.length - 3;
+        toast({
+          variant: "destructive",
+          title: "Projet créé, mais certains fichiers ont échoué",
+          description: `${uploadResult.uploadedCount}/${files.length} fichier${files.length > 1 ? "s" : ""} ajouté${uploadResult.uploadedCount > 1 ? "s" : ""}. Échec : ${failedPreview}${extraCount > 0 ? ` et ${extraCount} autre${extraCount > 1 ? "s" : ""}` : ""}. Le projet lui-même a bien été créé.`,
+        });
+      } else {
+        toast({ title: t("new_project.messages.success_title"), description: t("new_project.messages.success_desc") });
       }
 
-      toast({ title: t("new_project.messages.success_title"), description: t("new_project.messages.success_desc") });
       navigate("/dashboard");
     } catch (error) {
       console.error("Error creating project:", error);
