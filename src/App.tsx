@@ -11,7 +11,7 @@ import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
 import BottomNav from "@/components/BottomNav";
 
 const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
+const Auth = lazy(() => import("./pages/AuthEntry"));
 const CompleteProfile = lazy(() => import("./pages/CompleteProfile"));
 const PendingVerification = lazy(() => import("./pages/PendingVerification"));
 const Professionals = lazy(() => import("./pages/ProfessionalsDirectory"));
