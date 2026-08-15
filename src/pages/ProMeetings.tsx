@@ -1,85 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
+  AlertCircle,
   ArrowLeft,
-  Video,
   Calendar,
-  Clock,
-  User,
-  Bell,
-  ExternalLink,
-  Plus,
   CheckCircle2,
-  ClipboardList,
-  Trash2,
-  Link,
+  Clock,
+  ExternalLink,
   Loader2,
+  MessageSquare,
+  User,
+  Video,
+  XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
-// US-057 — Gestion des réunions (lien manuel Zoom/Meet/Teams)
+type MeetingStatus = "scheduled" | "cancelled" | "completed";
 
-// Accept HTTPS URLs and recognize the most common video-conferencing providers.
-// We intentionally allow arbitrary HTTPS URLs so users can paste links from
-// Whereby, Jitsi, Webex, etc. We only reject obviously invalid input.
-const KNOWN_MEETING_HOSTS = [
-  'zoom.us',
-  'us02web.zoom.us',
-  'us04web.zoom.us',
-  'us05web.zoom.us',
-  'us06web.zoom.us',
-  'meet.google.com',
-  'teams.microsoft.com',
-  'teams.live.com',
-  'webex.com',
-  'whereby.com',
-  'meet.jit.si',
-  'jitsi.org',
-];
-
-const validateMeetingUrl = (raw: string): { valid: boolean; reason?: string; known?: boolean } => {
-  const trimmed = raw.trim();
-  if (!trimmed) return { valid: true };
-  try {
-    const u = new URL(trimmed);
-    if (u.protocol !== 'https:') {
-      return { valid: false, reason: 'Le lien doit commencer par https:// pour des raisons de sécurité.' };
-    }
-    const host = u.hostname.toLowerCase();
-    const known = KNOWN_MEETING_HOSTS.some((h) => host === h || host.endsWith('.' + h));
-    return { valid: true, known };
-  } catch {
-    return { valid: false, reason: 'URL invalide. Exemple : https://zoom.us/j/123456789' };
-  }
-};
-
-interface Meeting {
+type Meeting = {
   id: string;
+  conversation_id: string;
   organizer_id: string;
-  client_name: string;
-  project_name: string | null;
+  participant_id: string;
+  title: string;
   scheduled_at: string;
   duration_minutes: number;
   meeting_url: string | null;
-  status: "upcoming" | "ongoing" | "completed" | "cancelled";
-  has_reminder: boolean;
-  pre_questions: string | null;
+  status: MeetingStatus;
   notes: string | null;
-  created_at: string;
-}
+  created_at: string | null;
+  counterpart_name: string;
+};
+
+type Filter = "all" | "upcoming" | "completed" | "cancelled";
 
 const ProMeetings = () => {
   const navigate = useNavigate();
@@ -87,158 +49,155 @@ const ProMeetings = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [detailMeeting, setDetailMeeting] = useState<Meeting | null>(null);
-  const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("upcoming");
-
-  // New meeting form
-  const [newTitle, setNewTitle] = useState("");
-  const [newClient, setNewClient] = useState("");
-  const [newProject, setNewProject] = useState("");
-  const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("");
-  const [newDuration, setNewDuration] = useState("60");
-  const [newMeetingUrl, setNewMeetingUrl] = useState("");
-  const [newPreQuestions, setNewPreQuestions] = useState("");
-
-  useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { navigate("/auth"); return; }
-      setUserId(session.user.id);
-      await fetchMeetings(session.user.id);
-      setLoading(false);
-    })();
-  }, []);
+  const [filter, setFilter] = useState<Filter>("upcoming");
 
   const fetchMeetings = async (uid: string) => {
+    setLoadError(false);
     const { data, error } = await supabase
-      .from("pro_meetings")
-      .select("*")
-      .eq("organizer_id", uid)
+      .from("meetings")
+      .select("id,conversation_id,organizer_id,participant_id,title,scheduled_at,duration_minutes,meeting_url,status,notes,created_at")
+      .or(`organizer_id.eq.${uid},participant_id.eq.${uid}`)
       .order("scheduled_at", { ascending: true });
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les réunions" });
-      return;
+
+    if (error) throw error;
+
+    const rows = data || [];
+    const counterpartIds = Array.from(new Set(rows.map((meeting) =>
+      meeting.organizer_id === uid ? meeting.participant_id : meeting.organizer_id,
+    )));
+
+    const profileNames = new Map<string, string>();
+    if (counterpartIds.length > 0) {
+      const { data: profiles, error: profileError } = await supabase
+        .from("profiles")
+        .select("id,full_name,company_name")
+        .in("id", counterpartIds);
+
+      if (profileError) throw profileError;
+      (profiles || []).forEach((profile) => {
+        profileNames.set(profile.id, profile.company_name || profile.full_name || "Participant");
+      });
     }
-    setMeetings((data || []) as Meeting[]);
+
+    setMeetings(rows.map((meeting) => {
+      const counterpartId = meeting.organizer_id === uid ? meeting.participant_id : meeting.organizer_id;
+      return {
+        ...meeting,
+        status: meeting.status as MeetingStatus,
+        counterpart_name: profileNames.get(counterpartId) || "Participant",
+      };
+    }));
   };
 
-  const upcoming = meetings.filter(m => m.status === "upcoming");
-  const completed = meetings.filter(m => m.status === "completed");
-  const filtered = filter === "all" ? meetings : filter === "upcoming" ? upcoming : completed;
+  useEffect(() => {
+    let cancelled = false;
 
-  const toggleReminder = async (id: string) => {
-    const meeting = meetings.find(m => m.id === id);
-    if (!meeting) return;
-    const newVal = !meeting.has_reminder;
-    const { error } = await supabase
-      .from("pro_meetings")
-      .update({ has_reminder: newVal })
-      .eq("id", id);
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de mettre à jour le rappel" });
-      return;
-    }
-    setMeetings(prev => prev.map(m => m.id === id ? { ...m, has_reminder: newVal } : m));
-    toast({
-      title: newVal ? "Rappels activés" : "Rappels désactivés",
-      description: newVal
-        ? "Vous recevrez automatiquement un rappel 24h puis 1h avant la réunion."
-        : "Aucun rappel ne sera envoyé.",
-    });
-  };
+    const initialize = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (!session) {
+          navigate("/auth?mode=login", { replace: true });
+          return;
+        }
 
-  const handleSchedule = async () => {
-    if (!newTitle || !newClient || !newDate || !newTime || !userId) {
-      toast({ variant: "destructive", title: "Champs requis", description: "Remplissez tous les champs obligatoires." });
-      return;
-    }
+        setUserId(session.user.id);
+        await fetchMeetings(session.user.id);
+      } catch (error) {
+        console.error("Unable to load meetings", error);
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-    // Validate the meeting URL if provided
-    const urlCheck = validateMeetingUrl(newMeetingUrl);
-    if (!urlCheck.valid) {
-      toast({ variant: "destructive", title: "Lien de réunion invalide", description: urlCheck.reason });
-      return;
-    }
+    void initialize();
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
-    const scheduledAt = new Date(`${newDate}T${newTime}`).toISOString();
-    if (new Date(scheduledAt).getTime() < Date.now() - 60_000) {
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel(`meetings-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "meetings" },
+        () => void fetchMeetings(userId).catch((error) => console.error("Unable to refresh meetings", error)),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  const upcoming = useMemo(
+    () => meetings.filter((meeting) => meeting.status === "scheduled" && new Date(meeting.scheduled_at).getTime() >= Date.now()),
+    [meetings],
+  );
+  const completed = useMemo(() => meetings.filter((meeting) => meeting.status === "completed"), [meetings]);
+  const cancelled = useMemo(() => meetings.filter((meeting) => meeting.status === "cancelled"), [meetings]);
+
+  const filtered = useMemo(() => {
+    if (filter === "upcoming") return upcoming;
+    if (filter === "completed") return completed;
+    if (filter === "cancelled") return cancelled;
+    return meetings;
+  }, [filter, meetings, upcoming, completed, cancelled]);
+
+  const updateStatus = async (meeting: Meeting, status: Extract<MeetingStatus, "cancelled" | "completed">) => {
+    if (!userId || meeting.organizer_id !== userId || savingId) return;
+    setSavingId(meeting.id);
+    try {
+      const { data, error } = await supabase
+        .from("meetings")
+        .update({ status })
+        .eq("id", meeting.id)
+        .eq("organizer_id", userId)
+        .eq("status", "scheduled")
+        .select("id")
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error("La réunion n’est plus modifiable.");
+
+      setMeetings((previous) => previous.map((item) => item.id === meeting.id ? { ...item, status } : item));
+      setDetailMeeting((current) => current?.id === meeting.id ? { ...current, status } : current);
+      toast({
+        title: status === "cancelled" ? "Réunion annulée" : "Réunion terminée",
+        description: status === "cancelled"
+          ? "Le statut a été mis à jour dans le même rendez-vous que celui de la messagerie."
+          : "La réunion est maintenant marquée comme terminée.",
+      });
+    } catch (error) {
+      console.error("Unable to update meeting", error);
       toast({
         variant: "destructive",
-        title: "Date passée",
-        description: "La réunion doit être planifiée dans le futur.",
+        title: "Impossible de modifier la réunion",
+        description: "Aucune modification n’a été enregistrée. Réessayez.",
       });
-      return;
-    }
-    setSaving(true);
-    const { data, error } = await supabase
-      .from("pro_meetings")
-      .insert({
-        organizer_id: userId,
-        client_name: newClient,
-        project_name: newProject || null,
-        scheduled_at: scheduledAt,
-        duration_minutes: parseInt(newDuration),
-        meeting_url: newMeetingUrl.trim() || null,
-        pre_questions: newPreQuestions.trim() || null,
-        has_reminder: true,
-        status: "upcoming",
-      })
-      .select()
-      .single();
-    setSaving(false);
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de créer la réunion" });
-      return;
-    }
-    setMeetings(prev => [data as Meeting, ...prev].sort((a, b) =>
-      new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
-    ));
-    setScheduleOpen(false);
-    setNewTitle(""); setNewClient(""); setNewProject(""); setNewDate(""); setNewTime("");
-    setNewMeetingUrl(""); setNewPreQuestions("");
-    toast({ title: "Réunion planifiée", description: `Réunion avec ${newClient} créée avec succès.` });
-  };
-
-  const handleCancel = async (id: string) => {
-    const { error } = await supabase
-      .from("pro_meetings")
-      .update({ status: "cancelled" })
-      .eq("id", id);
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible d'annuler la réunion" });
-      return;
-    }
-    setMeetings(prev => prev.map(m => m.id === id ? { ...m, status: "cancelled" } : m));
-    setDetailMeeting(null);
-    toast({ title: "Réunion annulée", description: "La réunion a été annulée." });
-  };
-
-  const getStatusBadge = (status: Meeting["status"]) => {
-    switch (status) {
-      case "upcoming": return <Badge className="bg-blue-100 text-blue-700 border-blue-200">À venir</Badge>;
-      case "ongoing": return <Badge className="bg-green-100 text-green-700 border-green-200">En cours</Badge>;
-      case "completed": return <Badge variant="secondary">Terminée</Badge>;
-      case "cancelled": return <Badge variant="destructive">Annulée</Badge>;
+    } finally {
+      setSavingId(null);
     }
   };
 
-  const isSoon = (dateStr: string) => {
-    const diff = (new Date(dateStr).getTime() - Date.now()) / 1000 / 60;
-    return diff > 0 && diff <= 60;
-  };
-
-  const isToday = (dateStr: string) => {
-    return new Date(dateStr).toDateString() === new Date().toDateString();
+  const getStatusBadge = (meeting: Meeting) => {
+    if (meeting.status === "completed") return <Badge variant="secondary">Terminée</Badge>;
+    if (meeting.status === "cancelled") return <Badge variant="destructive">Annulée</Badge>;
+    if (new Date(meeting.scheduled_at).getTime() < Date.now()) return <Badge variant="outline">Passée</Badge>;
+    return <Badge className="bg-blue-100 text-blue-700 border-blue-200">À venir</Badge>;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="min-h-screen bg-[#f7f9fc] flex flex-col">
         <Navigation />
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-center justify-center pt-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
         <Footer />
@@ -247,363 +206,151 @@ const ProMeetings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f7f9fc] flex flex-col">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Button variant="ghost" onClick={() => navigate("/pro/dashboard")} className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Tableau de bord
-          </Button>
-        </div>
+      <main className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
+        <Button variant="ghost" onClick={() => navigate("/pro/dashboard")} className="gap-2 mb-5">
+          <ArrowLeft className="h-4 w-4" /> Tableau de bord
+        </Button>
 
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Video className="h-6 w-6 text-blue-600" />
-              Réunions
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              {upcoming.length} réunion{upcoming.length !== 1 ? "s" : ""} à venir
+            <p className="tech-label-blue mb-2">Communication · Réunions</p>
+            <h1 className="font-ui text-3xl font-bold text-primary">Réunions</h1>
+            <p className="text-muted-foreground mt-2">
+              Les rendez-vous affichés ici sont exactement ceux planifiés dans vos conversations BâtirNet.
             </p>
           </div>
-          <Button onClick={() => setScheduleOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Planifier une réunion
+          <Button onClick={() => navigate("/messages")} className="gap-2 shrink-0">
+            <MessageSquare className="h-4 w-4" /> Planifier depuis la messagerie
           </Button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-600">{upcoming.length}</p>
-              <p className="text-xs text-muted-foreground">À venir</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-600">{completed.length}</p>
-              <p className="text-xs text-muted-foreground">Terminées</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-amber-600">
-                {meetings.filter(m => m.has_reminder && m.status === "upcoming").length}
-              </p>
-              <p className="text-xs text-muted-foreground">Rappels actifs</p>
-            </CardContent>
-          </Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-primary">{upcoming.length}</p><p className="text-xs text-muted-foreground">À venir</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-primary">{completed.length}</p><p className="text-xs text-muted-foreground">Terminées</p></CardContent></Card>
+          <Card><CardContent className="p-4 text-center"><p className="text-2xl font-bold text-primary">{meetings.length}</p><p className="text-xs text-muted-foreground">Total</p></CardContent></Card>
         </div>
 
-        {/* Filter tabs */}
-        <div className="flex gap-2 mb-4">
-          {([["all", "Toutes"], ["upcoming", "À venir"], ["completed", "Terminées"]] as const).map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setFilter(val)}
-              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                filter === val ? "bg-primary text-white" : "border hover:border-primary hover:text-primary"
-              }`}
-            >
+        <div className="flex gap-2 mb-4 flex-wrap">
+          {([[
+            "all", "Toutes",
+          ], ["upcoming", "À venir"], ["completed", "Terminées"], ["cancelled", "Annulées"]] as const).map(([value, label]) => (
+            <Button key={value} variant={filter === value ? "default" : "outline"} size="sm" onClick={() => setFilter(value)}>
               {label}
-            </button>
+            </Button>
           ))}
         </div>
 
-        {/* Meeting list */}
-        <div className="space-y-3">
-          {filtered.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center text-muted-foreground">
-                Aucune réunion dans cette catégorie.
-              </CardContent>
-            </Card>
-          )}
-          {filtered.map(meeting => (
-            <Card
-              key={meeting.id}
-              className={`cursor-pointer hover:shadow-md transition-shadow ${
-                isSoon(meeting.scheduled_at) ? "border-green-400 bg-green-50/30" : ""
-              } ${isToday(meeting.scheduled_at) ? "border-blue-400" : ""}`}
-              onClick={() => setDetailMeeting(meeting)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h3 className="font-semibold truncate">{meeting.client_name} — {meeting.project_name || "Projet"}</h3>
-                      {getStatusBadge(meeting.status)}
-                      {isSoon(meeting.scheduled_at) && (
-                        <Badge className="bg-green-500 text-white animate-pulse">Bientôt!</Badge>
+        {loadError ? (
+          <Card className="border-amber-200 bg-amber-50/70">
+            <CardContent className="py-10 text-center">
+              <AlertCircle className="h-9 w-9 mx-auto text-amber-600 mb-3" />
+              <h2 className="font-semibold">Impossible de charger les réunions.</h2>
+              <p className="text-sm text-muted-foreground mt-1">La messagerie reste accessible et aucune réunion n’a été modifiée.</p>
+              <Button
+                variant="outline"
+                className="mt-4 bg-white"
+                onClick={() => {
+                  if (!userId) return;
+                  setLoading(true);
+                  void fetchMeetings(userId)
+                    .catch((error) => {
+                      console.error("Unable to reload meetings", error);
+                      setLoadError(true);
+                    })
+                    .finally(() => setLoading(false));
+                }}
+              >
+                Réessayer
+              </Button>
+            </CardContent>
+          </Card>
+        ) : filtered.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+              <h2 className="font-semibold">Aucune réunion dans cette catégorie.</h2>
+              <p className="text-sm text-muted-foreground mt-1">Planifiez un rendez-vous directement depuis une conversation avec un client.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((meeting) => (
+              <Card key={meeting.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setDetailMeeting(meeting)}>
+                <CardContent className="p-4 sm:p-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-primary truncate">{meeting.title}</h3>
+                        {getStatusBadge(meeting)}
+                      </div>
+                      <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                        <span className="flex items-center gap-1"><User className="h-3.5 w-3.5" />{meeting.counterpart_name}</span>
+                        <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{format(new Date(meeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{meeting.duration_minutes} min</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button variant="outline" size="sm" onClick={(event) => { event.stopPropagation(); navigate(`/messages?conversation=${meeting.conversation_id}`); }}>
+                        <MessageSquare className="h-4 w-4 mr-1.5" /> Conversation
+                      </Button>
+                      {meeting.meeting_url && meeting.status === "scheduled" && (
+                        <Button size="sm" onClick={(event) => { event.stopPropagation(); window.open(meeting.meeting_url!, "_blank", "noopener,noreferrer"); }}>
+                          <Video className="h-4 w-4 mr-1.5" /> Rejoindre
+                        </Button>
                       )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
-                        {meeting.client_name}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {format(new Date(meeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {meeting.duration_minutes} min
-                      </span>
-                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    {meeting.status === "upcoming" && (
-                      <>
-                        {meeting.meeting_url && (
-                          <Button
-                            size="sm"
-                            className="gap-1.5 bg-blue-600 hover:bg-blue-700"
-                            onClick={e => { e.stopPropagation(); window.open(meeting.meeting_url!, "_blank"); }}
-                          >
-                            <Video className="h-3 w-3" />
-                            Rejoindre
-                          </Button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={e => { e.stopPropagation(); toggleReminder(meeting.id); }}
-                          className={`flex items-center gap-1 text-xs ${meeting.has_reminder ? "text-amber-600" : "text-muted-foreground"}`}
-                        >
-                          <Bell className="h-3 w-3" />
-                          {meeting.has_reminder ? "Rappel ON" : "Rappel OFF"}
-                        </button>
-                      </>
-                    )}
-                    {meeting.status === "completed" && (
-                      <CheckCircle2 className="h-5 w-5 text-green-600" />
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
 
-      {/* Detail dialog */}
-      {detailMeeting && (
-        <Dialog open={!!detailMeeting} onOpenChange={() => setDetailMeeting(null)}>
+      <Dialog open={Boolean(detailMeeting)} onOpenChange={(open) => { if (!open) setDetailMeeting(null); }}>
+        {detailMeeting && (
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Video className="h-5 w-5 text-blue-600" />
-                {detailMeeting.client_name}
-              </DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><Video className="h-5 w-5 text-primary" />{detailMeeting.title}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground text-xs">Client</p>
-                  <p className="font-medium">{detailMeeting.client_name}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Projet</p>
-                  <p className="font-medium">{detailMeeting.project_name || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Date & heure</p>
-                  <p className="font-medium">{format(new Date(detailMeeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs">Durée</p>
-                  <p className="font-medium">{detailMeeting.duration_minutes} minutes</p>
-                </div>
+            <div className="space-y-4 text-sm">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div><p className="text-xs text-muted-foreground">Avec</p><p className="font-medium">{detailMeeting.counterpart_name}</p></div>
+                <div><p className="text-xs text-muted-foreground">Statut</p><div className="mt-1">{getStatusBadge(detailMeeting)}</div></div>
+                <div><p className="text-xs text-muted-foreground">Date et heure</p><p className="font-medium">{format(new Date(detailMeeting.scheduled_at), "dd MMM yyyy 'à' HH'h'mm", { locale: fr })}</p></div>
+                <div><p className="text-xs text-muted-foreground">Durée</p><p className="font-medium">{detailMeeting.duration_minutes} minutes</p></div>
               </div>
-
-              {detailMeeting.pre_questions && (
-                <>
-                  <Separator />
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium flex items-center gap-1.5">
-                      <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                      Questionnaire pré-réunion
-                    </p>
-                    <p className="text-sm text-muted-foreground bg-gray-50 rounded p-2">{detailMeeting.pre_questions}</p>
-                  </div>
-                </>
-              )}
-
-              {detailMeeting.notes && (
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Notes</p>
-                  <p className="text-sm text-muted-foreground bg-gray-50 rounded p-2">{detailMeeting.notes}</p>
+              {detailMeeting.notes && <div><p className="text-xs text-muted-foreground">Notes</p><p className="mt-1 rounded-lg bg-muted p-3 whitespace-pre-wrap">{detailMeeting.notes}</p></div>}
+              {detailMeeting.meeting_url && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Lien de réunion</p>
+                  <Button variant="outline" className="mt-1 w-full justify-between" onClick={() => window.open(detailMeeting.meeting_url!, "_blank", "noopener,noreferrer") }>
+                    <span className="truncate">{detailMeeting.meeting_url}</span><ExternalLink className="h-4 w-4 ml-2 shrink-0" />
+                  </Button>
                 </div>
-              )}
-
-              {detailMeeting.status === "upcoming" && (
-                <>
-                  <Separator />
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Lien de réunion</p>
-                    {detailMeeting.meeting_url ? (
-                      <div className="flex items-center gap-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                        <span className="flex-1 truncate text-blue-700">{detailMeeting.meeting_url}</span>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="gap-1 shrink-0"
-                          onClick={() => window.open(detailMeeting.meeting_url!, "_blank")}
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Ouvrir
-                        </Button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground italic">Aucun lien défini</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Bell className={`h-4 w-4 ${detailMeeting.has_reminder ? "text-amber-500" : "text-muted-foreground"}`} />
-                    <span className="text-muted-foreground">
-                      Rappel : {detailMeeting.has_reminder ? <strong className="text-amber-600">1h avant</strong> : <span>désactivé</span>}
-                    </span>
-                  </div>
-                </>
               )}
             </div>
-            <DialogFooter className="gap-2">
-              {detailMeeting.status === "upcoming" && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => handleCancel(detailMeeting.id)}
-                  className="gap-1.5 mr-auto"
-                >
-                  <Trash2 className="h-3 w-3" />
-                  Annuler la réunion
-                </Button>
-              )}
-              {detailMeeting.meeting_url && detailMeeting.status === "upcoming" && (
-                <Button
-                  onClick={() => window.open(detailMeeting.meeting_url!, "_blank")}
-                  className="gap-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  <Video className="h-4 w-4" />
-                  Rejoindre
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => setDetailMeeting(null)}>Fermer</Button>
+            <DialogFooter className="gap-2 sm:justify-between">
+              <div className="flex gap-2">
+                {userId === detailMeeting.organizer_id && detailMeeting.status === "scheduled" && (
+                  <>
+                    <Button variant="destructive" size="sm" disabled={savingId === detailMeeting.id} onClick={() => void updateStatus(detailMeeting, "cancelled")}>
+                      {savingId === detailMeeting.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><XCircle className="h-4 w-4 mr-1.5" />Annuler</>}
+                    </Button>
+                    <Button variant="outline" size="sm" disabled={savingId === detailMeeting.id} onClick={() => void updateStatus(detailMeeting, "completed")}>
+                      <CheckCircle2 className="h-4 w-4 mr-1.5" />Terminée
+                    </Button>
+                  </>
+                )}
+              </div>
+              <Button onClick={() => navigate(`/messages?conversation=${detailMeeting.conversation_id}`)}>
+                <MessageSquare className="h-4 w-4 mr-1.5" /> Ouvrir la conversation
+              </Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Schedule meeting dialog */}
-      <Dialog open={scheduleOpen} onOpenChange={setScheduleOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Plus className="h-5 w-5" />
-              Planifier une réunion
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label>Titre de la réunion *</Label>
-              <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ex: Présentation de l'approche" />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Nom du client *</Label>
-                <Input value={newClient} onChange={e => setNewClient(e.target.value)} placeholder="Marie Tremblay" />
-              </div>
-              <div className="space-y-2">
-                <Label>Projet concerné</Label>
-                <Input value={newProject} onChange={e => setNewProject(e.target.value)} placeholder="Rénovation cuisine" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Date *</Label>
-                <Input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} min={new Date().toISOString().split("T")[0]} />
-              </div>
-              <div className="space-y-2">
-                <Label>Heure *</Label>
-                <Input type="time" value={newTime} onChange={e => setNewTime(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Durée</Label>
-              <div className="flex gap-2">
-                {[30, 45, 60, 90].map(d => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setNewDuration(String(d))}
-                    className={`flex-1 py-2 rounded border text-sm transition-colors ${newDuration === String(d) ? "bg-primary text-white border-primary" : "hover:border-primary"}`}
-                  >
-                    {d} min
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5">
-                <Link className="h-4 w-4 text-muted-foreground" />
-                Lien de réunion (Zoom, Google Meet, Teams…)
-              </Label>
-              <Input
-                value={newMeetingUrl}
-                onChange={e => setNewMeetingUrl(e.target.value)}
-                placeholder="https://zoom.us/j/... ou https://meet.google.com/..."
-                type="url"
-                className={(() => {
-                  const check = validateMeetingUrl(newMeetingUrl);
-                  if (!check.valid) return 'border-red-500 focus-visible:ring-red-500';
-                  return '';
-                })()}
-              />
-              {(() => {
-                const check = validateMeetingUrl(newMeetingUrl);
-                if (!check.valid && newMeetingUrl.trim()) {
-                  return <p className="text-xs text-red-600">{check.reason}</p>;
-                }
-                if (check.valid && newMeetingUrl.trim() && !check.known) {
-                  return (
-                    <p className="text-xs text-amber-600">
-                      Domaine non reconnu — vérifiez qu'il s'agit bien d'un lien de visioconférence.
-                    </p>
-                  );
-                }
-                if (check.valid && newMeetingUrl.trim() && check.known) {
-                  return <p className="text-xs text-green-600">Lien valide.</p>;
-                }
-                return null;
-              })()}
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Bell className="h-3 w-3" />
-                Rappels automatiques 24h et 1h avant la réunion.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1.5">
-                <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                Questionnaire pré-réunion (optionnel)
-              </Label>
-              <Textarea
-                value={newPreQuestions}
-                onChange={e => setNewPreQuestions(e.target.value)}
-                placeholder="Questions à préparer avant la réunion..."
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setScheduleOpen(false)}>Annuler</Button>
-            <Button onClick={handleSchedule} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Video className="h-4 w-4" />}
-              Créer la réunion
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+        )}
       </Dialog>
 
       <Footer />

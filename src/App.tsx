@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ProtectedProRoute from "@/components/ProtectedProRoute";
+import ProtectedClientRoute from "@/components/ProtectedClientRoute";
 import ProtectedAdminRoute from "@/components/ProtectedAdminRoute";
 import BottomNav from "@/components/BottomNav";
 
@@ -87,6 +88,9 @@ const App = () => (
               <Route path="/tender/:id" element={<TenderView />} />
               <Route path="/proposal/:id" element={<ProposalView />} />
               <Route path="/professional/:id" element={<ProfessionalProfile />} />
+              <Route element={<ProtectedClientRoute />}>
+                <Route path="/proposals/review" element={<ReviewContractProposals />} />
+              </Route>
               <Route element={<ProtectedProRoute />}>
                 <Route path="/pro/dashboard" element={<ProDashboard />} />
                 <Route path="/pro/profile" element={<ProProfile />} />
@@ -94,7 +98,6 @@ const App = () => (
                 <Route path="/pro/subcontractors" element={<Subcontractors />} />
                 <Route path="/pro/subcontractor-tasks" element={<SubcontractorTasks />} />
                 <Route path="/pro/contract-proposals/new" element={<ProposeContract />} />
-                <Route path="/proposals/review" element={<ReviewContractProposals />} />
                 <Route path="/pro/reviews" element={<ProReviews />} />
                 <Route path="/pro/contracts" element={<Navigate to="/contracts" replace />} />
                 <Route path="/pro/portfolio" element={<ProPortfolio />} />
