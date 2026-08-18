@@ -74,6 +74,9 @@ const DEFAULT_EVALUATION_CRITERIA = [
   { id: "guarantees", label: "Garanties et assurances", weight: 10 },
 ];
 
+type FormField = "title" | "category" | "customCategory" | "description";
+type FormErrors = Partial<Record<FormField, string>>;
+
 const NewProject = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -148,6 +151,7 @@ const NewProject = () => {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
   const [geocoding, setGeocoding] = useState(false);
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const availableProjectTypes = category ? PROJECT_TYPES_BY_CATEGORY[category] || ["Autre"] : [];
 
@@ -210,6 +214,49 @@ const NewProject = () => {
     setUserId(session.user.id);
   };
 
+  const clearFieldError = (field: FormField) => {
+    setFormErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+  };
+
+  const validateRequiredFields = () => {
+    const errors: FormErrors = {};
+
+    if (!title.trim()) errors.title = "Le titre du projet est requis.";
+    if (!category) errors.category = "Veuillez sélectionner une catégorie.";
+    if (category === "Autre" && !customCategory.trim()) errors.customCategory = "Veuillez préciser la catégorie du projet.";
+    if (!description.trim()) errors.description = "La description du projet est requise.";
+
+    setFormErrors(errors);
+    const fields = Object.keys(errors) as FormField[];
+    if (fields.length === 0) return true;
+
+    window.requestAnimationFrame(() => document.getElementById(fields[0])?.focus());
+    toast({
+      variant: "destructive",
+      title: "Informations manquantes",
+      description: Object.values(errors).join(" "),
+    });
+    return false;
+  };
+
+  const getCreationErrorDescription = (error: unknown) => {
+    const apiError = error as { code?: string; message?: string };
+    const message = apiError?.message?.toLowerCase() ?? "";
+
+    if (apiError?.code === "42501" || message.includes("row-level security")) {
+      return "Votre session n'autorise pas la création du projet. Déconnectez-vous puis reconnectez-vous avant de réessayer.";
+    }
+    if (apiError?.code === "23502") {
+      return "Un champ obligatoire est manquant. Vérifiez le titre, la catégorie et la description du projet.";
+    }
+    return t("new_project.messages.creation_error");
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     const validFiles = selectedFiles.filter((file) => {
@@ -255,10 +302,7 @@ const NewProject = () => {
       toast({ variant: "destructive", title: t("common.error"), description: t("new_project.messages.not_logged_in") });
       return;
     }
-    if (!title || !description || !category) {
-      toast({ variant: "destructive", title: t("new_project.messages.required_fields"), description: t("new_project.messages.fill_required_fields") });
-      return;
-    }
+    if (!validateRequiredFields()) return;
     if (budgetMin && budgetMax && Number(budgetMax) < Number(budgetMin)) {
       toast({ variant: "destructive", title: t("new_project.messages.invalid_budget"), description: t("new_project.messages.invalid_budget_desc") });
       return;
@@ -270,14 +314,16 @@ const NewProject = () => {
       const insuranceRequirements: Record<string, number> = {};
       if (insuranceLiability) insuranceRequirements.liability = Number(insuranceLiability);
       if (insuranceProfessional) insuranceRequirements.professional = Number(insuranceProfessional);
+      const projectId = crypto.randomUUID();
 
-      const { data: project, error: projectError } = await supabase
+      const { error: projectError } = await supabase
         .from("projects")
         .insert({
+          id: projectId,
           client_id: userId,
-          title,
-          description,
-          category: category === "Autre" ? customCategory.trim() || "Autre" : category,
+          title: title.trim(),
+          description: description.trim(),
+          category: category === "Autre" ? customCategory.trim() : category,
           project_type: projectType || null,
           budget_min: budgetMin ? Number(budgetMin) : null,
           budget_max: budgetMax ? Number(budgetMax) : null,
@@ -300,17 +346,15 @@ const NewProject = () => {
           payment_mode: paymentMode,
           payment_handling_preference: "offline",
           status: "open",
-        })
-        .select()
-        .single();
+        });
 
       if (projectError) throw projectError;
 
-      if (project && files.length > 0) {
-        const imageUrls = await uploadProjectImages(project.id);
+      if (files.length > 0) {
+        const imageUrls = await uploadProjectImages(projectId);
         await Promise.all(
           imageUrls.map((imageUrl, displayOrder) =>
-            supabase.from("project_images").insert({ project_id: project.id, image_url: imageUrl, display_order: displayOrder }),
+            supabase.from("project_images").insert({ project_id: projectId, image_url: imageUrl, display_order: displayOrder }),
           ),
         );
       }
@@ -319,7 +363,7 @@ const NewProject = () => {
       navigate("/dashboard");
     } catch (error) {
       console.error("Error creating project:", error);
-      toast({ variant: "destructive", title: t("common.error"), description: error instanceof Error ? error.message : t("new_project.messages.creation_error") });
+      toast({ variant: "destructive", title: t("common.error"), description: getCreationErrorDescription(error) });
     } finally {
       setLoading(false);
     }
@@ -360,7 +404,7 @@ const NewProject = () => {
             <p className="text-muted-foreground">{t("new_project.subtitle")}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} noValidate className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />Informations de base</CardTitle>
@@ -369,15 +413,37 @@ const NewProject = () => {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="title">{t("new_project.form.title")} *</Label>
-                  <Input id="title" placeholder={t("new_project.form.title_placeholder")} value={title} onChange={(e) => setTitle(e.target.value)} required />
+                  <Input
+                    id="title"
+                    placeholder={t("new_project.form.title_placeholder")}
+                    value={title}
+                    onChange={(e) => { setTitle(e.target.value); clearFieldError("title"); }}
+                    aria-invalid={Boolean(formErrors.title)}
+                    aria-describedby={formErrors.title ? "title-error" : undefined}
+                    className={formErrors.title ? "border-destructive focus-visible:ring-destructive" : undefined}
+                  />
+                  {formErrors.title && <p id="title-error" className="text-sm font-medium text-destructive" role="alert">{formErrors.title}</p>}
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>{t("new_project.form.category")} *</Label>
-                    <Select value={category} onValueChange={setCategory} required>
-                      <SelectTrigger aria-label={t("new_project.form.category")}><SelectValue placeholder={t("new_project.form.category_placeholder")} /></SelectTrigger>
+                    <Label htmlFor="category">{t("new_project.form.category")} *</Label>
+                    <Select value={category} onValueChange={(value) => {
+                      setCategory(value);
+                      clearFieldError("category");
+                      if (value !== "Autre") clearFieldError("customCategory");
+                    }}>
+                      <SelectTrigger
+                        id="category"
+                        aria-label={t("new_project.form.category")}
+                        aria-invalid={Boolean(formErrors.category)}
+                        aria-describedby={formErrors.category ? "category-error" : undefined}
+                        className={formErrors.category ? "border-destructive focus:ring-destructive" : undefined}
+                      >
+                        <SelectValue placeholder={t("new_project.form.category_placeholder")} />
+                      </SelectTrigger>
                       <SelectContent>{CATEGORIES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent>
                     </Select>
+                    {formErrors.category && <p id="category-error" className="text-sm font-medium text-destructive" role="alert">{formErrors.category}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label>Type de travaux</Label>
@@ -390,12 +456,30 @@ const NewProject = () => {
                 {category === "Autre" && (
                   <div className="space-y-2">
                     <Label htmlFor="customCategory">Précisez la catégorie *</Label>
-                    <Input id="customCategory" value={customCategory} onChange={(e) => setCustomCategory(e.target.value)} />
+                    <Input
+                      id="customCategory"
+                      value={customCategory}
+                      onChange={(e) => { setCustomCategory(e.target.value); clearFieldError("customCategory"); }}
+                      aria-invalid={Boolean(formErrors.customCategory)}
+                      aria-describedby={formErrors.customCategory ? "customCategory-error" : undefined}
+                      className={formErrors.customCategory ? "border-destructive focus-visible:ring-destructive" : undefined}
+                    />
+                    {formErrors.customCategory && <p id="customCategory-error" className="text-sm font-medium text-destructive" role="alert">{formErrors.customCategory}</p>}
                   </div>
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="description">{t("new_project.form.description")} *</Label>
-                  <Textarea id="description" placeholder={t("new_project.form.description_placeholder")} value={description} onChange={(e) => setDescription(e.target.value)} rows={4} required />
+                  <Textarea
+                    id="description"
+                    placeholder={t("new_project.form.description_placeholder")}
+                    value={description}
+                    onChange={(e) => { setDescription(e.target.value); clearFieldError("description"); }}
+                    rows={4}
+                    aria-invalid={Boolean(formErrors.description)}
+                    aria-describedby={formErrors.description ? "description-error" : undefined}
+                    className={formErrors.description ? "border-destructive focus-visible:ring-destructive" : undefined}
+                  />
+                  {formErrors.description && <p id="description-error" className="text-sm font-medium text-destructive" role="alert">{formErrors.description}</p>}
                 </div>
               </CardContent>
             </Card>
