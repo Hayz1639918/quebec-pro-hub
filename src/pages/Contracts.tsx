@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +34,7 @@ import { normalizeContract } from "@/lib/contract-mapper";
 import { formatAmount, formatDateLong } from "@/lib/format";
 
 type UserType = "client" | "professional";
+type ContractRow = Database["public"]["Tables"]["contracts"]["Row"];
 
 type SupabaseLikeError = {
   code?: string;
@@ -82,7 +84,7 @@ const Contracts = () => {
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "all">("all");
   const [sortBy, setSortBy] = useState<"created_at" | "title" | "total_amount">("created_at");
 
-  const enrichContract = async (rawContract: Record<string, any>): Promise<Contract> => {
+  const enrichContract = async (rawContract: ContractRow): Promise<Contract> => {
     let clientName: string | null = null;
     let professionalName: string | null = null;
     let companyName: string | null = null;
