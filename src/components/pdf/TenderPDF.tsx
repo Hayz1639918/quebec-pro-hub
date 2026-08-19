@@ -21,12 +21,31 @@ const CERTIFICATION_LABELS: Record<string, string> = {
 const ENTREPRENEUR_LABELS: Record<string, string> = {
   individual: 'Travailleur autonome / individuel',
   company: 'Entreprise',
+  any: 'Aucune préférence particulière',
 };
 
 const PAYMENT_LABELS: Record<string, string> = {
   full: 'Paiement complet selon les modalités convenues au contrat',
   milestones: "Versements par jalons selon l'avancement convenu",
   negotiable: "Échéancier négociable avec l'entrepreneur retenu",
+};
+
+/**
+ * Helvetica is a standard PDF font with a limited character set. Project and
+ * profile text is user-generated, so normalize typography and strip glyphs
+ * that PDFKit cannot encode before rendering the document.
+ */
+export const sanitizePdfText = (value: unknown): string => {
+  if (value === null || value === undefined) return '';
+
+  return String(value)
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u2022\u25A0\u25A1\u2610\u2611]/g, '-')
+    .replace(/[\u00A0\u202F]/g, ' ')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E\u00A1-\u00FF]/g, '');
 };
 
 const styles = StyleSheet.create({
@@ -98,7 +117,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   bullet: {
-    width: 12,
+    width: 14,
   },
   listText: {
     flex: 1,
@@ -126,6 +145,13 @@ const styles = StyleSheet.create({
     padding: 5,
     fontSize: 8,
   },
+  notice: {
+    border: '1 solid #d1d5db',
+    backgroundColor: '#f9fafb',
+    padding: 8,
+    marginTop: 8,
+    fontSize: 8,
+  },
   footer: {
     position: 'absolute',
     bottom: 18,
@@ -144,13 +170,6 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: '#6b7280',
   },
-  notice: {
-    border: '1 solid #d1d5db',
-    backgroundColor: '#f9fafb',
-    padding: 8,
-    marginTop: 8,
-    fontSize: 8,
-  },
 });
 
 interface TenderPDFProps {
@@ -158,29 +177,36 @@ interface TenderPDFProps {
   client: PartyInfo;
 }
 
+const pdfText = (value: unknown, fallback = 'Non précisé') => {
+  const normalized = sanitizePdfText(value).trim();
+  return normalized || fallback;
+};
+
 const formatDate = (value?: string | null) => {
   if (!value) return 'Non précisée';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Non précisée';
-  return format(date, 'dd MMMM yyyy', { locale: fr });
+  return sanitizePdfText(format(date, 'dd MMMM yyyy', { locale: fr }));
 };
 
 const formatCurrency = (value?: number | null) => {
-  if (value === null || value === undefined) return 'À discuter';
-  return new Intl.NumberFormat('fr-CA', {
-    style: 'currency',
-    currency: 'CAD',
-    maximumFractionDigits: 0,
-  }).format(value);
+  if (value === null || value === undefined || Number.isNaN(value)) return 'À discuter';
+  const amount = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  return `${amount} $ CA`;
 };
 
-const locationText = (project: TenderProject) =>
-  [project.city, project.region, project.postal_code].filter(Boolean).join(', ') || 'Non précisée';
+const locationText = (project: TenderProject) => {
+  const value = [project.city, project.region, project.postal_code]
+    .map((item) => sanitizePdfText(item).trim())
+    .filter(Boolean)
+    .join(', ');
+  return value || 'Non précisée';
+};
 
 const TenderFooter = () => (
   <>
     <Text style={styles.footer} fixed>
-      BâtirNet — Appel d'offres généré à partir des informations du projet
+      BâtirNet - Appel d'offres généré à partir des informations du projet
     </Text>
     <Text
       style={styles.pageNumber}
@@ -196,18 +222,19 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
     : DEFAULT_REQUIRED_DOCUMENTS;
   const certifications = project.required_certifications || [];
   const evaluationCriteria = Object.entries(project.evaluation_criteria || {});
+  const tenderReference = pdfText(project.tender_number || project.id, project.id);
 
   return (
-    <Document title={`Appel d'offres - ${project.title}`} author="BâtirNet">
+    <Document title={`Appel d'offres - ${pdfText(project.title, 'Projet')}`} author="BâtirNet">
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>APPEL D'OFFRES</Text>
-        <Text style={styles.subtitle}>{project.title}</Text>
+        <Text style={styles.subtitle}>{pdfText(project.title, 'Projet')}</Text>
 
         <View style={styles.referenceBox}>
           <View style={styles.row}>
             <View style={styles.column}>
               <Text style={styles.label}>Numéro d'appel d'offres</Text>
-              <Text style={styles.value}>{project.tender_number || project.id}</Text>
+              <Text style={styles.value}>{tenderReference}</Text>
             </View>
             <View style={styles.column}>
               <Text style={styles.label}>Date de publication</Text>
@@ -222,7 +249,12 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
             <View style={styles.column}>
               <Text style={styles.label}>Catégorie / type</Text>
               <Text style={styles.value}>
-                {[project.category, project.project_type].filter(Boolean).join(' — ') || 'Non précisé'}
+                {pdfText(
+                  [project.category, project.project_type]
+                    .map((item) => sanitizePdfText(item).trim())
+                    .filter(Boolean)
+                    .join(' - '),
+                )}
               </Text>
             </View>
           </View>
@@ -232,22 +264,26 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
         <View style={styles.row}>
           <View style={styles.column}>
             <Text style={styles.label}>Nom / raison sociale</Text>
-            <Text style={styles.value}>{client.company_name || client.full_name || 'Client BâtirNet'}</Text>
+            <Text style={styles.value}>
+              {pdfText(client.company_name || client.full_name, 'Client BâtirNet')}
+            </Text>
           </View>
           <View style={styles.column}>
             <Text style={styles.label}>Personne-ressource</Text>
-            <Text style={styles.value}>{client.full_name || client.company_name || 'Client BâtirNet'}</Text>
+            <Text style={styles.value}>
+              {pdfText(client.full_name || client.company_name, 'Client BâtirNet')}
+            </Text>
           </View>
         </View>
         {(client.email || client.phone) && (
           <View style={styles.row}>
             <View style={styles.column}>
               <Text style={styles.label}>Courriel</Text>
-              <Text style={styles.value}>{client.email || 'Non communiqué'}</Text>
+              <Text style={styles.value}>{pdfText(client.email, 'Non communiqué')}</Text>
             </View>
             <View style={styles.column}>
               <Text style={styles.label}>Téléphone</Text>
-              <Text style={styles.value}>{client.phone || 'Non communiqué'}</Text>
+              <Text style={styles.value}>{pdfText(client.phone, 'Non communiqué')}</Text>
             </View>
           </View>
         )}
@@ -299,24 +335,25 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
 
       <Page size="A4" style={styles.page}>
         <Text style={styles.sectionTitle}>DESCRIPTION DES TRAVAUX</Text>
-        <Text style={styles.paragraph}>{project.description || 'Aucune description fournie.'}</Text>
+        <Text style={styles.paragraph}>{pdfText(project.description, 'Aucune description fournie.')}</Text>
         {project.work_description_detailed && (
           <>
             <Text style={styles.subTitle}>Description détaillée</Text>
-            <Text style={styles.paragraph}>{project.work_description_detailed}</Text>
+            <Text style={styles.paragraph}>{pdfText(project.work_description_detailed)}</Text>
           </>
         )}
 
         <Text style={styles.sectionTitle}>SPÉCIFICATIONS TECHNIQUES</Text>
         {project.technical_specifications?.length ? (
-          project.technical_specifications.map((spec, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
-              <Text style={styles.listText}>
-                {typeof spec === 'string' ? spec : spec.description || spec.name || 'Spécification'}
-              </Text>
-            </View>
-          ))
+          project.technical_specifications.map((spec, index) => {
+            const value = typeof spec === 'string' ? spec : spec.description || spec.name;
+            return (
+              <View key={`${index}-${pdfText(value, 'spec')}`} style={styles.listItem}>
+                <Text style={styles.bullet}>-</Text>
+                <Text style={styles.listText}>{pdfText(value, 'Spécification')}</Text>
+              </View>
+            );
+          })
         ) : (
           <Text style={styles.paragraph}>Aucune spécification technique supplémentaire n'a été fournie.</Text>
         )}
@@ -332,12 +369,14 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
               </View>
               {project.milestones.map((milestone, index) => (
                 <View
-                  key={index}
+                  key={`${index}-${pdfText(milestone.name || milestone.title, 'jalon')}`}
                   style={index === project.milestones!.length - 1 ? styles.tableRowLast : styles.tableRow}
                 >
-                  <Text style={styles.tableCell}>{milestone.name || milestone.title || 'Jalon'}</Text>
+                  <Text style={styles.tableCell}>{pdfText(milestone.name || milestone.title, 'Jalon')}</Text>
                   <Text style={styles.tableCell}>{formatDate(milestone.date)}</Text>
-                  <Text style={styles.tableCell}>{milestone.deliverables || milestone.description || 'À préciser'}</Text>
+                  <Text style={styles.tableCell}>
+                    {pdfText(milestone.deliverables || milestone.description, 'À préciser')}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -347,18 +386,20 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
         <Text style={styles.sectionTitle}>EXIGENCES DU SOUMISSIONNAIRE</Text>
         <Text style={styles.subTitle}>Type d'entrepreneur recherché</Text>
         <Text style={styles.paragraph}>
-          {project.preferred_entrepreneur_type
-            ? ENTREPRENEUR_LABELS[project.preferred_entrepreneur_type] || project.preferred_entrepreneur_type
-            : 'Aucune préférence particulière'}
+          {pdfText(
+            project.preferred_entrepreneur_type
+              ? ENTREPRENEUR_LABELS[project.preferred_entrepreneur_type] || project.preferred_entrepreneur_type
+              : 'Aucune préférence particulière',
+          )}
         </Text>
 
         <Text style={styles.subTitle}>Certifications et accréditations</Text>
         {certifications.length ? (
-          certifications.map((certification) => (
-            <View key={certification} style={styles.listItem}>
-              <Text style={styles.bullet}>•</Text>
+          certifications.map((certification, index) => (
+            <View key={`${index}-${certification}`} style={styles.listItem}>
+              <Text style={styles.bullet}>-</Text>
               <Text style={styles.listText}>
-                {CERTIFICATION_LABELS[certification] || certification}
+                {pdfText(CERTIFICATION_LABELS[certification] || certification)}
               </Text>
             </View>
           ))
@@ -371,7 +412,7 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
           <>
             {project.insurance_requirements.liability !== undefined && (
               <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
+                <Text style={styles.bullet}>-</Text>
                 <Text style={styles.listText}>
                   Responsabilité civile : {formatCurrency(project.insurance_requirements.liability)}
                 </Text>
@@ -379,7 +420,7 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
             )}
             {project.insurance_requirements.professional !== undefined && (
               <View style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
+                <Text style={styles.bullet}>-</Text>
                 <Text style={styles.listText}>
                   Responsabilité professionnelle : {formatCurrency(project.insurance_requirements.professional)}
                 </Text>
@@ -395,8 +436,8 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
             <Text style={styles.subTitle}>Licences spécifiques</Text>
             {Object.entries(project.licensing_requirements).map(([key, value]) => (
               <View key={key} style={styles.listItem}>
-                <Text style={styles.bullet}>•</Text>
-                <Text style={styles.listText}>{value}</Text>
+                <Text style={styles.bullet}>-</Text>
+                <Text style={styles.listText}>{pdfText(value)}</Text>
               </View>
             ))}
           </>
@@ -415,11 +456,11 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
             </View>
             {evaluationCriteria.map(([criterion, weight], index) => (
               <View
-                key={criterion}
+                key={`${index}-${criterion}`}
                 style={index === evaluationCriteria.length - 1 ? styles.tableRowLast : styles.tableRow}
               >
-                <Text style={[styles.tableCell, { flex: 3 }]}>{criterion}</Text>
-                <Text style={styles.tableCell}>{String(weight)}%</Text>
+                <Text style={[styles.tableCell, { flex: 3 }]}>{pdfText(criterion)}</Text>
+                <Text style={styles.tableCell}>{pdfText(`${weight}%`)}</Text>
               </View>
             ))}
           </View>
@@ -428,19 +469,21 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
         )}
 
         <Text style={styles.sectionTitle}>DOCUMENTS REQUIS AVEC LA SOUMISSION</Text>
-        {requiredDocuments.map((document) => (
-          <View key={document} style={styles.listItem}>
-            <Text style={styles.bullet}>□</Text>
-            <Text style={styles.listText}>{document}</Text>
+        {requiredDocuments.map((document, index) => (
+          <View key={`${index}-${document}`} style={styles.listItem}>
+            <Text style={styles.bullet}>[ ]</Text>
+            <Text style={styles.listText}>{pdfText(document, 'Document requis')}</Text>
           </View>
         ))}
 
         <Text style={styles.sectionTitle}>MODALITÉS FINANCIÈRES</Text>
         <Text style={styles.subTitle}>Mode de paiement souhaité</Text>
         <Text style={styles.paragraph}>
-          {project.payment_mode
-            ? PAYMENT_LABELS[project.payment_mode] || project.payment_mode
-            : 'À définir entre les parties'}
+          {pdfText(
+            project.payment_mode
+              ? PAYMENT_LABELS[project.payment_mode] || project.payment_mode
+              : 'À définir entre les parties',
+          )}
         </Text>
         <Text style={styles.paragraph}>
           BâtirNet ne reçoit ni ne conserve les fonds. Le règlement est effectué directement entre le client et l'entrepreneur selon les modalités convenues au contrat.
@@ -453,9 +496,9 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
           'Les travaux doivent respecter les lois, règlements, codes et normes applicables.',
           `La garantie demandée sur les travaux est de ${project.warranty_period_months || 12} mois, sauf entente contractuelle différente.`,
         ].map((condition, index) => (
-          <View key={condition} style={styles.listItem}>
+          <View key={index} style={styles.listItem}>
             <Text style={styles.bullet}>{index + 1}.</Text>
-            <Text style={styles.listText}>{condition}</Text>
+            <Text style={styles.listText}>{pdfText(condition)}</Text>
           </View>
         ))}
 
@@ -469,12 +512,20 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
         <View style={styles.row}>
           <View style={styles.column}>
             <Text style={styles.label}>Nom</Text>
-            <Text style={styles.value}>{client.full_name || client.company_name || 'Client BâtirNet'}</Text>
+            <Text style={styles.value}>
+              {pdfText(client.full_name || client.company_name, 'Client BâtirNet')}
+            </Text>
           </View>
           <View style={styles.column}>
             <Text style={styles.label}>Coordonnées</Text>
             <Text style={styles.value}>
-              {[client.email, client.phone].filter(Boolean).join(' — ') || 'Communiquer par BâtirNet'}
+              {pdfText(
+                [client.email, client.phone]
+                  .map((item) => sanitizePdfText(item).trim())
+                  .filter(Boolean)
+                  .join(' - '),
+                'Communiquer par BâtirNet',
+              )}
             </Text>
           </View>
         </View>
