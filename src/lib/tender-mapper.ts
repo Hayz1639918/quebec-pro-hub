@@ -15,6 +15,9 @@ type ProposalViewRow = Database['public']['Views']['proposals_complete']['Row'];
 type TenderViewRow = Database['public']['Views']['tenders_complete']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
 type TenderRowWithRecentFields = (TenderViewRow | ProjectRow) & {
+  preferred_entrepreneur_type?: string | null;
+  required_certifications?: string[] | null;
+  payment_mode?: string | null;
   required_documents?: Json | null;
 };
 
