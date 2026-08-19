@@ -1,6 +1,7 @@
 import React from 'react';
 import { pdf } from '@react-pdf/renderer';
-import TenderPDF, { sanitizePdfText } from '@/components/pdf/TenderPDF';
+import TenderPDF from '@/components/pdf/TenderPDF';
+import { sanitizePdfText } from '@/lib/pdf-text';
 import type { PartyInfo, TenderProject } from '@/types/tender';
 
 const project: TenderProject = {
