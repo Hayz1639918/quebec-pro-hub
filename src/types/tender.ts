@@ -1,8 +1,8 @@
 /**
  * Types partagés pour les appels d'offres (tenders) et les propositions.
- * Les types générés Supabase (src/integrations/supabase/types.ts) sont
- * incomplets par rapport aux migrations récentes ; ces interfaces décrivent
- * les champs réellement consommés par l'UI et les PDF.
+ * Les types générés Supabase peuvent être incomplets par rapport aux
+ * migrations récentes ; ces interfaces décrivent les champs consommés par
+ * l'UI et les PDF.
  */
 
 export interface TeamMember {
@@ -35,7 +35,6 @@ export interface ProjectMilestone {
 }
 
 export type TechnicalSpec = string | { description?: string; name?: string };
-
 export type EquipmentItem = string | { name?: string; description?: string };
 
 export interface InsuranceRequirements {
@@ -62,6 +61,7 @@ export interface TenderProject {
   project_type?: string | null;
   city?: string | null;
   region?: string | null;
+  postal_code?: string | null;
   budget_min?: number | null;
   budget_max?: number | null;
   created_at?: string;
@@ -78,6 +78,10 @@ export interface TenderProject {
   evaluation_criteria?: Record<string, number | string> | null;
   licensing_requirements?: Record<string, string> | null;
   insurance_requirements?: InsuranceRequirements | null;
+  preferred_entrepreneur_type?: string | null;
+  required_certifications?: string[] | null;
+  payment_mode?: string | null;
+  required_documents?: string[] | null;
 }
 
 export interface ProposalRecord {
