@@ -264,50 +264,108 @@ const Dashboard = () => {
   const fetchStats = async (userId: string) => {
     try {
       setLoadingProjects(true);
-      
-      // Fetch all projects with contract details
+
+      // Projects are the source of truth for this list. Keep this request
+      // independent from optional joins so a permissions error on related
+      // data can never make the client's own projects disappear.
       const { data: projectsData, error: projectsError } = await supabase
         .from('projects')
-        .select(`
-          *,
-          contracts:contract_id (
-            id,
-            client_signed_at,
-            professional_signed_at
-          ),
-          profiles!projects_assigned_professional_id_fkey (full_name, company_name)
-        `)
+        .select('*')
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
       if (projectsError) throw projectsError;
 
-      // Transform data to include contract signature info
-      const transformedProjects: Project[] = (projectsData || []).map((p) => ({
-        id: p.id,
-        title: p.title,
-        description: p.description,
-        category: p.category,
-        budget_min: p.budget_min,
-        budget_max: p.budget_max,
-        city: p.city,
-        region: p.region,
-        status: p.status ?? 'open',
-        deadline: p.deadline,
-        created_at: p.created_at ?? new Date(0).toISOString(),
-        updated_at: p.updated_at ?? p.created_at ?? new Date(0).toISOString(),
-        proposals_count: p.proposals_count ?? 0,
-        views_count: p.views_count ?? 0,
-        assigned_professional_id: p.assigned_professional_id,
-        progress_percentage: p.progress_percentage ?? 0,
-        progress_status: p.progress_status ?? 'not_started',
-        current_phase: p.current_phase,
-        contract_id: p.contract_id,
-        contract_signed: !!(p.contracts?.client_signed_at && p.contracts?.professional_signed_at),
-        client_signed_at: p.contracts?.client_signed_at || null,
-        professional_signed_at: p.contracts?.professional_signed_at || null,
-        professional_name: p.profiles?.company_name || p.profiles?.full_name || null,
-      }));
+      const projectRows = projectsData || [];
+      const contractIds = Array.from(new Set(
+        projectRows
+          .map((project) => project.contract_id)
+          .filter((id): id is string => typeof id === 'string'),
+      ));
+      const professionalIds = Array.from(new Set(
+        projectRows
+          .map((project) => project.assigned_professional_id)
+          .filter((id): id is string => typeof id === 'string'),
+      ));
+
+      const contractsById = new Map<string, {
+        client_signed_at: string | null;
+        professional_signed_at: string | null;
+      }>();
+      if (contractIds.length > 0) {
+        const { data: contractRows, error: contractsError } = await supabase
+          .from('contracts')
+          .select('id, client_signed_at, professional_signed_at')
+          .in('id', contractIds);
+
+        if (contractsError) {
+          console.warn('Could not enrich dashboard projects with contract signatures:', contractsError.message);
+        } else {
+          contractRows?.forEach((contract) => {
+            contractsById.set(contract.id, {
+              client_signed_at: contract.client_signed_at,
+              professional_signed_at: contract.professional_signed_at,
+            });
+          });
+        }
+      }
+
+      const professionalsById = new Map<string, {
+        full_name: string | null;
+        company_name: string | null;
+      }>();
+      if (professionalIds.length > 0) {
+        const { data: professionalRows, error: professionalsError } = await supabase
+          .from('public_professional_profiles')
+          .select('id, full_name, company_name')
+          .in('id', professionalIds);
+
+        if (professionalsError) {
+          console.warn('Could not enrich dashboard projects with professional names:', professionalsError.message);
+        } else {
+          professionalRows?.forEach((professional) => {
+            if (professional.id) {
+              professionalsById.set(professional.id, {
+                full_name: professional.full_name,
+                company_name: professional.company_name,
+              });
+            }
+          });
+        }
+      }
+
+      const transformedProjects: Project[] = projectRows.map((p) => {
+        const contract = p.contract_id ? contractsById.get(p.contract_id) : undefined;
+        const professional = p.assigned_professional_id
+          ? professionalsById.get(p.assigned_professional_id)
+          : undefined;
+
+        return {
+          id: p.id,
+          title: p.title,
+          description: p.description,
+          category: p.category,
+          budget_min: p.budget_min,
+          budget_max: p.budget_max,
+          city: p.city,
+          region: p.region,
+          status: p.status ?? 'open',
+          deadline: p.deadline,
+          created_at: p.created_at ?? new Date(0).toISOString(),
+          updated_at: p.updated_at ?? p.created_at ?? new Date(0).toISOString(),
+          proposals_count: p.proposals_count ?? 0,
+          views_count: p.views_count ?? 0,
+          assigned_professional_id: p.assigned_professional_id,
+          progress_percentage: p.progress_percentage ?? 0,
+          progress_status: p.progress_status ?? 'not_started',
+          current_phase: p.current_phase,
+          contract_id: p.contract_id,
+          contract_signed: !!(contract?.client_signed_at && contract?.professional_signed_at),
+          client_signed_at: contract?.client_signed_at || null,
+          professional_signed_at: contract?.professional_signed_at || null,
+          professional_name: professional?.company_name || professional?.full_name || null,
+        };
+      });
 
       setProjects(transformedProjects);
 
@@ -1547,9 +1605,7 @@ const Dashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>{t('dashboard.favorites.title')}</CardTitle>
-                  <CardDescription>
-                    {t('dashboard.favorites.description')}
-                  </CardDescription>
+                  <CardDescription>{t('dashboard.favorites.description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <FavoritesList
