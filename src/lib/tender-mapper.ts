@@ -14,14 +14,17 @@ import type {
 type ProposalViewRow = Database['public']['Views']['proposals_complete']['Row'];
 type TenderViewRow = Database['public']['Views']['tenders_complete']['Row'];
 type ProjectRow = Database['public']['Tables']['projects']['Row'];
+type TenderRowWithRecentFields = (TenderViewRow | ProjectRow) & {
+  required_documents?: Json | null;
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 
-const jsonArray = <T>(value: Json | null): T[] | null =>
+const jsonArray = <T>(value: Json | null | undefined): T[] | null =>
   Array.isArray(value) ? value as unknown as T[] : null;
 
-const jsonRecord = <T extends Record<string, unknown>>(value: Json | null): T | null =>
+const jsonRecord = <T extends Record<string, unknown>>(value: Json | null | undefined): T | null =>
   isRecord(value) ? value as T : null;
 
 export const normalizeProposalRecord = (row: ProposalViewRow): ProposalRecord => ({
@@ -47,28 +50,37 @@ export const normalizeProposalRecord = (row: ProposalViewRow): ProposalRecord =>
   insurance_proof_url: row.insurance_proof_url,
 });
 
-export const normalizeTenderProject = (row: TenderViewRow | ProjectRow): TenderProject => ({
-  id: row.id ?? '',
-  title: row.title ?? 'Projet',
-  description: row.description,
-  category: row.category,
-  project_type: row.project_type,
-  city: row.city,
-  region: row.region,
-  budget_min: row.budget_min,
-  budget_max: row.budget_max,
-  created_at: row.created_at ?? undefined,
-  tender_number: row.tender_number,
-  submission_deadline: row.submission_deadline,
-  questions_deadline: row.questions_deadline,
-  site_visit_date: row.site_visit_date,
-  project_start_date: row.project_start_date,
-  project_end_date: row.project_end_date,
-  warranty_period_months: row.warranty_period_months,
-  work_description_detailed: row.work_description_detailed,
-  technical_specifications: jsonArray<TechnicalSpec>(row.technical_specifications),
-  milestones: jsonArray<ProjectMilestone>(row.milestones),
-  evaluation_criteria: jsonRecord<Record<string, number | string>>(row.evaluation_criteria),
-  licensing_requirements: jsonRecord<Record<string, string>>(row.licensing_requirements),
-  insurance_requirements: jsonRecord<InsuranceRequirements>(row.insurance_requirements),
-});
+export const normalizeTenderProject = (input: TenderViewRow | ProjectRow): TenderProject => {
+  const row = input as TenderRowWithRecentFields;
+
+  return {
+    id: row.id ?? '',
+    title: row.title ?? 'Projet',
+    description: row.description,
+    category: row.category,
+    project_type: row.project_type,
+    city: row.city,
+    region: row.region,
+    postal_code: row.postal_code,
+    budget_min: row.budget_min,
+    budget_max: row.budget_max,
+    created_at: row.created_at ?? undefined,
+    tender_number: row.tender_number,
+    submission_deadline: row.submission_deadline,
+    questions_deadline: row.questions_deadline,
+    site_visit_date: row.site_visit_date,
+    project_start_date: row.project_start_date,
+    project_end_date: row.project_end_date,
+    warranty_period_months: row.warranty_period_months,
+    work_description_detailed: row.work_description_detailed,
+    technical_specifications: jsonArray<TechnicalSpec>(row.technical_specifications),
+    milestones: jsonArray<ProjectMilestone>(row.milestones),
+    evaluation_criteria: jsonRecord<Record<string, number | string>>(row.evaluation_criteria),
+    licensing_requirements: jsonRecord<Record<string, string>>(row.licensing_requirements),
+    insurance_requirements: jsonRecord<InsuranceRequirements>(row.insurance_requirements),
+    preferred_entrepreneur_type: row.preferred_entrepreneur_type,
+    required_certifications: row.required_certifications,
+    payment_mode: row.payment_mode,
+    required_documents: jsonArray<string>(row.required_documents),
+  };
+};
