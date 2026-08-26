@@ -616,6 +616,7 @@
       "proposals": "propositions",
       "views": "vues",
       "view_details": "Voir les détails",
+      "view_tender": "Voir l'appel d'offres",
       "submit_proposal": "Soumettre une proposition",
       "published": "Publié",
       "from": "À partir de",
@@ -950,6 +951,7 @@
   },
   "project_details": {
     "back_to_projects": "Retour aux projets",
+    "view_tender": "Voir l'appel d'offres (PDF)",
     "submit_proposal": "Soumettre une proposition",
     "submit_proposal_description": "Proposez vos services pour ce projet",
     "your_message": "Votre message",

@@ -616,6 +616,7 @@
       "proposals": "proposals",
       "views": "views",
       "view_details": "View Details",
+      "view_tender": "View Tender",
       "submit_proposal": "Submit a Proposal",
       "published": "Published",
       "from": "From",
@@ -948,6 +949,7 @@
   },
   "project_details": {
     "back_to_projects": "Back to Projects",
+    "view_tender": "View Tender (PDF)",
     "submit_proposal": "Submit a Proposal",
     "submit_proposal_description": "Offer your services for this project",
     "your_message": "Your Message",
