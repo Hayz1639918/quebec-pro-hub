@@ -31,6 +31,7 @@ import {
   MessageSquare,
   Map,
   List,
+  FileText,
 } from "lucide-react";
 
 // Lazy load the map component
@@ -661,6 +662,14 @@ const Projects = () => {
                           <Button className="flex-1" onClick={() => navigate(`/project/${project.id}`)}>
                             {t('projects.card.view_details')}
                           </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1 min-w-[170px]"
+                            onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            {t('projects.card.view_tender')}
+                          </Button>
                           {isProfessional && (
                             <Button variant="outline" onClick={() => navigate(`/project/${project.id}`)}>
                               {t('projects.card.submit_proposal')}
@@ -684,8 +693,3 @@ const Projects = () => {
 };
 
 export default Projects;
-
-
-/* eslint-disable no-irregular-whitespace */
-
-

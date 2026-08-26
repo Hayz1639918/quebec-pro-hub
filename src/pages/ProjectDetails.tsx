@@ -577,21 +577,31 @@ const ProjectDetails = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12 flex-1">
-        {/* Bouton retour */}
-        <Button 
-          variant="ghost" 
-          className="mb-6"
-          onClick={() => {
-            if (currentUser?.user_type === 'client') {
-              navigate('/dashboard?tab=projects');
-            } else {
-              navigate('/projects');
-            }
-          }}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {currentUser?.user_type === 'client' ? 'Retour à mes projets' : t('project_details.back_to_projects')}
-        </Button>
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button
+            variant="ghost"
+            className="self-start"
+            onClick={() => {
+              if (currentUser?.user_type === 'client') {
+                navigate('/dashboard?tab=projects');
+              } else {
+                navigate('/projects');
+              }
+            }}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {currentUser?.user_type === 'client' ? 'Retour à mes projets' : t('project_details.back_to_projects')}
+          </Button>
+
+          <Button
+            variant="outline"
+            className="gap-2 self-start sm:self-auto"
+            onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}
+          >
+            <FileText className="h-4 w-4" />
+            {t('project_details.view_tender')}
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Colonne principale */}
