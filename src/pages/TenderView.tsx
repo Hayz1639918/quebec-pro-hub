@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { PDFViewer, pdf } from '@react-pdf/renderer';
+import { useNavigate, useParams } from 'react-router-dom';
+import { pdf } from '@react-pdf/renderer';
 import {
   ArrowLeft,
   Building2,
   Calendar,
   ClipboardCheck,
   Download,
-  Eye,
   FileCheck,
   FileText,
   Loader2,
@@ -57,25 +56,15 @@ const displayDate = (value?: string | null) => (value ? formatDateLong(value) : 
 const TenderView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [project, setProject] = useState<TenderProject | null>(null);
   const [client, setClient] = useState<PartyInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [downloading, setDownloading] = useState(false);
-
-  const shouldShowPDF = searchParams.get('showPDF') === 'true';
 
   useEffect(() => {
     void fetchTenderDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  useEffect(() => {
-    if (shouldShowPDF && project && client) {
-      setShowPDFViewer(true);
-    }
-  }, [shouldShowPDF, project, client]);
 
   const fetchTenderDetails = async () => {
     if (!id) return;
@@ -208,39 +197,11 @@ const TenderView = () => {
             Retour
           </Button>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowPDFViewer((current) => !current)}
-              className="gap-2"
-            >
-              <Eye className="h-4 w-4" />
-              {showPDFViewer ? 'Masquer le PDF' : 'Prévisualiser le PDF'}
-            </Button>
-            <Button onClick={() => void handleDownloadPdf()} className="gap-2" disabled={downloading}>
-              {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              {downloading ? 'Génération...' : 'Télécharger le PDF'}
-            </Button>
-          </div>
+          <Button onClick={() => void handleDownloadPdf()} className="gap-2" disabled={downloading}>
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {downloading ? 'Génération...' : 'Télécharger le PDF'}
+          </Button>
         </div>
-
-        {showPDFViewer && (
-          <Card className="mb-6 overflow-hidden">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Prévisualisation du document complet</CardTitle>
-              <CardDescription>
-                Si la prévisualisation intégrée n'est pas disponible sur votre appareil, utilisez « Télécharger le PDF ».
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="h-[70vh] min-h-[520px] w-full">
-                <PDFViewer width="100%" height="100%" key={`tender-pdf-${project.id}`}>
-                  <TenderPDF project={project} client={client} />
-                </PDFViewer>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card className="mb-6">
           <CardHeader>

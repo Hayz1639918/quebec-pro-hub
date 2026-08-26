@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.batirnet.com"
+        }
+      ],
+      "destination": "https://batirnet.com/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/|assets/).*)",
@@ -64,7 +77,6 @@
     }
   ]
 }
-
 
 
 

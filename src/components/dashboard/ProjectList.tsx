@@ -288,7 +288,7 @@ export default function ProjectList({ projects, onDelete, onEdit, onView, onProj
                         )}
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/tender/${project.id}?showPDF=true`);
+                          navigate(`/tender/${project.id}`);
                         }}>
                           <FileText className="mr-2 h-4 w-4" />
                           Voir l'appel d'offres (PDF)
@@ -391,7 +391,7 @@ export default function ProjectList({ projects, onDelete, onEdit, onView, onProj
                       )}
                       <DropdownMenuItem onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/tender/${project.id}?showPDF=true`);
+                        navigate(`/tender/${project.id}`);
                       }}>
                         <FileText className="mr-2 h-4 w-4" />
                         Voir l'appel d'offres (PDF)
@@ -513,4 +513,3 @@ export default function ProjectList({ projects, onDelete, onEdit, onView, onProj
     </>
   );
 }
-

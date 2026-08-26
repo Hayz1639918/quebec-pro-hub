@@ -596,7 +596,7 @@ const ProjectDetails = () => {
           <Button
             variant="outline"
             className="gap-2 self-start sm:self-auto"
-            onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}
+            onClick={() => navigate(`/tender/${project.id}`)}
           >
             <FileText className="h-4 w-4" />
             {t('project_details.view_tender')}
