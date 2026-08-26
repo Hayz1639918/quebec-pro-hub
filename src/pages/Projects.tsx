@@ -665,7 +665,7 @@ const Projects = () => {
                           <Button
                             variant="outline"
                             className="flex-1 min-w-[170px]"
-                            onClick={() => navigate(`/tender/${project.id}?showPDF=true`)}
+                            onClick={() => navigate(`/tender/${project.id}`)}
                           >
                             <FileText className="mr-2 h-4 w-4" />
                             {t('projects.card.view_tender')}

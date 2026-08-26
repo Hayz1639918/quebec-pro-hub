@@ -177,6 +177,4 @@ Ce projet est propriétaire. Contactez les mainteneurs pour les conditions d'uti
 
 ---
 
-<div align="center">
-Made with ❤️ in Canada 🇨🇦
-</div>
+BâtirNet — Québec, Canada.
