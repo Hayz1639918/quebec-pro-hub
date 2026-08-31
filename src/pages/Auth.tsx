@@ -260,7 +260,7 @@ const Auth = () => {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('user_type, profile_completed, is_rbq_verified, professional_type')
+      .select('user_type, profile_completed, professional_type')
       .eq('id', uid)
       .single();
 
@@ -302,7 +302,6 @@ const Auth = () => {
             redirectBasedOnProfile({
               user_type: 'professional',
               profile_completed: false,
-              is_rbq_verified: false,
               professional_type,
             });
             return false;
@@ -544,7 +543,6 @@ const Auth = () => {
         const nextRoute = getPostAuthRoute({
           user_type: userType,
           profile_completed: false,
-          is_rbq_verified: false,
           professional_type: userType === "professional" ? professionalType : null,
         });
 
@@ -978,7 +976,7 @@ const Auth = () => {
                     <Building2 className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-blue-700 space-y-1">
                       <p className="font-medium">Aucun document requis pour vous inscrire.</p>
-                      <p>Vous pourrez ajouter votre <strong>licence RBQ</strong> et votre assurance plus tard depuis votre profil pour obtenir le badge « Vérifié ».</p>
+                      <p>Vous pourrez ajouter votre <strong>licence RBQ</strong> et votre assurance plus tard depuis votre profil pour demander le badge « Profil approuvé ».</p>
                     </div>
                   </div>
                 </div>
@@ -1043,7 +1041,7 @@ const Auth = () => {
                     <HardHat className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
                     <div className="text-xs text-amber-700 space-y-1">
                       <p className="font-medium">Aucun document requis pour vous inscrire.</p>
-                      <p>Vous pourrez ajouter votre <strong>carte de compétence CCQ</strong> plus tard depuis votre profil pour obtenir le badge « Vérifié ».</p>
+                      <p>Vous pourrez ajouter votre <strong>carte de compétence CCQ</strong> plus tard depuis votre profil pour demander le badge « Profil approuvé ».</p>
                     </div>
                   </div>
                 </div>

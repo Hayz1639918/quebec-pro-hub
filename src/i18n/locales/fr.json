@@ -40,17 +40,17 @@
   },
   "hero": {
     "title": "Trouvez le bon\nentrepreneur,\nen toute confiance",
-    "subtitle": "Des professionnels vérifiés pour vos projets partout au Québec.",
+    "subtitle": "Des professionnels pour vos projets partout au Québec, avec un badge clair pour les profils approuvés.",
     "cta_client": "Publier un projet",
     "cta_pro": "Devenir professionnel",
     "badge": "La construction en toute confiance",
     "features": {
-      "verified": "Entrepreneurs vérifiés et certifiés",
+      "verified": "Badge distinctif pour les profils approuvés",
       "payments": "Paiements sécurisés par jalons",
       "contracts": "Contrats intelligents avec e-signature"
     },
     "stats": {
-      "professionals": "professionnels vérifiés",
+      "professionals": "professionnels inscrits",
       "projects": "projets publiés",
       "satisfaction": "satisfaction moyenne"
     },
@@ -240,7 +240,7 @@
     "messages": {
       "success": "Inscription réussie !",
       "success_client": "Votre compte a été créé avec succès !",
-      "success_pro": "Votre compte professionnel a été créé. Nous vérifierons votre certification RBQ sous peu.",
+      "success_pro": "Votre compte professionnel a été créé et est actif. La vérification facultative ajoute un badge à votre profil.",
       "login_success": "Connexion réussie",
       "welcome": "Bienvenue {{name}} !",
       "welcome_default": "Bienvenue sur BâtirNet !",
@@ -254,8 +254,8 @@
       "upload_error_description": "Impossible de télécharger la certification RBQ",
       "missing_fields": "Champs requis manquants",
       "missing_fields_description": "Veuillez remplir tous les champs obligatoires",
-      "rbq_required": "Certification RBQ requise",
-      "rbq_required_description": "Veuillez télécharger votre certification RBQ",
+      "rbq_required": "Certification RBQ optionnelle",
+      "rbq_required_description": "Ajoutez votre certification pour demander le badge « Profil approuvé »",
       "no_user_created": "Aucun utilisateur créé",
       "profile_error": "Impossible de créer le profil utilisateur",
       "signup_error": "Une erreur est survenue lors de l'inscription",
@@ -645,7 +645,7 @@
   "professionals": {
     "title": "Marketplace des Professionnels",
     "hero_title": "Trouvez votre entrepreneur qualifié",
-    "hero_subtitle": "Découvrez des professionnels vérifiés RBQ pour tous vos projets de construction et rénovation",
+    "hero_subtitle": "Découvrez des professionnels pour tous vos projets de construction et rénovation et repérez les profils approuvés grâce à leur badge",
     "search": "Rechercher un professionnel...",
     "search_placeholder": "Rechercher par nom, entreprise ou service...",
     "loading": "Chargement des professionnels...",
@@ -828,7 +828,7 @@
       "verified_count": "Vérifiés RBQ"
     },
     "card": {
-      "verified": "Vérifié RBQ",
+      "verified": "Profil approuvé",
       "pending_verification": "En attente de vérification",
       "years_exp": "ans d'expérience",
       "reviews": "avis",
@@ -1313,9 +1313,9 @@
       "reason_min_length": "Veuillez fournir une raison d'au moins 10 caractères."
     },
     "messages": {
-      "verified": "✓ Licence RBQ vérifiée",
-      "verified_description": "{{company}} peut maintenant recevoir des projets.",
-      "rejected": "Licence RBQ refusée",
+      "verified": "✓ Profil approuvé",
+      "verified_description": "Le badge « Profil approuvé » est maintenant visible pour {{company}}.",
+      "rejected": "Demande d'approbation refusée",
       "rejected_description": "La demande de {{company}} a été refusée.",
       "error": "Erreur",
       "verification_error": "Erreur lors de la vérification",

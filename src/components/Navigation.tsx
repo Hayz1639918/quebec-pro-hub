@@ -14,7 +14,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, Clock, HardHat, Search, Banknote, ChevronDown } from "lucide-react";
+import { User, LogOut, LayoutDashboard, MessageSquare, FileText, Bell, Menu, Building2, HardHat, Search, Banknote, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -23,6 +23,7 @@ import { getMyProfile } from "@/services/profile-service";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
 import Logo from "@/components/Logo";
+import { canUseProfessionalPlatform, getProfessionalCompletionRoute } from "@/lib/auth-routing";
 
 const MobileNavItem = ({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) => (
   <button
@@ -41,12 +42,18 @@ type NavigationProps = {
 const Navigation = ({ variant = "default" }: NavigationProps) => {
   const { t } = useTranslation();
   const [user, setUser] = useState<{id: string; email?: string} | null>(null);
-  const [profile, setProfile] = useState<{user_type: string; full_name: string; is_rbq_verified?: boolean; profile_completed?: boolean; professional_type?: string} | null>(null);
+  const [profile, setProfile] = useState<{
+    user_type: string;
+    full_name: string;
+    profile_completed: boolean | null;
+    professional_type: string | null;
+  } | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const isHome = variant === "home";
+  const professionalReady = canUseProfessionalPlatform(profile);
 
   useEffect(() => {
     checkUser();
@@ -248,7 +255,7 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
                       )}
                       {profile?.user_type === 'professional' && (
                         <>
-                          {profile.is_rbq_verified ? (
+                          {professionalReady ? (
                             <>
                               <DropdownMenuItem onClick={() => navigate("/pro/dashboard")} className="cursor-pointer font-ui text-sm">
                                 <LayoutDashboard className="mr-2 h-4 w-4 text-primary/60" />
@@ -261,28 +268,23 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
                             </>
                           ) : !profile.profile_completed ? (
                             <DropdownMenuItem
-                              onClick={() => navigate(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")}
+                              onClick={() => navigate(getProfessionalCompletionRoute(profile.professional_type))}
                               className="cursor-pointer font-ui text-sm"
                             >
                               <User className="mr-2 h-4 w-4 text-primary/60" />
                               Compléter mon profil
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={() => navigate("/pending-verification")} className="cursor-pointer font-ui text-sm">
-                              <Clock className="mr-2 h-4 w-4 text-primary/60" />
-                              Vérification en attente
-                            </DropdownMenuItem>
-                          )}
+                          ) : null}
                         </>
                       )}
                       <DropdownMenuSeparator />
-                      {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                      {(profile?.user_type === 'client' || professionalReady) && (
                         <DropdownMenuItem onClick={() => navigate("/messages")} className="cursor-pointer font-ui text-sm">
                           <MessageSquare className="mr-2 h-4 w-4 text-primary/60" />
                           {t('navigation.messages')}
                         </DropdownMenuItem>
                       )}
-                      {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
+                      {professionalReady && (
                         <DropdownMenuItem onClick={() => navigate("/contracts")} className="cursor-pointer font-ui text-sm">
                           <FileText className="mr-2 h-4 w-4 text-primary/60" />
                           {t('navigation.contracts')}
@@ -384,21 +386,19 @@ const Navigation = ({ variant = "default" }: NavigationProps) => {
                             </>
                           )}
                           {profile?.user_type === 'professional' && (
-                            profile.is_rbq_verified ? (
+                            professionalReady ? (
                               <>
                                 <MobileNavItem icon={LayoutDashboard} label="Dashboard Pro" onClick={() => navigateTo("/pro/dashboard")} />
-                                <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo("/pro/profile")} />
+                                <MobileNavItem icon={User} label="Mon profil" onClick={() => navigateTo(profile.professional_type === 'entrepreneur' ? "/pro/entrepreneur-profile" : "/pro/profile")} />
                               </>
                             ) : !profile.profile_completed ? (
-                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo(profile.professional_type === 'entrepreneur' ? "/complete-profile-entrepreneur" : "/complete-profile")} />
-                            ) : (
-                              <MobileNavItem icon={Clock} label="Vérification en attente" onClick={() => navigateTo("/pending-verification")} />
-                            )
+                              <MobileNavItem icon={User} label="Compléter mon profil" onClick={() => navigateTo(getProfessionalCompletionRoute(profile.professional_type))} />
+                            ) : null
                           )}
-                          {(profile?.user_type === 'client' || profile?.is_rbq_verified) && (
+                          {(profile?.user_type === 'client' || professionalReady) && (
                             <MobileNavItem icon={MessageSquare} label={t('navigation.messages')} onClick={() => navigateTo("/messages")} />
                           )}
-                          {profile?.user_type === 'professional' && profile?.is_rbq_verified && (
+                          {professionalReady && (
                             <MobileNavItem icon={FileText} label={t('navigation.contracts')} onClick={() => navigateTo("/contracts")} />
                           )}
                         </>

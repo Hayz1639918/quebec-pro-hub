@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ProfessionalApprovalBadge } from "@/components/ProfessionalApprovalBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
@@ -59,6 +60,7 @@ type Professional = {
   latitude: number | null;
   longitude: number | null;
   professional_type: ProfessionalType;
+  is_rbq_verified: boolean;
   created_at: string;
 };
 
@@ -133,6 +135,7 @@ const ProfessionalsDirectory = () => {
             latitude,
             longitude,
             professional_type,
+            is_rbq_verified,
             created_at
           `)
           .eq("user_type", "professional")
@@ -367,7 +370,7 @@ const ProfessionalsDirectory = () => {
                       service_radius_km: pro.travel_distance_km || 50,
                       services_offered: pro.services_offered,
                       years_experience: pro.years_experience,
-                      is_rbq_verified: false,
+                      is_rbq_verified: Boolean(pro.is_rbq_verified),
                       rbq_number: null,
                       average_rating: Number(pro.average_rating || 0),
                       total_reviews: Number(pro.total_reviews || 0),
@@ -402,6 +405,9 @@ const ProfessionalsDirectory = () => {
                             <button type="button" onClick={() => navigate(`/professional/${pro.id}`)} className="text-left min-w-0">
                               <h2 className="font-ui font-bold text-lg text-primary truncate">{pro.company_name || pro.full_name}</h2>
                               {pro.company_name && <p className="text-xs text-slate-500 truncate mt-0.5">{pro.full_name}</p>}
+                              {pro.is_rbq_verified && (
+                                <ProfessionalApprovalBadge className="mt-2" />
+                              )}
                             </button>
                             <FavoriteButton professionalId={pro.id} userId={userId} size="icon" variant="ghost" />
                           </div>

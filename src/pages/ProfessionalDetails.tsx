@@ -18,6 +18,7 @@ import Footer from "@/components/Footer";
 import InviteProfessionalDialog from "@/components/invitations/InviteProfessionalDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ProfessionalApprovalBadge } from "@/components/ProfessionalApprovalBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +39,7 @@ type PublicProfessional = {
   availability_status: "available" | "busy" | "unavailable" | null;
   response_time_hours: number | null;
   professional_type: string | null;
+  is_rbq_verified: boolean;
 };
 
 type PortfolioItem = {
@@ -121,7 +123,8 @@ const ProfessionalDetails = () => {
             profile_picture_url,
             availability_status,
             response_time_hours,
-            professional_type
+            professional_type,
+            is_rbq_verified
           `)
           .eq("id", id)
           .eq("user_type", "professional")
@@ -255,9 +258,14 @@ const ProfessionalDetails = () => {
               </Avatar>
 
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.13em] text-primary/55">
-                  {profile.professional_type === "entrepreneur" ? "Entrepreneur" : "Professionnel"}
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.13em] text-primary/55">
+                    {profile.professional_type === "entrepreneur" ? "Entrepreneur" : "Professionnel"}
+                  </p>
+                  {profile.is_rbq_verified && (
+                    <ProfessionalApprovalBadge />
+                  )}
+                </div>
                 <h1 className="mt-2 font-ui text-3xl sm:text-5xl font-bold text-primary tracking-tight leading-tight">
                   {profile.company_name || profile.full_name}
                 </h1>

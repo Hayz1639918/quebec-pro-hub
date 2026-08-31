@@ -135,7 +135,7 @@ const CompleteProfileEntrepreneur = () => {
     setLoading(true);
     try {
       // Documents RBQ / assurance / pièce d'identité sont OPTIONNELS : on ne
-      // les téléverse que s'ils ont été fournis (ils ajoutent le badge « Vérifié »).
+      // les téléverse que s'ils ont été fournis (ils permettent de demander le badge approuvé).
       const licenceUrl = docLicence ? await uploadFile(docLicence, "rbq") : null;
       const assuranceUrl = docAssurance ? await uploadFile(docAssurance, "assurance") : null;
       const identityUrl = docIdentity ? await uploadFile(docIdentity, "identity") : null;
@@ -165,7 +165,7 @@ const CompleteProfileEntrepreneur = () => {
       toast({
         title: "Profil entrepreneur créé !",
         description: hasDocuments
-          ? "Vos documents seront vérifiés sous 24-48h pour obtenir le badge « Vérifié »."
+          ? "Votre compte est actif. Vos documents seront examinés pour obtenir le badge « Profil approuvé »."
           : "Vous pouvez ajouter votre licence RBQ et vos documents plus tard depuis votre profil.",
       });
       navigate("/pro/dashboard");
@@ -220,7 +220,7 @@ const CompleteProfileEntrepreneur = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="rbq">Numéro de licence RBQ</Label>
+                <Label htmlFor="rbq">Numéro de licence RBQ (optionnel)</Label>
                 <Input
                   id="rbq"
                   value={rbqNumber}
@@ -320,7 +320,7 @@ const CompleteProfileEntrepreneur = () => {
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700 space-y-1">
-                  <p className="font-medium">Documents optionnels — pour obtenir le badge « Vérifié » :</p>
+                  <p className="font-medium">Documents optionnels — pour demander le badge « Profil approuvé » :</p>
                   <p>• Ajouter votre licence RBQ rassure les clients pour les contrats de construction.</p>
                   <p>• Le certificat d'assurance responsabilité civile renforce la confiance.</p>
                   <p>• Vous pouvez compléter ces documents plus tard depuis votre profil.</p>

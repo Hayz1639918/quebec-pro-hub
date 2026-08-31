@@ -109,11 +109,11 @@ AND name LIKE '%rbq%';
 - ❌ Mot de passe < 6 caractères → Erreur navigateur
 - ❌ Sans nom complet → Erreur navigateur
 - ❌ Sans nom d'entreprise → Toast "Champs requis manquants"
-- ❌ Sans numéro RBQ → Toast "Champs requis manquants"
-- ❌ Sans certification RBQ → Toast "Certification RBQ requise"
+- ✅ Sans numéro RBQ → Inscription autorisée
+- ✅ Sans certification RBQ → Inscription autorisée sans badge approuvé
 
 **Résultat attendu** :
-- ✅ Tous les champs requis sont validés
+- ✅ Les champs de profil requis sont validés sans rendre les certifications obligatoires
 - ✅ Messages d'erreur clairs et précis
 
 ---
@@ -337,10 +337,10 @@ WHERE user_type = 'professional'
 ORDER BY created_at DESC;
 ```
 
-### Vérifier un professionnel
+### Approuver un professionnel et lui attribuer le badge
 
 ```sql
--- Approuver un professionnel
+-- Attribuer le badge « Profil approuvé » sans modifier ses permissions
 UPDATE profiles
 SET is_rbq_verified = true
 WHERE email = 'pro-test@example.com';
@@ -416,4 +416,3 @@ Avant de considérer que tout fonctionne :
 - Documentation Supabase : https://supabase.com/docs
 - Guide d'authentification : `docs/authentication.md`
 - Configuration Supabase : `supabase/README.md`
-

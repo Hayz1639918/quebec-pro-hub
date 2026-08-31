@@ -13,6 +13,7 @@ import { Building2, FileText, Upload, CheckCircle2, MapPin, Loader2, X, Plus } f
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { geocodePostalCode } from "@/lib/geolocation";
+import { getProfessionalCompletionRoute } from "@/lib/auth-routing";
 
 const PREDEFINED_SERVICES = [
   "Rénovation résidentielle", "Construction neuve", "Toiture", "Plomberie",
@@ -77,7 +78,7 @@ const CompleteProfile = () => {
       // Check if user is a professional and profile is incomplete
       const { data: profile } = await supabase
         .from('profiles')
-        .select('user_type, profile_completed, company_name')
+        .select('user_type, profile_completed, company_name, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -94,18 +95,14 @@ const CompleteProfile = () => {
       }
 
       if (profile.profile_completed) {
-        // Professional has completed profile - redirect to pending verification or dashboard
-        const { data: verificationCheck } = await supabase
-          .from('profiles')
-          .select('is_rbq_verified')
-          .eq('id', session.user.id)
-          .single();
+        navigate("/pro/dashboard", { replace: true });
+        return;
+      }
 
-        if (verificationCheck?.is_rbq_verified) {
-          navigate("/pro/dashboard");
-        } else {
-          navigate("/pending-verification");
-        }
+      // Keep this legacy URL compatible, but use the dedicated non-blocking
+      // onboarding screens whenever the professional subtype is known.
+      if (profile.professional_type) {
+        navigate(getProfessionalCompletionRoute(profile.professional_type), { replace: true });
         return;
       }
 
@@ -238,21 +235,12 @@ const CompleteProfile = () => {
       return;
     }
 
-    // Validate required fields
-    if (!companyName || !rbqNumber) {
+    // A usable professional profile is required; certification is optional.
+    if (!companyName) {
       toast({
         variant: "destructive",
         title: t('auth.messages.missing_fields'),
         description: t('auth.messages.missing_fields_description'),
-      });
-      return;
-    }
-
-    if (!rbqFile) {
-      toast({
-        variant: "destructive",
-        title: t('auth.messages.rbq_required'),
-        description: t('auth.messages.rbq_required_description'),
       });
       return;
     }
@@ -269,15 +257,14 @@ const CompleteProfile = () => {
     setLoading(true);
 
     try {
-      // Upload RBQ certification
-      const rbqCertificationUrl = await uploadRBQCertification();
+      const rbqCertificationUrl = rbqFile ? await uploadRBQCertification() : null;
 
       // Update profile with professional details
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           company_name: companyName,
-          rbq_number: rbqNumber,
+          rbq_number: rbqNumber.trim() || null,
           rbq_certification_url: rbqCertificationUrl,
           services_offered: selectedServices.length > 0 ? selectedServices.join(', ') : null,
           insurance_info: insuranceInfo || null,
@@ -298,14 +285,15 @@ const CompleteProfile = () => {
       }
 
       toast({
-        title: "Profil soumis",
-        description: "Votre profil est en attente de validation. Notre équipe vérifiera votre certification RBQ.",
+        title: "Profil complété",
+        description: rbqCertificationUrl
+          ? "Votre compte est actif. Votre document sera examiné pour ajouter le badge « Profil approuvé »."
+          : "Votre compte est actif. Vous pourrez demander la vérification de vos certifications plus tard.",
       });
 
-      // Redirect to pending verification page
       setRedirecting(true);
       setTimeout(() => {
-        navigate("/pending-verification");
+        navigate("/pro/dashboard");
       }, 1500);
 
     } catch (error) {
@@ -364,7 +352,7 @@ const CompleteProfile = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="rbq">{t('auth.signup.rbq_number')} *</Label>
+                <Label htmlFor="rbq">{t('auth.signup.rbq_number')} (optionnel)</Label>
                 <div className="relative">
                   <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -374,13 +362,12 @@ const CompleteProfile = () => {
                     value={rbqNumber}
                     onChange={(e) => setRbqNumber(e.target.value)}
                     className="pl-10"
-                    required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="rbq-file">{t('auth.signup.rbq_certification')} *</Label>
+                <Label htmlFor="rbq-file">{t('auth.signup.rbq_certification')} (optionnelle)</Label>
                 <div className="relative">
                   <Input
                     id="rbq-file"

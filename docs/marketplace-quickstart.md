@@ -29,7 +29,7 @@ Cette migration ajoute :
 
 ### 2. Vérifier les données
 
-Pour tester la marketplace, assurez-vous d'avoir des professionnels vérifiés :
+Pour tester la marketplace, assurez-vous d'avoir des profils professionnels :
 
 ```sql
 -- Vérifier les professionnels
@@ -37,7 +37,7 @@ SELECT id, company_name, is_rbq_verified, average_rating, total_reviews
 FROM profiles
 WHERE user_type = 'professional';
 
--- Vérifier manuellement un professionnel (si nécessaire)
+-- Ajouter le badge approuvé (optionnel)
 UPDATE profiles
 SET is_rbq_verified = TRUE
 WHERE id = 'uuid-du-professionnel';
@@ -91,14 +91,13 @@ Chaque carte affiche :
 1. **Créer un professionnel de test** :
    - Allez sur `/auth?mode=signup`
    - Sélectionnez "Professionnel"
-   - Remplissez le formulaire avec certification RBQ
+   - Remplissez le formulaire; la certification RBQ est optionnelle
    - Inscrivez-vous
 
-2. **Vérifier le professionnel** :
+2. **Compléter les données d'affichage du professionnel** :
    ```sql
    UPDATE profiles
    SET 
-     is_rbq_verified = TRUE,
      city = 'Montréal',
      region = 'Montréal',
      years_experience = 10,
@@ -115,7 +114,7 @@ Chaque carte affiche :
 ## Problèmes courants
 
 ### Aucun professionnel affiché
-**Cause** : Aucun professionnel avec `is_rbq_verified = true`
+**Cause** : Aucun profil professionnel n'est disponible
 
 **Solution** :
 ```sql
@@ -123,8 +122,8 @@ SELECT id, company_name, is_rbq_verified
 FROM profiles
 WHERE user_type = 'professional';
 
--- Vérifier un professionnel
-UPDATE profiles SET is_rbq_verified = TRUE WHERE id = 'uuid';
+-- Vérifier la présence du profil
+SELECT id, company_name FROM profiles WHERE id = 'uuid' AND user_type = 'professional';
 ```
 
 ### Notes à 0.0
@@ -175,7 +174,6 @@ Pour plus de détails, consultez :
 
 Besoin d'aide ?
 1. Vérifiez que la migration 002 est appliquée
-2. Vérifiez que vous avez des professionnels avec `is_rbq_verified = TRUE`
+2. Vérifiez qu'au moins un profil avec `user_type = 'professional'` existe
 3. Consultez la console navigateur pour les erreurs
 4. Vérifiez les logs Supabase pour les erreurs de requêtes
-

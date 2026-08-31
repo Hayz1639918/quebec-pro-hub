@@ -35,6 +35,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { canUseProfessionalPlatform, getProfessionalCompletionRoute } from '@/lib/auth-routing';
 
 interface DashboardStats {
   activeProjects: number;
@@ -167,7 +168,7 @@ const ProDashboard = () => {
       // Fetch professional profile — select only stable columns (avoid missing column errors)
       const { data: prof, error: profError } = await supabase
         .from('profiles')
-        .select('user_type, is_rbq_verified, professional_type')
+        .select('user_type, profile_completed, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -186,10 +187,8 @@ const ProDashboard = () => {
       const subType = (prof.professional_type as 'entrepreneur' | 'trade_professional') || 'entrepreneur';
       setProfessionalType(subType);
 
-      // Trade professionals have full access (RBQ/CCQ verification is optional).
-      // Entrepreneurs still require RBQ verification before accessing the dashboard.
-      if (subType !== 'trade_professional' && !prof.is_rbq_verified) {
-        navigate('/pending-verification', { replace: true });
+      if (!canUseProfessionalPlatform(prof)) {
+        navigate(getProfessionalCompletionRoute(prof.professional_type), { replace: true });
         return;
       }
 
@@ -220,7 +219,6 @@ const ProDashboard = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   const fetchUpcomingMeetings = async (uid: string) => {
@@ -1023,6 +1021,7 @@ const ProDashboard = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 <ActionBtn icon={Hammer} label={t('pro_dashboard.quick_actions.my_projects')} onClick={() => navigate('/pro/my-projects')} badge={assignedProjects.length || undefined} primary />
                 <ActionBtn icon={User} label="Mon profil public" onClick={() => navigate(`/professional/${userId}`)} primary />
+                <ActionBtn icon={Award} label="Licences et vérification" onClick={() => navigate('/pro/profile?tab=licences')} />
                 <ActionBtn icon={FileText} label={t('pro_dashboard.quick_actions.my_contracts')} onClick={() => navigate('/contracts')} />
                 <ActionBtn icon={Briefcase} label="Mon portfolio" onClick={() => navigate('/pro/portfolio')} />
                 <ActionBtn icon={DollarSign} label="Mes paiements" onClick={() => navigate('/pro/payments')} iconColor="text-green-600" />

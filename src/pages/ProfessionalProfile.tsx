@@ -35,6 +35,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import InviteProfessionalDialog from '@/components/invitations/InviteProfessionalDialog';
+import { ProfessionalApprovalBadge } from '@/components/ProfessionalApprovalBadge';
 
 interface ProfessionalProfile {
   id: string;
@@ -491,10 +492,7 @@ const ProfessionalProfile = () => {
                     )}
                     <div className="flex items-center gap-2">
                       {profile.is_rbq_verified && (
-                        <Badge className="bg-green-600">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          RBQ Vérifié
-                        </Badge>
+                        <ProfessionalApprovalBadge />
                       )}
                       {profile.rbq_number && (
                         <Badge variant="outline">
@@ -626,7 +624,7 @@ const ProfessionalProfile = () => {
                           </div>
                         </div>
                         {/* Le document RBQ brut n'est pas exposé publiquement.
-                            Le numéro RBQ ci-dessus + le badge « Vérifié » suffisent
+                            Le numéro RBQ ci-dessus + le badge « Profil approuvé » suffisent
                             à la confiance ; le document est réservé à l'admin. */}
                         {profile.has_rbq_document && (
                           <span className="flex items-center gap-1.5 text-sm text-green-700">
