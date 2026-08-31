@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
+import { canUseProfessionalPlatform, getProfessionalCompletionRoute } from '@/lib/auth-routing';
 
 interface AssignedProject {
   id: string;
@@ -55,7 +56,7 @@ const ProMyProjects = () => {
       // Ensure professional
       const { data: prof } = await supabase
         .from('profiles')
-        .select('user_type, is_rbq_verified, professional_type')
+        .select('user_type, profile_completed, professional_type')
         .eq('id', session.user.id)
         .single();
 
@@ -64,10 +65,8 @@ const ProMyProjects = () => {
         return;
       }
 
-      // Trade professionals have full access (license optional); entrepreneurs
-      // still require RBQ verification.
-      if (prof?.professional_type !== 'trade_professional' && !prof?.is_rbq_verified) {
-        navigate('/pending-verification');
+      if (!canUseProfessionalPlatform(prof)) {
+        navigate(getProfessionalCompletionRoute(prof.professional_type), { replace: true });
         return;
       }
 

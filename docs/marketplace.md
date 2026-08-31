@@ -127,10 +127,9 @@ interface Professional {
 
 ```typescript
 const { data, error } = await supabase
-  .from('profiles')
+  .from('public_professional_profiles')
   .select('*')
   .eq('user_type', 'professional')
-  .eq('is_rbq_verified', true)  // Uniquement les professionnels vérifiés
   .order('created_at', { ascending: false });
 ```
 
@@ -150,7 +149,7 @@ Stocke les informations des professionnels.
 
 **Champs marketplace** :
 - `user_type` : Doit être 'professional'
-- `is_rbq_verified` : Doit être true pour apparaître
+- `is_rbq_verified` : Affiche le badge « Profil approuvé » sans modifier l'accès
 - `city` : Ville du professionnel
 - `region` : Région du professionnel
 - `bio` : Description du professionnel
@@ -357,4 +356,3 @@ Pour toute question :
 - Guide d'installation : `INSTALLATION.md`
 - Documentation API : `docs/architecture.md`
 - Configuration Supabase : `supabase/README.md`
-

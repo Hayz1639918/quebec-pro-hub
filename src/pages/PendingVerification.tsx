@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle2, FileText, Shield, Loader2, LogOut, RefreshCw, Lightbulb } from "lucide-react";
 
 const PendingVerification = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [profile, setProfile] = useState<{
@@ -51,13 +49,6 @@ const PendingVerification = () => {
           ? "/complete-profile-trade"
           : "/complete-profile-entrepreneur";
         navigate(completionRoute);
-        return;
-      }
-
-      // Trade professionals don't require verification (license optional) — they
-      // should never be stranded on this page.
-      if (profileData.professional_type === 'trade_professional') {
-        navigate("/pro/dashboard");
         return;
       }
 
@@ -147,10 +138,10 @@ const PendingVerification = () => {
               <Clock className="h-10 w-10 text-orange-700 animate-pulse" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
-              Vérification en cours
+              Compte actif — vérification facultative
             </h1>
             <p className="text-muted-foreground">
-              Votre certification RBQ est en attente de validation par notre équipe
+              Vous pouvez utiliser BâtirNet pendant l'examen de vos certifications.
             </p>
           </div>
 
@@ -199,16 +190,16 @@ const PendingVerification = () => {
                     <span className="text-sm font-medium">Profil complété</span>
                   </div>
                   <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    </div>
+                    <span className="text-sm font-medium">Accès à la plateforme activé</span>
+                  </div>
+                  <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
                       <Clock className="h-5 w-5 text-orange-700 animate-pulse" />
                     </div>
-                    <span className="text-sm font-medium text-orange-700">Validation RBQ en cours...</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Shield className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <span className="text-sm text-muted-foreground">Accès à la plateforme</span>
+                    <span className="text-sm font-medium text-orange-700">Badge « Profil approuvé » en cours d'examen</span>
                   </div>
                 </div>
               </div>
@@ -217,27 +208,36 @@ const PendingVerification = () => {
 
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" />Délai estimé</h4>
+            <h4 className="font-medium text-blue-900 mb-1 flex items-center gap-1.5"><Lightbulb className="h-4 w-4" />Votre accès n'est pas bloqué</h4>
             <p className="text-sm text-blue-800">
-              Notre équipe vérifie généralement les certifications RBQ sous 24 à 48 heures ouvrables. 
-              Vous recevrez un email dès que votre compte sera activé.
+              Notre équipe examine généralement les documents sous 24 à 48 heures ouvrables.
+              Une approbation ajoute uniquement le badge « Profil approuvé » à votre profil public.
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button 
-              onClick={handleRefresh}
+            <Button
+              onClick={() => navigate("/pro/dashboard")}
               variant="default"
               className="flex-1"
             >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Vérifier mon statut
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Accéder au tableau de bord
             </Button>
-            <Button 
-              onClick={handleLogout}
+            <Button
+              onClick={handleRefresh}
               variant="outline"
               className="flex-1"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Actualiser le statut
+            </Button>
+          </div>
+          <div className="mt-3 flex justify-center">
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Se déconnecter
@@ -251,4 +251,3 @@ const PendingVerification = () => {
 };
 
 export default PendingVerification;
-

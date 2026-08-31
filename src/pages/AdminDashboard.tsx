@@ -478,8 +478,8 @@ const AdminDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Licence RBQ vérifiée",
-        description: `${professional.company_name} peut maintenant recevoir des projets.`,
+        title: "Profil approuvé",
+        description: `Le badge « Profil approuvé » est maintenant visible pour ${professional.company_name}.`,
       });
 
       // Refresh data
@@ -522,7 +522,7 @@ const AdminDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Licence RBQ refusée",
+        title: "Demande d'approbation refusée",
         description: `La demande de ${selectedProfessional.company_name} a été refusée.`,
       });
 
@@ -664,7 +664,7 @@ const AdminDashboard = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold">Panneau d'administration</h1>
-              <p className="text-muted-foreground">Gestion des vérifications RBQ</p>
+              <p className="text-muted-foreground">Gestion des demandes d'approbation</p>
             </div>
           </div>
           <Button 
@@ -1212,7 +1212,7 @@ const AdminDashboard = () => {
               ) : (
                 <CheckCircle2 className="h-4 w-4 mr-2" />
               )}
-              Valider la licence
+              Approuver le profil
             </Button>
           </DialogFooter>
         </DialogContent>

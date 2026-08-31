@@ -4,7 +4,7 @@
 
 BâtirNet offre un système d'authentification complet avec deux types de comptes distincts :
 - **Client** : Pour les particuliers et entreprises cherchant des entrepreneurs
-- **Professionnel** : Pour les entrepreneurs du bâtiment avec licence RBQ
+- **Professionnel** : Pour les entrepreneurs et professionnels de métier; les certifications sont facultatives
 
 ## Fonctionnalités
 
@@ -20,8 +20,8 @@ Les clients peuvent s'inscrire avec les informations suivantes :
 #### Professionnel
 Les professionnels doivent fournir en plus :
 - Nom de l'entreprise (requis)
-- Numéro RBQ (requis)
-- Certification RBQ (fichier PDF, JPG ou PNG, max 5 Mo, requis)
+- Numéro RBQ ou autre certification (optionnel)
+- Preuve de certification (fichier PDF, JPG ou PNG, max 5 Mo, optionnelle)
 - Services offerts (optionnel)
 - Informations d'assurance (optionnel)
 
@@ -40,21 +40,19 @@ flowchart TD
     B -->|Professionnel| D[Formulaire professionnel]
     
     C --> E[Validation des champs communs]
-    D --> F[Validation champs + RBQ]
+    D --> F[Validation du profil professionnel]
     
     E --> G[Création compte Supabase]
-    F --> H[Upload certification RBQ]
-    
-    H --> G
+    F --> G
     G --> I[Création profil dans DB]
     I --> J{Type?}
     
     J -->|Client| K[Redirection tableau de bord]
-    J -->|Professionnel| L[En attente vérification RBQ]
-    
-    L --> M[Admin vérifie certification]
-    M --> N[Activation du profil]
-    N --> K
+    J -->|Professionnel| L[Tableau de bord professionnel]
+    L --> M{Certification soumise?}
+    M -->|Non| K
+    M -->|Oui| N[Examen administrateur]
+    N --> O[Badge Profil approuvé]
 ```
 
 ## Architecture technique
@@ -118,8 +116,8 @@ const maxSize = 5 * 1024 * 1024;
   phone: string | null;
   user_type: "professional";
   company_name: string;
-  rbq_number: string;
-  rbq_certification_url: string;
+  rbq_number: string | null;
+  rbq_certification_url: string | null;
   services_offered: string | null;
   insurance_info: string | null;
   is_rbq_verified: boolean;    // Par défaut: false
@@ -134,7 +132,7 @@ const maxSize = 5 * 1024 * 1024;
 
 **Policies appliquées :**
 1. Les utilisateurs peuvent lire/modifier uniquement leur propre profil
-2. Les profils professionnels vérifiés sont visibles publiquement
+2. Les profils professionnels sont visibles publiquement; le statut de vérification n'accorde aucun droit d'accès
 3. Les certifications RBQ ne sont accessibles que par l'utilisateur et les admins
 
 ### Validation
@@ -209,16 +207,16 @@ toast({
 
 ### Pour les professionnels
 
-1. **Inscription** : Le professionnel remplit le formulaire et upload sa certification
+1. **Inscription** : Le professionnel complète son profil; la certification peut être ajoutée maintenant ou plus tard
 2. **Statut initial** : `is_rbq_verified = false`
-3. **Limitations** : Le profil n'est pas visible publiquement
+3. **Accès** : Le compte est actif et le professionnel peut utiliser la plateforme
 
 ### Pour les administrateurs
 
 1. **Dashboard admin** : Voir la liste des professionnels en attente
 2. **Vérification** : Examiner la certification RBQ uploadée
 3. **Validation** : Mettre à jour le statut à `is_rbq_verified = true`
-4. **Activation** : Le profil devient visible et actif
+4. **Badge** : Le profil public reçoit le badge « Profil approuvé »; les permissions restent inchangées
 
 ### SQL de vérification manuelle
 
@@ -244,7 +242,7 @@ ORDER BY created_at DESC;
 | "Format de fichier invalide" | Fichier non PDF/JPG/PNG | Convertir le fichier au bon format |
 | "Fichier trop volumineux" | Fichier > 5 Mo | Compresser ou redimensionner le fichier |
 | "Champs requis manquants" | Champs obligatoires vides | Remplir tous les champs marqués * |
-| "Certification RBQ requise" | Pas de fichier uploadé | Télécharger la certification |
+| Aucune certification ajoutée | Choix volontaire du professionnel | Aucune action; le compte demeure actif sans badge approuvé |
 
 ### Gestion des erreurs dans le code
 
@@ -374,4 +372,3 @@ describe('Auth Component', () => {
 - [shadcn/ui Components](https://ui.shadcn.com)
 - [React Hook Form](https://react-hook-form.com)
 - [Régie du bâtiment du Québec (RBQ)](https://www.rbq.gouv.qc.ca)
-

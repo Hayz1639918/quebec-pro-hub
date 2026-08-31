@@ -226,14 +226,14 @@ const CompleteProfileTrade = () => {
             </CardContent>
           </Card>
 
-          {/* Documents obligatoires */}
+          {/* Documents optionnels */}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Documents de vérification</CardTitle>
               <CardDescription>Formats acceptés : PDF, JPG, PNG. Examinés sous 24-48h.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Carte CCQ — obligatoire */}
+              {/* Carte CCQ — optionnelle */}
               <div className="space-y-1">
                 <Label className="flex items-center gap-1">
                   {tradeSpecialty === "electricien"
@@ -290,7 +290,7 @@ const CompleteProfileTrade = () => {
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700 space-y-1">
                 <p className="font-medium">Bon à savoir :</p>
-                <p>• Ajouter votre carte de compétence CCQ renforce la confiance des clients (badge « Vérifié »), mais ce n'est pas obligatoire pour utiliser la plateforme.</p>
+                <p>• Ajouter votre carte de compétence CCQ permet de demander le badge « Profil approuvé », mais ce n'est pas obligatoire pour utiliser la plateforme.</p>
                 {tradeSpecialty === "electricien" && <p>• Les électriciens sont réglementés par la CMEQ.</p>}
                 {tradeSpecialty === "plombier" && <p>• Les plombiers sont réglementés par la CMMTQ.</p>}
               </div>

@@ -40,17 +40,17 @@
   },
   "hero": {
     "title": "Find the right\ncontractor,\nwith confidence",
-    "subtitle": "Verified professionals for your projects throughout Quebec.",
+    "subtitle": "Professionals for projects throughout Quebec, with a clear badge for approved profiles.",
     "cta_client": "Post a Project",
     "cta_pro": "Become a Professional",
     "badge": "Build with complete confidence",
     "features": {
-      "verified": "Verified and certified contractors",
+      "verified": "Distinct badge for approved profiles",
       "payments": "Secure milestone-based payments",
       "contracts": "Smart contracts with e-signature"
     },
     "stats": {
-      "professionals": "verified professionals",
+      "professionals": "registered professionals",
       "projects": "projects posted",
       "satisfaction": "average satisfaction"
     },
@@ -240,7 +240,7 @@
     "messages": {
       "success": "Registration successful!",
       "success_client": "Your account has been created successfully!",
-      "success_pro": "Your professional account has been created. We will verify your RBQ certification shortly.",
+      "success_pro": "Your professional account has been created and is active. Optional verification adds a badge to your profile.",
       "login_success": "Login successful",
       "welcome": "Welcome {{name}}!",
       "welcome_default": "Welcome to BâtirNet!",
@@ -254,8 +254,8 @@
       "upload_error_description": "Unable to upload RBQ certification",
       "missing_fields": "Missing required fields",
       "missing_fields_description": "Please fill in all required fields",
-      "rbq_required": "RBQ Certification required",
-      "rbq_required_description": "Please upload your RBQ certification",
+      "rbq_required": "Optional RBQ certification",
+      "rbq_required_description": "Add your certification to request the Approved Profile badge",
       "no_user_created": "No user created",
       "profile_error": "Unable to create user profile",
       "signup_error": "An error occurred during registration",
@@ -645,7 +645,7 @@
   "professionals": {
     "title": "Professionals Marketplace",
     "hero_title": "Find Your Qualified Contractor",
-    "hero_subtitle": "Discover RBQ-verified professionals for all your construction and renovation projects",
+    "hero_subtitle": "Discover professionals for every construction and renovation project and identify approved profiles by their badge",
     "search": "Search for a professional...",
     "search_placeholder": "Search by name, company or service...",
     "loading": "Loading professionals...",
@@ -826,7 +826,7 @@
       "verified_count": "RBQ verified"
     },
     "card": {
-      "verified": "RBQ Verified",
+      "verified": "Approved profile",
       "pending_verification": "Pending Verification",
       "years_exp": "years of experience",
       "reviews": "reviews",
@@ -1311,9 +1311,9 @@
       "reason_min_length": "Please provide a reason of at least 10 characters."
     },
     "messages": {
-      "verified": "✓ RBQ License Verified",
-      "verified_description": "{{company}} can now receive projects.",
-      "rejected": "RBQ License Rejected",
+      "verified": "✓ Profile approved",
+      "verified_description": "The Approved profile badge is now visible for {{company}}.",
+      "rejected": "Approval request rejected",
       "rejected_description": "The request from {{company}} has been rejected.",
       "error": "Error",
       "verification_error": "Error during verification",

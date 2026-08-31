@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPostAuthRoute } from '@/lib/auth-routing';
+import { canUseProfessionalPlatform, getPostAuthRoute } from '@/lib/auth-routing';
 
 describe('getPostAuthRoute', () => {
   it('redirects unauthenticated or missing profiles to home', () => {
@@ -69,5 +69,40 @@ describe('getPostAuthRoute', () => {
         professional_type: 'trade_professional',
       }),
     ).toBe('/pro/dashboard');
+  });
+});
+
+describe('canUseProfessionalPlatform', () => {
+  it.each([true, false])(
+    'does not use certification approval (%s) as an access requirement',
+    (isRbqVerified) => {
+      expect(
+        canUseProfessionalPlatform({
+          user_type: 'professional',
+          profile_completed: true,
+          professional_type: 'entrepreneur',
+          is_rbq_verified: isRbqVerified,
+        }),
+      ).toBe(true);
+    },
+  );
+
+  it('still requires the professional onboarding profile to be completed', () => {
+    expect(
+      canUseProfessionalPlatform({
+        user_type: 'professional',
+        profile_completed: false,
+        professional_type: 'entrepreneur',
+      }),
+    ).toBe(false);
+  });
+
+  it('does not grant professional features to a client account', () => {
+    expect(
+      canUseProfessionalPlatform({
+        user_type: 'client',
+        profile_completed: true,
+      }),
+    ).toBe(false);
   });
 });

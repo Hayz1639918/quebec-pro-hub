@@ -40,6 +40,7 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ProfessionalApprovalBadge } from '@/components/ProfessionalApprovalBadge';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -186,6 +187,7 @@ const ProjectDetails = () => {
     region: string | null;
     average_rating: number;
     total_reviews: number;
+    is_rbq_verified: boolean;
   }[]>([]);
   const handleMarkAsComplete = async () => {
     if (!project) return;
@@ -212,20 +214,18 @@ const ProjectDetails = () => {
     try {
       const { data } = await supabase
         .from('public_professional_profiles')
-        .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+        .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews, is_rbq_verified')
         .eq('user_type', 'professional')
-        .eq('is_rbq_verified', true)
         .ilike('services_offered', `%${category}%`)
         .order('average_rating', { ascending: false })
         .limit(3);
-      if (data) setRecommendedPros(data);
+      if (data?.length) setRecommendedPros(data);
       else {
         // Fallback: top rated professionals
         const { data: topPros } = await supabase
           .from('public_professional_profiles')
-          .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews')
+          .select('id, full_name, company_name, services_offered, city, region, average_rating, total_reviews, is_rbq_verified')
           .eq('user_type', 'professional')
-          .eq('is_rbq_verified', true)
           .order('average_rating', { ascending: false })
           .limit(3);
         setRecommendedPros(topPros || []);
@@ -1298,7 +1298,12 @@ const ProjectDetails = () => {
             ) : recommendedPros.map((pro) => (
               <div key={pro.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/30">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{pro.company_name || pro.full_name}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium truncate">{pro.company_name || pro.full_name}</p>
+                    {pro.is_rbq_verified && (
+                      <ProfessionalApprovalBadge />
+                    )}
+                  </div>
                   {pro.company_name && <p className="text-xs text-muted-foreground">{pro.full_name}</p>}
                   {(pro.city || pro.region) && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">

@@ -33,6 +33,7 @@ import {
   List,
   FileText,
 } from "lucide-react";
+import { canUseProfessionalPlatform } from "@/lib/auth-routing";
 
 // Lazy load the map component
 const InteractiveMap = lazy(() => import("@/components/map/InteractiveMap"));
@@ -151,15 +152,10 @@ const Projects = () => {
         setUserId(session.user.id);
         const { data: prof } = await supabase
           .from('profiles')
-          .select('user_type,is_rbq_verified,professional_type')
+          .select('user_type,profile_completed,professional_type')
           .eq('id', session.user.id)
           .single();
-        // Trade professionals can submit proposals without RBQ verification
-        // (license optional); entrepreneurs still require verification.
-        const canBid =
-          prof?.user_type === 'professional' &&
-          (prof?.professional_type === 'trade_professional' || prof?.is_rbq_verified === true);
-        setIsProfessional(!!canBid);
+        setIsProfessional(canUseProfessionalPlatform(prof));
       }
       fetchProjects();
     })();
