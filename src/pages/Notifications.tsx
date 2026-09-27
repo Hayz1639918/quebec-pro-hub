@@ -484,10 +484,12 @@ const Notifications = () => {
                       ].map(({ key, label, desc }) => (
                         <div key={key} className="flex items-center justify-between py-2">
                           <div>
-                            <p className="text-sm font-medium">{label}</p>
-                            <p className="text-xs text-muted-foreground">{desc}</p>
+                            <label htmlFor={key} className="text-sm font-medium cursor-pointer">{label}</label>
+                            <p id={`${key}-description`} className="text-xs text-muted-foreground">{desc}</p>
                           </div>
                           <Switch
+                            id={key}
+                            aria-describedby={`${key}-description`}
                             checked={prefs[key as keyof NotifPrefs]}
                             onCheckedChange={(v) => setPrefs(p => ({ ...p, [key]: v }))}
                           />
@@ -516,10 +518,12 @@ const Notifications = () => {
                       ].map(({ key, label, desc }) => (
                         <div key={key} className="flex items-center justify-between py-2">
                           <div>
-                            <p className="text-sm font-medium">{label}</p>
-                            <p className="text-xs text-muted-foreground">{desc}</p>
+                            <label htmlFor={key} className="text-sm font-medium cursor-pointer">{label}</label>
+                            <p id={`${key}-description`} className="text-xs text-muted-foreground">{desc}</p>
                           </div>
                           <Switch
+                            id={key}
+                            aria-describedby={`${key}-description`}
                             checked={prefs[key as keyof NotifPrefs]}
                             onCheckedChange={(v) => setPrefs(p => ({ ...p, [key]: v }))}
                           />

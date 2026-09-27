@@ -29,6 +29,7 @@ import { ContractBuilder } from "@/components/contracts/ContractBuilder";
 import { UploadContract } from "@/components/contracts/UploadContract";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadError from "@/components/LoadError";
 import type { Contract, ContractStatus, ContractStats, ContractTemplate } from "@/types/contracts";
 import { normalizeContract } from "@/lib/contract-mapper";
 import { formatAmount, formatDateLong } from "@/lib/format";
@@ -36,20 +37,8 @@ import { formatAmount, formatDateLong } from "@/lib/format";
 type UserType = "client" | "professional";
 type ContractRow = Database["public"]["Tables"]["contracts"]["Row"];
 
-type SupabaseLikeError = {
-  code?: string;
-  message?: string;
-};
-
-const isExpectedEmptyResult = (error: SupabaseLikeError | null | undefined) => {
-  if (!error) return false;
-  return error.code === "PGRST116" || error.code === "PGRST117" || /0 rows|no rows/i.test(error.message || "");
-};
-
-const isMissingTable = (error: SupabaseLikeError | null | undefined) => {
-  if (!error) return false;
-  return error.code === "42P01" || /does not exist/i.test(error.message || "");
-};
+const isExpectedEmptyResult = (error: { code?: string; message?: string } | null | undefined) =>
+  error?.code === "PGRST116" || error?.code === "PGRST117" || /0 rows|no rows/i.test(error?.message || "");
 
 const emptyStats = (): ContractStats => ({
   total_contracts: 0,
@@ -72,6 +61,8 @@ const Contracts = () => {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [stats, setStats] = useState<ContractStats>(emptyStats());
   const [loading, setLoading] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [userType, setUserType] = useState<UserType | null>(null);
@@ -168,13 +159,7 @@ const Contracts = () => {
       query = query.order(sortBy, { ascending: false });
 
       const { data, error } = await query;
-      if (error) {
-        if (isMissingTable(error) || isExpectedEmptyResult(error)) {
-          setContracts([]);
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       const transformed = await Promise.all((data || []).map((contract) => enrichContract(contract)));
       setContracts(transformed);
@@ -189,19 +174,14 @@ const Contracts = () => {
 
   const fetchStats = async () => {
     if (!userId) return;
+    setStatsLoading(true);
     try {
       const { data, error } = await supabase
         .from("contracts")
         .select("status, total_amount, created_at")
         .or(`client_id.eq.${userId},professional_id.eq.${userId}`);
 
-      if (error) {
-        if (isMissingTable(error) || isExpectedEmptyResult(error)) {
-          setStats(emptyStats());
-          return;
-        }
-        throw error;
-      }
+      if (error) throw error;
 
       const rows = data || [];
       const now = new Date();
@@ -223,9 +203,12 @@ const Contracts = () => {
           return createdAt >= lastMonth && createdAt < thisMonth;
         }).length,
       });
+      setStatsError(false);
     } catch (error) {
       console.error("Unable to load contract stats", error);
-      setStats(emptyStats());
+      setStatsError(true);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
@@ -409,6 +392,7 @@ const Contracts = () => {
             </div>
           ) : (
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
+              {statsError && <LoadError message="Impossible de charger les statistiques des contrats." onRetry={fetchStats} />}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <TabsList className="rounded-xl bg-white border border-slate-200 shadow-sm h-11 p-1">
                   <TabsTrigger value="contracts" className="rounded-lg">{t("contracts.my_contracts")}</TabsTrigger>
@@ -428,7 +412,7 @@ const Contracts = () => {
                           <p className="text-xs font-medium text-slate-500">{label}</p>
                           <div className="h-9 w-9 rounded-xl bg-primary/8 flex items-center justify-center"><Icon className="h-4 w-4 text-primary" /></div>
                         </div>
-                        <p className="mt-4 text-2xl font-bold tracking-tight text-primary">{value}</p>
+                        <p className="mt-4 text-2xl font-bold tracking-tight text-primary">{statsLoading ? "…" : statsError ? "Indisponible" : value}</p>
                       </CardContent>
                     </Card>
                   ))}

@@ -1,3 +1,4 @@
+import { loadRequiredDocumentOptions, serializeRequiredDocuments } from "@/lib/required-documents";
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -66,16 +67,6 @@ const PROJECT_TYPES_BY_CATEGORY: Record<string, string[]> = {
   "Extension et agrandissement": ["Agrandissement latéral", "Ajout d'étage", "Sous-sol", "Garage", "Véranda/Solarium", "Autre"],
   "Autre": ["Travaux spécialisés", "Services multiples", "Autre"],
 };
-
-// Documents requis par défaut
-const DEFAULT_REQUIRED_DOCUMENTS = [
-  { id: "submission_form", label: "Formulaire de soumission dûment complété et signé", checked: true },
-  { id: "license_copy", label: "Copie de la licence RBQ valide", checked: true },
-  { id: "insurance_cert", label: "Certificats d'assurance en vigueur", checked: true },
-  { id: "detailed_quote", label: "Devis détaillé et échéancier proposé", checked: true },
-  { id: "references", label: "Minimum trois (3) références de projets similaires", checked: false },
-  { id: "subcontractors_list", label: "Liste des sous-traitants (si applicable)", checked: false },
-];
 
 // Critères d'évaluation par défaut
 const DEFAULT_EVALUATION_CRITERIA = [
@@ -157,7 +148,7 @@ const EditProject = () => {
   const [newSpec, setNewSpec] = useState("");
   
   // Documents requis
-  const [requiredDocuments, setRequiredDocuments] = useState(DEFAULT_REQUIRED_DOCUMENTS);
+  const [requiredDocuments, setRequiredDocuments] = useState(() => loadRequiredDocumentOptions(null));
   
   // Critères d'évaluation
   const [evaluationCriteria, setEvaluationCriteria] = useState(DEFAULT_EVALUATION_CRITERIA);
@@ -257,6 +248,7 @@ const EditProject = () => {
     }
 
     // Populate form with existing data
+    setRequiredDocuments(loadRequiredDocumentOptions(project.required_documents));
     setTitle(project.title || "");
     setDescription(project.description || "");
     const knownCats = CATEGORIES.slice(0, -1); // exclude "Autre"
@@ -410,6 +402,7 @@ const EditProject = () => {
           work_description_detailed: workDescriptionDetailed || null,
           // Spécifications techniques
           technical_specifications: technicalSpecs.length > 0 ? technicalSpecs : null,
+          required_documents: serializeRequiredDocuments(requiredDocuments),
           // Critères d'évaluation
           evaluation_criteria: Object.keys(evaluationCriteriaObj).length > 0 ? evaluationCriteriaObj : null,
           // Exigences d'assurance

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadError from "@/components/LoadError";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ const ClientPayments = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [payments, setPayments] = useState<ClientPayment[]>([]);
+  const [loadError, setLoadError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sendOpen, setSendOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<ClientPayment | null>(null);
@@ -95,25 +97,33 @@ const ClientPayments = () => {
   }, []);
 
   const loadPage = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth?mode=login");
-      return;
+    setLoading(true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) {
+        navigate("/auth?mode=login");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", session.user.id)
+        .single();
+      if (profileError) throw profileError;
+      if (profile?.user_type !== "client") {
+        navigate("/");
+        return;
+      }
+      await fetchPayments(session.user.id);
+      setLoadError(false);
+    } catch (error) {
+      console.error("Unable to load client payments", error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profile?.user_type !== "client") {
-      navigate("/");
-      return;
-    }
-
-    await fetchPayments(session.user.id);
-    setLoading(false);
   };
 
   const fetchPayments = async (userId: string) => {
@@ -123,14 +133,7 @@ const ClientPayments = () => {
       .eq("client_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de charger vos paiements.",
-      });
-      return;
-    }
+    if (error) throw error;
 
     const contractorIds = [...new Set((rows || []).map((row) => row.contractor_id))];
     const { data: pros } = contractorIds.length
@@ -281,6 +284,10 @@ const ClientPayments = () => {
           </CardContent>
         </Card>
 
+        {loadError ? (
+          <LoadError message="Impossible de charger vos paiements. Les montants ne sont pas disponibles."
+            onRetry={loadPage} />
+        ) : <>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           <Card>
             <CardContent className="p-4">
@@ -406,6 +413,7 @@ const ClientPayments = () => {
             </TabsContent>
           ))}
         </Tabs>
+        </>}
       </main>
 
       <Dialog open={sendOpen} onOpenChange={setSendOpen}>

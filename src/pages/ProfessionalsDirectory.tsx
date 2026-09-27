@@ -1,3 +1,4 @@
+import { parseProfessionalServices } from "@/lib/professional-services";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -184,7 +185,7 @@ const ProfessionalsDirectory = () => {
 
     const result = professionals.filter((pro) => {
       if (needle) {
-        const haystack = [pro.full_name, pro.company_name, pro.services_offered, pro.city, pro.region]
+        const haystack = [pro.full_name, pro.company_name, ...parseProfessionalServices(pro.services_offered), pro.city, pro.region]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -192,7 +193,7 @@ const ProfessionalsDirectory = () => {
       }
 
       if (serviceOption) {
-        const offered = (pro.services_offered || "").toLowerCase();
+        const offered = parseProfessionalServices(pro.services_offered).join(" ").toLowerCase();
         if (!serviceOption.keywords.some((keyword) => offered.includes(keyword))) return false;
       }
 
@@ -388,7 +389,7 @@ const ProfessionalsDirectory = () => {
           ) : (
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mt-6">
               {filtered.map((pro, index) => {
-                const services = (pro.services_offered || "").split(",").map((item) => item.trim()).filter(Boolean).slice(0, 3);
+                const services = parseProfessionalServices(pro.services_offered).slice(0, 3);
                 return (
                   <article key={pro.id} className="bn-surface bn-card-lift bn-reveal p-0 overflow-hidden" style={{ animationDelay: `${Math.min(index, 8) * 55}ms` }}>
                     <div className="p-5 sm:p-6">

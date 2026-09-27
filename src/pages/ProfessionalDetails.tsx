@@ -1,3 +1,4 @@
+import { parseProfessionalServices } from "@/lib/professional-services";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -165,10 +166,7 @@ const ProfessionalDetails = () => {
     return Number(profile?.average_rating || 0);
   }, [profile?.average_rating, reviews]);
 
-  const services = useMemo(() => (profile?.services_offered || "")
-    .split(",")
-    .map((service) => service.trim())
-    .filter(Boolean), [profile?.services_offered]);
+  const services = useMemo(() => parseProfessionalServices(profile?.services_offered), [profile?.services_offered]);
 
   const startConversation = async () => {
     if (!profile) return;

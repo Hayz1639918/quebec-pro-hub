@@ -1,3 +1,4 @@
+import { resolveRequiredDocuments } from "@/lib/required-documents";
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { pdf } from '@react-pdf/renderer';
@@ -25,13 +26,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency, formatDateLong } from '@/lib/format';
 import { normalizeTenderProject } from '@/lib/tender-mapper';
 import type { PartyInfo, TenderProject } from '@/types/tender';
-
-const DEFAULT_REQUIRED_DOCUMENTS = [
-  'Formulaire de soumission dûment complété et signé',
-  'Copie de la licence RBQ valide',
-  "Certificats d'assurance en vigueur",
-  'Devis détaillé et échéancier proposé',
-];
 
 const CERTIFICATION_LABELS: Record<string, string> = {
   rbq: 'Licence RBQ obligatoire',
@@ -180,9 +174,7 @@ const TenderView = () => {
     );
   }
 
-  const requiredDocuments = project.required_documents?.length
-    ? project.required_documents
-    : DEFAULT_REQUIRED_DOCUMENTS;
+  const requiredDocuments = resolveRequiredDocuments(project.required_documents);
   const certifications = project.required_certifications || [];
   const location = [project.city, project.region, project.postal_code].filter(Boolean).join(', ') || 'Non précisée';
 
@@ -357,6 +349,9 @@ const TenderView = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {requiredDocuments.length === 0 && (
+                <p className="text-sm text-muted-foreground">Aucun document requis avec la soumission.</p>
+              )}
               <ul className="space-y-2 text-sm">
                 {requiredDocuments.map((document) => (
                   <li key={document} className="flex items-start gap-2">

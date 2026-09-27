@@ -3936,6 +3936,7 @@ export type Database = {
           milestones: Json | null
           payment_handling_preference: string
           preferred_entrepreneur_type: string | null
+          required_documents: Json
           required_certifications: string[] | null
           payment_mode: string | null
           payment_terms: Json | null
@@ -3988,6 +3989,7 @@ export type Database = {
           milestones?: Json | null
           payment_handling_preference?: string
           preferred_entrepreneur_type?: string | null
+          required_documents?: Json
           required_certifications?: string[] | null
           payment_mode?: string | null
           payment_terms?: Json | null
@@ -4040,6 +4042,7 @@ export type Database = {
           milestones?: Json | null
           payment_handling_preference?: string
           preferred_entrepreneur_type?: string | null
+          required_documents?: Json
           required_certifications?: string[] | null
           payment_mode?: string | null
           payment_terms?: Json | null
