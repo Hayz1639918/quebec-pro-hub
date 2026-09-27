@@ -1,16 +1,10 @@
+import { resolveRequiredDocuments } from "@/lib/required-documents";
 import React from 'react';
 import { Document, Page, StyleSheet, Text, View } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { sanitizePdfText } from '@/lib/pdf-text';
 import type { PartyInfo, TenderProject } from '@/types/tender';
-
-const DEFAULT_REQUIRED_DOCUMENTS = [
-  'Formulaire de soumission dûment complété et signé',
-  'Copie de la licence RBQ valide',
-  "Certificats d'assurance en vigueur",
-  'Devis détaillé et échéancier proposé',
-];
 
 const CERTIFICATION_LABELS: Record<string, string> = {
   rbq: 'Licence RBQ obligatoire',
@@ -129,7 +123,7 @@ const List = ({ items, marker = '-' }: { items: string[]; marker?: string }) => 
 );
 
 export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
-  const requiredDocuments = project.required_documents?.length ? project.required_documents : DEFAULT_REQUIRED_DOCUMENTS;
+  const requiredDocuments = resolveRequiredDocuments(project.required_documents);
   const certifications = (project.required_certifications || []).map((item) => CERTIFICATION_LABELS[item] || item);
   const location = [project.city, project.region, project.postal_code].map((item) => text(item, '')).filter(Boolean).join(', ') || 'Non précisée';
   const criteria = Object.entries(project.evaluation_criteria || {});
@@ -264,7 +258,11 @@ export const TenderPDF: React.FC<TenderPDFProps> = ({ project, client }) => {
         )}
 
         <Text style={styles.sectionTitle}>DOCUMENTS REQUIS AVEC LA SOUMISSION</Text>
-        <List items={requiredDocuments} marker="[ ]" />
+        {requiredDocuments.length > 0 ? (
+          <List items={requiredDocuments} marker="[ ]" />
+        ) : (
+          <Text style={styles.paragraph}>Aucun document requis avec la soumission.</Text>
+        )}
 
         <Text style={styles.sectionTitle}>MODALITÉS FINANCIÈRES</Text>
         <Text style={styles.subTitle}>Mode de paiement souhaité</Text>

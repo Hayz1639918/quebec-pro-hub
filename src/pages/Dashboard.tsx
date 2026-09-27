@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getMyProfile } from "@/services/profile-service";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadError from "@/components/LoadError";
 import ProjectList from "@/components/dashboard/ProjectList";
 import ProposalsList, { type Proposal } from "@/components/dashboard/ProposalsList";
 import ClientContractsTab, { type ClientContract } from "@/components/dashboard/ClientContractsTab";
@@ -163,6 +164,10 @@ const Dashboard = () => {
   const [activeProjects, setActiveProjects] = useState<ActiveProject[]>([]);
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
   const [pendingContracts, setPendingContracts] = useState<PendingContract[]>([]);
+  const [activeProjectsError, setActiveProjectsError] = useState(false);
+  const [pendingContractsError, setPendingContractsError] = useState(false);
+  const [contractsError, setContractsError] = useState(false);
+  const [milestonesError, setMilestonesError] = useState(false);
   const [allContracts, setAllContracts] = useState<ClientContract[]>([]);
   const [milestonesTransactions, setMilestonesTransactions] = useState<MilestoneTransaction[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
@@ -497,7 +502,6 @@ const Dashboard = () => {
   const fetchActiveProjectsAndReports = async (userId: string) => {
     try {
       // Fetch projects with assigned professional
-      // Note: This requires migration 031_project_workflow_notifications.sql to be applied
       const { data: assignedProjectsData, error: projectsError } = await supabase
         .from('projects')
         .select(`
@@ -516,32 +520,23 @@ const Dashboard = () => {
         .not('assigned_professional_id', 'is', null)
         .order('updated_at', { ascending: false });
 
-      // If columns don't exist yet (migration not applied), silently return
-      if (projectsError) {
-        console.warn('Active projects query failed (migration 031 may not be applied yet):', projectsError.message);
-        setActiveProjects([]);
-        setProjectReports([]);
-        return;
-      }
+      if (projectsError) throw projectsError;
 
       if (assignedProjectsData && assignedProjectsData.length > 0) {
         const projectIds = assignedProjectsData.map(p => p.id);
         
-        // Count unread reports for each project (project_reports table may not exist)
+        // Count unread reports for each project
         const unreadCountByProject: Record<string, number> = {};
-        try {
-          const { data: reportsCount } = await supabase
-            .from('project_reports')
-            .select('project_id')
-            .in('project_id', projectIds)
-            .eq('is_read_by_client', false);
-          
-          reportsCount?.forEach(r => {
-            unreadCountByProject[r.project_id] = (unreadCountByProject[r.project_id] || 0) + 1;
-          });
-        } catch (e) {
-          console.warn('project_reports table may not exist yet');
-        }
+        const { data: reportsCount, error: reportsCountError } = await supabase
+          .from('project_reports')
+          .select('project_id')
+          .in('project_id', projectIds)
+          .eq('is_read_by_client', false);
+
+        if (reportsCountError) throw reportsCountError;
+        reportsCount?.forEach(r => {
+          unreadCountByProject[r.project_id] = (unreadCountByProject[r.project_id] || 0) + 1;
+        });
 
         const formattedProjects: ActiveProject[] = assignedProjectsData.map((p) => ({
           id: p.id,
@@ -559,51 +554,49 @@ const Dashboard = () => {
 
         setActiveProjects(formattedProjects);
 
-        // Fetch recent reports (table may not exist)
-        try {
-          const { data: reportsData } = await supabase
-            .from('project_reports')
-            .select(`
-              id,
-              project_id,
-              title,
-              content,
-              report_type,
-              progress_percentage,
-              created_at,
-              is_read_by_client,
-              projects:project_id (title),
-              profiles!project_reports_professional_id_fkey (full_name, company_name)
-            `)
-            .in('project_id', projectIds)
-            .order('created_at', { ascending: false })
-            .limit(10);
+        // Fetch recent reports
+        const { data: reportsData, error: reportsError } = await supabase
+          .from('project_reports')
+          .select(`
+            id,
+            project_id,
+            title,
+            content,
+            report_type,
+            progress_percentage,
+            created_at,
+            is_read_by_client,
+            projects:project_id (title),
+            profiles!project_reports_professional_id_fkey (full_name, company_name)
+          `)
+          .in('project_id', projectIds)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-          if (reportsData) {
-            const formattedReports: ProjectReport[] = reportsData.map((r) => ({
-              id: r.id,
-              project_id: r.project_id,
-              project_title: r.projects?.title || 'Projet',
-              title: r.title,
-              content: r.content,
-              report_type: r.report_type,
-              progress_percentage: r.progress_percentage,
-              professional_name: r.profiles?.company_name || r.profiles?.full_name || 'Entrepreneur',
-              created_at: r.created_at,
-              is_read_by_client: r.is_read_by_client,
-            }));
-            setProjectReports(formattedReports);
-          }
-        } catch (e) {
-          console.warn('Could not fetch project reports');
-          setProjectReports([]);
+        if (reportsError) throw reportsError;
+        if (reportsData) {
+          const formattedReports: ProjectReport[] = reportsData.map((r) => ({
+            id: r.id,
+            project_id: r.project_id,
+            project_title: r.projects?.title || 'Projet',
+            title: r.title,
+            content: r.content,
+            report_type: r.report_type,
+            progress_percentage: r.progress_percentage,
+            professional_name: r.profiles?.company_name || r.profiles?.full_name || 'Entrepreneur',
+            created_at: r.created_at,
+            is_read_by_client: r.is_read_by_client,
+          }));
+          setProjectReports(formattedReports);
         }
       } else {
         setActiveProjects([]);
         setProjectReports([]);
       }
+      setActiveProjectsError(false);
     } catch (error) {
-      console.warn('Error fetching active projects (migration may not be applied):', error);
+      setActiveProjectsError(true);
+      console.warn('Error fetching active projects and reports:', error);
       setActiveProjects([]);
       setProjectReports([]);
     }
@@ -646,11 +639,7 @@ const Dashboard = () => {
         .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures'])
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn('Error fetching pending contracts:', error.message);
-        setPendingContracts([]);
-        return;
-      }
+      if (error) throw error;
 
       if (contractsData) {
         const formatted: PendingContract[] = contractsData.map((c) => ({
@@ -667,7 +656,9 @@ const Dashboard = () => {
         }));
         setPendingContracts(formatted);
       }
+      setPendingContractsError(false);
     } catch (error) {
+      setPendingContractsError(true);
       console.warn('Error fetching pending contracts:', error);
       setPendingContracts([]);
     }
@@ -693,11 +684,7 @@ const Dashboard = () => {
         .eq('client_id', userId)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn('Error fetching all contracts:', error.message);
-        setAllContracts([]);
-        return;
-      }
+      if (error) throw error;
 
       if (contractsData) {
         const formatted: ClientContract[] = contractsData.map((c) => ({
@@ -730,7 +717,9 @@ const Dashboard = () => {
         
         setAllContracts(formatted);
       }
+      setContractsError(false);
     } catch (error) {
+      setContractsError(true);
       console.warn('Error fetching all contracts:', error);
       setAllContracts([]);
     }
@@ -738,7 +727,7 @@ const Dashboard = () => {
 
   const fetchMilestoneTransactions = async (userId: string) => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('contract_milestones')
         .select(`
           id, title, amount, status, validated_at, created_at,
@@ -751,6 +740,7 @@ const Dashboard = () => {
         .eq('contracts.client_id', userId)
         .order('created_at', { ascending: false });
 
+      if (error) throw error;
       if (data) {
         const formatted = data
           .filter((m) => m.contracts)
@@ -768,7 +758,9 @@ const Dashboard = () => {
           }));
         setMilestonesTransactions(formatted);
       }
+      setMilestonesError(false);
     } catch (error) {
+      setMilestonesError(true);
       console.warn('Error fetching milestone transactions:', error);
     }
   };
@@ -1107,7 +1099,7 @@ const Dashboard = () => {
                 <FileText className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
               </CardHeader>
               <CardContent className="p-2.5 sm:p-3 md:p-4 pt-0">
-                <div className="text-lg sm:text-xl md:text-2xl font-bold">{allContracts.length}</div>
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">{contractsError ? "Indisponible" : allContracts.length}</div>
                 <p className="text-[9px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
                   en cours
                 </p>
@@ -1216,6 +1208,14 @@ const Dashboard = () => {
                 </Card>
               </div>
 
+              {pendingContractsError && (
+                <LoadError message="Impossible de charger les contrats en attente de signature."
+                  onRetry={() => fetchPendingContracts(user!.id)} />
+              )}
+              {activeProjectsError && (
+                <LoadError message="Impossible de charger le suivi des travaux et les rapports de chantier."
+                  onRetry={() => fetchActiveProjectsAndReports(user!.id)} />
+              )}
               {/* Pending Contracts - Contracts awaiting signature */}
               {pendingContracts.length > 0 && (
                 <Card className="border-warning/30 bg-warning-light">
@@ -1563,16 +1563,21 @@ const Dashboard = () => {
 
             {/* Contracts Tab */}
             <TabsContent value="contracts">
-              <ClientContractsTab contracts={allContracts} />
+              {contractsError ? (
+                <LoadError message="Impossible de charger vos contrats." onRetry={() => fetchAllContracts(user!.id)} />
+              ) : <ClientContractsTab contracts={allContracts} />}
             </TabsContent>
 
             {/* Invoices Tab */}
             <TabsContent value="invoices">
-              <ClientInvoicesTab
+              {contractsError || milestonesError ? (
+                <LoadError message="Impossible de charger vos factures et transactions."
+                  onRetry={() => Promise.all([fetchAllContracts(user!.id), fetchMilestoneTransactions(user!.id)])} />
+              ) : <ClientInvoicesTab
                 contracts={allContracts}
                 milestones={milestonesTransactions}
                 onDownloadInvoice={handleDownloadInvoice}
-              />
+              />}
             </TabsContent>
 
             {/* Activity Tab */}

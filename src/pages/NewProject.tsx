@@ -1,3 +1,4 @@
+import { loadRequiredDocumentOptions, serializeRequiredDocuments } from "@/lib/required-documents";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -57,15 +58,6 @@ const PROJECT_TYPES_BY_CATEGORY: Record<string, string[]> = {
   "Extension et agrandissement": ["Agrandissement latéral", "Ajout d'étage", "Sous-sol", "Garage", "Véranda/Solarium", "Autre"],
   Autre: ["Travaux spécialisés", "Services multiples", "Autre"],
 };
-
-const DEFAULT_REQUIRED_DOCUMENTS = [
-  { id: "submission_form", label: "Formulaire de soumission dûment complété et signé", checked: true },
-  { id: "license_copy", label: "Copie de la licence RBQ valide", checked: true },
-  { id: "insurance_cert", label: "Certificats d'assurance en vigueur", checked: true },
-  { id: "detailed_quote", label: "Devis détaillé et échéancier proposé", checked: true },
-  { id: "references", label: "Minimum trois (3) références de projets similaires", checked: false },
-  { id: "subcontractors_list", label: "Liste des sous-traitants (si applicable)", checked: false },
-];
 
 const DEFAULT_EVALUATION_CRITERIA = [
   { id: "price", label: "Prix proposé", weight: 40 },
@@ -133,7 +125,7 @@ const NewProject = () => {
   const [workDescriptionDetailed, setWorkDescriptionDetailed] = useState("");
   const [technicalSpecs, setTechnicalSpecs] = useState<string[]>([]);
   const [newSpec, setNewSpec] = useState("");
-  const [requiredDocuments, setRequiredDocuments] = useState(DEFAULT_REQUIRED_DOCUMENTS);
+  const [requiredDocuments, setRequiredDocuments] = useState(() => loadRequiredDocumentOptions(null));
   const [evaluationCriteria, setEvaluationCriteria] = useState(DEFAULT_EVALUATION_CRITERIA);
   const [insuranceLiability, setInsuranceLiability] = useState("");
   const [insuranceProfessional, setInsuranceProfessional] = useState("");
@@ -339,6 +331,7 @@ const NewProject = () => {
           questions_deadline: questionsDeadline ? questionsDeadline.toISOString() : null,
           work_description_detailed: workDescriptionDetailed || null,
           technical_specifications: technicalSpecs.length > 0 ? technicalSpecs : null,
+          required_documents: serializeRequiredDocuments(requiredDocuments),
           evaluation_criteria: evaluationCriteriaObject,
           insurance_requirements: Object.keys(insuranceRequirements).length > 0 ? insuranceRequirements : null,
           preferred_entrepreneur_type: entrepreneurType !== "any" ? entrepreneurType : null,
