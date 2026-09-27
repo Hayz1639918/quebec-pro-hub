@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
+import LoadError from '@/components/LoadError';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +102,7 @@ const ProDashboard = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [professionalType, setProfessionalType] = useState<'entrepreneur' | 'trade_professional'>('entrepreneur');
   const [stats, setStats] = useState<DashboardStats>({
     activeProjects: 0,
@@ -156,14 +158,15 @@ const ProDashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  const loadPage = async () => {
+    setLoading(true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       if (!session) {
         navigate('/auth?mode=login');
         return;
       }
-      setUserId(session.user.id);
 
       // Fetch professional profile — select only stable columns (avoid missing column errors)
       const { data: prof, error: profError } = await supabase
@@ -172,11 +175,8 @@ const ProDashboard = () => {
         .eq('id', session.user.id)
         .single();
 
-      if (profError || !prof) {
-        // Query failed (DB error, network, or RLS issue) — send to auth to re-authenticate
-        navigate('/auth?mode=login', { replace: true });
-        return;
-      }
+      if (profError) throw profError;
+      if (!prof) throw new Error('Profil professionnel indisponible');
 
       if (prof.user_type !== 'professional') {
         navigate('/', { replace: true });
@@ -192,12 +192,23 @@ const ProDashboard = () => {
         return;
       }
 
+      setUserId(session.user.id);
       await fetchDashboardData(session.user.id);
       await fetchPendingContractsList(session.user.id);
       await fetchPendingInvitations(session.user.id);
       await fetchUpcomingMeetings(session.user.id);
+      setLoadError(false);
+    } catch (error) {
+      console.error('Unable to load professional dashboard:', error);
+      setLoadError(true);
+    } finally {
       setLoading(false);
-    })();
+    }
+  };
+
+  useEffect(() => {
+    void loadPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Realtime: refresh invitations on insert/update (separate effect so cleanup runs properly)
@@ -213,7 +224,9 @@ const ProDashboard = () => {
           table: 'project_invitations',
           filter: `professional_id=eq.${userId}`,
         },
-        () => fetchPendingInvitations(userId)
+        () => {
+          void fetchPendingInvitations(userId).catch(() => setLoadError(true));
+        }
       )
       .subscribe();
     return () => {
@@ -235,6 +248,7 @@ const ProDashboard = () => {
       setUpcomingMeetings(data || []);
     } catch (e) {
       console.error('Error fetching upcoming meetings:', e);
+      throw e;
     }
   };
 
@@ -247,11 +261,7 @@ const ProDashboard = () => {
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn('Error fetching invitations:', error.message);
-        setPendingInvitations([]);
-        return;
-      }
+      if (error) throw error;
 
       setPendingInvitations(
         (data || []).map((inv) => ({
@@ -266,7 +276,7 @@ const ProDashboard = () => {
       );
     } catch (e) {
       console.warn('Error fetching invitations:', e);
-      setPendingInvitations([]);
+      throw e;
     }
   };
 
@@ -316,11 +326,7 @@ const ProDashboard = () => {
         .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures'])
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.warn('Error fetching pending contracts:', error.message);
-        setPendingContractsList([]);
-        return;
-      }
+      if (error) throw error;
 
       if (contractsData) {
         const formatted: PendingContract[] = contractsData.map((c) => ({
@@ -338,27 +344,31 @@ const ProDashboard = () => {
       }
     } catch (error) {
       console.warn('Error fetching pending contracts:', error);
-      setPendingContractsList([]);
+      throw error;
     }
   };
 
   const fetchDashboardData = async (uid: string) => {
     try {
       // Fetch proposals stats
-      const { data: proposals } = await supabase
+      const { data: proposals, error: proposalsError } = await supabase
         .from('proposals')
         .select('status')
         .eq('professional_id', uid);
+
+      if (proposalsError) throw proposalsError;
 
       const proposalsSent = proposals?.length || 0;
       const proposalsAccepted = proposals?.filter((p) => p.status === 'accepted').length || 0;
       const acceptanceRate = proposalsSent ? Math.round((proposalsAccepted / proposalsSent) * 100) : 0;
 
       // Fetch reviews stats
-      const { data: reviews } = await supabase
+      const { data: reviews, error: reviewsError } = await supabase
         .from('reviews')
         .select('rating')
         .eq('professional_id', uid);
+
+      if (reviewsError) throw reviewsError;
 
       const totalReviews = reviews?.length || 0;
       const averageRating =
@@ -367,25 +377,31 @@ const ProDashboard = () => {
           : 0;
 
       // Fetch unread messages
-      const { count: unreadMessages } = await supabase
+      const { count: unreadMessages, error: messagesError } = await supabase
         .from('messages')
         .select('id', { count: 'exact', head: true })
         .eq('receiver_id', uid)
         .eq('is_read', false);
 
+      if (messagesError) throw messagesError;
+
       // Fetch pending contracts
-      const { count: pendingContracts } = await supabase
+      const { count: pendingContracts, error: contractsError } = await supabase
         .from('contracts')
         .select('id', { count: 'exact', head: true })
         .eq('professional_id', uid)
         .in('status', ['draft', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures']);
 
+      if (contractsError) throw contractsError;
+
       // Fetch active projects (those with proposals)
-      const { data: activeProjectsData } = await supabase
+      const { data: activeProjectsData, error: projectsError } = await supabase
         .from('proposals')
         .select('project_id')
         .eq('professional_id', uid)
         .in('status', ['pending', 'accepted']);
+
+      if (projectsError) throw projectsError;
 
       const activeProjects = new Set(activeProjectsData?.map((p) => p.project_id) || []).size;
 
@@ -402,10 +418,12 @@ const ProDashboard = () => {
 
       // US-052 — Revenue stats from contractor_payments + active contracts
       try {
-        const { data: paymentRows } = await supabase
+        const { data: paymentRows, error: paymentsError } = await supabase
           .from('contractor_payments')
           .select('status, net_amount, released_at, created_at')
           .eq('contractor_id', uid);
+        if (paymentsError) throw paymentsError;
+
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -421,11 +439,13 @@ const ProDashboard = () => {
           }
         });
 
-        const { data: contractRows } = await supabase
+        const { data: contractRows, error: revenueContractsError } = await supabase
           .from('contracts')
           .select('total_amount, status')
           .eq('professional_id', uid)
           .in('status', ['signed', 'pending_client_signature', 'pending_professional_signature', 'pending_both_signatures']);
+        if (revenueContractsError) throw revenueContractsError;
+
         const totalActive = (contractRows || []).reduce(
           (sum: number, c: { total_amount: number | null }) => sum + Number(c.total_amount || 0),
           0,
@@ -434,10 +454,10 @@ const ProDashboard = () => {
         setRevenue({ total: totalActive, pending, paid, paidThisMonth });
       } catch (revErr) {
         console.warn('Revenue fetch failed:', revErr);
+        throw revErr;
       }
 
       // Fetch assigned projects (where this professional was accepted)
-      // Note: This requires migration 031_project_workflow_notifications.sql to be applied
       try {
         const { data: assignedProjectsData, error: assignedError } = await supabase
           .from('projects')
@@ -458,11 +478,8 @@ const ProDashboard = () => {
           .order('updated_at', { ascending: false })
           .limit(10);
 
-        // If error (columns don't exist yet), silently ignore
-        if (assignedError) {
-          console.warn('Assigned projects query failed (migration 031 may not be applied yet):', assignedError.message);
-          setAssignedProjects([]);
-        } else if (assignedProjectsData) {
+        if (assignedError) throw assignedError;
+        if (assignedProjectsData) {
           const formattedAssignedProjects: AssignedProject[] = assignedProjectsData.map((p) => ({
             id: p.id,
             title: p.title,
@@ -482,10 +499,11 @@ const ProDashboard = () => {
         }
       } catch (assignedErr) {
         console.warn('Could not fetch assigned projects:', assignedErr);
-        setAssignedProjects([]);
+        throw assignedErr;
       }
     } catch (e) {
       console.error('Error fetching dashboard data:', e);
+      throw e;
     }
   };
 
@@ -495,6 +513,19 @@ const ProDashboard = () => {
         <Navigation />
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 flex-1">
           <div>Chargement...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-12 flex-1">
+          <LoadError message="Impossible de charger votre tableau de bord professionnel. Vos données sont temporairement indisponibles."
+            onRetry={loadPage} />
         </main>
         <Footer />
       </div>

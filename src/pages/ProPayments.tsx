@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadError from "@/components/LoadError";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +84,7 @@ const ProPayments = () => {
   const { toast } = useToast();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [receiveOpen, setReceiveOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [receiveMethod, setReceiveMethod] = useState<DirectMethod>("transfer");
@@ -95,25 +97,35 @@ const ProPayments = () => {
   }, []);
 
   const loadPage = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/auth?mode=login");
-      return;
+    setLoading(true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!session) {
+        navigate("/auth?mode=login");
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_type")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (profile?.user_type !== "professional") {
+        navigate("/");
+        return;
+      }
+
+      await fetchPayments(session.user.id);
+      setLoadError(false);
+    } catch (error) {
+      console.error("Unable to load professional payments", error);
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("user_type")
-      .eq("id", session.user.id)
-      .single();
-
-    if (profile?.user_type !== "professional") {
-      navigate("/");
-      return;
-    }
-
-    await fetchPayments(session.user.id);
-    setLoading(false);
   };
 
   const fetchPayments = async (userId: string) => {
@@ -123,10 +135,7 @@ const ProPayments = () => {
       .eq("contractor_id", userId)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger vos paiements." });
-      return;
-    }
+    if (error) throw error;
 
     setPayments(
       (data || []).map((payment) => ({
@@ -232,6 +241,19 @@ const ProPayments = () => {
     if (tab === "received") return payments.filter((p) => p.status === "released");
     return payments;
   };
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-12 flex-1">
+          <LoadError message="Impossible de charger vos paiements. Vos données sont temporairement indisponibles."
+            onRetry={loadPage} />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

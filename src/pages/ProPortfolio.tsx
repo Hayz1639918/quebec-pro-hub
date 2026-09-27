@@ -193,7 +193,9 @@ const ProPortfolio = () => {
     try {
       setUploading(true);
 
-      let imageUrl = editingItem?.image_url || null;
+      // Clearing the preview explicitly removes the image from this portfolio entry.
+      // Keep the stored object: other entries may still reference its public URL.
+      let imageUrl = imagePreview ? editingItem?.image_url || null : null;
 
       // Upload new image if provided
       if (imageFile) {
@@ -350,14 +352,14 @@ const ProPortfolio = () => {
                     {editingItem ? 'Modifier le projet' : 'Ajouter un projet'}
                   </DialogTitle>
                   <DialogDescription>
-                    Ajoutez une photo et les détails de votre réalisation
+                    Ajoutez les détails de votre réalisation et une photo si vous le souhaitez
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
                   {/* Image Upload */}
                   <div>
-                    <Label>Photo du projet *</Label>
+                    <Label htmlFor="portfolio-photo">Photo du projet</Label>
                     <div className="mt-2">
                       {imagePreview ? (
                         <div className="relative">
@@ -370,6 +372,7 @@ const ProPortfolio = () => {
                             variant="destructive"
                             size="icon"
                             className="absolute top-2 right-2"
+                            aria-label="Retirer la photo sélectionnée"
                             onClick={() => {
                               setImageFile(null);
                               setImagePreview(null);
@@ -379,7 +382,7 @@ const ProPortfolio = () => {
                           </Button>
                         </div>
                       ) : (
-                        <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 focus-within:ring-2 focus-within:ring-ring transition-colors">
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
                             <Upload className="h-12 w-12 mb-3 text-muted-foreground" />
                             <p className="mb-2 text-sm text-muted-foreground">
@@ -390,8 +393,9 @@ const ProPortfolio = () => {
                             </p>
                           </div>
                           <input
+                            id="portfolio-photo"
                             type="file"
-                            className="hidden"
+                            className="sr-only"
                             accept="image/*"
                             onChange={handleFileChange}
                           />
@@ -433,7 +437,7 @@ const ProPortfolio = () => {
                         value={formData.category}
                         onValueChange={(value) => setFormData({ ...formData, category: value })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger id="category">
                           <SelectValue placeholder="Sélectionner..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -509,10 +513,11 @@ const ProPortfolio = () => {
                       <ImageIcon className="h-16 w-16 text-muted-foreground opacity-50" />
                     </div>
                   )}
-                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity">
                     <Button
                       size="icon"
                       variant="secondary"
+                      aria-label={`Modifier ${item.title}`}
                       onClick={() => openEditDialog(item)}
                     >
                       <Edit className="h-4 w-4" />
@@ -520,6 +525,7 @@ const ProPortfolio = () => {
                     <Button
                       size="icon"
                       variant="destructive"
+                      aria-label={`Supprimer ${item.title}`}
                       onClick={() => handleDelete(item.id)}
                     >
                       <Trash2 className="h-4 w-4" />
