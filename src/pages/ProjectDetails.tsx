@@ -885,7 +885,6 @@ const ProjectDetails = () => {
                         professionalId={currentUser.id}
                         onSuccess={() => {
                           setShowProposalForm(false);
-                          toast.success('Soumission envoyée avec succès !');
                           // Refresh project data to update proposal count
                           fetchProjectDetails();
                         }}

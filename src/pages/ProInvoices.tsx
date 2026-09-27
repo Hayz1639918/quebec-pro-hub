@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { pdf } from "@react-pdf/renderer";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import LoadError from "@/components/LoadError";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,23 +48,37 @@ const ProInvoices = () => {
   const [contractorName, setContractorName] = useState("");
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
   const [previewInvoice, setPreviewInvoice] = useState<Invoice | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  const loadPage = async () => {
+    setLoading(true);
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
       if (!session) { navigate("/auth"); return; }
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("full_name")
         .eq("id", session.user.id)
         .single();
+      if (profileError) throw profileError;
       if (profile?.full_name) setContractorName(profile.full_name);
       await fetchInvoices(session.user.id);
+      setLoadError(false);
+    } catch (error) {
+      console.error("Unable to load professional invoices", error);
+      setLoadError(true);
+    } finally {
       setLoading(false);
-    })();
+    }
+  };
+
+  useEffect(() => {
+    void loadPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchInvoices = async (uid: string) => {
@@ -72,10 +87,7 @@ const ProInvoices = () => {
       .select("*")
       .eq("contractor_id", uid)
       .order("issued_at", { ascending: false });
-    if (error) {
-      toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les factures" });
-      return;
-    }
+    if (error) throw error;
     setInvoices((data || []) as Invoice[]);
   };
 
@@ -113,6 +125,19 @@ const ProInvoices = () => {
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navigation />
+        <main className="container mx-auto px-4 pt-24 pb-12 flex-1">
+          <LoadError message="Impossible de charger vos factures. Vos données sont temporairement indisponibles."
+            onRetry={loadPage} />
+        </main>
         <Footer />
       </div>
     );

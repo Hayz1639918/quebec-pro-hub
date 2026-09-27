@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
 }) => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
+  const submissionInFlight = useRef(false);
 
   // Section 1: Base information
   const [message, setMessage] = useState('');
@@ -152,6 +153,8 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (submissionInFlight.current) return;
+
     // Validation
     if (!message || !estimatedBudget || !estimatedDuration) {
       toast.error('Veuillez remplir tous les champs obligatoires');
@@ -159,6 +162,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
     }
 
     try {
+      submissionInFlight.current = true;
       setSubmitting(true);
 
       // Prepare budget breakdown
@@ -189,7 +193,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
       validUntil.setDate(validUntil.getDate() + 90);
 
       // Insert proposal
-      const { data: proposal, error } = await supabase
+      const { error } = await supabase
         .from('proposals')
         .insert({
           project_id: projectId,
@@ -208,43 +212,11 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
           warranty_offered_months: parseInt(warrantyMonths),
           valid_until: validUntil.toISOString().split('T')[0],
           status: 'pending',
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      // Get project details to find client_id
-      const { data: projectData } = await supabase
-        .from('projects')
-        .select('client_id, title')
-        .eq('id', projectId)
-        .single();
-
-      // Get professional details
-      const { data: professionalData } = await supabase
-        .from('profiles')
-        .select('full_name, company_name')
-        .eq('id', professionalId)
-        .single();
-
-      // Create notification for client
-      if (projectData && professionalData) {
-        await supabase
-          .from('notifications')
-          .insert({
-            user_id: projectData.client_id,
-            type: 'new_proposal',
-            title: 'Nouvelle proposition reçue',
-            message: `${professionalData.company_name || professionalData.full_name} a soumis une proposition pour "${projectData.title}"`,
-            action_url: `/proposal/${proposal.id}?showPDF=true`,
-            metadata: {
-              proposal_id: proposal.id,
-              project_id: projectId,
-              professional_id: professionalId,
-            },
-          });
-      }
+      // on_proposal_created sends the client notification atomically in the database.
 
       toast.success('Soumission envoyée avec succès !');
       
@@ -261,6 +233,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
         toast.error('Erreur lors de l\'envoi de la soumission');
       }
     } finally {
+      submissionInFlight.current = false;
       setSubmitting(false);
     }
   };
@@ -413,6 +386,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                     {teamMembers.length > 1 && (
                       <Button
                         type="button"
+                        aria-label={`Supprimer le membre ${index + 1}`}
                         onClick={() => removeTeamMember(index)}
                         size="sm"
                         variant="ghost"
@@ -423,24 +397,27 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                   </div>
                   <div className="grid md:grid-cols-3 gap-3">
                     <div>
-                      <Label>Nom</Label>
+                      <Label htmlFor={`team-${index}-name`}>Nom</Label>
                       <Input
+                        id={`team-${index}-name`}
                         value={member.name}
                         onChange={(e) => updateTeamMember(index, 'name', e.target.value)}
                         placeholder="Jean Tremblay"
                       />
                     </div>
                     <div>
-                      <Label>Rôle</Label>
+                      <Label htmlFor={`team-${index}-role`}>Rôle</Label>
                       <Input
+                        id={`team-${index}-role`}
                         value={member.role}
                         onChange={(e) => updateTeamMember(index, 'role', e.target.value)}
                         placeholder="Chef de chantier"
                       />
                     </div>
                     <div>
-                      <Label>Expérience</Label>
+                      <Label htmlFor={`team-${index}-experience`}>Expérience</Label>
                       <Input
+                        id={`team-${index}-experience`}
                         value={member.experience}
                         onChange={(e) => updateTeamMember(index, 'experience', e.target.value)}
                         placeholder="15 ans"
@@ -471,6 +448,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                     {timelinePhases.length > 1 && (
                       <Button
                         type="button"
+                        aria-label={`Supprimer la phase ${index + 1}`}
                         onClick={() => removeTimelinePhase(index)}
                         size="sm"
                         variant="ghost"
@@ -481,25 +459,28 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                   </div>
                   <div className="grid md:grid-cols-3 gap-3">
                     <div>
-                      <Label>Nom de la phase</Label>
+                      <Label htmlFor={`phase-${index}-name`}>Nom de la phase</Label>
                       <Input
+                        id={`phase-${index}-name`}
                         value={phase.name}
                         onChange={(e) => updateTimelinePhase(index, 'name', e.target.value)}
                         placeholder="Préparation du site"
                       />
                     </div>
                     <div>
-                      <Label>Durée</Label>
+                      <Label htmlFor={`phase-${index}-duration`}>Durée</Label>
                       <Input
+                        id={`phase-${index}-duration`}
                         value={phase.duration}
                         onChange={(e) => updateTimelinePhase(index, 'duration', e.target.value)}
                         placeholder="5 jours"
                       />
                     </div>
                     <div>
-                      <Label>Date (optionnel)</Label>
+                      <Label htmlFor={`phase-${index}-date`}>Date (optionnel)</Label>
                       <Input
                         type="date"
+                        id={`phase-${index}-date`}
                         value={phase.date}
                         onChange={(e) => updateTimelinePhase(index, 'date', e.target.value)}
                       />
@@ -522,20 +503,22 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              {Object.entries(budgetItems).map(([key, value]) => (
+              {Object.entries(budgetItems).map(([key, value], index) => (
                 <div key={key} className="flex gap-3 items-end">
                   <div className="flex-1">
-                    <Label>Poste de dépense</Label>
+                    <Label htmlFor={`budget-${index}-name`}>Poste de dépense</Label>
                     <Input
+                      id={`budget-${index}-name`}
                       value={key}
                       onChange={(e) => updateBudgetItem(key, e.target.value, value)}
                       placeholder="Description du poste"
                     />
                   </div>
                   <div className="flex-1">
-                    <Label>Montant (CAD)</Label>
+                    <Label htmlFor={`budget-${index}-amount`}>Montant (CAD)</Label>
                     <Input
                       type="number"
+                      id={`budget-${index}-amount`}
                       value={value}
                       onChange={(e) => updateBudgetItem(key, key, e.target.value)}
                       placeholder="10000"
@@ -543,6 +526,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                   </div>
                   <Button
                     type="button"
+                    aria-label={`Supprimer le poste ${key}`}
                     onClick={() => removeBudgetItem(key)}
                     size="icon"
                     variant="ghost"
@@ -586,6 +570,7 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                     {references.length > 1 && (
                       <Button
                         type="button"
+                        aria-label={`Supprimer la référence ${index + 1}`}
                         onClick={() => removeReference(index)}
                         size="sm"
                         variant="ghost"
@@ -596,41 +581,46 @@ export const ProfessionalProposalForm: React.FC<ProfessionalProposalFormProps> =
                   </div>
                   <div className="grid md:grid-cols-2 gap-3">
                     <div>
-                      <Label>Nom du projet</Label>
+                      <Label htmlFor={`reference-${index}-project_name`}>Nom du projet</Label>
                       <Input
+                        id={`reference-${index}-project_name`}
                         value={ref.project_name}
                         onChange={(e) => updateReference(index, 'project_name', e.target.value)}
                         placeholder="Rénovation résidentielle"
                       />
                     </div>
                     <div>
-                      <Label>Nom du client</Label>
+                      <Label htmlFor={`reference-${index}-client_name`}>Nom du client</Label>
                       <Input
+                        id={`reference-${index}-client_name`}
                         value={ref.client_name}
                         onChange={(e) => updateReference(index, 'client_name', e.target.value)}
                         placeholder="Jean Dupont"
                       />
                     </div>
                     <div>
-                      <Label>Téléphone du contact</Label>
+                      <Label htmlFor={`reference-${index}-contact_phone`}>Téléphone du contact</Label>
                       <Input
+                        id={`reference-${index}-contact_phone`}
                         value={ref.contact_phone}
                         onChange={(e) => updateReference(index, 'contact_phone', e.target.value)}
                         placeholder="514-123-4567"
                       />
                     </div>
                     <div>
-                      <Label>Année</Label>
+                      <Label htmlFor={`reference-${index}-year`}>Année</Label>
                       <Input
+                        id={`reference-${index}-year`}
                         value={ref.year}
                         onChange={(e) => updateReference(index, 'year', e.target.value)}
                         placeholder="2023"
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <Label>Valeur du projet (CAD)</Label>
+                      <Label htmlFor={`reference-${index}-value`}>Valeur du projet (CAD)</Label>
                       <Input
                         type="number"
+                        id={`reference-${index}-value`}
                         value={ref.value}
                         onChange={(e) => updateReference(index, 'value', e.target.value)}
                         placeholder="75000"
